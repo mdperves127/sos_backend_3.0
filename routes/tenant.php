@@ -19,6 +19,7 @@ use App\Http\Controllers\API\Vendor\ProfileController;
 use App\Http\Controllers\API\Vendor\VendorController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
+use App\Http\Controllers\API\Vendor\VendorSubCategoryController as VendorSubCategoryController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\SizeController;
@@ -111,7 +112,24 @@ Route::middleware([
         // Route::get( 'vendor-category-subcategory/{id}', [ProductController::class, 'catecoryToSubcategory'] );
 
 
+
         Route::get('all-category', [CategoryController::class, 'index']);
+        Route::post('store-category', [CategoryController::class, 'store']);
+        Route::get('edit-category/{id}', [CategoryController::class, 'edit']);
+        Route::put('update-category/{id}', [CategoryController::class, 'update']);
+        Route::put('status-category/{id}', [CategoryController::class, 'status']);
+        Route::delete('delete-category/{id}', [CategoryController::class, 'destroy']);
+
+
+
+
+
+        Route::get('all-subcategory', [VendorSubCategoryController::class, 'index']);
+        Route::post('store-subcategory', [VendorSubCategoryController::class, 'store']);
+        Route::get('edit-subcategory/{id}', [VendorSubCategoryController::class, 'edit']);
+        Route::put('update-subcategory/{id}', [VendorSubCategoryController::class, 'update']);
+        Route::put('status-subcategory/{id}', [VendorSubCategoryController::class, 'status']);
+        Route::delete('delete-subcategory/{id}', [VendorSubCategoryController::class, 'destroy']);
 
         // all sub categories
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );
