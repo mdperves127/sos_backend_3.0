@@ -16,6 +16,12 @@ use App\Http\Controllers\API\Vendor\ProfileController;
 use App\Http\Controllers\API\Vendor\SubCategoryController as VendorSubCategoryController;
 use App\Http\Controllers\API\Vendor\VendorController;
 use App\Http\Controllers\Tenant\TenantAuthController;
+
+use App\Http\Controllers\API\Vendor\SubUnitController;
+use App\Http\Controllers\API\Vendor\WarehouseController;
+use App\Http\Controllers\API\Vendor\SupplierController;
+use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\UnitController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -94,9 +100,58 @@ Route::middleware( [
         Route::put( 'size-update/{id}', [SizeController::class, 'SizeUpdate'] );
         Route::delete( 'size-delete/{id}', [SizeController::class, 'destroy'] );
 
-        //all categories
-        // Route::get( 'vendor-categories', [ProductController::class, 'AllCategory'] );
-        // Route::get( 'vendor-category-subcategory/{id}', [ProductController::class, 'catecoryToSubcategory'] );
+
+        //Units Route
+
+        Route::prefix( 'unit' )->group( function () {
+            Route::get( '/', [UnitController::class, 'index'] );
+            Route::post( 'store', [UnitController::class, 'store'] );
+            Route::get( 'edit/{id}', [UnitController::class, 'edit'] );
+            Route::post( 'update/{id}', [UnitController::class, 'update'] );
+            Route::delete( 'delete/{id}', [UnitController::class, 'destroy'] );
+            Route::get( 'status/{id}', [UnitController::class, 'status'] );
+        } );
+
+        //Sub-units Route
+        Route::prefix( 'sub-unit' )->group( function () {
+            Route::get( '/', [SubUnitController::class, 'index'] );
+            Route::post( 'store', [SubUnitController::class, 'store'] );
+            Route::get( 'edit/{id}', [SubUnitController::class, 'edit'] );
+            Route::post( 'update/{id}', [SubUnitController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SubUnitController::class, 'destroy'] );
+            Route::get( 'status/{id}', [SubUnitController::class, 'status'] );
+        } );
+
+        //Ware house Route
+        Route::prefix( 'warehouse' )->group( function () {
+            Route::get( '/', [WarehouseController::class, 'index'] );
+            Route::post( 'store', [WarehouseController::class, 'store'] );
+            Route::get( 'edit/{id}', [WarehouseController::class, 'edit'] );
+            Route::post( 'update/{id}', [WarehouseController::class, 'update'] );
+            Route::delete( 'delete/{id}', [WarehouseController::class, 'destroy'] );
+            Route::get( 'status/{id}', [WarehouseController::class, 'status'] );
+        } );
+
+        //Suppler Route
+        Route::prefix( 'supplier' )->group( function () {
+            Route::get( '/', [SupplierController::class, 'index'] );
+            Route::post( 'store', [SupplierController::class, 'store'] );
+            Route::get( 'edit/{id}', [SupplierController::class, 'edit'] );
+            Route::post( 'update/{id}', [SupplierController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SupplierController::class, 'destroy'] );
+            Route::get( 'status/{id}', [SupplierController::class, 'status'] );
+        } );
+
+        //Customer Route
+        Route::prefix( 'customer' )->group( function () {
+            Route::get( '/', [CustomerController::class, 'index'] );
+            Route::post( 'store', [CustomerController::class, 'store'] );
+            Route::get( 'edit/{id}', [CustomerController::class, 'edit'] );
+            Route::post( 'update/{id}', [CustomerController::class, 'update'] );
+            Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
+            Route::get( 'status/{id}', [CustomerController::class, 'status'] );
+        } );
+
 
         Route::get( 'category-all', [CategoryController::class, 'index'] );
         Route::get( 'category-all/active', [CategoryController::class, 'active'] );
