@@ -4,120 +4,140 @@ namespace App\Http\Controllers\API\Vendor;
 
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BrandRequest;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
 
-class BrandController extends Controller
-{
+class BrandController extends Controller {
     //
-    function create(BrandRequest $request)
-    {
-        $validateData = $request->validated();
-        $slug = slugCreate(Brand::class, $validateData['name']);
 
-        if ($request->hasFile('image')) {
-            $image = fileUpload($validateData['image'], 'uploads/brand');
-        } else {
-            $image = '';
+    public function create( Request $request ) {
+        $validator = Validator::make( $request->all(), [
+            'name'   => 'required|unique:brands|max:255',
+            'status' => 'required|in:' . Status::Active->value . ',' . Status::Pending->value,
+            'image'  => 'nullable|image|mimes:jpeg,png,jpg,gif',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
+            ] );
         }
 
-        Brand::create([
-            'name' => $validateData['name'],
-            'slug' => $slug,
-            'status' => Status::Active->value,
-            'image' => $image,
-            'user_id' => auth()->user()->id,
-            'created_by' => Status::Vendor->value
-        ]);
+        $validateData = $validator->validated();
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Brand Added Sucessfully',
-        ]);
+        $slug = slugCreate( Brand::class, $validateData['name'] );
+
+        $image = '';
+        if ( $request->hasFile( 'image' ) ) {
+            $image = fileUpload( $validateData['image'], 'uploads/brand' );
+        }
+
+        Brand::create( [
+            'name'       => $validateData['name'],
+            'slug'       => $slug,
+            'status'     => $validateData['status'],
+            'image'      => $image,
+            'user_id'    => auth()->id(),
+            'created_by' => Status::Vendor->value,
+        ] );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Brand Added Successfully',
+        ] );
     }
 
-    function allBrand()
-    {
-
-        $brands = Brand::where('status','active')
-            ->latest()
-            ->paginate(15);
-
-        return response()->json([
+    function allBrand() {
+        $brands = Brand::latest()->paginate( 15 );
+        return response()->json( [
             'status' => 200,
-            'brands' => $brands
-        ]);
+            'brands' => $brands,
+        ] );
     }
 
-    function allBrandActive()
-    {
+    function allBrandActive() {
 
-        $brands = Brand::where('status','active')
+        $brands = Brand::where( 'status', 'active' )
             ->latest()
             ->get();
 
-        return response()->json([
+        return response()->json( [
             'status' => 200,
-            'brands' => $brands
-        ]);
+            'brands' => $brands,
+        ] );
     }
 
-    function delete($id)
-    {
-        $brand = Brand::where(['user_id'=>auth()->user()->id,'id'=>$id])->firstOrFail();
+    function delete( $id ) {
+        $brand = Brand::where( ['user_id' => auth()->user()->id, 'id' => $id] )->firstOrFail();
 
-        if ($brand) {
+        if ( $brand ) {
             $brand->delete();
-            return response()->json([
-                'status' => 200,
-                'message' => 'Brand deleted Sucessfully',
-            ]);
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Brand deleted Successfully',
+            ] );
         }
     }
-    function edit($id)
-    {
-        $brand = Brand::where(['user_id'=>auth()->user()->id,'id'=>$id])->firstOrFail();
-        return response()->json([
-            'status' => 200,
-            'message' => $brand
-        ]);
+    function edit( $id ) {
+        $brand = Brand::where( ['user_id' => auth()->user()->id, 'id' => $id] )->firstOrFail();
+        return response()->json( [
+            'status'  => 200,
+            'message' => $brand,
+        ] );
     }
+    public function update( Request $request, $id ) {
+        $validator = Validator::make( $request->all(), [
+            'name'   => 'required|max:255|unique:brands,name,' . $id . ',id',
+            'status' => 'required|in:active,pending',
+            'image'  => 'nullable|image|mimes:jpeg,png,jpg,gif',
+        ] );
 
-    function update(Request $request, $id)
-    {
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
+            ] );
+        }
 
-        $request->validate([
-            'name'=>'required|unique:brands,name,'.$id,
-            'image'=>'nullable|image|mimes:jpeg,png,jpg,gif'
-        ]);
+        $brand = Brand::where( [
+            'user_id' => auth()->id(),
+            'id'      => $id,
+        ] )->first();
 
-        $brand = Brand::where(['user_id'=>auth()->user()->id,'id'=>$id])->firstOrFail();
+        if ( $brand ) {
+            $brand->name   = $request->input( 'name' );
+            $brand->slug   = slugUpdate( Brand::class, $request->input( 'name' ), $brand->id );
+            $brand->status = $request->input( 'status' );
 
-        $brand->name = $validateData['name'];
+            if ( $request->hasFile( 'image' ) ) {
+                if ( File::exists( $brand->image ) ) {
+                    File::delete( $brand->image );
+                }
 
-        if ($validateData['image']) {
-
-            if (File::exists($brand->image)) {
-                File::delete($brand->image);
+                $file      = $request->file( 'image' );
+                $extension = $file->getClientOriginalExtension();
+                $filename  = time() . '.' . $extension;
+                $file->move( 'uploads/brand/', $filename );
+                $brand->image = 'uploads/brand/' . $filename;
             }
-            $image = fileUpload($validateData['image'], 'uploads/brand');
-            $brand->image = $image;
+
+            $brand->save();
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Brand updated successfully',
+            ] );
         } else {
-            $brand->image = null;
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'No Brand ID Found',
+            ] );
         }
-
-
-        $brand->slug = slugUpdate(Brand::class, $validateData['name'], $brand->id);
-
-        $brand->save();
-
-        return response()->json([
-            'status' => 200,
-            'message' => 'Brand updated Sucessfully',
-        ]);
     }
-
 
 }

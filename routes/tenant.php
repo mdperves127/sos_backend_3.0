@@ -1,60 +1,54 @@
 <?php
 
-declare(strict_types=1);
+declare ( strict_types = 1 );
 
-use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use App\Http\Controllers\Tenant\TenantRegistrationController;
-use App\Http\Controllers\Tenant\TenantAuthController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\API\ColorController;
+use App\Http\Controllers\API\SizeController;
+use App\Http\Controllers\API\SubCategoryController;
+use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
+use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
-
-
-
 
 // Merchant routes
 
-use App\Http\Controllers\API\Vendor\ProfileController;
-use App\Http\Controllers\API\Vendor\VendorController;
-use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
-use App\Http\Controllers\API\Vendor\CategoryController;
-use App\Http\Controllers\API\Vendor\VendorSubCategoryController as VendorSubCategoryController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
-use App\Http\Controllers\API\ColorController;
-use App\Http\Controllers\API\SizeController;
-use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\SubCategoryController;
+use App\Http\Controllers\API\Vendor\ProfileController;
+use App\Http\Controllers\API\Vendor\SubCategoryController as VendorSubCategoryController;
+use App\Http\Controllers\API\Vendor\VendorController;
+use App\Http\Controllers\Tenant\TenantAuthController;
 
+use App\Http\Controllers\API\Vendor\SubUnitController;
+use App\Http\Controllers\API\Vendor\WarehouseController;
+use App\Http\Controllers\API\Vendor\SupplierController;
+use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\UnitController;
+use Illuminate\Support\Facades\Route;
+use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
-
-
-Route::middleware([
+Route::middleware( [
     'api',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
-])->group(function () {
-    Route::get('/', function () {
-        return response()->json([
-            'message' => 'Tenant subdomain is working!',
-            'tenant_id' => tenant('id'),
-            'domain' => request()->getHost(),
-            'timestamp' => now()
-        ]);
-    });
+] )->group( function () {
+    Route::get( '/', function () {
+        return response()->json( [
+            'message'   => 'Tenant subdomain is working!',
+            'tenant_id' => tenant( 'id' ),
+            'domain'    => request()->getHost(),
+            'timestamp' => now(),
+        ] );
+    } );
     // Public tenant routes
-    Route::post('/auth/login', [TenantAuthController::class, 'login']);
-    Route::post('/auth/register', [TenantAuthController::class, 'register']);
+    Route::post( '/auth/login', [TenantAuthController::class, 'login'] );
+    Route::post( '/auth/register', [TenantAuthController::class, 'register'] );
 
     // Protected tenant routes
-    Route::middleware('tenantAuth')->group(function () {
-        Route::post('/auth/logout', [TenantAuthController::class, 'logout']);
-        Route::put('/auth/profile', [TenantAuthController::class, 'updateProfile']);
-        Route::get('/auth/profile/info', [TenantAuthController::class, 'profileInfo']);
-        Route::put('/auth/change-password', [TenantAuthController::class, 'changePassword']);
-
-
-
+    Route::middleware( 'tenantAuth' )->group( function () {
+        Route::post( '/auth/logout', [TenantAuthController::class, 'logout'] );
+        Route::put( '/auth/profile', [TenantAuthController::class, 'updateProfile'] );
+        Route::get( '/auth/profile/info', [TenantAuthController::class, 'profileInfo'] );
+        Route::put( '/auth/change-password', [TenantAuthController::class, 'changePassword'] );
 
         //Vendor Routes
         Route::get( 'vendor/profile', [ProfileController::class, 'VendorProfile'] );
@@ -77,13 +71,12 @@ Route::middleware([
         Route::get( 'vendor-all-size', [VendorController::class, 'AllSize'] );
 
         //brand create
-        Route::post( 'vendor-brand-create', [VendorBrandController::class, 'create'] );
-        Route::get( 'vendor-brands', [VendorBrandController::class, 'allBrand'] );
-        Route::get( 'vendor-brands/active', [VendorBrandController::class, 'allBrandActive'] );
-
-        Route::delete( 'vendor-brand-delete/{id}', [VendorBrandController::class, 'delete'] );
-        Route::get( 'vendor-brand-edit/{id}', [VendorBrandController::class, 'edit'] );
-        Route::post( 'vendor-brand-update/{id}', [VendorBrandController::class, 'update'] );
+        Route::get( 'tenant-brands', [VendorBrandController::class, 'allBrand'] );
+        Route::get( 'tenant-brands/active', [VendorBrandController::class, 'allBrandActive'] );
+        Route::post( 'tenant-brand-store', [VendorBrandController::class, 'create'] );
+        Route::get( 'tenant-brand-edit/{id}', [VendorBrandController::class, 'edit'] );
+        Route::put( 'tenant-brand-update/{id}', [VendorBrandController::class, 'update'] );
+        Route::delete( 'tenant-brand-delete/{id}', [VendorBrandController::class, 'delete'] );
 
         Route::get( 'vendor/balabrandnce/request', [ProductStatusController::class, 'VendorBalanceRequest'] );
         Route::post( 'vendor/request/sent', [ProductStatusController::class, 'VendorRequestSent'] );
@@ -94,46 +87,89 @@ Route::middleware([
         Route::get( 'vendor-product-status-count', [ProductStatusController::class, 'statusCount'] );
 
         //color
-        Route::post( 'store-color', [ColorController::class, 'ColorStore'] );
-        Route::get( 'view-color/{status?}', [ColorController::class, 'ColorIndex'] );
-        Route::get( 'edit-color/{id}', [ColorController::class, 'ColorEdit'] );
-        Route::post( 'update-color/{id}', [ColorController::class, 'ColorUpdate'] );
-        Route::delete( 'delete-color/{id}', [ColorController::class, 'destroy'] );
+        Route::get( 'color-view', [ColorController::class, 'ColorIndex'] );
+        Route::post( 'color-store', [ColorController::class, 'ColorStore'] );
+        Route::get( 'color-edit/{id}', [ColorController::class, 'ColorEdit'] );
+        Route::post( 'color-update/{id}', [ColorController::class, 'ColorUpdate'] );
+        Route::delete( 'color-delete/{id}', [ColorController::class, 'destroy'] );
 
         //size route
-        Route::post( 'store-size', [SizeController::class, 'Sizestore'] );
-        Route::get( 'view-size/{status?}', [SizeController::class, 'SizeIndex'] );
-        Route::get( 'edit-size/{id}', [SizeController::class, 'SizeEdit'] );
-        Route::put( 'update-size/{id}', [SizeController::class, 'SizeUpdate'] );
-        Route::delete( 'delete-size/{id}', [SizeController::class, 'destroy'] );
-
-        //all categories
-        // Route::get( 'vendor-categories', [ProductController::class, 'AllCategory'] );
-        // Route::get( 'vendor-category-subcategory/{id}', [ProductController::class, 'catecoryToSubcategory'] );
+        Route::get( 'size-view/{status?}', [SizeController::class, 'SizeIndex'] );
+        Route::post( 'size-store', [SizeController::class, 'SizeStore'] );
+        Route::get( 'size-edit/{id}', [SizeController::class, 'SizeEdit'] );
+        Route::put( 'size-update/{id}', [SizeController::class, 'SizeUpdate'] );
+        Route::delete( 'size-delete/{id}', [SizeController::class, 'destroy'] );
 
 
+        //Units Route
 
-        Route::get('all-category', [CategoryController::class, 'index']);
-        Route::post('store-category', [CategoryController::class, 'store']);
-        Route::get('edit-category/{id}', [CategoryController::class, 'edit']);
-        Route::put('update-category/{id}', [CategoryController::class, 'update']);
-        Route::put('status-category/{id}', [CategoryController::class, 'status']);
-        Route::delete('delete-category/{id}', [CategoryController::class, 'destroy']);
+        Route::prefix( 'unit' )->group( function () {
+            Route::get( '/', [UnitController::class, 'index'] );
+            Route::post( 'store', [UnitController::class, 'store'] );
+            Route::get( 'edit/{id}', [UnitController::class, 'edit'] );
+            Route::post( 'update/{id}', [UnitController::class, 'update'] );
+            Route::delete( 'delete/{id}', [UnitController::class, 'destroy'] );
+            Route::get( 'status/{id}', [UnitController::class, 'status'] );
+        } );
+
+        //Sub-units Route
+        Route::prefix( 'sub-unit' )->group( function () {
+            Route::get( '/', [SubUnitController::class, 'index'] );
+            Route::post( 'store', [SubUnitController::class, 'store'] );
+            Route::get( 'edit/{id}', [SubUnitController::class, 'edit'] );
+            Route::post( 'update/{id}', [SubUnitController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SubUnitController::class, 'destroy'] );
+            Route::get( 'status/{id}', [SubUnitController::class, 'status'] );
+        } );
+
+        //Ware house Route
+        Route::prefix( 'warehouse' )->group( function () {
+            Route::get( '/', [WarehouseController::class, 'index'] );
+            Route::post( 'store', [WarehouseController::class, 'store'] );
+            Route::get( 'edit/{id}', [WarehouseController::class, 'edit'] );
+            Route::post( 'update/{id}', [WarehouseController::class, 'update'] );
+            Route::delete( 'delete/{id}', [WarehouseController::class, 'destroy'] );
+            Route::get( 'status/{id}', [WarehouseController::class, 'status'] );
+        } );
+
+        //Suppler Route
+        Route::prefix( 'supplier' )->group( function () {
+            Route::get( '/', [SupplierController::class, 'index'] );
+            Route::post( 'store', [SupplierController::class, 'store'] );
+            Route::get( 'edit/{id}', [SupplierController::class, 'edit'] );
+            Route::post( 'update/{id}', [SupplierController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SupplierController::class, 'destroy'] );
+            Route::get( 'status/{id}', [SupplierController::class, 'status'] );
+        } );
+
+        //Customer Route
+        Route::prefix( 'customer' )->group( function () {
+            Route::get( '/', [CustomerController::class, 'index'] );
+            Route::post( 'store', [CustomerController::class, 'store'] );
+            Route::get( 'edit/{id}', [CustomerController::class, 'edit'] );
+            Route::post( 'update/{id}', [CustomerController::class, 'update'] );
+            Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
+            Route::get( 'status/{id}', [CustomerController::class, 'status'] );
+        } );
 
 
+        Route::get( 'category-all', [CategoryController::class, 'index'] );
+        Route::get( 'category-all/active', [CategoryController::class, 'active'] );
+        Route::post( 'category-store', [CategoryController::class, 'store'] );
+        Route::get( 'category-edit/{id}', [CategoryController::class, 'edit'] );
+        Route::put( 'category-update/{id}', [CategoryController::class, 'update'] );
+        Route::put( 'category-status/{id}', [CategoryController::class, 'status'] );
+        Route::delete( 'category-delete/{id}', [CategoryController::class, 'destroy'] );
 
-
-
-        Route::get('all-subcategory', [VendorSubCategoryController::class, 'index']);
-        Route::post('store-subcategory', [VendorSubCategoryController::class, 'store']);
-        Route::get('edit-subcategory/{id}', [VendorSubCategoryController::class, 'edit']);
-        Route::put('update-subcategory/{id}', [VendorSubCategoryController::class, 'update']);
-        Route::put('status-subcategory/{id}', [VendorSubCategoryController::class, 'status']);
-        Route::delete('delete-subcategory/{id}', [VendorSubCategoryController::class, 'destroy']);
+        Route::get( 'subcategory-all', [VendorSubCategoryController::class, 'index'] );
+        Route::post( 'subcategory-store', [VendorSubCategoryController::class, 'store'] );
+        Route::get( 'subcategory-edit/{id}', [VendorSubCategoryController::class, 'edit'] );
+        Route::put( 'subcategory-update/{id}', [VendorSubCategoryController::class, 'update'] );
+        Route::put( 'subcategory-status/{id}', [VendorSubCategoryController::class, 'status'] );
+        Route::delete( 'subcategory-delete/{id}', [VendorSubCategoryController::class, 'destroy'] );
 
         // all sub categories
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );
 
-    });
-});
-
+    } );
+} );
