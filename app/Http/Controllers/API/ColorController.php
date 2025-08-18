@@ -6,30 +6,29 @@ use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Models\Color;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
-class ColorController extends Controller
-{
-    public function ColorIndex()
-    {
+class ColorController extends Controller {
+    public function ColorIndex( Request $request ) {
+        $status = $request->query( 'status' );
 
-        $color=Color::where('vendor_id',vendorId())
-        ->when(request('status') == 'active', function ($q) {
-            return $q->where('status', 'active');
-        })
-        ->latest()->get();
+        \Log::info( "Status: " . $status );
 
-        return response()->json([
-            'status'=>200,
-            'color'=>$color,
-        ]);
+        $color = Color::where( 'vendor_id', vendorId() )
+            ->when( $status == 'active', fn( $q ) => $q->where( 'status', 'active' ) )
+            ->latest()
+            ->get();
+
+        \Log::info( "Colors found: " . $color->count() );
+
+        return response()->json( [
+            'status' => 200,
+            'color'  => '$color',
+        ] );
     }
 
-    public function Colortore(Request $request)
-    {
+    public function ColorStore( Request $request ) {
 
         // $validator = Validator::make($request->all(), [
         //     'name' => 'required',
@@ -47,57 +46,49 @@ class ColorController extends Controller
         //     ],
         // ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:colors,name,NULL,id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'name' => 'required|unique:colors,name,NULL,id,vendor_id,' . vendorId(),
+        ] );
 
-        if($validator->fails())
-        {
-            return response()->json([
-                'status'=>400,
-                'validation_errors'=>$validator->messages(),
-            ]);
-        }
-          else
-          {
-            $color =new Color();
-            $color->name=$request->input('name');
-            $color->code=$request->input('code');
-            $color->slug = slugCreate(Color::class,$request->name);
-            $color->user_id=Auth::id();
-            $color->status= $request->status;
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'            => 400,
+                'validation_errors' => $validator->messages(),
+            ] );
+        } else {
+            $color             = new Color();
+            $color->name       = $request->input( 'name' );
+            $color->code       = $request->input( 'code' );
+            $color->slug       = slugCreate( Color::class, $request->name );
+            $color->user_id    = Auth::id();
+            $color->status     = $request->status;
             $color->created_by = Status::Vendor->value;
-            $color->vendor_id = vendorId();
+            $color->vendor_id  = vendorId();
             $color->save();
-            return response()->json([
-            'status'=>200,
-             'message'=>'Color Added Sucessfully',
-            ]);
-          }
-    }
-
-    public function ColorEdit($id)
-    {
-        $userId =Auth::id();
-         $color = Color::where('user_id',$userId)->find($id);
-        if($color)
-        {
-            return response()->json([
-                'status'=>200,
-                'color'=>$color
-            ]);
-        }
-        else
-        {
-            return response()->json([
-                'status'=>404,
-                'message'=>'No Color Id Found'
-            ]);
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Color Added Successfully',
+            ] );
         }
     }
 
-    public function ColorUpdate(Request $request, $id)
-    {
+    public function ColorEdit( $id ) {
+        $userId = Auth::id();
+        $color  = Color::where( 'user_id', $userId )->find( $id );
+        if ( $color ) {
+            return response()->json( [
+                'status' => 200,
+                'color'  => $color,
+            ] );
+        } else {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'No Color Id Found',
+            ] );
+        }
+    }
+
+    public function ColorUpdate( Request $request, $id ) {
         // $currentUserId = vendorId();
         // $rules = [
         //     'name' => [
@@ -115,72 +106,62 @@ class ColorController extends Controller
 
         // $validator = Validator::make($request->all(), $rules);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:colors,name,'.$id.',id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'name' => 'required|unique:colors,name,' . $id . ',id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'=>400,
-                'validation_errors'=>$validator->messages(),
-            ]);
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'            => 400,
+                'validation_errors' => $validator->messages(),
+            ] );
         } else {
-            $color = Color::find($id);
-            if($color)
-            {
-                $color->name = $request->input('name');
-                $color->slug = slugUpdate(Color::class,$request->name,$id);
+            $color = Color::find( $id );
+            if ( $color ) {
+                $color->name = $request->input( 'name' );
+                $color->slug = slugUpdate( Color::class, $request->name, $id );
 
                 // Update other fields only if they are present in the request
-                if ($request->has('status')) {
-                    $color->status = $request->input('status');
+                if ( $request->has( 'status' ) ) {
+                    $color->status = $request->input( 'status' );
                 }
 
-                if ($request->has('code')) {
-                    $color->code = $request->input('code');
+                if ( $request->has( 'code' ) ) {
+                    $color->code = $request->input( 'code' );
                 }
 
-                $color->user_id = Auth::id();
+                $color->user_id   = Auth::id();
                 $color->vendor_id = vendorId();
                 $color->save();
 
-                return response()->json([
-                    'status'=>200,
-                    'message'=>'Color Updated Successfully',
-                ]);
-            }
-            else
-            {
-                return response()->json([
-                    'status'=>404,
-                    'message'=>'No Color ID Found',
-                ]);
+                return response()->json( [
+                    'status'  => 200,
+                    'message' => 'Color Updated Successfully',
+                ] );
+            } else {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'No Color ID Found',
+                ] );
             }
         }
     }
 
-
-    public function destroy($id)
-    {
-        $userId =Auth::id();
-        $color = Color::where('user_id',$userId)->find($id);
-        if($color)
-        {
+    public function destroy( $id ) {
+        $userId = Auth::id();
+        $color  = Color::where( 'user_id', $userId )->find( $id );
+        if ( $color ) {
             $color->delete();
-            return response()->json([
-                'status'=>200,
-                'message'=>'Color Deleted Successfully',
-            ]);
-        }
-        else
-        {
-            return response()->json([
-                'status'=>404,
-                'message'=>'No COlor ID Found',
-            ]);
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Color Deleted Successfully',
+            ] );
+        } else {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'No COlor ID Found',
+            ] );
         }
     }
-
-
 
 }
