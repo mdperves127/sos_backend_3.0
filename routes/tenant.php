@@ -94,7 +94,7 @@ Route::middleware([
         Route::get( 'vendor-product-status-count', [ProductStatusController::class, 'statusCount'] );
 
         //color
-        Route::post( 'store-color', [ColorController::class, 'Colortore'] );
+        Route::post( 'store-color', [ColorController::class, 'ColorStore'] );
         Route::get( 'view-color/{status?}', [ColorController::class, 'ColorIndex'] );
         Route::get( 'edit-color/{id}', [ColorController::class, 'ColorEdit'] );
         Route::post( 'update-color/{id}', [ColorController::class, 'ColorUpdate'] );

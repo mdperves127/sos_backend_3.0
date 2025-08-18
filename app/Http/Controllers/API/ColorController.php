@@ -28,7 +28,7 @@ class ColorController extends Controller
         ]);
     }
 
-    public function Colortore(Request $request)
+    public function ColorStore(Request $request)
     {
 
         // $validator = Validator::make($request->all(), [
