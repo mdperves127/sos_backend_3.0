@@ -47,8 +47,9 @@ class UnitController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         }
 
@@ -94,8 +95,9 @@ class UnitController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             $unit = Unit::find( $id );

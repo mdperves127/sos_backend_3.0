@@ -3,28 +3,24 @@
 namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Warehouse;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
-class WarehouseController extends Controller
-{
+class WarehouseController extends Controller {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        return response()->json([
-            'status' => 200,
-            'warehouses' => Warehouse::where('vendor_id',vendorId())->latest()->get(),
-        ]);
+    public function index() {
+        return response()->json( [
+            'status'     => 200,
+            'warehouses' => Warehouse::where( 'vendor_id', vendorId() )->latest()->get(),
+        ] );
     }
-
 
     /**
      * Store the newly created resource in storage.
@@ -33,43 +29,33 @@ class WarehouseController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        // $otherUserIds = [vendorId()];
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required',
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('warehouses')->where(function ($query) use ($otherUserIds) {
-        //             return $query->whereIn('vendor_id', $otherUserIds);
-        //         })
-        //     ],
-        // ]);
+    public function store( Request $request ) {
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:warehouses,name,NULL,id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'name' => 'required|unique:warehouses,name,NULL,id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 400,
-                'validation_errors' => $validator->messages(),
-            ]);
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
+            ] );
         }
 
-        Warehouse::create([
-            'user_id' => Auth::id(),
-            'vendor_id' => vendorId(),
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
+        Warehouse::create( [
+            'user_id'     => Auth::id(),
+            'vendor_id'   => vendorId(),
+            'name'        => $request->name,
+            'slug'        => Str::slug( $request->name ),
             'description' => $request->description,
-            'status' => $request->status,
-        ]);
+            'status'      => $request->status,
+        ] );
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Warehouse Added Successfully!'
-        ]);
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Warehouse Added Successfully!',
+        ] );
     }
 
     /**
@@ -78,12 +64,11 @@ class WarehouseController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        return response()->json([
-            'status' => 200,
-            'message' => Warehouse::find($id),
-        ]);
+    public function edit( $id ) {
+        return response()->json( [
+            'status'  => 200,
+            'message' => Warehouse::find( $id ),
+        ] );
     }
 
     /**
@@ -93,40 +78,31 @@ class WarehouseController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request , $id)
-    {
-        // $currentUserId = vendorId();
-        // $validator = Validator::make($request->all(), [
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('warehouses')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         })->ignore($currentUserId),
-        //     ]
-        // ]);
+    public function update( Request $request, $id ) {
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:warehouses,name,'.$id.',id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'name' => 'required|unique:warehouses,name,' . $id . ',id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 400,
-                'validation_errors' => $validator->messages(),
-            ]);
-        }else{
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
+            ] );
+        } else {
 
-            Warehouse::find($id)->update([
-                'name' => $request->name,
-                'slug' => Str::slug($request->name),
+            Warehouse::find( $id )->update( [
+                'name'        => $request->name,
+                'slug'        => Str::slug( $request->name ),
                 'description' => $request->description,
-                'status' => $request->status,
-            ]);
+                'status'      => $request->status,
+            ] );
 
-            return response()->json([
+            return response()->json( [
                 'status'  => 200,
                 'message' => 'Warehouse Updated Successfully !',
-            ]);
+            ] );
         }
     }
 
@@ -136,13 +112,12 @@ class WarehouseController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        Warehouse::find($id)->delete();
-        return response()->json([
-            'status' => 200,
+    public function destroy( $id ) {
+        Warehouse::find( $id )->delete();
+        return response()->json( [
+            'status'  => 200,
             'message' => 'Warehouse Deleted Successfully !',
-        ]);
+        ] );
     }
 
     /**
@@ -151,22 +126,21 @@ class WarehouseController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function status($id)
-    {
-        $data = Warehouse::find($id);
-        $data->status = $data->status == 'active' ? 'deactive':'active';
+    public function status( $id ) {
+        $data         = Warehouse::find( $id );
+        $data->status = $data->status == 'active' ? 'deactive' : 'active';
         $data->save();
 
-        if($data->status == 'active'){
-            return response()->json([
-                'status' => 200,
+        if ( $data->status == 'active' ) {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Warehouse Active Successfully !',
-            ]);
-        }else{
-            return response()->json([
-                'status' => 200,
+            ] );
+        } else {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Warehouse Deactive Successfully !',
-            ]);
+            ] );
         }
 
     }

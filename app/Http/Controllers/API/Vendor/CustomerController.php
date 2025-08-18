@@ -32,22 +32,6 @@ class CustomerController extends Controller {
     public function store( Request $request ) {
         $currentUserId = vendorId();
 
-        // $validator = Validator::make($request->all(), [
-        //     'customer_name' => 'required',
-        //     'phone' => [
-        //         'required',
-        //         Rule::unique('customers')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         }),
-        //     ],
-        //     'email' => [
-        //         'nullable',
-        //         Rule::unique('customers')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         }),
-        //     ],
-        // ]);
-
         $validator = Validator::make( $request->all(), [
             'customer_name' => 'required',
             'phone'         => 'required|unique:customers,phone,NULL,id,vendor_id,' . vendorId(),
@@ -56,8 +40,9 @@ class CustomerController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         }
 
@@ -110,23 +95,6 @@ class CustomerController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update( Request $request, $id ) {
-        $currentUserId = vendorId();
-
-        // $validator = Validator::make($request->all(), [
-        //     'customer_name' => 'required',
-        //     'phone' => [
-        //         'required',
-        //         Rule::unique('customers')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         })->ignore($id),
-        //     ],
-        //     'email' => [
-        //         'nullable',
-        //         Rule::unique('customers')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         })->ignore($id),
-        //     ],
-        // ]);
 
         $validator = Validator::make( $request->all(), [
             'customer_name' => 'required',
@@ -136,8 +104,9 @@ class CustomerController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             Customer::find( $id )->update( [
