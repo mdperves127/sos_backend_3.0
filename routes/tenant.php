@@ -6,11 +6,16 @@ use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
+use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
-use App\Http\Controllers\API\Vendor\ProductManageController;
 
 // Merchant routes
 
+use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
+use App\Http\Controllers\API\Vendor\DeliveryChargeController;
+use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
+use App\Http\Controllers\API\Vendor\PaymentMethodController;
+use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
@@ -19,6 +24,9 @@ use App\Http\Controllers\API\Vendor\SupplierController;
 use App\Http\Controllers\API\Vendor\UnitController;
 use App\Http\Controllers\API\Vendor\VendorController;
 use App\Http\Controllers\API\Vendor\WarehouseController;
+use App\Http\Controllers\API\Vendor\WoocommerceCredentialController;
+use App\Http\Controllers\API\Vendor\WoocommerceOrderController;
+use App\Http\Controllers\API\Vendor\WoocommerceProductController;
 use App\Http\Controllers\Tenant\TenantAuthController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -191,6 +199,81 @@ Route::middleware( [
             Route::post( 'update/{id}', [CustomerController::class, 'update'] );
             Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
             Route::get( 'status/{id}', [CustomerController::class, 'status'] );
+        } );
+
+        //Delivery charge Route
+        Route::prefix( 'delivery-charge' )->group( function () {
+            Route::get( '/', [DeliveryChargeController::class, 'index'] );
+            Route::post( 'store', [DeliveryChargeController::class, 'store'] );
+            Route::get( 'edit/{id}', [DeliveryChargeController::class, 'edit'] );
+            Route::post( 'update/{id}', [DeliveryChargeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [DeliveryChargeController::class, 'destroy'] );
+            Route::get( 'status/{id}', [DeliveryChargeController::class, 'status'] );
+        } );
+
+        //Delivery company Route
+        Route::prefix( 'delivery-company' )->group( function () {
+            Route::get( '/', [DeliveryCompanyController::class, 'index'] );
+            Route::post( 'store', [DeliveryCompanyController::class, 'store'] );
+            Route::get( 'edit/{id}', [DeliveryCompanyController::class, 'edit'] );
+            Route::post( 'update/{id}', [DeliveryCompanyController::class, 'update'] );
+            Route::delete( 'delete/{id}', [DeliveryCompanyController::class, 'destroy'] );
+            Route::get( 'status/{id}', [DeliveryCompanyController::class, 'status'] );
+            Route::get( 'list', [DeliveryCompanyController::class, 'companyList'] );
+        } );
+
+        //Delivery company Route
+        Route::prefix( 'delivery-and-pickup-address' )->group( function () {
+            Route::get( '/', [DeliveryAndPickupAddressController::class, 'index'] );
+            Route::post( 'store', [DeliveryAndPickupAddressController::class, 'store'] );
+            Route::get( 'edit/{id}', [DeliveryAndPickupAddressController::class, 'edit'] );
+            Route::post( 'update/{id}', [DeliveryAndPickupAddressController::class, 'update'] );
+            Route::delete( 'delete/{id}', [DeliveryAndPickupAddressController::class, 'destroy'] );
+            Route::get( 'status/{id}', [DeliveryAndPickupAddressController::class, 'status'] );
+        } );
+
+        //courier-credential Route
+        Route::prefix( 'courier-credential' )->group( function () {
+            Route::get( '/', [CourierCredentialController::class, 'index'] );
+            Route::post( 'store', [CourierCredentialController::class, 'store'] );
+            Route::get( 'edit/{id}', [CourierCredentialController::class, 'edit'] );
+            Route::post( 'update/{id}', [CourierCredentialController::class, 'update'] );
+            Route::delete( 'delete/{id}', [CourierCredentialController::class, 'destroy'] );
+            Route::get( 'status/{id}', [CourierCredentialController::class, 'status'] );
+            Route::get( 'default/{id}', [CourierCredentialController::class, 'default'] );
+        } );
+
+        //Woocommerce-credential Route
+        Route::prefix( 'woocommerce-credential' )->group( function () {
+            Route::get( '/', [WoocommerceCredentialController::class, 'index'] );
+            Route::post( 'store', [WoocommerceCredentialController::class, 'store'] );
+            Route::get( 'edit/{id}', [WoocommerceCredentialController::class, 'edit'] );
+            Route::post( 'update/{id}', [WoocommerceCredentialController::class, 'update'] );
+            Route::delete( 'delete/{id}', [WoocommerceCredentialController::class, 'destroy'] );
+            Route::get( 'status/{id}', [WoocommerceCredentialController::class, 'status'] );
+            Route::get( 'default/{id}', [WoocommerceCredentialController::class, 'default'] );
+        } );
+
+        //Woocommerce-credential Route
+        Route::prefix( 'woocommerce-order' )->group( function () {
+            Route::get( '/', [WoocommerceOrderController::class, 'index'] );
+            Route::post( 'store', [WoocommerceOrderController::class, 'store'] );
+            Route::post( 'delivery/{id}', [WoocommerceOrderController::class, 'wcOrderDelivery'] );
+            Route::get( 'order-status/{id}/{status}', [WoocommerceOrderController::class, 'wcOrderStatusUpdate'] );
+        } );
+
+        Route::prefix( 'woocommerce-product' )->group( function () {
+            Route::get( '/', [WoocommerceProductController::class, 'index'] );
+            Route::post( 'store', [WoocommerceProductController::class, 'wcProductStore'] );
+        } );
+
+        Route::prefix( 'payment-method' )->group( function () {
+            Route::get( '/', [PaymentMethodController::class, 'index'] );
+            Route::post( 'store', [PaymentMethodController::class, 'store'] );
+            Route::get( 'edit/{id}', [PaymentMethodController::class, 'edit'] );
+            Route::post( 'update/{id}', [PaymentMethodController::class, 'update'] );
+            Route::delete( 'delete/{id}', [PaymentMethodController::class, 'destroy'] );
+            Route::get( 'status/{id}', [PaymentMethodController::class, 'status'] );
         } );
 
         // all sub categories
