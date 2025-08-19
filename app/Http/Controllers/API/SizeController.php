@@ -26,25 +26,15 @@ class SizeController extends Controller {
 
     public function SizeStore( Request $request ) {
 
-        // $otherUserIds = [vendorId()];
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required',
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('sizes')->where(function ($query) use ($otherUserIds) {
-        //             return $query->whereIn('vendor_id', $otherUserIds);
-        //         })
-        //     ],
-        // ]);
-
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:sizes,name,NULL,id,vendor_id,' . vendorId(),
         ] );
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             $size             = new Size();
@@ -57,7 +47,7 @@ class SizeController extends Controller {
             $size->save();
             return response()->json( [
                 'status'  => 200,
-                'message' => 'Size Added Sucessfully',
+                'message' => 'Size Added Successfully',
             ] );
         }
     }
@@ -79,22 +69,6 @@ class SizeController extends Controller {
     }
 
     public function SizeUpdate( Request $request, $id ) {
-        // $currentUserId = vendorId();
-        // $rules = [
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('sizes')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         })->ignore($id), // Ignore the current size ID when checking uniqueness
-        //     ],
-        // ];
-
-        // // Check if name is present and not empty
-        // if ($request->has('name') && !empty($request->name)) {
-        //     // Add other validation rules for 'name' if needed
-        // }
-
-        // $validator = Validator::make($request->all(), $rules);
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:sizes,name,' . $id . ',id,vendor_id,' . vendorId(),
@@ -102,8 +76,9 @@ class SizeController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             $size = Size::find( $id );

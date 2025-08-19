@@ -13,38 +13,18 @@ class ColorController extends Controller {
     public function ColorIndex( Request $request ) {
         $status = $request->query( 'status' );
 
-        \Log::info( "Status: " . $status );
-
         $color = Color::where( 'vendor_id', vendorId() )
             ->when( $status == 'active', fn( $q ) => $q->where( 'status', 'active' ) )
             ->latest()
             ->get();
 
-        \Log::info( "Colors found: " . $color->count() );
-
         return response()->json( [
             'status' => 200,
-            'color'  => '$color',
+            'color'  => $color,
         ] );
     }
 
     public function ColorStore( Request $request ) {
-
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required',
-        //     'code'=>'nullable'
-        // ]);
-
-        // $otherUserIds = [vendorId()];
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required',
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('colors')->where(function ($query) use ($otherUserIds) {
-        //             return $query->whereIn('vendor_id', $otherUserIds);
-        //         })
-        //     ],
-        // ]);
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:colors,name,NULL,id,vendor_id,' . vendorId(),
@@ -52,8 +32,10 @@ class ColorController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
+
             ] );
         } else {
             $color             = new Color();
@@ -89,22 +71,6 @@ class ColorController extends Controller {
     }
 
     public function ColorUpdate( Request $request, $id ) {
-        // $currentUserId = vendorId();
-        // $rules = [
-        //     'name' => [
-        //         'required',
-        //         Rule::unique('colors')->where(function ($query) use ($currentUserId) {
-        //             return $query->where('vendor_id', $currentUserId);
-        //         })->ignore($id), // Ignore the current color ID when checking uniqueness
-        //     ],
-        // ];
-
-        // // Check if name is present and not empty
-        // if ($request->has('name') && !empty($request->name)) {
-        //     // Add other validation rules for 'name' if needed
-        // }
-
-        // $validator = Validator::make($request->all(), $rules);
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:colors,name,' . $id . ',id,vendor_id,' . vendorId(),
@@ -112,8 +78,9 @@ class ColorController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             $color = Color::find( $id );

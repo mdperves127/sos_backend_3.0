@@ -7,10 +7,11 @@ use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
-use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\CustomerController;
 
 // Merchant routes
 
+use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
 use App\Http\Controllers\API\Vendor\SubCategoryController as VendorSubCategoryController;
@@ -26,10 +27,11 @@ use App\Http\Controllers\API\Vendor\PaymentMethodController;
 
 use App\Http\Controllers\API\Vendor\WoocommerceProductController;
 use App\Http\Controllers\API\Vendor\SubUnitController;
-use App\Http\Controllers\API\Vendor\WarehouseController;
 use App\Http\Controllers\API\Vendor\SupplierController;
-use App\Http\Controllers\API\Vendor\CustomerController;
 use App\Http\Controllers\API\Vendor\UnitController;
+use App\Http\Controllers\API\Vendor\VendorController;
+use App\Http\Controllers\API\Vendor\WarehouseController;
+use App\Http\Controllers\Tenant\TenantAuthController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -107,7 +109,6 @@ Route::middleware( [
         Route::get( 'size-edit/{id}', [SizeController::class, 'SizeEdit'] );
         Route::put( 'size-update/{id}', [SizeController::class, 'SizeUpdate'] );
         Route::delete( 'size-delete/{id}', [SizeController::class, 'destroy'] );
-
 
         //Units Route
 
