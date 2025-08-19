@@ -290,7 +290,7 @@ class ProductManageController extends Controller {
         }
     }
 
-    public function VendotUpdateProduct( Request $request, $id ) {
+    public function VendorUpdateProduct( Request $request, $id ) {
         // $validator = Validator::make($request->all(), [
 
         //     'name' => 'required|max:255',

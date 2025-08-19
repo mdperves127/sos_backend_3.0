@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class SizeController extends Controller {
-    public function SizeIndex() {
+    public function index() {
         $size = Size::where( 'user_id', auth()->user()->id )
             ->when( request( 'status' ) == 'active', function ( $q ) {
                 return $q->where( 'status', 'active' );
@@ -24,7 +24,7 @@ class SizeController extends Controller {
         ] );
     }
 
-    public function SizeStore( Request $request ) {
+    public function store( Request $request ) {
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:sizes,name,NULL,id,vendor_id,' . vendorId(),
@@ -52,7 +52,7 @@ class SizeController extends Controller {
         }
     }
 
-    public function SizeEdit( $id ) {
+    public function edit( $id ) {
         $userId = Auth::id();
         $size   = Size::where( 'user_id', $userId )->find( $id );
         if ( $size ) {
@@ -68,7 +68,7 @@ class SizeController extends Controller {
         }
     }
 
-    public function SizeUpdate( Request $request, $id ) {
+    public function update( Request $request, $id ) {
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:sizes,name,' . $id . ',id,vendor_id,' . vendorId(),

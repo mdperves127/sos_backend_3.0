@@ -4,17 +4,16 @@ declare ( strict_types = 1 );
 
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\SizeController;
-use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\ProductManageController;
 
 // Merchant routes
 
-use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
-use App\Http\Controllers\API\Vendor\SubCategoryController as VendorSubCategoryController;
+use App\Http\Controllers\API\Vendor\SubCategoryController;
 use App\Http\Controllers\API\Vendor\SubUnitController;
 use App\Http\Controllers\API\Vendor\SupplierController;
 use App\Http\Controllers\API\Vendor\UnitController;
@@ -44,24 +43,42 @@ Route::middleware( [
 
     // Protected tenant routes
     Route::middleware( 'tenantAuth' )->group( function () {
-        Route::post( '/auth/logout', [TenantAuthController::class, 'logout'] );
-        Route::put( '/auth/profile', [TenantAuthController::class, 'updateProfile'] );
-        Route::get( '/auth/profile/info', [TenantAuthController::class, 'profileInfo'] );
-        Route::put( '/auth/change-password', [TenantAuthController::class, 'changePassword'] );
+
+        Route::prefix( 'tenant-auth' )->group( function () {
+            Route::post( '/logout', [TenantAuthController::class, 'logout'] );
+            Route::put( '/profile', [TenantAuthController::class, 'updateProfile'] );
+            Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo'] );
+            Route::put( '/change-password', [TenantAuthController::class, 'changePassword'] );
+        } );
 
         //Vendor Routes
-        Route::get( 'vendor/profile', [ProfileController::class, 'VendorProfile'] );
-        Route::post( 'vendor/update/profile', [ProfileController::class, 'VendorUpdateProfile'] );
+        Route::prefix( 'tenant-profile' )->group( function () {
+            Route::get( '/', [ProfileController::class, 'VendorProfile'] );
+            Route::post( 'update', [ProfileController::class, 'VendorUpdateProfile'] );
+        } );
+
         //vendor product
-        Route::get( 'vendor-product-create', [ProductManageController::class, 'create'] );
-        Route::get( 'vendor/product/{status?}', [ProductManageController::class, 'VendorProduct'] );
-        Route::get( 'vendor-product-count/{status?}', [ProductManageController::class, 'VendorProductCount'] );
-        Route::post( 'vendor-store-product', [ProductManageController::class, 'VendorProductStore'] );
-        Route::get( 'vendor-edit-product/{id}', [ProductManageController::class, 'VendorProductEdit'] );
-        Route::get( 'vendor-edit-product-count', [ProductManageController::class, 'vendorProductEditCount'] );
-        Route::post( 'vendor-update-product/{id}', [ProductManageController::class, 'VendotUpdateProduct'] );
-        Route::delete( 'vendor-delete-product/{id}', [ProductManageController::class, 'VendorDelete'] );
-        Route::delete( 'vendor-delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
+        Route::prefix( 'tenant-product' )->group( function () {
+            Route::get( '/', [ProductManageController::class, 'VendorProduct'] );
+            Route::get( 'create', [ProductManageController::class, 'create'] );
+            Route::get( 'count', [ProductManageController::class, 'VendorProductCount'] );
+            Route::post( 'store', [ProductManageController::class, 'VendorProductStore'] );
+            Route::get( 'edit-count', [ProductManageController::class, 'vendorProductEditCount'] );
+            Route::get( 'edit/{id}', [ProductManageController::class, 'VendorProductEdit'] );
+            Route::post( 'update/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
+            Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
+            Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
+        } );
+
+        // Route::get( 'vendor-product-create', [ProductManageController::class, 'create'] );
+        // Route::get( 'vendor/product/{status?}', [ProductManageController::class, 'VendorProduct'] );
+        // Route::get( 'vendor-product-count/{status?}', [ProductManageController::class, 'VendorProductCount'] );
+        // Route::post( 'vendor-store-product', [ProductManageController::class, 'VendorProductStore'] );
+        // Route::get( 'vendor-edit-product/{id}', [ProductManageController::class, 'VendorProductEdit'] );
+        // Route::get( 'vendor-edit-product-count', [ProductManageController::class, 'vendorProductEditCount'] );
+        // Route::post( 'vendor-update-product/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
+        // Route::delete( 'vendor-delete-product/{id}', [ProductManageController::class, 'VendorDelete'] );
+        // Route::delete( 'vendor-delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
         Route::get( 'vendor-all-subcategory', [VendorController::class, 'AllSubCategory'] );
@@ -69,15 +86,7 @@ Route::middleware( [
         Route::get( 'vendor-all-color', [VendorController::class, 'AllColor'] );
         Route::get( 'vendor-all-size', [VendorController::class, 'AllSize'] );
 
-        //brand create
-        Route::get( 'tenant-brands', [VendorBrandController::class, 'allBrand'] );
-        Route::get( 'tenant-brands/active', [VendorBrandController::class, 'allBrandActive'] );
-        Route::post( 'tenant-brand-store', [VendorBrandController::class, 'create'] );
-        Route::get( 'tenant-brand-edit/{id}', [VendorBrandController::class, 'edit'] );
-        Route::put( 'tenant-brand-update/{id}', [VendorBrandController::class, 'update'] );
-        Route::delete( 'tenant-brand-delete/{id}', [VendorBrandController::class, 'delete'] );
-
-        Route::get( 'vendor/balabrandnce/request', [ProductStatusController::class, 'VendorBalanceRequest'] );
+        Route::get( 'vendor/balance/request', [ProductStatusController::class, 'VendorBalanceRequest'] );
         Route::post( 'vendor/request/sent', [ProductStatusController::class, 'VendorRequestSent'] );
 
         Route::get( 'vendor-product-approval/{id}', [ProductStatusController::class, 'approval'] );
@@ -85,23 +94,57 @@ Route::middleware( [
         Route::get( 'vendor-all/product-accepted/{id}', [ProductStatusController::class, 'Accepted'] );
         Route::get( 'vendor-product-status-count', [ProductStatusController::class, 'statusCount'] );
 
+        //tenant Brand
+        Route::prefix( 'tenant-brand' )->group( function () {
+            Route::get( '/', [VendorBrandController::class, 'index'] );
+            Route::get( 'active', [VendorBrandController::class, 'active'] );
+            Route::post( 'store', [VendorBrandController::class, 'store'] );
+            Route::get( 'edit/{id}', [VendorBrandController::class, 'edit'] );
+            Route::post( 'update/{id}', [VendorBrandController::class, 'update'] );
+            Route::delete( 'delete/{id}', [VendorBrandController::class, 'destroy'] );
+        } );
+
+        // tenant Category
+        Route::prefix( 'tenant-category' )->group( function () {
+            Route::get( '/', [CategoryController::class, 'index'] );
+            Route::get( 'active', [CategoryController::class, 'active'] );
+            Route::post( 'store', [CategoryController::class, 'store'] );
+            Route::get( 'edit/{id}', [CategoryController::class, 'edit'] );
+            Route::put( 'update/{id}', [CategoryController::class, 'update'] );
+            Route::put( 'status/{id}', [CategoryController::class, 'status'] );
+            Route::delete( 'delete/{id}', [CategoryController::class, 'destroy'] );
+        } );
+
+        //tenant Sub Category
+        Route::prefix( 'tenant-sub-category' )->group( function () {
+            Route::get( '/', [SubCategoryController::class, 'index'] );
+            Route::post( 'store', [SubCategoryController::class, 'store'] );
+            Route::get( 'edit/{id}', [SubCategoryController::class, 'edit'] );
+            Route::put( 'update/{id}', [SubCategoryController::class, 'update'] );
+            Route::put( 'status/{id}', [SubCategoryController::class, 'status'] );
+            Route::delete( 'delete/{id}', [SubCategoryController::class, 'destroy'] );
+        } );
+
         //color
-        Route::get( 'color-view', [ColorController::class, 'ColorIndex'] );
-        Route::post( 'color-store', [ColorController::class, 'ColorStore'] );
-        Route::get( 'color-edit/{id}', [ColorController::class, 'ColorEdit'] );
-        Route::post( 'color-update/{id}', [ColorController::class, 'ColorUpdate'] );
-        Route::delete( 'color-delete/{id}', [ColorController::class, 'destroy'] );
+        Route::prefix( 'tenant-color' )->group( function () {
+            Route::get( '/', [ColorController::class, 'index'] );
+            Route::post( 'store', [ColorController::class, 'store'] );
+            Route::get( 'edit/{id}', [ColorController::class, 'edit'] );
+            Route::post( 'update/{id}', [ColorController::class, 'update'] );
+            Route::delete( 'delete/{id}', [ColorController::class, 'destroy'] );
+        } );
 
         //size route
-        Route::get( 'size-view/{status?}', [SizeController::class, 'SizeIndex'] );
-        Route::post( 'size-store', [SizeController::class, 'SizeStore'] );
-        Route::get( 'size-edit/{id}', [SizeController::class, 'SizeEdit'] );
-        Route::put( 'size-update/{id}', [SizeController::class, 'SizeUpdate'] );
-        Route::delete( 'size-delete/{id}', [SizeController::class, 'destroy'] );
+        Route::prefix( 'tenant-variant' )->group( function () {
+            Route::get( '/', [SizeController::class, 'index'] );
+            Route::post( 'store', [SizeController::class, 'store'] );
+            Route::get( 'edit/{id}', [SizeController::class, 'edit'] );
+            Route::post( 'update/{id}', [SizeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SizeController::class, 'destroy'] );
+        } );
 
         //Units Route
-
-        Route::prefix( 'unit' )->group( function () {
+        Route::prefix( 'tenant-unit' )->group( function () {
             Route::get( '/', [UnitController::class, 'index'] );
             Route::post( 'store', [UnitController::class, 'store'] );
             Route::get( 'edit/{id}', [UnitController::class, 'edit'] );
@@ -111,7 +154,7 @@ Route::middleware( [
         } );
 
         //Sub-units Route
-        Route::prefix( 'sub-unit' )->group( function () {
+        Route::prefix( 'tenant-sub-unit' )->group( function () {
             Route::get( '/', [SubUnitController::class, 'index'] );
             Route::post( 'store', [SubUnitController::class, 'store'] );
             Route::get( 'edit/{id}', [SubUnitController::class, 'edit'] );
@@ -121,7 +164,7 @@ Route::middleware( [
         } );
 
         //Ware house Route
-        Route::prefix( 'warehouse' )->group( function () {
+        Route::prefix( 'tenant-warehouse' )->group( function () {
             Route::get( '/', [WarehouseController::class, 'index'] );
             Route::post( 'store', [WarehouseController::class, 'store'] );
             Route::get( 'edit/{id}', [WarehouseController::class, 'edit'] );
@@ -131,7 +174,7 @@ Route::middleware( [
         } );
 
         //Suppler Route
-        Route::prefix( 'supplier' )->group( function () {
+        Route::prefix( 'tenant-supplier' )->group( function () {
             Route::get( '/', [SupplierController::class, 'index'] );
             Route::post( 'store', [SupplierController::class, 'store'] );
             Route::get( 'edit/{id}', [SupplierController::class, 'edit'] );
@@ -141,7 +184,7 @@ Route::middleware( [
         } );
 
         //Customer Route
-        Route::prefix( 'customer' )->group( function () {
+        Route::prefix( 'tenant-customer' )->group( function () {
             Route::get( '/', [CustomerController::class, 'index'] );
             Route::post( 'store', [CustomerController::class, 'store'] );
             Route::get( 'edit/{id}', [CustomerController::class, 'edit'] );
@@ -149,21 +192,6 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
             Route::get( 'status/{id}', [CustomerController::class, 'status'] );
         } );
-
-        Route::get( 'category-all', [CategoryController::class, 'index'] );
-        Route::get( 'category-all/active', [CategoryController::class, 'active'] );
-        Route::post( 'category-store', [CategoryController::class, 'store'] );
-        Route::get( 'category-edit/{id}', [CategoryController::class, 'edit'] );
-        Route::put( 'category-update/{id}', [CategoryController::class, 'update'] );
-        Route::put( 'category-status/{id}', [CategoryController::class, 'status'] );
-        Route::delete( 'category-delete/{id}', [CategoryController::class, 'destroy'] );
-
-        Route::get( 'subcategory-all', [VendorSubCategoryController::class, 'index'] );
-        Route::post( 'subcategory-store', [VendorSubCategoryController::class, 'store'] );
-        Route::get( 'subcategory-edit/{id}', [VendorSubCategoryController::class, 'edit'] );
-        Route::put( 'subcategory-update/{id}', [VendorSubCategoryController::class, 'update'] );
-        Route::put( 'subcategory-status/{id}', [VendorSubCategoryController::class, 'status'] );
-        Route::delete( 'subcategory-delete/{id}', [VendorSubCategoryController::class, 'destroy'] );
 
         // all sub categories
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );

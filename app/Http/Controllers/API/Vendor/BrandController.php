@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class BrandController extends Controller {
     //
 
-    public function create( Request $request ) {
+    public function store( Request $request ) {
         $validator = Validator::make( $request->all(), [
             'name'   => 'required|unique:brands|max:255',
             'status' => 'required|in:' . Status::Active->value . ',' . Status::Pending->value,
@@ -51,7 +51,7 @@ class BrandController extends Controller {
         ] );
     }
 
-    function allBrand() {
+    function index() {
         $brands = Brand::latest()->paginate( 15 );
         return response()->json( [
             'status' => 200,
@@ -59,7 +59,7 @@ class BrandController extends Controller {
         ] );
     }
 
-    function allBrandActive() {
+    function active() {
 
         $brands = Brand::where( 'status', 'active' )
             ->latest()
@@ -71,7 +71,7 @@ class BrandController extends Controller {
         ] );
     }
 
-    function delete( $id ) {
+    function destroy( $id ) {
         $brand = Brand::where( ['user_id' => auth()->user()->id, 'id' => $id] )->firstOrFail();
 
         if ( $brand ) {
@@ -82,6 +82,7 @@ class BrandController extends Controller {
             ] );
         }
     }
+
     function edit( $id ) {
         $brand = Brand::where( ['user_id' => auth()->user()->id, 'id' => $id] )->firstOrFail();
         return response()->json( [
@@ -89,6 +90,7 @@ class BrandController extends Controller {
             'message' => $brand,
         ] );
     }
+
     public function update( Request $request, $id ) {
         $validator = Validator::make( $request->all(), [
             'name'   => 'required|max:255|unique:brands,name,' . $id . ',id',

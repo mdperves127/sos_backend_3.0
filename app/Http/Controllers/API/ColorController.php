@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ColorController extends Controller {
-    public function ColorIndex( Request $request ) {
+    public function index( Request $request ) {
         $status = $request->query( 'status' );
 
         $color = Color::where( 'vendor_id', vendorId() )
@@ -24,7 +24,7 @@ class ColorController extends Controller {
         ] );
     }
 
-    public function ColorStore( Request $request ) {
+    public function store( Request $request ) {
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:colors,name,NULL,id,vendor_id,' . vendorId(),
@@ -54,7 +54,7 @@ class ColorController extends Controller {
         }
     }
 
-    public function ColorEdit( $id ) {
+    public function edit( $id ) {
         $userId = Auth::id();
         $color  = Color::where( 'user_id', $userId )->find( $id );
         if ( $color ) {
@@ -70,7 +70,7 @@ class ColorController extends Controller {
         }
     }
 
-    public function ColorUpdate( Request $request, $id ) {
+    public function update( Request $request, $id ) {
 
         $validator = Validator::make( $request->all(), [
             'name' => 'required|unique:colors,name,' . $id . ',id,vendor_id,' . vendorId(),
