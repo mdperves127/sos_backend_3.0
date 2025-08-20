@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Settings;
 use App\Models\User;
-use App\Notifications\ProductCreateNotification;
 use App\Rules\BrandRule;
 use App\Rules\CategoryRule;
 use App\Rules\SubCategorydRule;
@@ -18,7 +17,6 @@ use App\Service\Vendor\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -156,28 +154,29 @@ class ProductManageController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status' => 400,
-                'errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
 
-            $getmembershipdetails = getmembershipdetails();
+            // $getmembershipdetails = getmembershipdetails();
 
-            $productecreateqty = $getmembershipdetails?->product_qty;
+            // $productecreateqty = $getmembershipdetails?->product_qty;
 
-            $totalcreatedproduct = Product::where( 'vendor_id', vendorId() )->count();
+            // $totalcreatedproduct = Product::where( 'vendor_id', vendorId() )->count();
 
-            if ( Auth::user()->is_employee == null && ismembershipexists() != 1 ) {
-                return responsejson( 'You do not have a membership', 'fail' );
-            }
+            // if ( Auth::user()->is_employee == null && ismembershipexists() != 1 ) {
+            //     return responsejson( 'You do not have a membership', 'fail' );
+            // }
 
-            if ( Auth::user()->is_employee == null && isactivemembership() != 1 ) {
-                return responsejson( 'Membership expired!', 'fail' );
-            }
+            // if ( Auth::user()->is_employee == null && isactivemembership() != 1 ) {
+            //     return responsejson( 'Membership expired!', 'fail' );
+            // }
 
-            if ( $productecreateqty <= $totalcreatedproduct ) {
-                return responsejson( 'You can not create product more than ' . $productecreateqty . '.', 'fail' );
-            }
+            // if ( $productecreateqty <= $totalcreatedproduct ) {
+            //     return responsejson( 'You can not create product more than ' . $productecreateqty . '.', 'fail' );
+            // }
 
             $product                 = new Product();
             $product->category_id    = $request->category_id;
@@ -254,10 +253,10 @@ class ProductManageController extends Controller {
                 }
             }
 
-            if ( $request->is_affiliate == 1 ) {
-                $user = User::where( 'role_as', 1 )->first();
-                Notification::send( $user, new ProductCreateNotification( $user, $product ) );
-            }
+            // if ( $request->is_affiliate == 1 ) {
+            //     $user = User::where( 'role_as', 1 )->first();
+            //     Notification::send( $user, new ProductCreateNotification( $user, $product ) );
+            // }
 
             return response()->json( [
                 'status'  => 200,
@@ -269,7 +268,7 @@ class ProductManageController extends Controller {
     public function VendorProductEdit( $id ) {
         $userId  = vendorId();
         $product = Product::query()
-            ->with( 'vendor:id,name,email,role_as,is_employee,vendor_id', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage', 'productrating.affiliate:id,name,image', 'supplier:id,supplier_name,business_name', 'warehouse:id,name' )
+            ->with( 'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage', 'productrating.affiliate:id,name,image', 'supplier:id,supplier_name,business_name', 'warehouse:id,name' )
             ->with( 'productVariant', function ( $q ) {
                 $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
             } )
@@ -291,50 +290,6 @@ class ProductManageController extends Controller {
     }
 
     public function VendorUpdateProduct( Request $request, $id ) {
-        // $validator = Validator::make($request->all(), [
-
-        //     'name' => 'required|max:255',
-        //     'sku' => 'required|unique:products,sku,' . $id,
-        //     'category_id' => ['required', 'integer', 'min:1', new CategoryRule],
-        //     'subcategory_id' => ['nullable', new SubCategorydRule],
-        //     'qty' => ['required', 'integer', 'min:1'],
-        //     'selling_price' => ['required', 'numeric', 'min:1'],
-        //     'original_price' => ['required', 'numeric', 'min:1'],
-        //     'brand_id' => ['required', 'integer', 'min:1', new BrandRule],
-        //     'meta_keyword' => ['nullable', 'array'],
-        //     'tags' => ['nullable', 'array'],
-        //     'variants' => ['nullable', 'array'],
-        //     'variants.*.qty' => ['required_with:variants', 'integer', 'min:0'],
-        //     'image' => ['nullable', 'mimes:jpeg,png,jpg'],
-        //     'images.*' => ['nullable', 'mimes:jpeg,png,jpg'],
-
-        //     'selling_type' => ['required', Rule::in(['single', 'bulk', 'both'])],
-        //     'advance_payment' => ['numeric', 'min:0', 'nullable'],
-        //     'single_advance_payment_type' => [Rule::in(['flat', 'percent']), Rule::requiredIf(function () {
-        //         return (request('advance_payment') > 0) && (in_array(request('selling_type'), ['single', 'both']));
-        //     })],
-
-        //     'selling_details' => ['required_if:selling_type,bulk,both', 'array'],
-        //     'selling_details.*.min_bulk_qty' => ['required', 'integer', 'min:0'],
-        //     'selling_details.*.min_bulk_price' => ['required', 'numeric', 'min:1'],
-        //     'selling_details.*.bulk_commission' => ['numeric', 'min:0'],
-        //     'selling_details.*.bulk_commission_type' => [Rule::in(['percent', 'flat']), 'required'],
-        //     'selling_details.*.advance_payment' => ['present', 'numeric', 'min:0'],
-        //     'selling_details.*.advance_payment_type' => [Rule::in(['percent', 'flat']), 'required'],
-
-        //     'discount_rate' => ['required_if:selling_type,single,both', 'numeric', 'min:0'],
-        //     'discount_type' => ['in:percent,flat', Rule::requiredIf(function () {
-        //         return request('discount_rate') > 0;
-        //     })],
-        //     'is_connect_bulk_single' => [function ($attribute, $value, $fail) {
-        //         if ((request('is_connect_bulk_single') == 1) && (request('selling_details') == 'single')) {
-        //             $fail('You many not active when selling type single.');
-        //         }
-        //     }]
-
-        // ]);
-
-        // $product = Product::find($id);
 
         $validator = Validator::make( $request->all(), [
             'name'                                   => 'required|max:255',
@@ -416,8 +371,9 @@ class ProductManageController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status' => 400,
-                'errors' => $validator->messages(),
+                'status'  => 400,
+                'errors'  => $validator->messages(),
+                'message' => 'Please check the required fields.',
             ] );
         } else {
             $product = Product::find( $id );

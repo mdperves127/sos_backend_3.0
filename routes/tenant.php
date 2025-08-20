@@ -8,9 +8,6 @@ use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
-
-// Merchant routes
-
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
 use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
@@ -24,9 +21,9 @@ use App\Http\Controllers\API\Vendor\SupplierController;
 use App\Http\Controllers\API\Vendor\UnitController;
 use App\Http\Controllers\API\Vendor\VendorController;
 use App\Http\Controllers\API\Vendor\WarehouseController;
-use App\Http\Controllers\API\Vendor\WoocommerceCredentialController;
-use App\Http\Controllers\API\Vendor\WoocommerceOrderController;
-use App\Http\Controllers\API\Vendor\WoocommerceProductController;
+use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommerceCredentialController;
+use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
+use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
 use App\Http\Controllers\Tenant\TenantAuthController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -77,16 +74,6 @@ Route::middleware( [
             Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
         } );
-
-        // Route::get( 'vendor-product-create', [ProductManageController::class, 'create'] );
-        // Route::get( 'vendor/product/{status?}', [ProductManageController::class, 'VendorProduct'] );
-        // Route::get( 'vendor-product-count/{status?}', [ProductManageController::class, 'VendorProductCount'] );
-        // Route::post( 'vendor-store-product', [ProductManageController::class, 'VendorProductStore'] );
-        // Route::get( 'vendor-edit-product/{id}', [ProductManageController::class, 'VendorProductEdit'] );
-        // Route::get( 'vendor-edit-product-count', [ProductManageController::class, 'vendorProductEditCount'] );
-        // Route::post( 'vendor-update-product/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
-        // Route::delete( 'vendor-delete-product/{id}', [ProductManageController::class, 'VendorDelete'] );
-        // Route::delete( 'vendor-delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
         Route::get( 'vendor-all-subcategory', [VendorController::class, 'AllSubCategory'] );
@@ -243,28 +230,28 @@ Route::middleware( [
             Route::get( 'default/{id}', [CourierCredentialController::class, 'default'] );
         } );
 
-        //Woocommerce-credential Route
-        Route::prefix( 'woocommerce-credential' )->group( function () {
-            Route::get( '/', [WoocommerceCredentialController::class, 'index'] );
-            Route::post( 'store', [WoocommerceCredentialController::class, 'store'] );
-            Route::get( 'edit/{id}', [WoocommerceCredentialController::class, 'edit'] );
-            Route::post( 'update/{id}', [WoocommerceCredentialController::class, 'update'] );
-            Route::delete( 'delete/{id}', [WoocommerceCredentialController::class, 'destroy'] );
-            Route::get( 'status/{id}', [WoocommerceCredentialController::class, 'status'] );
-            Route::get( 'default/{id}', [WoocommerceCredentialController::class, 'default'] );
+        //Woo-commerce-credential Route
+        Route::prefix( 'woo-commerce-credential' )->group( function () {
+            Route::get( '/', [WooCommerceCredentialController::class, 'index'] );
+            Route::post( 'store', [WooCommerceCredentialController::class, 'store'] );
+            Route::get( 'edit/{id}', [WooCommerceCredentialController::class, 'edit'] );
+            Route::post( 'update/{id}', [WooCommerceCredentialController::class, 'update'] );
+            Route::delete( 'delete/{id}', [WooCommerceCredentialController::class, 'destroy'] );
+            Route::get( 'status/{id}', [WooCommerceCredentialController::class, 'status'] );
+            Route::get( 'default/{id}', [WooCommerceCredentialController::class, 'default'] );
         } );
 
-        //Woocommerce-credential Route
-        Route::prefix( 'woocommerce-order' )->group( function () {
-            Route::get( '/', [WoocommerceOrderController::class, 'index'] );
-            Route::post( 'store', [WoocommerceOrderController::class, 'store'] );
-            Route::post( 'delivery/{id}', [WoocommerceOrderController::class, 'wcOrderDelivery'] );
-            Route::get( 'order-status/{id}/{status}', [WoocommerceOrderController::class, 'wcOrderStatusUpdate'] );
+        //Woo-commerce-credential Route
+        Route::prefix( 'woo-commerce-order' )->group( function () {
+            Route::get( '/', [WooCommerceOrderController::class, 'index'] );
+            Route::post( 'store', [WooCommerceOrderController::class, 'store'] );
+            Route::post( 'delivery/{id}', [WooCommerceOrderController::class, 'wcOrderDelivery'] );
+            Route::get( 'order-status/{id}/{status}', [WooCommerceOrderController::class, 'wcOrderStatusUpdate'] );
         } );
 
-        Route::prefix( 'woocommerce-product' )->group( function () {
-            Route::get( '/', [WoocommerceProductController::class, 'index'] );
-            Route::post( 'store', [WoocommerceProductController::class, 'wcProductStore'] );
+        Route::prefix( 'woo-commerce-product' )->group( function () {
+            Route::get( '/', [WooCommerceProductController::class, 'index'] );
+            Route::post( 'store', [WooCommerceProductController::class, 'wcProductStore'] );
         } );
 
         Route::prefix( 'payment-method' )->group( function () {
