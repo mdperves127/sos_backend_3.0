@@ -13,8 +13,10 @@ use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
+use App\Http\Controllers\API\Vendor\SaleOrderResourceController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
 use App\Http\Controllers\API\Vendor\SubUnitController;
 use App\Http\Controllers\API\Vendor\SupplierController;
@@ -188,8 +190,17 @@ Route::middleware( [
             Route::get( 'status/{id}', [CustomerController::class, 'status'] );
         } );
 
+        Route::prefix( 'tenant-order-source' )->group( function () {
+            Route::get( '/', [SaleOrderResourceController::class, 'index'] );
+            Route::post( 'store', [SaleOrderResourceController::class, 'store'] );
+            Route::get( 'edit/{id}', [SaleOrderResourceController::class, 'edit'] );
+            Route::post( 'update/{id}', [SaleOrderResourceController::class, 'update'] );
+            Route::delete( 'delete/{id}', [SaleOrderResourceController::class, 'destroy'] );
+            Route::get( 'status/{id}', [SaleOrderResourceController::class, 'status'] );
+        } );
+
         //Delivery charge Route
-        Route::prefix( 'delivery-charge' )->group( function () {
+        Route::prefix( 'tenant-delivery-charge' )->group( function () {
             Route::get( '/', [DeliveryChargeController::class, 'index'] );
             Route::post( 'store', [DeliveryChargeController::class, 'store'] );
             Route::get( 'edit/{id}', [DeliveryChargeController::class, 'edit'] );
@@ -210,7 +221,7 @@ Route::middleware( [
         } );
 
         //Delivery company Route
-        Route::prefix( 'delivery-and-pickup-address' )->group( function () {
+        Route::prefix( 'tenant-delivery-and-pickup-address' )->group( function () {
             Route::get( '/', [DeliveryAndPickupAddressController::class, 'index'] );
             Route::post( 'store', [DeliveryAndPickupAddressController::class, 'store'] );
             Route::get( 'edit/{id}', [DeliveryAndPickupAddressController::class, 'edit'] );
@@ -220,7 +231,7 @@ Route::middleware( [
         } );
 
         //courier-credential Route
-        Route::prefix( 'courier-credential' )->group( function () {
+        Route::prefix( 'tenant-courier-credential' )->group( function () {
             Route::get( '/', [CourierCredentialController::class, 'index'] );
             Route::post( 'store', [CourierCredentialController::class, 'store'] );
             Route::get( 'edit/{id}', [CourierCredentialController::class, 'edit'] );
@@ -231,7 +242,7 @@ Route::middleware( [
         } );
 
         //Woo-commerce-credential Route
-        Route::prefix( 'woo-commerce-credential' )->group( function () {
+        Route::prefix( 'tenant-woo-commerce-credential' )->group( function () {
             Route::get( '/', [WooCommerceCredentialController::class, 'index'] );
             Route::post( 'store', [WooCommerceCredentialController::class, 'store'] );
             Route::get( 'edit/{id}', [WooCommerceCredentialController::class, 'edit'] );
@@ -254,13 +265,30 @@ Route::middleware( [
             Route::post( 'store', [WooCommerceProductController::class, 'wcProductStore'] );
         } );
 
-        Route::prefix( 'payment-method' )->group( function () {
+        Route::prefix( 'tenant-payment-method' )->group( function () {
             Route::get( '/', [PaymentMethodController::class, 'index'] );
             Route::post( 'store', [PaymentMethodController::class, 'store'] );
             Route::get( 'edit/{id}', [PaymentMethodController::class, 'edit'] );
             Route::post( 'update/{id}', [PaymentMethodController::class, 'update'] );
             Route::delete( 'delete/{id}', [PaymentMethodController::class, 'destroy'] );
             Route::get( 'status/{id}', [PaymentMethodController::class, 'status'] );
+        } );
+
+        //Purchase Route
+        Route::prefix( 'tenant-product-purchase' )->group( function () {
+            Route::get( '/', [ProductPurchaseController::class, 'index'] );
+            Route::get( 'create', [ProductPurchaseController::class, 'create'] );
+            Route::post( 'store', [ProductPurchaseController::class, 'store'] );
+            Route::get( 'show/{id}', [ProductPurchaseController::class, 'show'] );
+            Route::get( 'edit/{id}', [ProductPurchaseController::class, 'edit'] );
+            Route::post( 'update/{id}', [ProductPurchaseController::class, 'update'] );
+            Route::delete( 'delete/{id}', [ProductPurchaseController::class, 'destroy'] );
+            Route::get( 'status/{id}', [ProductPurchaseController::class, 'status'] ); //Product receive
+            //Partial payment
+            Route::post( 'add-payment/{purchase_id}', [ProductPurchaseController::class, 'addPayment'] );
+            Route::get( 'payment-history', [ProductPurchaseController::class, 'paymentHistory'] );
+            //Get product supplier wise
+            Route::get( '/supplier-product/{supplier_id}', [ProductPurchaseController::class, 'supplierProduct'] );
         } );
 
         // all sub categories

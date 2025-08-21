@@ -23,7 +23,7 @@ class DeliveryAndPickupAddressController extends Controller {
             ->when( request( 'type' ) == "delivery", function ( $query ) {
                 return $query->where( 'type', 'delivery' );
             } )
-            ->where( 'vendor_id', vendorId() )->select( 'id', 'address', 'type', 'status' )->paginate( 10 );
+            ->where( 'vendor_id', vendorId() )->select( 'id', 'address', 'type', 'status' )->get();
 
         return response()->json( [
             'status'                   => 200,
@@ -48,8 +48,8 @@ class DeliveryAndPickupAddressController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status' => 400,
+                'errors' => $validator->messages(),
             ] );
         }
 
@@ -107,8 +107,8 @@ class DeliveryAndPickupAddressController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status' => 400,
+                'errors' => $validator->messages(),
             ] );
         } else {
             $data = DeliveryAndPickupAddress::find( $id );

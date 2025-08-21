@@ -16,7 +16,7 @@ class CourierCredentialController extends Controller {
      */
     public function index() {
         $data = CourierCredential::where( 'vendor_id', vendorId() )->get();
-        return $this->response( $data );
+        return $this->responseData( $data );
     }
 
     /**
@@ -40,8 +40,8 @@ class CourierCredentialController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 422,
-                'validation_errors' => $validator->messages(),
+                'status' => 400,
+                'errors' => $validator->messages(),
             ] );
         }
 
@@ -66,7 +66,7 @@ class CourierCredentialController extends Controller {
         $data->status          = $isFirstCourier ? 'active' : $request->status;
         $data->default         = $isFirstCourier ? 'yes' : 'no';
         $data->save();
-        return $this->response( 'Created successfull' );
+        return $this->responseMessage( 'Created Successfully' );
     }
 
     /**
@@ -102,8 +102,8 @@ class CourierCredentialController extends Controller {
 
         if ( $validator->fails() ) {
             return response()->json( [
-                'status'            => 400,
-                'validation_errors' => $validator->messages(),
+                'status' => 400,
+                'errors' => $validator->messages(),
             ] );
         }
 
@@ -135,7 +135,7 @@ class CourierCredentialController extends Controller {
 
         $data->status = $isFirstCourier ? 'active' : $request->status;
         $data->save();
-        return $this->response( 'Update successfull' );
+        return $this->responseMessage( 'Update Successfully' );
     }
 
     /**
@@ -146,7 +146,7 @@ class CourierCredentialController extends Controller {
      */
     public function destroy( $id ) {
         CourierCredential::find( $id )->delete();
-        return $this->response( 'Deleted successfull' );
+        return $this->responseMessage( 'Deleted Successfully' );
     }
 
     /**

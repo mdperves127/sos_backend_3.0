@@ -3,28 +3,25 @@
 namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\SaleOrderResource;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use File;
 
-class SaleOrderResourceController extends Controller
-{
-     /**
+class SaleOrderResourceController extends Controller {
+    /**
      * Store the newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        return response()->json([
-            'status' => 200,
-            'resource' => SaleOrderResource::latest()->where('user_id',Auth::id())->select('id','name','image','status')->get(),
-        ]);
+    public function index() {
+        return response()->json( [
+            'status'   => 200,
+            'resource' => SaleOrderResource::latest()->where( 'user_id', Auth::id() )->select( 'id', 'name', 'image', 'status' )->get(),
+        ] );
     }
 
     /**
@@ -34,8 +31,7 @@ class SaleOrderResourceController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
+    public function store( Request $request ) {
         // $otherUserIds = [vendorId()];
         // $validator = Validator::make($request->all(), [
         //     'name' => 'required',
@@ -48,30 +44,30 @@ class SaleOrderResourceController extends Controller
         //     ],
         // ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:sale_order_resources,name,NULL,id,vendor_id,'.vendorId(),
+        $validator = Validator::make( $request->all(), [
+            'name'  => 'required|unique:sale_order_resources,name,NULL,id,vendor_id,' . vendorId(),
             'image' => 'nullable|image|max:1024',
-        ]);
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
+        if ( $validator->fails() ) {
+            return response()->json( [
                 'status' => 400,
-                'validation_errors' => $validator->messages(),
-            ]);
+                'errors' => $validator->messages(),
+            ] );
         }
 
-        SaleOrderResource::create([
-            'user_id' => Auth::id(),
+        SaleOrderResource::create( [
+            'user_id'   => Auth::id(),
             'vendor_id' => vendorId(),
-            'name' => $request->name,
-            'image' =>  $request->hasFile('image') ? fileUpload($request->file('image'), 'uploads/resource', 100, 100) : null,
-            'status' => $request->status,
-        ]);
+            'name'      => $request->name,
+            'image'     => $request->hasFile( 'image' ) ? fileUpload( $request->file( 'image' ), 'uploads/resource', 100, 100 ) : null,
+            'status'    => $request->status,
+        ] );
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Resource Added Successfully!'
-        ]);
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Resource Added Successfully!',
+        ] );
     }
 
     /**
@@ -80,12 +76,11 @@ class SaleOrderResourceController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        return response()->json([
-            'status' => 200,
-            'message' => SaleOrderResource::find($id),
-        ]);
+    public function edit( $id ) {
+        return response()->json( [
+            'status'  => 200,
+            'message' => SaleOrderResource::find( $id ),
+        ] );
     }
 
     /**
@@ -95,8 +90,7 @@ class SaleOrderResourceController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
+    public function update( Request $request, $id ) {
         // $currentUserId = [vendorId()];
         // $validator = Validator::make($request->all(), [
         //     'name' => [
@@ -108,34 +102,35 @@ class SaleOrderResourceController extends Controller
         //     'image' => 'nullable|image|max:1024',
         // ]);
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:sale_order_resources,name,'.$id.',id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'name' => 'required|unique:sale_order_resources,name,' . $id . ',id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
+        if ( $validator->fails() ) {
+            return response()->json( [
                 'status' => 400,
                 'errors' => $validator->messages(),
-            ]);
-        }else{
-            $saleOrderResource = SaleOrderResource::find($id);
-            if ($request->hasFile('image')) {
-                if ($saleOrderResource->image) {
-                    File::delete($saleOrderResource->image);
+
+            ] );
+        } else {
+            $saleOrderResource = SaleOrderResource::find( $id );
+            if ( $request->hasFile( 'image' ) ) {
+                if ( $saleOrderResource->image ) {
+                    File::delete( $saleOrderResource->image );
                 }
-                $filename = fileUpload($request->file('image'), 'uploads/resource', 100, 100);
+                $filename                 = fileUpload( $request->file( 'image' ), 'uploads/resource', 100, 100 );
                 $saleOrderResource->image = $filename;
             }
 
             // Update other fields
-            $saleOrderResource->name = $request->name;
+            $saleOrderResource->name   = $request->name;
             $saleOrderResource->status = $request->status;
             $saleOrderResource->save();
 
-            return response()->json([
+            return response()->json( [
                 'status'  => 200,
                 'message' => 'Resource Updated Successfully !',
-            ]);
+            ] );
         }
     }
 
@@ -145,17 +140,16 @@ class SaleOrderResourceController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        $data = SaleOrderResource::find($id);
-        if ($data->image) {
-            File::delete($data->image);
+    public function destroy( $id ) {
+        $data = SaleOrderResource::find( $id );
+        if ( $data->image ) {
+            File::delete( $data->image );
         }
         $data->delete();
-        return response()->json([
-            'status' => 200,
+        return response()->json( [
+            'status'  => 200,
             'message' => 'Resource Deleted Successfully !',
-        ]);
+        ] );
     }
 
     /**
@@ -164,22 +158,21 @@ class SaleOrderResourceController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function status($id)
-    {
-        $data = SaleOrderResource::find($id);
-        $data->status = $data->status == 'active' ? 'deactive':'active';
+    public function status( $id ) {
+        $data         = SaleOrderResource::find( $id );
+        $data->status = $data->status == 'active' ? 'deactive' : 'active';
         $data->save();
 
-        if($data->status == 'active'){
-            return response()->json([
-                'status' => 200,
+        if ( $data->status == 'active' ) {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Resource method Active Successfully !',
-            ]);
-        }else{
-            return response()->json([
-                'status' => 200,
+            ] );
+        } else {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Resource method Deactive Successfully !',
-            ]);
+            ] );
         }
 
     }

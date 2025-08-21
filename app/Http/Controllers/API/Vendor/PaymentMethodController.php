@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
-class PaymentMethodController extends Controller
-{
+class PaymentMethodController extends Controller {
     /**
      * Store the newly created resource in storage.
      *
@@ -19,12 +17,11 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        return response()->json([
+    public function index() {
+        return response()->json( [
             'status' => 200,
-            'message' => PaymentMethod::latest()->where('user_id',Auth::id())->select('id','payment_method_name','status','acc_no')->get(),
-        ]);
+            'data'   => PaymentMethod::latest()->where( 'user_id', Auth::id() )->select( 'id', 'payment_method_name', 'status', 'acc_no' )->get(),
+        ] );
     }
 
     /**
@@ -34,8 +31,7 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
+    public function store( Request $request ) {
         // $otherUserIds = [vendorId()];
         // $validator = Validator::make($request->all(), [
         //     'payment_method_name' => 'required',
@@ -47,30 +43,30 @@ class PaymentMethodController extends Controller
         //     ],
         // ]);
 
-        $validator = Validator::make($request->all(), [
-            'payment_method_name' => 'required|unique:payment_methods,payment_method_name,NULL,id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'payment_method_name' => 'required|unique:payment_methods,payment_method_name,NULL,id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
+        if ( $validator->fails() ) {
+            return response()->json( [
                 'status' => 400,
-                'validation_errors' => $validator->messages(),
-            ]);
+                'errors' => $validator->messages(),
+            ] );
         }
 
-        PaymentMethod::create([
-            'user_id' => Auth::id(),
+        PaymentMethod::create( [
+            'user_id'             => Auth::id(),
             'payment_method_name' => $request->payment_method_name,
-            'payment_method_slug' => Str::slug($request->payment_method_name),
-            'acc_no' => $request->acc_no,
-            'status' => $request->status,
-            'vendor_id' => vendorId(),
-        ]);
+            'payment_method_slug' => Str::slug( $request->payment_method_name ),
+            'acc_no'              => $request->acc_no,
+            'status'              => $request->status,
+            'vendor_id'           => vendorId(),
+        ] );
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Payment method Added Successfully!'
-        ]);
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Payment method Added Successfully!',
+        ] );
     }
 
     /**
@@ -79,12 +75,11 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        return response()->json([
-            'status' => 200,
-            'message' => PaymentMethod::find($id),
-        ]);
+    public function edit( $id ) {
+        return response()->json( [
+            'status'  => 200,
+            'message' => PaymentMethod::find( $id ),
+        ] );
     }
 
     /**
@@ -94,8 +89,7 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
+    public function update( Request $request, $id ) {
         // $currentUserId = vendorId();
         // $rules = [
         //     'payment_method_name' => [
@@ -113,48 +107,47 @@ class PaymentMethodController extends Controller
 
         // $validator = Validator::make($request->all(), $rules);
 
-        $validator = Validator::make($request->all(), [
-            'payment_method_name' => 'required|unique:payment_methods,payment_method_name,'.$id.',id,vendor_id,'.vendorId(),
-        ]);
+        $validator = Validator::make( $request->all(), [
+            'payment_method_name' => 'required|unique:payment_methods,payment_method_name,' . $id . ',id,vendor_id,' . vendorId(),
+        ] );
 
-        if ($validator->fails()) {
-            return response()->json([
+        if ( $validator->fails() ) {
+            return response()->json( [
                 'status' => 400,
-                'validation_errors' => $validator->messages(),
-            ]);
+                'errors' => $validator->messages(),
+            ] );
         } else {
-            $paymentMethod = PaymentMethod::find($id);
+            $paymentMethod = PaymentMethod::find( $id );
 
-            if ($paymentMethod) {
+            if ( $paymentMethod ) {
                 // Update only the fields that have changed
                 $updateData = [
                     'payment_method_name' => $request->payment_method_name,
-                    'payment_method_slug' => Str::slug($request->payment_method_name),
+                    'payment_method_slug' => Str::slug( $request->payment_method_name ),
                 ];
 
-                if ($request->has('acc_no')) {
+                if ( $request->has( 'acc_no' ) ) {
                     $updateData['acc_no'] = $request->acc_no;
                 }
 
-                if ($request->has('status')) {
+                if ( $request->has( 'status' ) ) {
                     $updateData['status'] = $request->status;
                 }
 
-                $paymentMethod->update($updateData);
+                $paymentMethod->update( $updateData );
 
-                return response()->json([
+                return response()->json( [
                     'status'  => 200,
                     'message' => 'Payment method Updated Successfully!',
-                ]);
+                ] );
             } else {
-                return response()->json([
-                    'status' => 404,
+                return response()->json( [
+                    'status'  => 404,
                     'message' => 'No Payment method ID Found',
-                ]);
+                ] );
             }
         }
     }
-
 
     /**
      * Remove the resource from storage.
@@ -162,13 +155,12 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        PaymentMethod::find($id)->delete();
-        return response()->json([
-            'status' => 200,
+    public function destroy( $id ) {
+        PaymentMethod::find( $id )->delete();
+        return response()->json( [
+            'status'  => 200,
             'message' => 'Payment method Deleted Successfully !',
-        ]);
+        ] );
     }
 
     /**
@@ -177,22 +169,21 @@ class PaymentMethodController extends Controller
      * @param  \{{ namespacedParentModel }}  ${{ parentModelVariable }}
      * @return \Illuminate\Http\Response
      */
-    public function status($id)
-    {
-        $data = PaymentMethod::find($id);
-        $data->status = $data->status == 'active' ? 'deactive':'active';
+    public function status( $id ) {
+        $data         = PaymentMethod::find( $id );
+        $data->status = $data->status == 'active' ? 'deactive' : 'active';
         $data->save();
 
-        if($data->status == 'active'){
-            return response()->json([
-                'status' => 200,
+        if ( $data->status == 'active' ) {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Payment method Active Successfully !',
-            ]);
-        }else{
-            return response()->json([
-                'status' => 200,
+            ] );
+        } else {
+            return response()->json( [
+                'status'  => 200,
                 'message' => 'Payment method Deactive Successfully !',
-            ]);
+            ] );
         }
 
     }

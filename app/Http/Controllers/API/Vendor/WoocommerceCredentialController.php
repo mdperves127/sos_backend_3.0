@@ -15,7 +15,11 @@ class WoocommerceCredentialController extends Controller {
     public function index() {
 
         $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->get();
-        return $this->response( $data );
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => $data,
+        ] );
     }
 
     /**

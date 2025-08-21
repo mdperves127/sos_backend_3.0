@@ -19,6 +19,25 @@ class Controller extends BaseController {
             ]
         );
     }
+    function responseData( $message ) {
+        return response()->json(
+            [
+                'status'  => 200,
+                'data'    => $message,
+                'message' => 'success',
+            ]
+        );
+    }
+
+    function responseMessage( $message ) {
+        return response()->json(
+            [
+                'status'  => 200,
+                'data'    => 'success',
+                'message' => $message,
+            ]
+        );
+    }
 
     function permissionmessage() {
         return response()->json(
