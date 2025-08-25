@@ -4,14 +4,17 @@ namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barcode;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Customer;
 use App\Models\CustomerPayment;
 use App\Models\ExchangeSaleProduct;
+use App\Models\PaymentMethod;
 use App\Models\PosSales;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\Settings;
+use App\Models\SaleOrderResource;
 use App\Models\VendorInfo;
-use App\Services\Vendor\VariantApiService;
 use App\Service\Vendor\ProductPosSaleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,23 +46,29 @@ class ProductPosSaleController extends Controller {
                     $query->where( 'sku', $search )
                         ->orWhere( 'name', 'like', '%' . $search . '%' );
                 } );
-            } )
-        // ->with('productVariant',function($q){
-        //     $q->select('id','product_id','unit_id','size_id','color_id','qty');
-        // })
-            ->select( 'id', 'category_id', 'brand_id', 'image', 'is_feature', 'name', 'slug', 'sku', DB::raw( 'CASE
+            } )->select( 'id', 'category_id', 'brand_id', 'image', 'is_feature', 'name', 'slug', 'sku', DB::raw( 'CASE
         WHEN discount_price IS NULL THEN selling_price
         ELSE discount_price
         END AS selling_price' ) )
             ->orderBy( 'is_feature', 'DESC' )
             ->get();
-        $video = Settings::first()->value( 'pos_video_tutorial' );
+        // $video          = Settings::first()->value( 'pos_video_tutorial' );
+        $variantApiData = [
+            'category'        => Category::whereStatus( 'active' )->with( 'subcategory', function ( $q ) {
+                $q->select( 'id', 'name', 'category_id' );
+            } )
+                ->select( 'id', 'name' )->get(),
+            'brand'           => Brand::whereStatus( 'active' )->select( 'id', 'name' )->get(),
+            'customer'        => Customer::where( 'vendor_id', vendorId() )->where( 'status', 'active' )->select( 'id', 'customer_name', 'phone', 'email', 'address' )->get(),
+            'resource'        => SaleOrderResource::latest()->where( 'vendor_id', vendorId() )->where( 'status', 'active' )->select( 'id', 'name' )->get(),
+            'payment_methods' => PaymentMethod::where( 'vendor_id', vendorId() )->where( 'status', 'active' )->select( 'id', 'payment_method_name' )->get(),
+        ];
         return response()->json( [
             'status'   => 200,
-            'data'     => VariantApiService::variationApi(),
+            'data'     => $variantApiData,
             'barcode'  => barcode( 10 ),
             'products' => $product,
-            'video'    => $video,
+            'video'    => 'test.mp4',
         ] );
     }
 
@@ -119,7 +128,7 @@ class ProductPosSaleController extends Controller {
         $rules = [
             'customer_id'   => 'required|exists:customers,id',
             'barcode'       => 'required', // Add your validation rules for barcode
-            'source_id' => 'required|exists:sale_order_resources,id',
+            'source_id'     => 'required|exists:sale_order_resources,id',
             'payment_id'    => 'required|exists:payment_methods,id',
             'paid_amount'   => 'required|numeric|min:0',
             'total_qty'     => 'required|numeric|min:1',

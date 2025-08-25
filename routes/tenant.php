@@ -13,6 +13,7 @@ use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\ProductPosSaleController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\API\Vendor\SaleOrderResourceController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
 use App\Http\Controllers\API\Vendor\SubUnitController;
 use App\Http\Controllers\API\Vendor\SupplierController;
+use App\Http\Controllers\API\Vendor\SupplierProductReturnController;
 use App\Http\Controllers\API\Vendor\UnitController;
 use App\Http\Controllers\API\Vendor\VendorController;
 use App\Http\Controllers\API\Vendor\WarehouseController;
@@ -289,6 +291,29 @@ Route::middleware( [
             Route::get( 'payment-history', [ProductPurchaseController::class, 'paymentHistory'] );
             //Get product supplier wise
             Route::get( '/supplier-product/{supplier_id}', [ProductPurchaseController::class, 'supplierProduct'] );
+        } );
+
+        //Purchase Return Route
+        Route::prefix( 'tenant-product-purchase/return' )->group( function () {
+            Route::get( 'list', [SupplierProductReturnController::class, 'returnList'] );
+            Route::get( 'list/{id}', [SupplierProductReturnController::class, 'returnListDetails'] );
+            Route::post( '/{id}', [SupplierProductReturnController::class, 'returnToSupplier'] );
+        } );
+
+        //Pos Sales Route
+        Route::prefix( 'tenant-product-pos-sales' )->group( function () {
+            Route::get( '/manage', [ProductPosSaleController::class, 'index'] );
+            Route::get( 'create', [ProductPosSaleController::class, 'create'] );
+            Route::post( 'store', [ProductPosSaleController::class, 'store'] );
+            Route::get( 'show/{id}', [ProductPosSaleController::class, 'show'] );
+            Route::get( 'edit/{id}', [ProductPosSaleController::class, 'edit'] );
+            Route::post( 'exchange/{id}', [ProductPosSaleController::class, 'exchange'] );
+            Route::delete( 'delete/{id}', [ProductPosSaleController::class, 'destroy'] );
+            Route::get( 'product/select/{barcode}', [ProductPosSaleController::class, 'productSelect'] ); //Product select
+            Route::get( 'scan', [ProductPosSaleController::class, 'scan'] ); //Product select
+            //Partial payment
+            Route::post( 'add/payment/{sales_id}', [ProductPosSaleController::class, 'addPayment'] );
+            Route::get( 'customer/payment/history', [ProductPosSaleController::class, 'paymentHistory'] );
         } );
 
         // all sub categories
