@@ -4,18 +4,21 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
-use Illuminate\Http\Request;
 
-class CouponListController extends Controller
-{
-    function index()
-    {
+class CouponListController extends Controller {
+    function index() {
 
         $coupon = Coupon::query()
-            ->where('user_id', userid())
-            ->withCount('couponused')
-            ->withSum('couponused','total_commission')
+            ->where( 'user_id', userid() )
             ->get();
-        return $this->response($coupon);
+
+        //[ SHOVON - 03-09-25] couponused er error day ti off kora ase
+
+        //  $coupon = Coupon::query()
+        // ->where('user_id', userid())
+        // ->withCount('couponused')
+        // ->withSum('couponused','total_commission')
+        // ->get();
+        return $this->response( $coupon );
     }
 }

@@ -25,7 +25,7 @@ class DamageController extends Controller {
                 $q->select( 'id', 'damage_id', 'unit_id', 'size_id', 'color_id', 'damage_qty', 'rate', 'sub_total', 'remark' )->with( 'color', 'size', 'unit' );
             } )
             ->with( 'user', function ( $q ) {
-                $q->select( 'id', 'name', 'email', \DB::raw( 'UPPER(uniqid) AS uniqid' ) );
+                $q->select( 'id', 'name', 'email' );
             } )
             ->with( 'product:id,name' )
             ->where( 'vendor_id', vendorId() )

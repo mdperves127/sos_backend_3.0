@@ -31,13 +31,13 @@ use App\Http\Controllers\API\Vendor\ServiceCategoryController;
 use App\Http\Controllers\API\Vendor\VendorServiceController;
 use App\Http\Controllers\BuySubscription;
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\CpanelController;
 use App\Http\Controllers\DollerRateController;
 use App\Http\Controllers\RenewController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use App\Http\Controllers\TenantRegistrationController;
-use App\Http\Controllers\CpanelController;
 
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
@@ -51,11 +51,11 @@ Route::post( 'logout', [AuthController::class, 'logout'] );
 Route::post( 'forgot/password', [ForgotPasswordController::class, 'sendResetLinkEmail'] );
 Route::post( 'password/reset', [ResetPasswordController::class, 'reset'] );
 
-Route::middleware([
+Route::middleware( [
     InitializeTenancyByDomain::class,
     'auth:sanctum',
-    'userOnline'
-])->group( function () {
+    'userOnline',
+] )->group( function () {
 
     Route::resource( 'main-services', VendorServiceController::class );
     Route::get( 'main-service-count', [VendorServiceController::class, 'serviceCount'] );
@@ -67,8 +67,8 @@ Route::middleware([
 
     Route::get( 'service/orders/view/{id}', [VendorServiceController::class, 'ordersview'] );
 
-    Route::resource( 'service/delivery-to-customer', OrderDeliveryController::class );
     Route::get( 'service-category-subcategory', [VendorServiceController::class, 'categorysubcategory'] );
+    Route::resource( 'service/delivery-to-customer', OrderDeliveryController::class );
 
     Route::resource( 'supportbox', SupportBoxController::class );
     Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
@@ -193,15 +193,13 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
     return isactivemembership();
 } );
 
-
-
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
-Route::post('/tenants/register', [TenantRegistrationController::class, 'register']);
+Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
 // cPanel API Routes (environment-based subdomain and database creation)
-Route::prefix('cpanel')->group(function () {
-    Route::post('/subdomain', [CpanelController::class, 'createSubdomain']);
-    Route::post('/database', [CpanelController::class, 'createDatabase']);
-    Route::post('/infrastructure', [CpanelController::class, 'createTenantInfrastructure']);
-    Route::get('/environment-info', [CpanelController::class, 'getEnvironmentInfo']);
-});
+Route::prefix( 'cpanel' )->group( function () {
+    Route::post( '/subdomain', [CpanelController::class, 'createSubdomain'] );
+    Route::post( '/database', [CpanelController::class, 'createDatabase'] );
+    Route::post( '/infrastructure', [CpanelController::class, 'createTenantInfrastructure'] );
+    Route::get( '/environment-info', [CpanelController::class, 'getEnvironmentInfo'] );
+} );

@@ -2,21 +2,28 @@
 
 declare ( strict_types = 1 );
 
+use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\ColorController;
+use App\Http\Controllers\API\CouponListController;
+use App\Http\Controllers\API\CouponRequestController;
+use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\DamageController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
 use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
+use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ProfileController;
+use App\Http\Controllers\API\Vendor\ReportController;
 use App\Http\Controllers\API\Vendor\SaleOrderResourceController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
 use App\Http\Controllers\API\Vendor\SubUnitController;
@@ -302,7 +309,7 @@ Route::middleware( [
 
         //Pos Sales Route
         Route::prefix( 'tenant-product-pos-sales' )->group( function () {
-            Route::get( '/manage', [ProductPosSaleController::class, 'index'] );
+            Route::get( '/orders', [ProductPosSaleController::class, 'index'] );
             Route::get( 'create', [ProductPosSaleController::class, 'create'] );
             Route::post( 'store', [ProductPosSaleController::class, 'store'] );
             Route::get( 'show/{id}', [ProductPosSaleController::class, 'show'] );
@@ -312,8 +319,59 @@ Route::middleware( [
             Route::get( 'product/select/{barcode}', [ProductPosSaleController::class, 'productSelect'] ); //Product select
             Route::get( 'scan', [ProductPosSaleController::class, 'scan'] ); //Product select
             //Partial payment
-            Route::post( 'add/payment/{sales_id}', [ProductPosSaleController::class, 'addPayment'] );
-            Route::get( 'customer/payment/history', [ProductPosSaleController::class, 'paymentHistory'] );
+            Route::post( 'add-payment/{sales_id}', [ProductPosSaleController::class, 'addPayment'] );
+            Route::get( 'payment-history', [ProductPosSaleController::class, 'paymentHistory'] );
+        } );
+
+        //Pos Sales Return Route
+        Route::prefix( 'tenant-product-pos-sales-return' )->group( function () {
+            Route::get( '/', [PosSaleReturnController::class, 'returnList'] );
+            Route::get( 'details/{id}', [PosSaleReturnController::class, 'returnListDetails'] );
+            Route::post( '/{id}', [PosSaleReturnController::class, 'returnPosSaleProduct'] );
+        } );
+        // Product damage
+        Route::prefix( 'tenant-product-damage' )->group( function () {
+            Route::get( '/', [DamageController::class, 'index'] );
+            Route::post( '/store', [DamageController::class, 'store'] );
+        } );
+
+        //Pos Sales wastage Return Route
+        Route::prefix( 'tenant-product-wastage' )->group( function () {
+            Route::post( '/store', [PosSaleReturnController::class, 'returnPosSaleWastageProduct'] );
+            Route::get( 'get-invoice', [PosSaleReturnController::class, 'getInvoice'] );
+            Route::get( 'show/{id}', [PosSaleReturnController::class, 'returnListDetails'] );
+            Route::get( '/', [PosSaleReturnController::class, 'wastageReturnList'] );
+        } );
+
+        Route::prefix( 'tenant-coupons' )->group( function () {
+            Route::get( 'list', [CouponListController::class, 'index'] );
+            Route::post( 'request-send', [CouponRequestController::class, 'store'] );
+            Route::get( 'request-list', [CouponRequestController::class, 'getcouponrequest'] );
+        } );
+
+        //Report Route
+        Route::prefix( 'tenant-report' )->group( function () {
+            Route::get( 'stock', [ReportController::class, 'stockReport'] );
+            Route::get( 'stock-shortage', [ReportController::class, 'stockShortageReport'] );
+            Route::get( 'sales', [ReportController::class, 'salesReport'] );
+            Route::get( 'due-sales', [ReportController::class, 'dueSalesReport'] );
+            Route::get( 'purchase', [ReportController::class, 'purchaseReport'] );
+            Route::get( 'warehouse', [ReportController::class, 'warehouseReport'] );
+            Route::get( 'top-repeat-customer', [ReportController::class, 'topRepeatCustomer'] );
+            Route::get( 'sales-report-variant', [ReportController::class, 'salesReportVariant'] );
+            Route::get( 'sales-report-product-id', [ReportController::class, 'getProductIdsFromSalesDetails'] );
+            Route::get( 'sales-report-daily-product-wise', [ReportController::class, 'salesReportDailyProductWise'] );
+
+        } );
+
+        Route::prefix( 'tenant-advertise' )->group( function () {
+            Route::get( '/', [AdvertiseController::class, 'index'] );
+            Route::get( 'count', [AdvertiseController::class, 'advertiseCount'] );
+            Route::get( '/{id}', [AdvertiseController::class, 'show'] );
+        } );
+
+        Route::prefix( 'tenant-service' )->group( function () {
+            Route::apiResource( '/', ServiceOrderController::class );
         } );
 
         // all sub categories

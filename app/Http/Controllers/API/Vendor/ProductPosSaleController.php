@@ -158,27 +158,27 @@ class ProductPosSaleController extends Controller {
             ] );
         }
 
-        $getmembershipdetails = getmembershipdetails();
+        // $getmembershipdetails = getmembershipdetails();
 
-        $productecreateqty = $getmembershipdetails?->pos_sale_qty;
+        // $productecreateqty = $getmembershipdetails?->pos_sale_qty;
 
-        if ( $productecreateqty == null ) {
-            return responsejson( 'You do not have permission for pos sale', 'fail' );
-        }
+        // if ( $productecreateqty == null ) {
+        //     return responsejson( 'You do not have permission for pos sale', 'fail' );
+        // }
 
         $totalcreatedproduct = PosSales::where( 'vendor_id', vendorId() )->count();
 
-        if ( Auth::user()->is_employee == null && ismembershipexists() != 1 ) {
-            return responsejson( 'You do not have a membership', 'fail' );
-        }
+        // if ( Auth::user()->is_employee == null && ismembershipexists() != 1 ) {
+        //     return responsejson( 'You do not have a membership', 'fail' );
+        // }
 
-        if ( Auth::user()->is_employee == null && isactivemembership() != 1 ) {
-            return responsejson( 'Membership expired!', 'fail' );
-        }
+        // if ( Auth::user()->is_employee == null && isactivemembership() != 1 ) {
+        //     return responsejson( 'Membership expired!', 'fail' );
+        // }
 
-        if ( $productecreateqty <= $totalcreatedproduct ) {
-            return responsejson( 'You can not create invoice more than ' . $productecreateqty . '.', 'fail' );
-        }
+        // if ( $productecreateqty <= $totalcreatedproduct ) {
+        //     return responsejson( 'You can not create invoice more than ' . $productecreateqty . '.', 'fail' );
+        // }
 
         $sale                 = new PosSales();
         $sale->customer_id    = $request->customer_id;
@@ -221,9 +221,9 @@ class ProductPosSaleController extends Controller {
 
     public function show( $id ) {
         return response()->json( [
-            'status'        => 200,
-            'logo'          => VendorInfo::where( 'vendor_id', vendorId() )->first(),
-            'purchase_show' => ProductPosSaleService::show( $id ),
+            'status' => 200,
+            'logo'   => VendorInfo::where( 'vendor_id', vendorId() )->first(),
+            'data'   => ProductPosSaleService::show( $id ),
         ] );
     }
 

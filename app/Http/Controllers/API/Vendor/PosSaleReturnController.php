@@ -141,7 +141,7 @@ class PosSaleReturnController extends Controller {
         }
 
         return response()->json( [
-            'status' => 404,
+            'status' => 200,
             'sales'  => $sale,
         ] );
 
