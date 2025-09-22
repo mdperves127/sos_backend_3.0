@@ -62,19 +62,20 @@ class ProductService {
     // }
 
     public static function countThis() {
-        $userId = Auth::id();
+        $vendorId = vendorId();
 
-        $count = Product::where( 'vendor_id', vendorId() )
-            ->when( request( 'status' ) == 'pending', function ( $q ) {
-                return $q->where( 'status', 'pending' );
-            } )
-            ->when( request( 'status' ) == 'rejected', function ( $q ) {
-                return $q->where( 'status', 'rejected' );
-            } )
-            ->when( request( 'status' ) == 'active', function ( $q ) {
-                return $q->where( 'status', 'active' );
-            } )->count();
-        return $count;
+        $counts = Product::select( 'status', DB::raw( 'COUNT(*) as total' ) )
+            ->where( 'vendor_id', $vendorId )
+            ->whereIn( 'status', ['active', 'pending', 'rejected'] )
+            ->groupBy( 'status' )
+            ->pluck( 'total', 'status' );
+
+        return [
+            'active'   => $counts['active'] ?? 0,
+            'pending'  => $counts['pending'] ?? 0,
+            'rejected' => $counts['rejected'] ?? 0,
+            'total'    => array_sum( $counts->toArray() ),
+        ];
     }
 
     public static function productVariants( $product_ids, $variant, $purchaseStatus ) {

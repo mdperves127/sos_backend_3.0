@@ -43,6 +43,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
 Route::post( 'resend/verify/code', [AuthController::class, 'resendVerifyCode'] );
+Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
 //login
 Route::post( 'login', [AuthController::class, 'login'] );
@@ -50,7 +51,6 @@ Route::post( 'logout', [AuthController::class, 'logout'] );
 
 Route::post( 'forgot/password', [ForgotPasswordController::class, 'sendResetLinkEmail'] );
 Route::post( 'password/reset', [ResetPasswordController::class, 'reset'] );
-
 Route::middleware( [
     InitializeTenancyByDomain::class,
     'auth:sanctum',
@@ -99,7 +99,6 @@ Route::middleware( [
     Route::post( 'renew-subscription', [RenewController::class, 'store'] );
 
     Route::post( 'recharge', [RechargeController::class, 'recharge'] );
-    Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
     Route::post( 'service-rating', [ServiceRatingController::class, 'store'] );
     Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );

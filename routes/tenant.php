@@ -16,6 +16,7 @@ use App\Http\Controllers\API\Vendor\DamageController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
 use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
+use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
@@ -75,15 +76,30 @@ Route::middleware( [
 
         //vendor product
         Route::prefix( 'tenant-product' )->group( function () {
-            Route::get( '/', [ProductManageController::class, 'VendorProduct'] );
+            Route::get( '/count-data', [ProductManageController::class, 'VendorProductCount'] );
             Route::get( 'create', [ProductManageController::class, 'create'] );
-            Route::get( 'count', [ProductManageController::class, 'VendorProductCount'] );
             Route::post( 'store', [ProductManageController::class, 'VendorProductStore'] );
             Route::get( 'edit-count', [ProductManageController::class, 'vendorProductEditCount'] );
             Route::get( 'edit/{id}', [ProductManageController::class, 'VendorProductEdit'] );
             Route::post( 'update/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
             Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
+            Route::get( '/{status?}', [ProductManageController::class, 'VendorProduct'] );
+
+        } );
+
+        Route::prefix( 'tenant-product-order' )->group( function () {
+            Route::get( 'all-orders', [VendorOrderController::class, 'AllOrders'] );
+            Route::get( 'pending-orders', [VendorOrderController::class, 'pendingOrders'] );
+            Route::get( 'progress-orders', [VendorOrderController::class, 'ProgressOrders'] );
+            Route::get( 'product-processing', [VendorOrderController::class, 'ProductProcessing'] );
+            Route::get( 'order-ready', [VendorOrderController::class, 'OrderReady'] );
+            Route::get( 'received-orders', [VendorOrderController::class, 'receivedOrders'] );
+            Route::get( 'delivered-orders', [VendorOrderController::class, 'DeliveredOrders'] );
+            Route::get( 'cancel-orders', [VendorOrderController::class, 'CanceldOrders'] );
+            Route::get( 'hold-orders', [VendorOrderController::class, 'HoldOrders'] );
+            Route::get( 'order-count', [VendorOrderController::class, 'orderCount'] );
+            Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
         } );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
