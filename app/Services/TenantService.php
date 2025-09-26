@@ -48,7 +48,10 @@ class TenantService
             }
             // For other environments, keep the domain as is
 
-            // Create the tenant with password in data field
+            // Store password in session for later use
+            session(['tenant_password_' . $tenantId => $data['password']]);
+
+            // Create the tenant without storing password in database
             $tenant = Tenant::create([
                 'id' => $tenantId,
                 'company_name' => $data['company_name'],
@@ -56,17 +59,19 @@ class TenantService
                 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null,
                 'owner_name' => $data['owner_name'],
-                'data' => json_encode([
-                    'password' => $data['password']
-                ])
+                'data' => null // Don't store password in database
             ]);
 
-            \Log::info('TenantService: Tenant created', [
+            \Log::info('TenantService: Tenant created with password in session', [
+                'tenant_id' => $tenant->id,
+                'password_stored_in_session' => true
+            ]);
+
+            \Log::info('TenantService: Tenant created successfully', [
                 'tenant_id' => $tenant->id,
                 'owner_name' => $tenant->owner_name,
                 'email' => $tenant->email,
-                'has_password' => !empty($data['password']),
-                'data_field' => $tenant->data
+                'password_stored_in_session' => true
             ]);
 
             // Create the domain

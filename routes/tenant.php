@@ -40,6 +40,10 @@ use App\Http\Controllers\Tenant\TenantAuthController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Http\Controllers\Tenant\RechargeController;
+use App\Http\Controllers\Tenant\WithdrawController;
+use App\Http\Controllers\Tenant\BankController;
+use App\Http\Controllers\Tenant\SupportBoxController;
 
 Route::middleware( [
     'api',
@@ -388,10 +392,33 @@ Route::middleware( [
 
         Route::prefix( 'tenant-service' )->group( function () {
             Route::apiResource( '/', ServiceOrderController::class );
-        } );
+        });
 
         // all sub categories
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );
+
+
+        Route::post( 'recharge', [RechargeController::class, 'recharge'] );
+
+
+        Route::get( 'all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
+        Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
+
+
+        Route::get( 'all/banks', [BankController::class, 'index'] );
+
+        //supportbox route
+        Route::resource( 'supportbox', SupportBoxController::class );
+        Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
+        Route::get( 'support-count', [SupportBoxController::class, 'supportCount'] );
+        Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
+        Route::get( 'ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
+
+
+
+        Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
+        Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
+        Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
 
     } );
 } );

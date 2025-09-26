@@ -24,9 +24,14 @@ class CreateTenantUser implements ShouldQueue
 
     public function handle(): void
     {
-        // Get password from tenant's data field
-        $tenantData = is_string($this->tenant->data) ? json_decode($this->tenant->data, true) : $this->tenant->data;
-        $password = $tenantData['password'] ?? 'password123';
+        // Get password from session
+        $password = session('tenant_password_' . $this->tenant->id, 'password123');
+
+        // Debug logging to see password source
+        \Log::info('CreateTenantUser: Getting password from session', [
+            'tenant_id' => $this->tenant->id,
+            'password_from_session' => $password !== 'password123'
+        ]);
 
         // Get user data from tenant fields
         $userData = [
@@ -56,6 +61,13 @@ class CreateTenantUser implements ShouldQueue
                     'email' => $user->email
                 ]);
             });
+
+            // Clean up password from session after user creation
+            session()->forget('tenant_password_' . $this->tenant->id);
+
+            \Log::info('CreateTenantUser: Password removed from session', [
+                'tenant_id' => $this->tenant->id
+            ]);
         } catch (\Exception $e) {
             \Log::error('CreateTenantUser: Failed to create user', [
                 'tenant_id' => $this->tenant->id,

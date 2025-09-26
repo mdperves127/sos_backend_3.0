@@ -56,6 +56,7 @@ use App\Http\Controllers\API\Vendor\ServiceSubCategoryController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
+Route::get( 'admin/profile', [ProfileController::class, 'AdminProfile'] );
 //admin route
 Route::middleware( ['auth:sanctum', 'isAPIAdmin', 'userOnline'] )->group( function () {
 
@@ -63,7 +64,6 @@ Route::middleware( ['auth:sanctum', 'isAPIAdmin', 'userOnline'] )->group( functi
         return response()->json( ['message' => 'You are in', 'status' => 200], 200 );
     } );
 
-    Route::get( 'admin/profile', [ProfileController::class, 'AdminProfile'] );
     Route::post( 'admin/update/profile', [ProfileController::class, 'AdminUpdateProfile'] );
 
     Route::get( 'admin/request/product/pending', [ProductStatusController::class, 'AdminRequestPending'] );
@@ -281,7 +281,7 @@ Route::middleware( ['auth:sanctum', 'isAPIAdmin', 'userOnline'] )->group( functi
         Route::get( 'email-subscriber-list', [UserEmailSubscribeControllerList::class, 'index'] );
 
         Route::get( 'vendor-products-edit-request', [VendorProductController::class, 'index'] );
-        
+
         Route::get( 'vendor-products-edit-request-view/{id}', [VendorProductController::class, 'productview'] );
         Route::post( 'vendor-products-edit-request-status/{id}', [VendorProductController::class, 'productstatus'] );
         Route::post( 'product-update/{productid}', [AdminProductController::class, 'productupdate'] );

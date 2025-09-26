@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Http\Controllers\Tenant;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+class BankController extends Controller
+{
+
+    function index() {
+        return response()->json( [
+            'status'   => 200,
+            'message'  => Bank::latest()->get(),
+            'settings' => Settings::select( 'minimum_withdraw', 'withdraw_charge', 'withdraw_charge_status' )->first(),
+        ] );
+    }
+}

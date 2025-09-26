@@ -17,6 +17,17 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $guarded = [];
 
+    protected $fillable = [
+        'id',
+        'company_name',
+        'email',
+        'owner_name',
+        'phone',
+        'address',
+        'data',
+        'type'
+    ];
+
     /**
      * Get the domains for this tenant
      */

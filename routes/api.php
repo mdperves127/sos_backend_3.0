@@ -195,6 +195,7 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
+
 // cPanel API Routes (environment-based subdomain and database creation)
 Route::prefix( 'cpanel' )->group( function () {
     Route::post( '/subdomain', [CpanelController::class, 'createSubdomain'] );
