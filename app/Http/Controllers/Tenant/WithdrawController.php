@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Settings;
 use App\Models\Withdraw;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
-class WithdrawController extends Controller
-{
+class WithdrawController extends Controller {
 
     public function index() {
         $search   = request( 'search' );
-        $withdraw = Withdraw::on('mysql')->query()
+        $withdraw = Withdraw::on( 'mysql' )->query()
             ->where( 'user_id', tenant()->id )
             ->latest()
             ->when( request( 'status' ) == 'success', function ( $q ) {
@@ -31,9 +32,6 @@ class WithdrawController extends Controller
             'message' => $withdraw,
         ] );
     }
-
-
-
 
     function withdraw( Request $request ) {
         $validator = Validator::make( $request->all(), [
@@ -66,7 +64,7 @@ class WithdrawController extends Controller
 
         if ( tenant()->user()->balance >= $request->amount + $charge ) {
 
-            Withdraw::on('mysql')->create( [
+            Withdraw::on( 'mysql' )->create( [
                 'user_id'      => auth()->id(),
                 'amount'       => $request->amount,
                 'bank_name'    => $request->bank_name,

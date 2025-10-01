@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Bank;
+use App\Models\Settings;
 
-class BankController extends Controller
-{
+class BankController extends Controller {
 
     function index() {
         return response()->json( [
