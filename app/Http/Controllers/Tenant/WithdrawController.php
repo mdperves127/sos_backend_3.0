@@ -12,7 +12,7 @@ class WithdrawController extends Controller {
 
     public function index() {
         $search   = request( 'search' );
-        $withdraw = Withdraw::on( 'mysql' )->query()
+        $withdraw = Withdraw::on( 'mysql' )
             ->where( 'user_id', tenant()->id )
             ->latest()
             ->when( request( 'status' ) == 'success', function ( $q ) {
@@ -47,7 +47,7 @@ class WithdrawController extends Controller {
             ] );
         }
 
-        $setting = Settings::first();
+        $setting = Settings::on('mysql')->first();
 
         if ( $setting->minimum_withdraw > $request->amount ) {
             return response()->json( [
@@ -62,7 +62,7 @@ class WithdrawController extends Controller {
             $charge = 0;
         }
 
-        if ( tenant()->user()->balance >= $request->amount + $charge ) {
+        if ( tenant()->balance >= $request->amount + $charge ) {
 
             Withdraw::on( 'mysql' )->create( [
                 'user_id'      => auth()->id(),
@@ -71,21 +71,22 @@ class WithdrawController extends Controller {
                 'ac_or_number' => $request->ac_or_number,
                 'holder_name'  => $request->holder_name,
                 'branch_name'  => $request->branch_name,
-                'role'         => tenant()->user()->role_as,
+                'role'         => auth()->user()->role_as,
                 'uniqid'       => uniqid(),
                 'charge'       => $charge,
             ] );
 
-            $afi          = tenant()->user();
-            $afi->balance = $setting->withdraw_charge_status == "on" ? ( $afi->balance - $request->amount ) - $charge : ( $afi->balance - $request->amount );
-            $afi->save();
+
+            $tenant          = tenant();
+            // dd($tenant);
+            $tenant->balance = $setting->withdraw_charge_status == "on" ? ( $tenant->balance - $request->amount ) - $charge : ( $tenant->balance - $request->amount );
+            $tenant->save();
 
             return response()->json( [
                 'status'  => 200,
                 'message' => 'Withdraw successfully!',
             ] );
         } else {
-
             return response()->json( [
                 'status'  => 200,
                 'message' => 'Balance not available!',

@@ -43,7 +43,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
 Route::post( 'resend/verify/code', [AuthController::class, 'resendVerifyCode'] );
-Route::get( 'transition-history', [HistoryController::class, 'index'] );
+// Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
 //login
 Route::post( 'login', [AuthController::class, 'login'] );
@@ -81,7 +81,7 @@ Route::middleware( [
     Route::get( 'service-buy-count', [ServiceOrderController::class, 'serviceOrderCount'] );
     Route::post( 'service/order/status', [ServiceOrderController::class, 'status'] );
     // Route::apiResource('coupon-list', CouponUsedController::class);
-    Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
+    // Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
     Route::get( 'ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
 
     Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );

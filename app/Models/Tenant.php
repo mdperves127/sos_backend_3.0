@@ -25,7 +25,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'phone',
         'address',
         'data',
-        'type'
+        'type',
+        'balance'
     ];
 
     /**

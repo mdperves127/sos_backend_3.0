@@ -27,8 +27,8 @@ class StoreSupportBoxRequest extends FormRequest
     {
         return [
             'description'=>'required',
-            'support_box_category_id'=>'required|exists:support_box_categories,id',
-            'support_problem_topic_id'=>'required|exists:support_problem_topics,id',
+            'support_box_category_id'=>'required|exists:mysql.support_box_categories,id',
+            'support_problem_topic_id'=>'required|exists:mysql.support_problem_topics,id',
             'subject'=>'required',
             'file' => 'nullable|mimes:jpg,png,pdf|max:20000',
         ];

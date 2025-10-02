@@ -44,6 +44,8 @@ use App\Http\Controllers\Tenant\RechargeController;
 use App\Http\Controllers\Tenant\WithdrawController;
 use App\Http\Controllers\Tenant\BankController;
 use App\Http\Controllers\Tenant\SupportBoxController;
+use App\Http\Controllers\API\HistoryController;
+use App\Http\Controllers\Tenant\SupportBoxCategoryController;
 
 Route::middleware( [
     'api',
@@ -399,7 +401,7 @@ Route::middleware( [
 
 
         Route::post( 'recharge', [RechargeController::class, 'recharge'] );
-
+        Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
         Route::get( 'all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
         Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
@@ -414,7 +416,8 @@ Route::middleware( [
         Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
         Route::get( 'ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
 
-
+        Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
+        Route::get( 'ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
 
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
