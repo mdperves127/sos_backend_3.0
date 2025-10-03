@@ -6,6 +6,7 @@ use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\API\CouponRequestController;
+use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
@@ -36,16 +37,15 @@ use App\Http\Controllers\API\Vendor\WarehouseController;
 use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommerceCredentialController;
 use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
+use App\Http\Controllers\Tenant\BankController;
+use App\Http\Controllers\Tenant\RechargeController;
+use App\Http\Controllers\Tenant\SupportBoxCategoryController;
+use App\Http\Controllers\Tenant\SupportBoxController;
 use App\Http\Controllers\Tenant\TenantAuthController;
+use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use App\Http\Controllers\Tenant\RechargeController;
-use App\Http\Controllers\Tenant\WithdrawController;
-use App\Http\Controllers\Tenant\BankController;
-use App\Http\Controllers\Tenant\SupportBoxController;
-use App\Http\Controllers\API\HistoryController;
-use App\Http\Controllers\Tenant\SupportBoxCategoryController;
 
 Route::middleware( [
     'api',
@@ -394,30 +394,31 @@ Route::middleware( [
 
         Route::prefix( 'tenant-service' )->group( function () {
             Route::apiResource( '/', ServiceOrderController::class );
-        });
+        } );
 
         // all sub categories
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );
 
-
         Route::post( 'recharge', [RechargeController::class, 'recharge'] );
         Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
-        Route::get( 'all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
+        Route::get( 'tenant-withdraw-history/{status?}', [WithdrawController::class, 'index'] );
         Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
-
 
         Route::get( 'all/banks', [BankController::class, 'index'] );
 
         //supportbox route
-        Route::resource( 'supportbox', SupportBoxController::class );
-        Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
-        Route::get( 'support-count', [SupportBoxController::class, 'supportCount'] );
-        Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
-        Route::get( 'ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
 
-        Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
-        Route::get( 'ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
+        Route::prefix( 'tenant-support' )->group( function () {
+            Route::resource( '/', SupportBoxController::class );
+            Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
+            Route::get( 'count', [SupportBoxController::class, 'supportCount'] );
+            Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
+            Route::get( 'ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
+
+            Route::get( 'category', [SupportBoxCategoryController::class, 'index'] );
+            Route::get( 'sub-category/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
+        } );
 
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
