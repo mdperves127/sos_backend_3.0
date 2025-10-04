@@ -36,7 +36,7 @@ class SupportBoxCategoryController extends Controller
     {
         $validatedData = $request->validated();
 
-        SupportBoxCategory::create($validatedData);
+        SupportBoxCategory::on('mysql')->create($validatedData);
         return $this->response('Created Successfully');
     }
 
@@ -49,7 +49,7 @@ class SupportBoxCategoryController extends Controller
     public function show($id)
     {
         // return $this->response($supportBoxCategory);
-        $data =  SupportBoxCategory::find($id);
+        $data =  SupportBoxCategory::on('mysql')->find($id);
         if (!$data) {
             return responsejson('Not found', 'fail');
         }
@@ -66,7 +66,7 @@ class SupportBoxCategoryController extends Controller
     public function update(UpdateSupportBoxCategoryRequest $request, $id)
     {
         $validatedData = $request->validated();
-        $supportBoxCategory = SupportBoxCategory::find($id);
+        $supportBoxCategory = SupportBoxCategory::on('mysql')->find($id);
         if(!$supportBoxCategory){
             return responsejson('Not found!','fail');
         }
@@ -84,7 +84,7 @@ class SupportBoxCategoryController extends Controller
      */
     public function destroy($id)
     {
-        $category =  SupportBoxCategory::find($id);
+        $category =  SupportBoxCategory::on('mysql')->find($id);
         if(!$category){
             return responsejson('Not found','fail');
         }
@@ -93,7 +93,7 @@ class SupportBoxCategoryController extends Controller
     }
     function ticketcategorytoproblem($id){
 
-        $data = SupportBoxCategory::find($id)->load('problems');
+        $data = SupportBoxCategory::on('mysql')->find($id)->load('problems');
         return $this->response($data);
     }
 }

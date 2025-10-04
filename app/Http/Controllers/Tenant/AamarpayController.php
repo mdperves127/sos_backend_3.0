@@ -1,20 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Tenant;
 
-use App\Models\AdminAdvertise;
-use App\Models\PaymentStore;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\ServiceOrder;
-use App\Models\VendorService;
-use App\Models\CustomerRequiremnt;
-use App\Models\DollerRate;
-use App\Models\ServicePackage;
-use App\Models\Subscription;
 use App\Models\User;
+use App\Models\PaymentStore;
+use App\Models\AdminAdvertise;
+use App\Models\Subscription;
 use App\Services\PaymentHistoryService;
-use App\Services\ProductCheckoutService;
 use App\Services\SubscriptionRenewService;
 use App\Services\SubscriptionService;
+use App\Services\ProductCheckoutService;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\RechargeNotification;
 use App\Notifications\SubscriptionNotification;
@@ -22,7 +20,6 @@ use App\Models\Tenant;
 
 class AamarpayController extends Controller
 {
-
     function servicesuccess()
     {
         $response = request()->all();
@@ -144,21 +141,40 @@ class AamarpayController extends Controller
     function rechargesuccess()
     {
         $response = request()->all();
+
+        // Debug all available data
+        // Debug Aamarpay response to find transaction ID
+        $aamarpayResponse = [
+            'all_request_data' => request()->all(),
+            'post_data' => request()->post(),
+            'query_data' => request()->query(),
+            'json_data' => request()->json()->all(),
+            'possible_txn_fields' => [
+                'mer_txnid' => $response['mer_txnid'] ?? 'NOT_FOUND',
+                'txnid' => $response['txnid'] ?? 'NOT_FOUND',
+                'transaction_id' => $response['transaction_id'] ?? 'NOT_FOUND',
+                'merchant_txnid' => $response['merchant_txnid'] ?? 'NOT_FOUND',
+                'payment_id' => $response['payment_id'] ?? 'NOT_FOUND',
+                'order_id' => $response['order_id'] ?? 'NOT_FOUND',
+                'opt_a' => $response['opt_a'] ?? 'NOT_FOUND',
+                'opt_b' => $response['opt_b'] ?? 'NOT_FOUND',
+                'opt_c' => $response['opt_c'] ?? 'NOT_FOUND',
+            ]
+        ];
+
+        dd($aamarpayResponse);
+
+
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
         PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['tenant_id']);
 
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
 
-        // $tenant = Tenant::find(tenant()->id);
-        dd(tenant());
+        $tenant = tenant();
         if ($tenant) {
             $tenant->increment('balance', $data['info']['amount']);
         }
 
-        // $user = Tenant::find(tenant()->id);
-        // dd($user);
-        // $path = paymentredirect($user->role_as);
-        // $url = config('app.redirecturl') . $path . '?message=Recharge successful';
         $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
 
         if ($tenant) {

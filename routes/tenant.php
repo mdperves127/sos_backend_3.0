@@ -37,6 +37,7 @@ use App\Http\Controllers\API\Vendor\WarehouseController;
 use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommerceCredentialController;
 use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
+use App\Http\Controllers\Tenant\AamarpayController;
 use App\Http\Controllers\Tenant\BankController;
 use App\Http\Controllers\Tenant\RechargeController;
 use App\Http\Controllers\Tenant\SupportBoxCategoryController;
@@ -68,10 +69,10 @@ Route::middleware( [
     Route::middleware( 'tenantAuth' )->group( function () {
 
         Route::prefix( 'tenant-auth' )->group( function () {
-            Route::post( '/logout', [TenantAuthController::class, 'logout'] );
-            Route::put( '/profile', [TenantAuthController::class, 'updateProfile'] );
-            Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo'] );
-            Route::put( '/change-password', [TenantAuthController::class, 'changePassword'] );
+            Route::post( '/logout', [TenantAuthController::class, 'logout']);
+            Route::put( '/profile', [TenantAuthController::class, 'updateProfile']);
+            Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo']);
+            Route::put( '/change-password', [TenantAuthController::class, 'changePassword']);
         } );
 
         //Vendor Routes
@@ -423,6 +424,25 @@ Route::middleware( [
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
         Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
+
+
+
+
+
+
+        Route::prefix( 'aaparpay' )->group( function () {
+
+            Route::post( 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
+            Route::post( 'service-success', [AamarpayController::class, 'servicesuccess'] );
+            Route::post( 'renew-success', [AamarpayController::class, 'renewsuccess'] );
+            Route::post( 'recharge-success', [AamarpayController::class, 'rechargesuccess'] );
+
+            Route::post( 'subscription-success', [AamarpayController::class, 'subscriptionsuccess'] );
+            Route::post( 'product-checkout-success', [AamarpayController::class, 'productcheckoutsuccess'] );
+
+            Route::post( 'fail', [AamarpayController::class, 'fail'] );
+            Route::get( 'cancel', [AamarpayController::class, 'cancel'] );
+        } );
 
     } );
 } );

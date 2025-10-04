@@ -39,4 +39,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     // The database() method is provided by the HasDatabase trait
     // Custom database configuration can be done in the database() method if needed
+
+    function paymenthistories() {
+        return $this->hasMany( PaymentHistory::class, 'tenant_id' );
+    }
 }
