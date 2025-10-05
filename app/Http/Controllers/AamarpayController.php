@@ -143,6 +143,7 @@ class AamarpayController extends Controller
 
     function rechargesuccess()
     {
+        
         $response = request()->all();
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
         PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['tenant_id']);
