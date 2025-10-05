@@ -435,7 +435,7 @@ Route::middleware( [
             Route::post( 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
             Route::post( 'service-success', [AamarpayController::class, 'servicesuccess'] );
             Route::post( 'renew-success', [AamarpayController::class, 'renewsuccess'] );
-            Route::post( 'recharge-success', [AamarpayController::class, 'rechargesuccess'] );
+            Route::post( 'recharge-success-for-us', [AamarpayController::class, 'rechargesuccess'] );
 
             Route::post( 'subscription-success', [AamarpayController::class, 'subscriptionsuccess'] );
             Route::post( 'product-checkout-success', [AamarpayController::class, 'productcheckoutsuccess'] );
