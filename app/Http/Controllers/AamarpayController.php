@@ -150,7 +150,7 @@ class AamarpayController extends Controller
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
 
         // $tenant = Tenant::find(tenant()->id);
-        dd(tenant());
+        // dd(tenant());
         if ($tenant) {
             $tenant->increment('balance', $data['info']['amount']);
         }
@@ -159,12 +159,18 @@ class AamarpayController extends Controller
         // dd($user);
         // $path = paymentredirect($user->role_as);
         // $url = config('app.redirecturl') . $path . '?message=Recharge successful';
-        $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
+        // $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
 
         if ($tenant) {
             Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         }
-        return redirect($url);
+        return redirect(
+            response()->json([
+                'success' => true,
+                'message' => 'Recharge successful',
+                'data' => $data
+            ])
+        );
     }
 
 
