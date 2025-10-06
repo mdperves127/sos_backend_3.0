@@ -140,7 +140,6 @@ class AamarpayController extends Controller
 
     function rechargesuccess()
     {
-        dd('okay success');
         $response = request()->all();
 
         // Debug all available data

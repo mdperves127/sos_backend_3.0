@@ -2,7 +2,7 @@
 
 declare ( strict_types = 1 );
 
-use App\Http\Controllers\AdvertiseController;
+use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\API\CouponRequestController;
@@ -47,6 +47,8 @@ use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
+use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
 
 Route::middleware( [
     'api',
@@ -428,7 +430,18 @@ Route::middleware( [
 
 
 
+        Route::resource( 'main-services', TenantServiceController::class );
+        Route::get( 'service-buy-count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
 
+
+        Route::get( 'service/orders', [TenantServiceController::class, 'serviceorders'] );
+
+        Route::post( 'service/status', [TenantServiceController::class, 'statusChange'] );
+
+        Route::get( 'service/orders/view/{id}', [TenantServiceController::class, 'ordersview'] );
+        Route::get( 'service/myorders/{id}', [TenantServiceController::class, 'singlemyorder'] );
+
+        Route::get( 'service-category-subcategory', [TenantServiceController::class, 'categorysubcategory'] );
 
         Route::prefix( 'aaparpay' )->group( function () {
 

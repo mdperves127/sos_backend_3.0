@@ -95,13 +95,13 @@ class ServiceOrderController extends Controller
         return  CustomerService::service($validateData);
     }
     public function serviceOrderCount() {
-        $all = ServiceOrder::where('user_id', auth()->user()->id)->count();
-        $success = ServiceOrder::where('user_id', auth()->user()->id)->where('status', 'success')->count();
-        $delivered = ServiceOrder::where('user_id', auth()->user()->id)->where('status', 'delivered')->count();
-        $revision = ServiceOrder::where('user_id', auth()->user()->id)->where('status', 'revision')->count();
-        $pending = ServiceOrder::where('user_id', auth()->user()->id)->where(['status'=> 'pending','is_paid'=>1])->count();
-        $canceled = ServiceOrder::where('user_id', auth()->user()->id)->where('status', 'canceled')->count();
-        $progress = ServiceOrder::where('user_id', auth()->user()->id)->where('status', 'progress')->count();
+        $all = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->count();
+        $success = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'success')->count();
+        $delivered = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'delivered')->count();
+        $revision = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'revision')->count();
+        $pending = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where(['status'=> 'pending','is_paid'=>1])->count();
+        $canceled = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'canceled')->count();
+        $progress = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'progress')->count();
 
         return response()->json([
             'all' => $all,

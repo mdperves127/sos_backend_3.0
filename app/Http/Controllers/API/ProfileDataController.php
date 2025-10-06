@@ -16,7 +16,7 @@ class ProfileDataController extends Controller
 
     public function profile()
     {
-        $user = User::find(auth()->id())
+        $user = User::on('mysql')->find(auth()->id())
         ->load(['usersubscription.subscription:id,card_heading']);
 
         return response()->json([

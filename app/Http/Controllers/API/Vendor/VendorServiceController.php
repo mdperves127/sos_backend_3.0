@@ -186,7 +186,7 @@ class VendorServiceController extends Controller {
     }
 
     function categorysubcategory() {
-        $data = ServiceCategory::query()->with( 'servicesubCategories' )->get();
+        $data = ServiceCategory::on('mysql')->query()->with( 'servicesubCategories' )->get();
         return $this->response( $data );
     }
 

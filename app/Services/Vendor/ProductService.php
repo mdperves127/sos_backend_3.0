@@ -16,7 +16,7 @@ class ProductService
     static function store($data)
     {
         $vendorService = new VendorService;
-        $vendorService->user_id = userid();
+        $vendorService->user_id = userid() ;
         $vendorService->service_category_id =  $data['service_category_id'];
         $vendorService->service_sub_category_id =  $data['service_sub_category_id'];
         $vendorService->service_sub_category_id =  $data['service_sub_category_id'];
@@ -27,6 +27,7 @@ class ProductService
         $vendorService->status =   Status::Pending->value;
         $vendorService->commission =   $data['commission'];
         $vendorService->commission_type =   $data['commission_type'];
+        $vendorService->tenant_id = tenant()->id ?? null;
         if (request()->hasFile('image')) {
             $vendorService->image =  fileUpload(request()->file('image'), 'uploads/vendor');
         }
@@ -58,7 +59,7 @@ class ProductService
 
     static function update($data, $id)
     {
-        $vendorService = VendorService::where(['user_id' => userid(), 'id' => $id])->with('servicepackages')->first();
+        $vendorService = VendorService::on('mysql')->where(['tenant_id' => tenant()->id, 'id' => $id])->with('servicepackages')->first();
         if (!$vendorService) {
             return responsejson('Not found', 'fail');
         }
@@ -74,7 +75,7 @@ class ProductService
         $vendorService->status =   Status::Pending->value;
         $vendorService->commission =   $data['commission'];
         $vendorService->commission_type =   $data['commission_type'];
-
+        $vendorService->tenant_id = tenant()->id ?? null;
         if (request()->hasFile('image')) {
             if (File::exists($vendorService->image)) {
                 File::delete($vendorService->image);
