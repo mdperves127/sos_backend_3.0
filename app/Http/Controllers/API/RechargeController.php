@@ -13,7 +13,7 @@ use App\Services\PaymentHistoryService;
 class RechargeController extends Controller {
 
     function recharge( RechargeRequest $request ) {
-
+        dd($request->all());
         $setting = Settings::first();
 
         $validateData            = $request->validated();
@@ -31,7 +31,7 @@ class RechargeController extends Controller {
 
         $trxid      = uniqid();
         $type       = "recharge";
-        $successurl = url( 'api/aaparpay/recharge-success' );
+        $successurl = url( 'api/aaparpay/recharge-success-for-us' );
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
         PaymentStore::create( [
@@ -43,6 +43,8 @@ class RechargeController extends Controller {
         ] );
         // return 2;
 
+
+        dd($successurl);
         return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl );
     }
 

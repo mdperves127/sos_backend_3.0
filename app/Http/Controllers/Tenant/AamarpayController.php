@@ -162,7 +162,6 @@ class AamarpayController extends Controller
             ]
         ];
 
-        dd($aamarpayResponse);
 
 
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
@@ -177,9 +176,9 @@ class AamarpayController extends Controller
 
         $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
 
-        if ($tenant) {
-            Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
-        }
+        // if ($tenant) {
+        //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
+        // }
         return redirect($url);
     }
 
