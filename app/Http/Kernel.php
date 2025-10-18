@@ -74,5 +74,10 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'employee' => \App\Http\Middleware\VendorEmployeeMiddleware::class,
         'tenantAuth' => \App\Http\Middleware\TenantMiddleware::class,
+        'preventCentralAccess' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+        'initializeTenancy' => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+        'preventTenancyOnAdmin' => \App\Http\Middleware\PreventTenancyOnAdminRoutes::class,
+        'adminDatabase' => \App\Http\Middleware\ForceAdminBaseDatabase::class,
+        'adminAuth' => \App\Http\Middleware\SimpleSanctumMiddleware::class,
     ];
 }

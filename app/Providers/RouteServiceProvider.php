@@ -46,7 +46,9 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/vendor.php'));
-            Route::middleware('api')
+
+            // Tenant routes - load with api prefix and middleware
+            Route::middleware(['throttle:api', \Illuminate\Routing\Middleware\SubstituteBindings::class])
                 ->prefix('api')
                 ->group(base_path('routes/tenant.php'));
 

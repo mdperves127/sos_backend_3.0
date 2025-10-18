@@ -175,7 +175,6 @@ class AamarpayController extends Controller
         }
 
         $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
-
         // if ($tenant) {
         //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         // }

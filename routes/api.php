@@ -1,5 +1,13 @@
 <?php
 
+// Test route to verify API routes are working
+Route::get('/test-api', function () {
+    return response()->json([
+        'message' => 'API routes are working!',
+        'timestamp' => now()
+    ]);
+});
+
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;

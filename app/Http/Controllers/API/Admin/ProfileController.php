@@ -14,10 +14,21 @@ class ProfileController extends Controller
 {
     public function AdminProfile()
     {
-        $user=User::find(Auth::user()->id);
+        // Use request()->user() to avoid Auth facade memory issues
+        $user = request()->user();
+
+        // If we only have a minimal user object with ID, fetch the full user
+        if (isset($user->id) && !isset($user->name)) {
+            $fullUser = User::find($user->id);
+            return response()->json([
+                'status' => 200,
+                'user' => $fullUser
+            ]);
+        }
+
         return response()->json([
-            'status'=>200,
-            'user'=>$user
+            'status' => 200,
+            'user' => $user
         ]);
     }
 
@@ -47,12 +58,12 @@ class ProfileController extends Controller
         }
 
 
-        $data = User::find(Auth::user()->id);
+        $data = User::find(request()->user()->id);
         $data->name = $request->name;
         $data->number = $request->number;
         $data->number2 = $request->number2;
         if ($request->old_password) {
-            if (!Hash::check($request->old_password, auth()->user()->password)) {
+            if (!Hash::check($request->old_password, request()->user()->password)) {
                 return response()->json([
                     'status' => 400,
                     'message' => 'Old Password Not Match!'

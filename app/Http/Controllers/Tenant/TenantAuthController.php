@@ -41,7 +41,7 @@ class TenantAuthController extends Controller {
                 ], 422 );
             }
 
-            $user = User::create( [
+            $user = User::on('tenant')->create( [
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make( $request->password ),
@@ -103,7 +103,8 @@ class TenantAuthController extends Controller {
             }
 
             // Check if user exists and credentials are correct
-            $user = User::where( 'email', $request->email )->first();
+            // Force using tenant connection
+            $user = User::on('tenant')->where( 'email', $request->email )->first();
 
             if ( !$user || !Hash::check( $request->password, $user->password ) ) {
                 return response()->json( [
@@ -200,7 +201,7 @@ class TenantAuthController extends Controller {
     }
 
     public function profileInfo( Request $request ): JsonResponse {
-        $user = User::find( Auth::user()->id );
+        $user = User::on('tenant')->find( Auth::user()->id );
         return response()->json( [
             'success'     => true,
             'message'     => 'Profile info fetched successfully',
@@ -319,5 +320,13 @@ class TenantAuthController extends Controller {
                 'error'   => $e->getMessage(),
             ], 500 );
         }
+    }
+    public function profileData( Request $request ): JsonResponse {
+        $tenant_data = tenant()->id;
+        return response()->json( [
+            'success'     => true,
+            'message'     => 'Profile data fetched successfully',
+            'data'        => $tenant_data,
+        ] );
     }
 }

@@ -101,10 +101,13 @@ class TenancyServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        // Enable events for proper tenant lifecycle management
         $this->bootEvents();
-        $this->mapRoutes();
+        // Routes are already loaded in RouteServiceProvider
+        // $this->mapRoutes();
 
-        $this->makeTenancyMiddlewareHighestPriority();
+        // Disable global tenancy middleware to prevent conflicts with admin routes
+        // $this->makeTenancyMiddlewareHighestPriority();
     }
 
     protected function bootEvents()
@@ -122,29 +125,15 @@ class TenancyServiceProvider extends ServiceProvider
 
     protected function mapRoutes()
     {
-        $this->app->booted(function () {
-            if (file_exists(base_path('routes/tenant.php'))) {
-                Route::namespace(static::$controllerNamespace)
-                    ->group(base_path('routes/tenant.php'));
-            }
-        });
+        // Routes are already loaded in RouteServiceProvider
+        // This prevents double loading which causes conflicts
+        return;
     }
 
     protected function makeTenancyMiddlewareHighestPriority()
     {
-        $tenancyMiddleware = [
-            // Even higher priority than the initialization middleware
-            Middleware\PreventAccessFromCentralDomains::class,
-
-            Middleware\InitializeTenancyByDomain::class,
-            Middleware\InitializeTenancyBySubdomain::class,
-            Middleware\InitializeTenancyByDomainOrSubdomain::class,
-            Middleware\InitializeTenancyByPath::class,
-            Middleware\InitializeTenancyByRequestData::class,
-        ];
-
-        foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
-        }
+        // Disabled: Tenancy middleware should only be applied to tenant routes
+        // This prevents conflicts with admin routes and server crashes
+        return;
     }
 }

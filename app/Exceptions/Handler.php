@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
@@ -75,6 +76,27 @@ class Handler extends ExceptionHandler
         }
 
         return parent::render($request, $exception);
+    }
+
+    /**
+     * Convert an authentication exception into a response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        // For API routes, return JSON response instead of redirecting
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+                'status' => 401
+            ], 401);
+        }
+
+        // For web routes, redirect to login
+        return redirect()->guest('/login');
     }
 
     /**

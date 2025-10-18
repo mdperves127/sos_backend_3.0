@@ -19,8 +19,7 @@ class WithdrawController extends Controller {
         }
 
         $search   = request( 'search' );
-        $withdraw = Withdraw::query()
-            ->latest()
+        $withdraw = Withdraw::on('mysql')->latest()
             ->when( request( 'status' ) == 'pending', function ( $q ) {
                 return $q->where( 'status', 'pending' );
             } )

@@ -5,11 +5,11 @@ use App\Http\Controllers\Admin\UserRegisterChartController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
 use App\Http\Controllers\API\Admin\AssignController;
 use App\Http\Controllers\API\Admin\BankController;
-use App\Http\Controllers\API\Admin\CampaignCategoryController;
+use App\Http\Controllers\Api\Admin\CampaignCategoryController;
 use App\Http\Controllers\API\Admin\CompanionController;
 use App\Http\Controllers\API\Admin\ContactController;
 use App\Http\Controllers\API\Admin\ContactPageController;
-use App\Http\Controllers\API\Admin\ConversionLocationController;
+use App\Http\Controllers\Api\Admin\ConversionLocationController;
 use App\Http\Controllers\API\Admin\CouponController;
 use App\Http\Controllers\API\Admin\DashboardController;
 use App\Http\Controllers\API\Admin\DollerPriceController;
@@ -26,10 +26,10 @@ use App\Http\Controllers\API\Admin\OrganizationTwoController;
 use App\Http\Controllers\API\Admin\OurServiceController;
 use App\Http\Controllers\API\Admin\PartnerController;
 use App\Http\Controllers\API\Admin\PaymentHistoryController;
-use App\Http\Controllers\API\Admin\PerformanceGoalController;
-use App\Http\Controllers\API\Admin\PlacementController;
+use App\Http\Controllers\Api\Admin\PerformanceGoalController;
+use App\Http\Controllers\Api\Admin\PlacementController;
 use App\Http\Controllers\API\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\API\Admin\ProductStatusController;
+use App\Http\Controllers\Api\Admin\ProductStatusController;
 use App\Http\Controllers\API\Admin\ProfileController;
 use App\Http\Controllers\API\Admin\ServiceOrderShowController;
 use App\Http\Controllers\API\Admin\SettingsController;
@@ -56,15 +56,19 @@ use App\Http\Controllers\API\Vendor\ServiceSubCategoryController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
-Route::get( 'admin/profile', [ProfileController::class, 'AdminProfile'] );
-//admin route
-Route::middleware( ['auth:sanctum', 'isAPIAdmin', 'userOnline'] )->group( function () {
 
-    Route::get( '/checkingAuthenticated', function () {
-        return response()->json( ['message' => 'You are in', 'status' => 200], 200 );
-    } );
+//admin route with full middleware - USING WORKING MIDDLEWARE
+Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( function () {
+
+    // Simple test route
+    Route::get( 'admin/test-simple', function () {
+        return response()->json(['message' => 'Simple admin test working!']);
+    });
+
+    Route::get( 'admin/profile', [ProfileController::class, 'AdminProfile'] );
 
     Route::post( 'admin/update/profile', [ProfileController::class, 'AdminUpdateProfile'] );
+
 
     Route::get( 'admin/request/product/pending', [ProductStatusController::class, 'AdminRequestPending'] );
     Route::get( 'admin/request/product/active', [ProductStatusController::class, 'AdminRequestActive'] );
@@ -346,5 +350,4 @@ Route::middleware( ['auth:sanctum', 'isAPIAdmin', 'userOnline'] )->group( functi
         Route::get( 'vendor/payment/history/{vendor_id}', [AdminNoteController::class, 'vendorPaymentHistory'] );
 
     } );
-
-} );
+}); // End of admin middleware group

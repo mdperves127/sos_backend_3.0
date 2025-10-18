@@ -17,20 +17,12 @@ class User extends Authenticatable {
     Notifiable,
     HasRoles;
 
-        /**
-     * Get the database connection for the model.
-     *
-     * @return \Illuminate\Database\Connection
-     */
-    public function getConnectionName()
-    {
-        // If we're in a tenant context, use the tenant connection
-        if (function_exists('tenant') && tenant()) {
-            return 'tenant';
-        }
-
-        return parent::getConnectionName();
-    }
+    // Temporarily remove custom connection logic to isolate memory issues
+    // public function getConnectionName()
+    // {
+    //     // Temporarily always use central database to isolate issues
+    //     return env('DB_CONNECTION', 'mysql');
+    // }
 
     /**
      * Get the access tokens that belong to model.
@@ -39,7 +31,7 @@ class User extends Authenticatable {
      */
     public function tokens()
     {
-        return $this->morphMany(\App\Models\PersonalAccessToken::class, 'tokenable');
+        return $this->morphMany(PersonalAccessToken::class, 'tokenable');
     }
     /**
      * The attributes that are mass assignable.

@@ -50,19 +50,11 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
 use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
 
+
 Route::middleware( [
-    'api',
     InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
+    // PreventAccessFromCentralDomains::class, // Temporarily disabled for localhost testing
 ] )->group( function () {
-    Route::get( '/', function () {
-        return response()->json( [
-            'message'   => 'Tenant subdomain is working!',
-            'tenant_id' => tenant( 'id' ),
-            'domain'    => request()->getHost(),
-            'timestamp' => now(),
-        ] );
-    } );
     // Public tenant routes
     Route::post( '/auth/login', [TenantAuthController::class, 'login'] );
     Route::post( '/auth/register', [TenantAuthController::class, 'register'] );
@@ -86,6 +78,7 @@ Route::middleware( [
             Route::post( '/logout', [TenantAuthController::class, 'logout']);
             Route::put( '/profile', [TenantAuthController::class, 'updateProfile']);
             Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo']);
+            Route::get( '/profile-data', [TenantAuthController::class, 'profileData']);
             Route::put( '/change-password', [TenantAuthController::class, 'changePassword']);
         } );
 

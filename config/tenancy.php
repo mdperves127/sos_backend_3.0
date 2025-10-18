@@ -23,6 +23,8 @@ return [
         '127.0.0.1:8000',
         env('MAIN_DOMAIN'), // Add your main domain here, e.g. 'app.com'
         env('APP_URL'), // Add your app URL
+        // Note: For localhost testing, we're temporarily disabling PreventAccessFromCentralDomains
+        // in routes/tenant.php to allow subdomain access
     ],
 
     /**

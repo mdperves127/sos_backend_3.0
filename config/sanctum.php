@@ -73,6 +73,6 @@ return [
     | This is the model that Sanctum will use to store and retrieve tokens.
     |
     */
-    'model' => PersonalAccessToken::class,
+    'model' => \Laravel\Sanctum\PersonalAccessToken::class,
 
 ];
