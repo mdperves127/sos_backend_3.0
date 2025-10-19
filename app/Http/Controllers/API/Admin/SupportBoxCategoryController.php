@@ -21,7 +21,7 @@ class SupportBoxCategoryController extends Controller
         //     return $this->permissionmessage();
         // }
 
-        $supportBoxCategory = DB::on('mysql')->table('support_box_categories')->where('deleted_at',null)->get();
+        $supportBoxCategory = DB::connection('mysql')->table('support_box_categories')->where('deleted_at',null)->get();
 
         return $this->response($supportBoxCategory);
     }

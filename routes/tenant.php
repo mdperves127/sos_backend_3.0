@@ -24,7 +24,7 @@ use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
-use App\Http\Controllers\API\Vendor\ProfileController;
+use App\Http\Controllers\Tenant\ProfileController;
 use App\Http\Controllers\API\Vendor\ReportController;
 use App\Http\Controllers\API\Vendor\SaleOrderResourceController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
@@ -84,8 +84,8 @@ Route::middleware( [
 
         //Vendor Routes
         Route::prefix( 'tenant-profile' )->group( function () {
-            Route::get( '/', [ProfileController::class, 'VendorProfile'] );
-            Route::post( 'update', [ProfileController::class, 'VendorUpdateProfile'] );
+            Route::get( '/', [ProfileController::class, 'TenantProfile'] );
+            Route::post( 'update', [ProfileController::class, 'TenantUpdateProfile'] );
         } );
 
         //vendor product
@@ -435,7 +435,7 @@ Route::middleware( [
 
 
 
-        Route::resource( 'main-services', TenantServiceController::class );
+        Route::resource( 'tenant/main-services', TenantServiceController::class );
         Route::get( 'service-buy-count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
 
 
