@@ -29,12 +29,12 @@ class StoreVendorServiceRequest extends FormRequest
         return [
             'service_category_id' => [
                 'required',
-                Rule::exists('service_categories', 'id')->where(function ($query) {
+                Rule::exists('mysql.service_categories', 'id')->where(function ($query) {
                 })
             ],
             'service_sub_category_id' => [
                 'required',
-                Rule::exists('service_sub_categories','id')->where(function($query){
+                Rule::exists('mysql.service_sub_categories','id')->where(function($query){
                 })
             ],
             'title'=>'required',

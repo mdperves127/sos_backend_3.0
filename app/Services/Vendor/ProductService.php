@@ -16,6 +16,7 @@ class ProductService
     static function store($data)
     {
         $vendorService = new VendorService;
+        $vendorService->setConnection('mysql');
         $vendorService->user_id = userid() ;
         $vendorService->service_category_id =  $data['service_category_id'];
         $vendorService->service_sub_category_id =  $data['service_sub_category_id'];
@@ -38,6 +39,7 @@ class ProductService
 
         foreach (request('package_title') as $key => $value) {
             $servicepackages = new ServicePackage();
+            $servicepackages->setConnection('mysql');
             $servicepackages->vendor_service_id = $vendorService->id;
             $servicepackages->time =  request('time')[$key];
             $servicepackages->package_title = $value;
@@ -49,6 +51,7 @@ class ProductService
 
         foreach ($data['images'] as $key => $value) {
             $serviceImages =  new ServiceImages();
+            $serviceImages->setConnection('mysql');
             $serviceImages->vendor_service_id = $vendorService->id;
             $serviceImages->images = fileUpload($value, 'uploads/vendor');
             $serviceImages->save();

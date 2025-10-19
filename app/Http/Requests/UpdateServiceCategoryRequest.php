@@ -30,7 +30,7 @@ class UpdateServiceCategoryRequest extends FormRequest
     {
         $id = $this->route('servicecategory');
         return [
-            'name' => ['required', Rule::unique('service_categories', 'slug')->ignore($id)->where(function ($query) {
+            'name' => ['required', Rule::unique('mysql.service_categories', 'slug')->ignore($id)->where(function ($query) {
                 return $query->where('user_id', auth()->user()->id);
             })],
 

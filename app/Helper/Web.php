@@ -156,7 +156,7 @@ function ismembershipexists( $userid = null ) {
     if ( !$userid ) {
         $userid = auth()->id();
     }
-    return UserSubscription::where( ['user_id' => $userid] )->exists();
+    return UserSubscription::on('mysql')->where( ['user_id' => $userid] )->exists();
 }
 
 function isactivemembership( $userid = null ) {
@@ -164,8 +164,8 @@ function isactivemembership( $userid = null ) {
         $userid = auth()->id();
     }
 
-    $usersubscription = UserSubscription::where( ['user_id' => $userid] )->first();
-    $sub              = Subscription::find( $usersubscription->subscription_id );
+    $usersubscription = UserSubscription::on('mysql')->where( ['user_id' => $userid] )->first();
+    $sub              = Subscription::on('mysql')->find( $usersubscription->subscription_id );
     if ( $sub->subscription_amount != 0 ) {
         $date = Carbon::parse( $usersubscription->expire_date )->addMonth( 1 );
         if ( $date > now() ) {
@@ -186,7 +186,7 @@ function getmembershipdetails( $userid = null ) {
         $userid = auth()->id();
     }
 
-    return UserSubscription::where( ['user_id' => vendorId()] )->first();
+    return UserSubscription::on('mysql')->where( ['user_id' => vendorId()] )->first();
 }
 
 function paymentredirect( $role ) {

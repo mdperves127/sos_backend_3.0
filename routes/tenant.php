@@ -428,6 +428,7 @@ Route::middleware( [
             Route::get( 'sub-category/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
         } );
 
+        Route::post( 'tenant/create-advertise', [AdvertiseController::class, 'store'] );
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
         Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );

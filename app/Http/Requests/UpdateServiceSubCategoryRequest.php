@@ -29,8 +29,7 @@ class UpdateServiceSubCategoryRequest extends FormRequest
         return [
             'service_category_id' => [
                 'required',
-                'exists:service_categories,id',
-                Rule::exists('service_categories', 'id')->where(function ($query) {
+                Rule::exists('mysql.service_categories', 'id')->where(function ($query) {
                     $query->where(['user_id' => userid(), 'deleted_at' => null]);
                 })
             ],

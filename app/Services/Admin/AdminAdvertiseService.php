@@ -21,9 +21,10 @@ class AdminAdvertiseService {
         // return $validatData;
         $trxid                                = uniqid();
         $adminadvaertise                      = new AdminAdvertise();
+        $adminadvaertise->setConnection('mysql');
         $adminadvaertise->trxid               = $trxid;
         $adminadvaertise->campaign_objective  = $validatData['campaign_objective'];
-        $adminadvaertise->user_id             = userid();
+        $adminadvaertise->user_id             = userid() ?? 0;
         $adminadvaertise->campaign_name       = $validatData['campaign_name'];
         $adminadvaertise->conversion_location = $validatData['conversion_location'];
         $adminadvaertise->performance_goal    = $validatData['performance_goal'];
@@ -58,6 +59,7 @@ class AdminAdvertiseService {
         $adminadvaertise->status           = Status::Pending->value;
         $adminadvaertise->audience         = request( 'audience' );
         $adminadvaertise->unique_id        = uniqid();
+        $adminadvaertise->tenant_id        = tenant()->id ?? 0;
 
         $adminadvaertise->save();
 
@@ -65,6 +67,7 @@ class AdminAdvertiseService {
             foreach ( request( 'advertise_audience_files' ) as $file ) {
                 $data                                = uploadany_file( $file, 'uploads/advertise_audience_files/' );
                 $AdvertiseAudienceFile               = new AdvertiseAudienceFile();
+                $AdvertiseAudienceFile->setConnection('mysql');
                 $AdvertiseAudienceFile->advertise_id = $adminadvaertise->id;
                 $AdvertiseAudienceFile->file         = $data;
                 $AdvertiseAudienceFile->save();
@@ -75,13 +78,14 @@ class AdminAdvertiseService {
             foreach ( request( 'location_files' ) as $file ) {
                 $data                    = uploadany_file( $file, 'uploads/location_files/' );
                 $locatFile               = new LocationFile();
+                $locatFile->setConnection('mysql');
                 $locatFile->advertise_id = $adminadvaertise->id;
                 $locatFile->file         = $data;
                 $locatFile->save();
             }
         }
 
-        $dollerRate = DollerRate::first()?->amount;
+        $dollerRate = DollerRate::on('mysql')->first()?->amount;
 
         $totalprice = ( $validatData['budget_amount'] * $dollerRate ) * $total_days;
 
@@ -96,7 +100,7 @@ class AdminAdvertiseService {
         // }
 
         if ( request( 'paymethod' ) == 'my-wallet' ) {
-            $user = User::find( userid() );
+            $user = User::on('mysql')->find( userid() );
             $user->decrement( 'balance', $totalprice );
             $adminadvaertise->is_paid = 1;
             $adminadvaertise->save();
@@ -110,7 +114,7 @@ class AdminAdvertiseService {
     }
 
     static function update( $validatData, $id ) {
-        $adminadvaertise                      = AdminAdvertise::find( $id );
+        $adminadvaertise                      = AdminAdvertise::on('mysql')->find( $id );
         $adminadvaertise->campaign_objective  = $validatData['campaign_objective'];
         $adminadvaertise->campaign_name       = $validatData['campaign_name'];
         $adminadvaertise->conversion_location = $validatData['conversion_location'];
@@ -145,6 +149,7 @@ class AdminAdvertiseService {
             foreach ( request( 'advertise_audience_files' ) as $file ) {
                 $data                                = uploadany_file( $file, 'uploads/advertise_audience_files/' );
                 $AdvertiseAudienceFile               = new AdvertiseAudienceFile();
+                $AdvertiseAudienceFile->setConnection('mysql');
                 $AdvertiseAudienceFile->advertise_id = $adminadvaertise->id;
                 $AdvertiseAudienceFile->file         = $data;
                 $AdvertiseAudienceFile->save();
@@ -155,6 +160,7 @@ class AdminAdvertiseService {
             foreach ( request( 'location_files' ) as $file ) {
                 $data                    = uploadany_file( $file, 'uploads/location_files/' );
                 $locatFile               = new LocationFile();
+                $locatFile->setConnection('mysql');
                 $locatFile->advertise_id = $adminadvaertise->id;
                 $locatFile->file         = $data;
                 $locatFile->save();

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAdvertise;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreAdminAdvertiseRequest;
+use App\Services\Admin\AdminAdvertiseService;
 
 class AdvertiseController extends Controller
 {
@@ -19,6 +21,22 @@ class AdvertiseController extends Controller
             ->paginate(10);
 
         return $this->response($data);
+    }
+
+    public function store( StoreAdminAdvertiseRequest $request ) {
+        // $validator = Validator::make( $request->all(), [
+
+        //     'number' => 'required|string',
+        // ] );
+        // if ( $validator->fails() ) {
+        //     return response()->json( [
+        //         'status'            => 400,
+        //         'validation_errors' => $validator->messages(),
+        //     ] );
+        // }
+        $advertise = AdminAdvertiseService::create( $request->validated() );
+
+        return $this->response( $advertise );
     }
     function show($id)
     {

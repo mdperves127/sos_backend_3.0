@@ -27,7 +27,7 @@ class StoreServiceCategoryRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'=>['required',Rule::unique('service_categories')->where(function ($query) {
+            'name'=>['required',Rule::unique('mysql.service_categories')->where(function ($query) {
                 return $query->where('user_id', auth()->user()->id);
             })]
         ];
