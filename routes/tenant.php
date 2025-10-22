@@ -419,6 +419,7 @@ Route::middleware( [
 
         Route::prefix( 'tenant-support' )->group( function () {
             Route::resource( '/', SupportBoxController::class );
+            Route::get('show/{id}', [SupportBoxController::class, 'show']);
             Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
             Route::get( 'count', [SupportBoxController::class, 'supportCount'] );
             Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
