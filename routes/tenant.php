@@ -401,7 +401,20 @@ Route::middleware( [
         } );
 
         Route::prefix( 'tenant-service' )->group( function () {
-            Route::apiResource( '/', ServiceOrderController::class );
+            Route::apiResource( '/order', ServiceOrderController::class );
+
+            Route::resource( '/', TenantServiceController::class );
+            Route::get( '/count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
+
+
+            Route::get( '/orders', [TenantServiceController::class, 'serviceorders'] );
+
+            Route::post( '/status', [TenantServiceController::class, 'statusChange'] );
+
+            Route::get( '/orders/view/{id}', [TenantServiceController::class, 'ordersview'] );
+            Route::get( '/myorders/{id}', [TenantServiceController::class, 'singlemyorder'] );
+
+            Route::get( '/category-subcategory', [TenantServiceController::class, 'categorysubcategory'] );
         } );
 
         // all sub categories
@@ -437,18 +450,6 @@ Route::middleware( [
 
 
 
-        Route::resource( 'tenant/main-services', TenantServiceController::class );
-        Route::get( 'service-buy-count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
-
-
-        Route::get( 'service/orders', [TenantServiceController::class, 'serviceorders'] );
-
-        Route::post( 'service/status', [TenantServiceController::class, 'statusChange'] );
-
-        Route::get( 'service/orders/view/{id}', [TenantServiceController::class, 'ordersview'] );
-        Route::get( 'service/myorders/{id}', [TenantServiceController::class, 'singlemyorder'] );
-
-        Route::get( 'service-category-subcategory', [TenantServiceController::class, 'categorysubcategory'] );
 
 
     } );
