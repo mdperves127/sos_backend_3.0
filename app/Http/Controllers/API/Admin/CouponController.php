@@ -30,9 +30,9 @@ class CouponController extends Controller {
         }
 
         $search = request( 'search', '' );
-        $data   = Coupon::query()
+        $data   = Coupon::on('mysql')
             ->latest()
-            ->with( 'user:id,name,email' )
+            // ->with( 'user:id,name,email' )
         // ->when( ( request( 'form' ) != '' ) && request( 'to' ) != '', function ( $query ) {
         //     $fromDate = Carbon::parse( request( 'form' ) );
         //     $toDate   = Carbon::parse( request( 'to' ) )->addDay( 1 );

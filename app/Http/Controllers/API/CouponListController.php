@@ -8,9 +8,12 @@ use App\Models\Coupon;
 class CouponListController extends Controller {
     function index() {
 
-        $coupon = Coupon::query()
-            ->where( 'user_id', userid() )
-            ->get();
+        $coupon = Coupon::on('mysql')
+                ->where( 'tenant_id', tenant()->id )
+                ->where('status', 'active')
+                ->withCount('couponused')
+                ->withSum('couponused','total_commission')
+                ->get();
 
         //[ SHOVON - 03-09-25] couponused er error day ti off kora ase
 

@@ -29,8 +29,8 @@ class CouponSendRequest extends FormRequest
         return [
             'comments'=>['required', function($attribute,$value,$fail){
                 if(request('comments') != ''){
-                   $data = CouponRequest::query()
-                    ->where('user_id',auth()->id())
+                   $data = CouponRequest::on('mysql')
+                    ->where('tenant_id',tenant()->id)
                     ->whereIn('status',['pending','active'])
                     ->exists();
                     if($data){

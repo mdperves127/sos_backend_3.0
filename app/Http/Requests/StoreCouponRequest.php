@@ -35,13 +35,13 @@ class StoreCouponRequest extends FormRequest
             'commission_type' => ['required',Rule::in(['flat','percentage'])],
             'expire_date' => ['required'],
             'limitation' => ['required'],
-            'user_id' => ['required', 'integer',Rule::exists('users', 'id')->whereIn('role_as', [2, 3]),function($attribute,$value,$fail){
-                if(request('user_id') != ''){
-                   $data = Coupon::query()
-                    ->where('user_id',request('user_id'))
+            'tenant_id' => ['required', 'string',Rule::exists('tenants', 'id'),function($attribute,$value,$fail){
+                if(request('tenant_id') != ''){
+                   $data = Coupon::on('mysql')
+                    ->where('tenant_id',request('tenant_id'))
                     ->exists();
                     if($data){
-                        $fail('Already coupon exists');
+                        $fail('Already coupon exists for this tenant');
                     }
                 }
             }],

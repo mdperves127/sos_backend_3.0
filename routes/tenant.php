@@ -5,7 +5,7 @@ declare ( strict_types = 1 );
 use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
-use App\Http\Controllers\API\CouponRequestController;
+use App\Http\Controllers\Tenant\CouponRequestController;
 use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;

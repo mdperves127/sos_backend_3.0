@@ -17,6 +17,10 @@ class CouponRequest extends Model
         return $this->belongsTo(User::class,'user_id');
     }
 
+    function tenant(){
+        return $this->belongsTo(Tenant::class,'tenant_id');
+    }
+
     protected $searchables = ['user.email'];
 
 }
