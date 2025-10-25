@@ -100,11 +100,11 @@ class AdminAdvertiseService {
         // }
 
         if ( request( 'paymethod' ) == 'my-wallet' ) {
-            $user = User::on('mysql')->find( userid() );
-            $user->decrement( 'balance', $totalprice );
+            $tenant = Tenant::on('mysql')->find( tenant()->id );
+            $tenant->decrement( 'balance', $totalprice );
             $adminadvaertise->is_paid = 1;
             $adminadvaertise->save();
-            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', userid() );
+            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', tenant()->id );
             return responsejson( 'Successfull!' );
         } else {
 

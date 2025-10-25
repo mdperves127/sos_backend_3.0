@@ -48,4 +48,20 @@ class AdvertiseController extends Controller
         return $this->response($data);
 
     }
+
+
+    public function advertiseCount() {
+        $all  = AdminAdvertise::on('mysql')->where('tenant_id', tenant()->id)->count();
+        $pending  = AdminAdvertise::on('mysql')->where('tenant_id', tenant()->id)->where('is_paid',1)->where('status', 'pending')->count();
+        $progress  = AdminAdvertise::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'progress')->count();
+        $delivered  = AdminAdvertise::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'delivered')->count();
+        $cancel  = AdminAdvertise::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'cancel')->count();
+        return response()->json([
+            'pending' => $pending,
+            'progress' => $progress,
+            'delivered' => $delivered,
+            'cancel' => $cancel,
+            'all' => $all,
+        ]);
+    }
 }

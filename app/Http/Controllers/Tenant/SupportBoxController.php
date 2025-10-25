@@ -19,9 +19,9 @@ class SupportBoxController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index() {
-        $datas = SupportBox::on( 'mysql' )->where( 'user_id', userid() )
+        $datas = SupportBox::on( 'mysql' )->where( 'tenant_id', tenant()->id )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_id', 1 );
+                $query->where( 'tenant_id', tenant()->id );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
@@ -50,7 +50,7 @@ class SupportBoxController extends Controller {
      */
     public function show( $id ) {
 
-        $supportBox = SupportBox::on( 'mysql' )->where( ['id' => $id, 'tenant_id' => tenant()->id])->first();
+        $supportBox = SupportBox::on( 'mysql' )->where( ['id' => $id, 'user_id' => userid()])->first();
 
         if ( !$supportBox ) {
             return responsejson( 'Not found', 'fail' );
@@ -146,9 +146,9 @@ class SupportBoxController extends Controller {
     }
 
     public function supportCount() {
-        $all_support = SupportBox::on( 'mysql' )->where( 'user_id', userid() )
+        $all_support = SupportBox::on( 'mysql' )->where( 'tenant_id', tenant()->id )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_id', 1 );
+                $query->where( 'tenant_id', tenant()->id );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
