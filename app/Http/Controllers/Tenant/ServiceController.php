@@ -69,7 +69,17 @@ class ServiceController extends Controller
 
         return $this->response( $vendorService );
     }
+    public function view( $id ) {
+        $vendorService = VendorService::on('mysql')->where( ['tenant_id' => tenant()->id, 'id' => $id] )
+            ->with( ['servicepackages', 'serviceimages'] )
+            ->first();
 
+        if ( !$vendorService ) {
+            return responsejson( 'Not found', 'fail' );
+        }
+
+        return $this->response( $vendorService );
+    }
 
     public function update( UpdateVendorServiceRequest $request, $id ) {
         $data = $request->validated();
@@ -80,6 +90,15 @@ class ServiceController extends Controller
 
     public function destroy( $id ) {
         $data = VendorService::on('mysql')->where( ['tenant_id' => tenant()->id, 'id' => $id] )->first();
+        if ( !$data ) {
+            return responsejson( 'Not found', 'fail' );
+        }
+        $data->delete();
+
+        return $this->response( 'Deleted successfull!' );
+    }
+    public function delete( $id ) {
+        $data = VendorService::on('mysql')->where(['tenant_id' => tenant()->id, 'id' => $id])->first();
         if ( !$data ) {
             return responsejson( 'Not found', 'fail' );
         }

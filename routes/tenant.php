@@ -404,6 +404,8 @@ Route::middleware( [
             Route::apiResource( '/order', ServiceOrderController::class );
 
             Route::resource( '/', TenantServiceController::class );
+            Route::get('/view/{id}', [TenantServiceController::class, 'view']);
+            Route::post('/delete/{id}', [TenantServiceController::class, 'delete']);
             Route::get( '/count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
 
 
