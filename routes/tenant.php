@@ -2,13 +2,12 @@
 
 declare ( strict_types = 1 );
 
-use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
-use App\Http\Controllers\Tenant\CouponRequestController;
 use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
+use App\Http\Controllers\API\Vendor\BarcodeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
@@ -24,7 +23,6 @@ use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
-use App\Http\Controllers\Tenant\ProfileController;
 use App\Http\Controllers\API\Vendor\ReportController;
 use App\Http\Controllers\API\Vendor\SaleOrderResourceController;
 use App\Http\Controllers\API\Vendor\SubCategoryController;
@@ -38,18 +36,19 @@ use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommer
 use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
 use App\Http\Controllers\Tenant\AamarpayController;
+use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\Tenant\BankController;
+use App\Http\Controllers\Tenant\CouponRequestController;
+use App\Http\Controllers\Tenant\ProfileController;
 use App\Http\Controllers\Tenant\RechargeController;
+use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
+use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
 use App\Http\Controllers\Tenant\SupportBoxCategoryController;
 use App\Http\Controllers\Tenant\SupportBoxController;
 use App\Http\Controllers\Tenant\TenantAuthController;
 use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
-use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
-
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -75,11 +74,11 @@ Route::middleware( [
     Route::middleware( 'tenantAuth' )->group( function () {
 
         Route::prefix( 'tenant-auth' )->group( function () {
-            Route::post( '/logout', [TenantAuthController::class, 'logout']);
-            Route::put( '/profile', [TenantAuthController::class, 'updateProfile']);
-            Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo']);
-            Route::get( '/profile-data', [TenantAuthController::class, 'profileData']);
-            Route::put( '/change-password', [TenantAuthController::class, 'changePassword']);
+            Route::post( '/logout', [TenantAuthController::class, 'logout'] );
+            Route::put( '/profile', [TenantAuthController::class, 'updateProfile'] );
+            Route::get( '/profile/info', [TenantAuthController::class, 'profileInfo'] );
+            Route::get( '/profile-data', [TenantAuthController::class, 'profileData'] );
+            Route::put( '/change-password', [TenantAuthController::class, 'changePassword'] );
         } );
 
         //Vendor Routes
@@ -353,6 +352,12 @@ Route::middleware( [
             Route::get( 'payment-history', [ProductPosSaleController::class, 'paymentHistory'] );
         } );
 
+        Route::prefix( 'tenant-barcode' )->group( function () {
+            Route::post( 're-generate', [BarcodeController::class, 'reGenerate'] );
+            Route::post( 'generate', [BarcodeController::class, 'generate'] );
+            Route::get( 'manage', [BarcodeController::class, 'manage'] );
+        } );
+
         //Pos Sales Return Route
         Route::prefix( 'tenant-product-pos-sales-return' )->group( function () {
             Route::get( '/', [PosSaleReturnController::class, 'returnList'] );
@@ -404,10 +409,9 @@ Route::middleware( [
             Route::apiResource( '/order', ServiceOrderController::class );
 
             Route::resource( '/', TenantServiceController::class );
-            Route::get('/view/{id}', [TenantServiceController::class, 'view']);
-            Route::post('/delete/{id}', [TenantServiceController::class, 'delete']);
+            Route::get( '/view/{id}', [TenantServiceController::class, 'view'] );
+            Route::post( '/delete/{id}', [TenantServiceController::class, 'delete'] );
             Route::get( '/count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
-
 
             Route::get( '/orders', [TenantServiceController::class, 'serviceorders'] );
 
@@ -434,7 +438,7 @@ Route::middleware( [
 
         Route::prefix( 'tenant-support' )->group( function () {
             Route::resource( '/', SupportBoxController::class );
-            Route::get('show/{id}', [SupportBoxController::class, 'show']);
+            Route::get( 'show/{id}', [SupportBoxController::class, 'show'] );
             Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
             Route::get( 'count', [SupportBoxController::class, 'supportCount'] );
             Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
@@ -448,11 +452,6 @@ Route::middleware( [
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
         Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
-
-
-
-
-
 
     } );
 } );
