@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
+use App\Models\Coupon;
 
 class UpdateCouponRequest extends FormRequest
 {
@@ -35,7 +36,17 @@ class UpdateCouponRequest extends FormRequest
             'commission_type' => ['required',Rule::in(['flat','percentage'])],
             'expire_date' => ['required'],
             'limitation' => ['required'],
-            'user_id' => ['required', 'integer', Rule::exists('users', 'id')->whereIn('role_as', [2, 3,4])],
+            'tenant_id' => ['required', 'string',Rule::exists('tenants', 'id'),function($attribute,$value,$fail){
+                if(request('tenant_id') != ''){
+                   $data = Coupon::on('mysql')
+                    ->where('tenant_id',request('tenant_id'))
+                    ->where('id','!=',request('id'))
+                    ->exists();
+                    if($data){
+                        $fail('Coupon already exists for this tenant');
+                    }
+                }
+            }],
             'status'=>['required',Rule::in([Status::Active->value,Status::Deactivate->value])]
         ];
     }
