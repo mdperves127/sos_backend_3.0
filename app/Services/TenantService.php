@@ -59,7 +59,7 @@ class TenantService
                 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null,
                 'owner_name' => $data['owner_name'],
-                'type' => $data['type'] ?? 'affiliate',
+                'type' => $data['type'] ?? 'dropshipper',
                 'data' => null // Don't store password in database
             ]);
 
