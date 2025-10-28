@@ -7,6 +7,7 @@ use App\Models\AdminAdvertise;
 use App\Models\AdvertiseAudienceFile;
 use App\Models\DollerRate;
 use App\Models\LocationFile;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AamarPayService;
 use App\Services\PaymentHistoryService;
@@ -101,6 +102,12 @@ class AdminAdvertiseService {
 
         if ( request( 'paymethod' ) == 'my-wallet' ) {
             $tenant = Tenant::on('mysql')->find( tenant()->id );
+
+            // Validate balance
+            if ( $tenant->balance < $totalprice ) {
+                return responsejson( 'Insufficient balance!', 'fail' );
+            }
+
             $tenant->decrement( 'balance', $totalprice );
             $adminadvaertise->is_paid = 1;
             $adminadvaertise->save();
