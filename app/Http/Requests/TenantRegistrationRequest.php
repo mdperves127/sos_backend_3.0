@@ -31,6 +31,7 @@ class TenantRegistrationRequest extends FormRequest
             'address' => 'nullable|string|max:500',
             'owner_name' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed|max:255',
+            'type' => 'required|string|in:merchant,dropshipper',
         ];
     }
 

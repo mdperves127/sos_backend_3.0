@@ -39,6 +39,7 @@ class TenantRegistrationController extends Controller
                 'data' => [
                     'tenant_id' => $result['tenant_id'],
                     'domain' => $request->domain,
+                    'type' => $request->type,
                     'company_name' => $request->company_name,
                     'email' => $request->email,
                     'domain_url' => $result['domain_url'],
