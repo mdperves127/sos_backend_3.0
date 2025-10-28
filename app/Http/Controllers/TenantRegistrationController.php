@@ -32,6 +32,7 @@ class TenantRegistrationController extends Controller
     {
         try {
             $result = $this->tenantService->createTenant($request->validated());
+            // dd($result);
 
             return response()->json([
                 'success' => true,
@@ -39,7 +40,7 @@ class TenantRegistrationController extends Controller
                 'data' => [
                     'tenant_id' => $result['tenant_id'],
                     'domain' => $request->domain,
-                    'type' => $request->type,
+                    'type' => $request->type ?? 'dropshipper',
                     'company_name' => $request->company_name,
                     'email' => $request->email,
                     'domain_url' => $result['domain_url'],

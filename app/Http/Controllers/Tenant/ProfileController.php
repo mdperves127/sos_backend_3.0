@@ -10,7 +10,7 @@ class ProfileController extends Controller
 {
     public function TenantProfile()
     {
-        $user = Tenant::on('mysql')->find(tenant()->id);
+        $user = Tenant::on('mysql')->where('id', tenant()->id)->first();
 
         return response()->json([
             'status' => 200,

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('tenants', function (Blueprint $table) {
-            $table->enum('type', ['merchant', 'dropshipper'])->default('merchant');
+            $table->enum('type', ['dropshipper', 'merchant'])->nullable();
         });
     }
 

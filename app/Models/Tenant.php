@@ -15,7 +15,18 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasFactory, SoftDeletes, HasDatabase;
 
-    protected $guarded = [];
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'data' => 'array',
+    ];
+
+    /**
+     * Explicitly define fillable attributes to ensure they're saved as columns, not in data JSON
+     */
 
     protected $fillable = [
         'id',
@@ -24,10 +35,31 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'owner_name',
         'phone',
         'address',
-        'data',
         'type',
         'balance'
     ];
+
+    /**
+     * Override getCustomColumns to tell VirtualColumn which attributes are actual columns
+     * All attributes NOT in this list will be stored in the data JSON column
+     */
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'company_name',
+            'email',
+            'owner_name',
+            'phone',
+            'address',
+            'type',
+            'balance',
+            'data',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ];
+    }
 
     /**
      * Get the domains for this tenant
@@ -42,5 +74,18 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     function paymenthistories() {
         return $this->hasMany( PaymentHistory::class, 'tenant_id' );
+    }
+
+    /**
+     * Convert the model instance to an array, ensuring type comes from the column, not data JSON
+     */
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        // Ensure type comes from the actual column, not from data JSON
+        $array['type'] = $this->attributes['type'] ?? null;
+
+        return $array;
     }
 }
