@@ -19,7 +19,7 @@ class SingleProductController extends Controller {
         return response()->json( [
             'status'         => 200,
             'productDetails' => $productDetails,
-        ] );
+        ]);
     }
 
     public function AffiliatorProductSingle( $id ) {

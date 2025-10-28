@@ -12,6 +12,8 @@ class UserSubscription extends Model {
 
     protected $guarded = [];
 
+    protected $connection = 'mysql';
+
     function subscription() {
         return $this->belongsTo( Subscription::class, 'subscription_id' );
     }

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductDetails;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use App\Models\Tenant;
 
 class ProductStatusController extends Controller
 {

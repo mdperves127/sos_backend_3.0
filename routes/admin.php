@@ -350,4 +350,6 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'vendor/payment/history/{vendor_id}', [AdminNoteController::class, 'vendorPaymentHistory'] );
 
     } );
+
 }); // End of admin middleware group
+// Route::get( 'all-tenants-products', [ProductStatusController::class, 'getAllTenantsProducts'] );

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 //affiliator
 
 Route::middleware( ['auth:sanctum', 'isAPIaffiliator', 'userOnline'] )->group( function () {
+
+
     Route::get( 'single/product/{id}', [SingleProductController::class, 'AffiliatorProductSingle'] );
     Route::get( 'single/active/product/{id}', [SingleProductController::class, 'AffiliatoractiveProduct'] );
 

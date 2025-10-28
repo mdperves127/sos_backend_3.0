@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDetails;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\AffiliateProductRequestNotification;
 use Illuminate\Http\Request;
@@ -13,7 +14,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class ProductStatusController extends Controller {
+
+
     public function AffiliatorProducts() {
+        tenancy()->initialize(tenant());
+
+        // $product = Product::query()
+        //     ->where( 'status', 'active' )
+        //     ->where( 'is_affiliate', '1' )->get();
+
+
         $product = Product::query()
             ->where( 'status', 'active' )
             ->where( 'is_affiliate', '1' )
@@ -43,7 +53,7 @@ class ProductStatusController extends Controller {
                 } );
             } )
 
-            ->whereHas( 'productVariant' )
+            // ->whereHas( 'productVariant' )
 
             ->when( request( 'high_to_low' ), function ( $query ) {
                 $query->orderBy( DB::raw( 'CASE
@@ -67,23 +77,7 @@ class ProductStatusController extends Controller {
             ->whereHas( 'vendor', function ( $query ) {
                 $query->withCount( ['vendoractiveproduct' => function ( $query ) {
                     $query->where( 'status', 1 );
-                }] )
-                    ->withwhereHas( 'usersubscription', function ( $query ) {
-                        $query->where( function ( $query ) {
-                            $query->whereHas( 'subscription', function ( $query ) {
-                                $query->where( 'plan_type', 'freemium' );
-                            } )
-                                ->where( 'expire_date', '>', now() );
-                        } )
-                            ->orwhere( function ( $query ) {
-                                $query->whereHas( 'subscription', function ( $query ) {
-                                    $query->where( 'plan_type', '!=', 'freemium' );
-                                } )
-                                    ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                            } );
-                    } )
-                    ->withSum( 'usersubscription', 'affiliate_request' )
-                    ->having( 'vendoractiveproduct_count', '<', \DB::raw( 'usersubscription_sum_affiliate_request' ) );
+                }] );
             } )
             ->whereDoesntHave( 'productdetails', function ( $query ) {
                 $query->where( 'user_id', auth()->id() );
