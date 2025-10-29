@@ -108,6 +108,123 @@ class CrossTenantQueryService
     }
 
     /**
+     * Get a single model instance from a specific tenant's database
+     * This method returns a full Eloquent model with relationship support
+     *
+     * @param string|int $tenantId The tenant ID (can be string or int)
+     * @param string $modelClass The fully qualified model class name
+     * @param callable $queryCallback Callback to build the query (receives Eloquent query builder)
+     * @return mixed|null The model instance or null if not found
+     */
+    public static function getSingleFromTenant(string|int $tenantId, string $modelClass, callable $queryCallback = null)
+    {
+        // Find tenant by ID (accepts both string and int)
+        $tenant = Tenant::find($tenantId);
+
+        if (!$tenant) {
+            return null;
+        }
+
+        // Store the original connection to restore it later
+        $originalConnection = DB::getDefaultConnection();
+
+        try {
+            $connectionName = self::getTenantConnectionName($tenant);
+            self::configureTenantConnection($tenant, $connectionName);
+
+            $model = new $modelClass;
+            $query = $model->setConnection($connectionName)->newQuery();
+
+            // Apply the callback if provided
+            if ($queryCallback) {
+                $queryCallback($query);
+            }
+
+            $result = $query->first();
+
+            // Add tenant context if result found
+            if ($result) {
+                $domain = $tenant->domains()->first();
+                $result->tenant_id = $tenant->id;
+                $result->tenant_domain = $domain?->domain;
+                $result->tenant_name = $tenant->company_name;
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            \Log::error("Failed to query single model from tenant {$tenantId}: " . $e->getMessage());
+            return null;
+        } finally {
+            // Restore the original connection (could be 'tenant', 'mysql', etc.)
+            DB::setDefaultConnection($originalConnection);
+            config(['database.default' => $originalConnection]);
+        }
+    }
+
+    /**
+     * Save a model instance to a specific tenant's database
+     *
+     * @param string|int $tenantId The tenant ID where to save the data
+     * @param string $modelClass The fully qualified model class name
+     * @param callable $dataCallback Callback to set model data (receives model instance)
+     * @return mixed|null The saved model instance or null if failed
+     */
+    public static function saveToTenant(string|int $tenantId, string $modelClass, callable $dataCallback)
+    {
+        // Find tenant by ID (accepts both string and int)
+        $tenant = Tenant::find($tenantId);
+
+        if (!$tenant) {
+            \Log::error("Tenant not found for saving data", ['tenant_id' => $tenantId]);
+            return null;
+        }
+
+        // Store the original connection to restore it later
+        $originalConnection = DB::getDefaultConnection();
+
+        try {
+            $connectionName = self::getTenantConnectionName($tenant);
+            self::configureTenantConnection($tenant, $connectionName);
+
+            // Create model instance and set connection to target tenant
+            $model = new $modelClass;
+            $model->setConnection($connectionName);
+
+            // Apply the callback to set data
+            $dataCallback($model);
+
+            // Save to the target tenant database
+            $saved = $model->save();
+
+            if (!$saved) {
+                \Log::error("Failed to save model to tenant", [
+                    'tenant_id' => $tenantId,
+                    'model_class' => $modelClass
+                ]);
+                return null;
+            }
+
+            \Log::info("Model saved successfully to tenant", [
+                'tenant_id' => $tenantId,
+                'model_id' => $model->id,
+                'model_class' => $modelClass,
+                'database' => DB::connection($connectionName)->getDatabaseName()
+            ]);
+
+            return $model;
+        } catch (\Exception $e) {
+            \Log::error("Exception saving model to tenant {$tenantId}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        } finally {
+            // Restore the original connection
+            DB::setDefaultConnection($originalConnection);
+            config(['database.default' => $originalConnection]);
+        }
+    }
+
+    /**
      * Get paginated results across all tenants
      *
      * @param string $modelClass

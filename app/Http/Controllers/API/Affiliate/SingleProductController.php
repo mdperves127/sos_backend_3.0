@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDetails;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Facades\Auth;
 
 class SingleProductController extends Controller {
@@ -22,40 +23,16 @@ class SingleProductController extends Controller {
         ]);
     }
 
-    public function AffiliatorProductSingle( $id ) {
-        $product = Product::query()
-            ->with( ['category', 'subcategory', 'productImage', 'brand', 'productdetails' => function ( $query ) {
-                $query->where( ['user_id' => auth()->id(), 'status' => 3] );
-            }, 'vendor:id,uniqid'] )
-            ->where( 'status', 'active' )
-            ->withAvg( 'productrating', 'rating' )
-            ->with( 'productrating.affiliate:id,name,image' )
-            ->with( 'productVariant', function ( $query ) {
-                $query->with( 'size:id,name', 'unit:id,unit_name', 'color:id,name' );
-            } )
-            ->whereHas( 'vendor', function ( $query ) {
-                $query->withCount( ['vendoractiveproduct' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
+    public function AffiliatorProductSingle( $tenant_id, $id ) {
 
-                        $query->where( function ( $query ) {
-                            $query->whereHas( 'subscription', function ( $query ) {
-                                $query->where( 'plan_type', 'freemium' );
-                            } )
-                                ->where( 'expire_date', '>', now() );
-                        } )
-                            ->orwhere( function ( $query ) {
-                                $query->whereHas( 'subscription', function ( $query ) {
-                                    $query->where( 'plan_type', '!=', 'freemium' );
-                                } )
-                                    ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                            } );
-                    } )
-                    ->withSum( 'usersubscription', 'affiliate_request' )
-                    ->having( 'vendoractiveproduct_count', '<=', \DB::raw( 'usersubscription_sum_affiliate_request' ) );
-            } )
-            ->find( $id );
+        $product = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
+            Product::class,
+            function ( $query ) use ( $id ) {
+                return $query->where( 'id', $id );
+            }
+        );
+
         if ( $product ) {
             return response()->json( [
                 'status'  => 200,

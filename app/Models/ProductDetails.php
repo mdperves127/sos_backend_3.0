@@ -9,6 +9,8 @@ class ProductDetails extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+    protected $connection = 'tenant';
 
     public function product(){
         return $this->belongsTo('App\Models\Product');
