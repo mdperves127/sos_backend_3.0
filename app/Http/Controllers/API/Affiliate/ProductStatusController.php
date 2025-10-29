@@ -12,79 +12,69 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use App\Services\CrossTenantQueryService;
 
 class ProductStatusController extends Controller {
 
 
     public function AffiliatorProducts() {
-        tenancy()->initialize(tenant());
 
-        // $product = Product::query()
-        //     ->where( 'status', 'active' )
-        //     ->where( 'is_affiliate', '1' )->get();
+        // Get product IDs the affiliate has already requested (from their tenant DB)
+        $requestedProductIds = ProductDetails::where('user_id', 1)->pluck('product_id')->toArray();
 
-
-        $product = Product::query()
-            ->where( 'status', 'active' )
-            ->where( 'is_affiliate', '1' )
-            ->when( request( 'search' ), fn( $q, $name ) => $q->where( 'name', 'like', "%{$name}%" ) )
-            ->when( request( 'warranty' ), fn( $q, $warranty ) => $q->where( 'warranty', 'like', "%{$warranty}%" ) )
-            ->when( request( 'category_id' ), function ( $query ) {
-                $query->where( 'category_id', request( 'category_id' ) );
-            } )
-            ->when( request( 'start_stock' ) && request( 'end_stock' ), function ( $query ) {
-                $query->whereBetween( 'qty', [request( 'start_stock' ), request( 'end_stock' )] );
-            } )
-            ->when( request()->has( 'start_price' ) && request()->has( 'end_price' ), function ( $query ) {
-                $query->where( function ( $subQuery ) {
-                    $subQuery->whereBetween( DB::raw( 'CASE
+        // Query products across ALL vendor tenants
+        $products = CrossTenantQueryService::queryAllTenants(
+            Product::class,
+            function ($query) use ($requestedProductIds) {
+                return $query
+                    ->where('status', 'active')
+                    ->where('is_affiliate', '1')
+                    ->whereNotIn('id', $requestedProductIds ?: [-1])
+                    ->when(request('search'), fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
+                    ->when(request('warranty'), fn($q, $warranty) => $q->where('warranty', 'like', "%{$warranty}%"))
+                    ->when(request('category_id'), function ($query) {
+                        $query->where('category_id', request('category_id'));
+                    })
+                    ->when(request('start_stock') && request('end_stock'), function ($query) {
+                        $query->whereBetween('qty', [request('start_stock'), request('end_stock')]);
+                    })
+                    ->when(request()->has('start_price') && request()->has('end_price'), function ($query) {
+                        $query->where(function ($subQuery) {
+                            $subQuery->whereBetween(DB::raw('CASE
                                 WHEN discount_price IS NULL THEN selling_price
                                 ELSE discount_price
-                                END' ), [request( 'start_price' ), request( 'end_price' )] );
-                } );
-            } )
-            ->when( request( 'start_commission' ) && request( 'end_commission' ), function ( $query ) {
-                $query->whereBetween( 'discount_rate', [request( 'start_commission' ), request( 'end_commission' )] );
-            } )
+                                END'), [request('start_price'), request('end_price')]);
+                        });
+                    })
+                    ->when(request('start_commission') && request('end_commission'), function ($query) {
+                        $query->whereBetween('discount_rate', [request('start_commission'), request('end_commission')]);
+                    });
+            }
+        );
 
-            ->when( request( 'rating' ), function ( $query ) {
-                $query->whereHas( 'productrating', function ( $q ) {
-                    $q->where( 'rating', request( 'rating' ) );
-                } );
-            } )
+        // Apply additional filters and sorting
+        $filteredProducts = $products->when(request('high_to_low'), function ($collection) {
+            return $collection->sortByDesc(function ($product) {
+                return $product->discount_price ?: $product->selling_price;
+            });
+        })->when(request('low_to_high'), function ($collection) {
+            return $collection->sortBy(function ($product) {
+                return $product->discount_price ?: $product->selling_price;
+            });
+        });
 
-            // ->whereHas( 'productVariant' )
+        // Manual pagination
+        $perPage = 10;
+        $currentPage = request()->get('page', 1);
+        $items = $filteredProducts->forPage($currentPage, $perPage)->values();
 
-            ->when( request( 'high_to_low' ), function ( $query ) {
-                $query->orderBy( DB::raw( 'CASE
-                    WHEN discount_price IS NULL THEN selling_price
-                    ELSE discount_price
-                    END' ), 'desc' );
-            } )
-
-            ->when( request( 'low_to_high' ), function ( $query ) {
-                $query->orderBy( DB::raw( 'CASE
-                    WHEN discount_price IS NULL THEN selling_price
-                    ELSE discount_price
-                    END' ), 'ASC' );
-            } )
-
-            ->when( request( 'top_sale' ), function ( $query ) {
-                $query->withCount( 'orderDetails' )
-                    ->orderByDesc( 'order_details_count' );
-            } )
-
-            ->whereHas( 'vendor', function ( $query ) {
-                $query->withCount( ['vendoractiveproduct' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] );
-            } )
-            ->whereDoesntHave( 'productdetails', function ( $query ) {
-                $query->where( 'user_id', auth()->id() );
-            } )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $product = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $filteredProducts->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return response()->json( [
             'status'  => 200,

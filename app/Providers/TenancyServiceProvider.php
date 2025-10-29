@@ -94,6 +94,7 @@ class TenancyServiceProvider extends ServiceProvider
         ];
     }
 
+
     public function register()
     {
         //
