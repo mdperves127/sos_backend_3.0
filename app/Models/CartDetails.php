@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class CartDetails extends Model {
     use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'cart_details';
     protected $guarded = [];
 
     public function size() {

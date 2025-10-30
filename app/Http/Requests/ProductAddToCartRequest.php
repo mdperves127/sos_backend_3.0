@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Product;
+use App\Models\Tenant;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -24,40 +26,20 @@ class ProductAddToCartRequest extends FormRequest {
      * @return array<string, mixed>
      */
     public function rules() {
-
-        if ( request( 'product_id' ) ) {
-            $getproduct = Product::query()
-                ->where( 'id', request( 'product_id' ) )
-                ->whereHas( 'productdetails', function ( $query ) {
-                    $query->where( [
-                        'user_id' => auth()->id(),
-                        'status'  => 1,
-                    ] );
-                } )
-                ->withwhereHas( 'vendor', function ( $query ) {
-
-                    $query->withwhereHas( 'usersubscription', function ( $query ) {
-
-                        $query->where( function ( $query ) {
-                            $query->whereHas( 'subscription', function ( $query ) {
-                                $query->where( 'plan_type', 'freemium' );
-                            } )
-                                ->where( 'expire_date', '>', now() );
-                        } )
-                            ->orwhere( function ( $query ) {
-                                $query->whereHas( 'subscription', function ( $query ) {
-                                    $query->where( 'plan_type', '!=', 'freemium' );
-                                } )
-                                    ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                            } );
-                    } );
-                } )
-                ->where( 'status', 'active' )
-                ->first();
+        $getproduct = null;
+        if ( request('product_id') && request('tenant_id') ) {
+            $getproduct = CrossTenantQueryService::getSingleFromTenant(
+                request('tenant_id'),
+                Product::class,
+                function($query){
+                    $query->where('id', request('product_id'))
+                        ->where('status','active');
+                }
+            );
         }
 
         return [
-            'product_id'      => ['required', Rule::exists( 'products', 'id' ), function ( $attribute, $value, $fail ) use ( $getproduct ) {
+            'product_id'      => ['required', function ( $attribute, $value, $fail ) use ( $getproduct ) {
                 if ( request( 'product_id' ) != '' ) {
                     if ( !$getproduct ) {
                         $fail( 'Product not found!' );
@@ -66,8 +48,8 @@ class ProductAddToCartRequest extends FormRequest {
             }],
 
             'purchase_type'   => ['required', function ( $attribute, $value, $fail ) use ( $getproduct ) {
-                if ( request( 'purchase_type' ) != '' && request( 'product_id' ) ) {
-                    $selling_type = Product::find( request( 'product_id' ) )->selling_type;
+                if ( request( 'purchase_type' ) != '' && $getproduct ) {
+                    $selling_type = $getproduct->selling_type;
                     if ( $selling_type == null ) {
                         $fail( 'No selling type found in this product' );
                     }
@@ -108,6 +90,17 @@ class ProductAddToCartRequest extends FormRequest {
                     }
                 },
             ],
+            'tenant_id'       => ['required', 'string', Rule::exists('mysql.tenants', 'id'), function ( $attribute, $value, $fail ) use ( $getproduct ) {
+                if ( request( 'tenant_id' ) != '' ) {
+                    $tenant = Tenant::on('mysql')->find( request( 'tenant_id' ) );
+                    if ( !$tenant ) {
+                        $fail( 'Tenant not found!' );
+                    }
+                    if ( $tenant->type != 'merchant' ) {
+                        $fail( 'This product is not available for this tenant!' );
+                    }
+                }
+            }],
         ];
     }
 

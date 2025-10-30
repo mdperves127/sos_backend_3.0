@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Cart extends Model {
     use HasFactory;
 
+    protected $connection = 'tenant';
+    protected $table = 'carts';
+
     public function product() {
         return $this->belongsTo( 'App\Models\Product' );
     }

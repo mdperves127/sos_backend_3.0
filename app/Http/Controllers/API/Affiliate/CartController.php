@@ -10,6 +10,7 @@ use App\Models\CourierCredential;
 use App\Models\DeliveryCharge;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\CrossTenantQueryService;
 use App\Services\PathaoService;
 use App\Services\RedxService;
 use Illuminate\Http\Request;
@@ -20,7 +21,9 @@ class CartController extends Controller {
     public function addtocart( ProductAddToCartRequest $request ) {
         $validatedData = $request->validated();
 
+
         $getproduct = Product::find( request( 'product_id' ) );
+
         $totalqty   = collect( request( 'cartItems' ) )->sum( 'qty' );
 
         // $totalqty = collect( request( 'qty' ) )->sum();
@@ -39,7 +42,7 @@ class CartController extends Controller {
             }
         }
 
-        $user_id       = userid();
+        $user_id       = 1;
         $product_id    = $getproduct->id;
         $productAmount = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
         $vendor_id     = $getproduct->user_id;
@@ -96,72 +99,77 @@ class CartController extends Controller {
 
         DB::beginTransaction();
 
-        try {
-            $cartitem                             = new Cart();
-            $cartitem->user_id                    = $user_id;
-            $cartitem->product_id                 = $product_id;
-            $cartitem->product_price              = $product_price;
-            $cartitem->vendor_id                  = $vendor_id;
-            $cartitem->amount                     = $affi_commission;
-            $cartitem->category_id                = $getproduct->category_id;
-            $cartitem->product_qty                = $totalqty;
-            $cartitem->totalproductprice          = $totalproductprice;
-            $cartitem->total_affiliate_commission = $total_affiliate_commission;
-            $cartitem->purchase_type              = request( 'purchase_type' );
-            $cartitem->advancepayment             = $advancepayment;
-            $cartitem->totaladvancepayment        = $totaladvancepayment;
+        // try {
+            // Save cart in tenant DB and get created instance
+            $cartitem = CrossTenantQueryService::saveToTenant( request( 'tenant_id' ), Cart::class, function ( $cart ) use (
+                $user_id,
+                $product_id,
+                $product_price,
+                $vendor_id,
+                $affi_commission,
+                $getproduct,
+                $totalqty,
+                $totalproductprice,
+                $total_affiliate_commission,
+                $advancepayment,
+                $totaladvancepayment
+            ) {
+                $cart->user_id                    = $user_id;
+                $cart->product_id                 = $product_id;
+                $cart->product_price              = $product_price;
+                $cart->vendor_id                  = $vendor_id;
+                $cart->amount                     = $affi_commission;
+                $cart->category_id                = $getproduct->category_id;
+                $cart->product_qty                = $totalqty;
+                $cart->totalproductprice          = $totalproductprice;
+                $cart->total_affiliate_commission = $total_affiliate_commission;
+                $cart->purchase_type              = request( 'purchase_type' );
+                $cart->advancepayment             = $advancepayment;
+                $cart->totaladvancepayment        = $totaladvancepayment;
+            } );
 
-            $cartitem->save();
+            if ( !$cartitem ) {
+                throw new \RuntimeException('Failed to create cart in tenant database');
+            }
 
             foreach ( request( 'cartItems' ) as $data ) {
                 $colors[]   = $data['color'] ?? null;
                 $sizes[]    = $data['size'] ?? null;
-                $qnts[]     = $data['qty'];
+                $qnts[]     = $data['qty'] ?? 1;
                 $variants[] = $data['variant_id'] ?? null;
                 $units[]    = $data['unit'] ?? null;
             }
 
             foreach ( $qnts as $key => $value ) {
-                CartDetails::create( [
-                    'cart_id'    => $cartitem->id,
-                    'color'      => $colors[$key],
-                    'size'       => $sizes[$key],
-                    'qty'        => $value,
-                    'variant_id' => $variants[$key],
-                    'unit_id'    => $units[$key],
-                ] );
+                CrossTenantQueryService::saveToTenant( request( 'tenant_id' ), CartDetails::class, function ( $cartDetail ) use (
+                    $cartitem,
+                    $colors,
+                    $sizes,
+                    $variants,
+                    $units,
+                    $key,
+                    $value
+                ) {
+                    $cartDetail->cart_id    = $cartitem->id;
+                    $cartDetail->color      = $colors[$key];
+                    $cartDetail->size       = $sizes[$key];
+                    $cartDetail->qty        = $value;
+                    $cartDetail->variant_id = $variants[$key];
+                    $cartDetail->unit_id    = $units[$key];
+                } );
             }
 
             DB::commit();
 
-        } catch ( \Exception $e ) {
-            DB::rollBack();
-            return response()->json( ['error' => 'Failed to create cart.'], 500 );
-        }
+        // } catch ( \Exception $e ) {
+        //     DB::rollBack();
+        //     return response()->json( ['error' => 'Failed to create cart.'], 500 );
+        // }
 
         return response()->json( [
             'status'  => 201,
             'message' => 'Added to Cart',
         ] );
-
-        // return $request->cartItems[0]['color_id'];
-
-        // $colors   = $request->color_id;
-        // $sizes    = $request->size_id;
-        // $qtys     = $request->qty;
-        // $variants = $request->unit_id;
-
-        // // return $cartItems;
-        // $cartItems = request( 'cartItems' );
-        // foreach ( $colors as $key => $item ) {
-        //     $cart_item             = new CartDetails;
-        //     $cart_item->cart_id    = $cartitem->id;
-        //     $cart_item->color      = $item;
-        //     $cart_item->size       = $sizes[$key];
-        //     $cart_item->qty        = $qtys[$key];
-        //     $cart_item->variant_id = $variants[$key];
-        //     $cart_item->save();
-        // }
 
     }
 
