@@ -15,6 +15,8 @@ use App\Services\PathaoService;
 use App\Services\RedxService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\Tenant;
 
 class CartController extends Controller {
     //
@@ -101,7 +103,7 @@ class CartController extends Controller {
 
         // try {
             // Save cart in tenant DB and get created instance
-            $cartitem = CrossTenantQueryService::saveToTenant( request( 'tenant_id' ), Cart::class, function ( $cart ) use (
+            $cartitem = CrossTenantQueryService::saveToTenant( tenant()->id, Cart::class, function ( $cart ) use (
                 $user_id,
                 $product_id,
                 $product_price,
@@ -126,6 +128,7 @@ class CartController extends Controller {
                 $cart->purchase_type              = request( 'purchase_type' );
                 $cart->advancepayment             = $advancepayment;
                 $cart->totaladvancepayment        = $totaladvancepayment;
+                $cart->tenant_id                  = request('tenant_id');
             } );
 
             if ( !$cartitem ) {
@@ -141,7 +144,7 @@ class CartController extends Controller {
             }
 
             foreach ( $qnts as $key => $value ) {
-                CrossTenantQueryService::saveToTenant( request( 'tenant_id' ), CartDetails::class, function ( $cartDetail ) use (
+                CrossTenantQueryService::saveToTenant( tenant()->id, CartDetails::class, function ( $cartDetail ) use (
                     $cartitem,
                     $colors,
                     $sizes,
@@ -175,37 +178,84 @@ class CartController extends Controller {
 
     public function viewcart() {
 
-        $user_id   = auth()->user()->id;
-        $cartitems = Cart::where( 'user_id', $user_id )->with( ['cartDetails', 'product:id,name'] )
+        $tenants = Cart::pluck('tenant_id')->get();
 
-            ->whereHas( 'product', function ( $query ) {
-                $query->where( 'status', 'active' )
+        dd($tenants);
+
+        if ( !$tenant_id ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Tenant ID is required.',
+            ], 400 );
+        }
+
+        // Step 1: Get the specific tenant from central database
+        $tenant = Tenant::find( $tenant_id );
+        if ( !$tenant ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Tenant not found.',
+            ], 404 );
+        }
+
+        // Step 2: Get all cart items from this tenant's database
+        $cartitems = CrossTenantQueryService::queryTenant(
+            $tenant,
+            Cart::class,
+            function ( $query ) {
+                $query->with( ['cartDetails'] );
+            }
+        );
+
+        if ( $cartitems->isEmpty() ) {
+            return response()->json( [
+                'status' => 200,
+                'cart'   => [],
+            ] );
+        }
+
+        // Step 3: Extract unique product_ids from cart items
+        $productIds = $cartitems->pluck( 'product_id' )->unique()->values()->toArray();
+
+        // Step 4: Get product details from this tenant's product table
+        $products = CrossTenantQueryService::queryTenant(
+            $tenant,
+            Product::class,
+            function ( $query ) use ( $productIds ) {
+                $query->whereIn( 'id', $productIds )
+                    ->where( 'status', 'active' )
                     ->whereHas( 'productdetails', function ( $query ) {
                         $query->where( 'status', 1 );
-                    } )
-                    ->whereHas( 'vendor', function ( $query ) {
-                        $query->withwhereHas( 'usersubscription', function ( $query ) {
-
-                            $query->where( function ( $query ) {
-                                $query->whereHas( 'subscription', function ( $query ) {
-                                    $query->where( 'plan_type', 'freemium' );
-                                } )
-                                    ->where( 'expire_date', '>', now() );
-                            } )
-                                ->orwhere( function ( $query ) {
-                                    $query->whereHas( 'subscription', function ( $query ) {
-                                        $query->where( 'plan_type', '!=', 'freemium' );
-                                    } )
-                                        ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                                } );
-                        } );
                     } );
-            } )
-            ->get();
+            }
+        );
+
+        // Step 5: Create products lookup by id
+        $productsByProductId = $products->keyBy( 'id' );
+
+        // Step 6: Attach product data and tenant info to cart items
+        $cartitems->transform( function ( $cartItem ) use ( $productsByProductId, $tenant ) {
+            $productId = $cartItem->product_id;
+
+            if ( isset( $productsByProductId[$productId] ) ) {
+                $cartItem->product = $productsByProductId[$productId];
+            }
+
+            // Add tenant context
+            $cartItem->tenant_id = $tenant->id;
+            $cartItem->tenant_name = $tenant->company_name;
+
+            return $cartItem;
+        } );
+
+        // Step 7: Filter out cart items without valid products
+        $cartitems = $cartitems->filter( function ( $cartItem ) {
+            return isset( $cartItem->product );
+        } );
 
         return response()->json( [
             'status' => 200,
-            'cart'   => $cartitems,
+            'cart'   => $cartitems->values(),
         ] );
     }
 

@@ -10,6 +10,7 @@ class Cart extends Model {
 
     protected $connection = 'tenant';
     protected $table = 'carts';
+    protected $guarded = [];
 
     public function product() {
         return $this->belongsTo( 'App\Models\Product' );
