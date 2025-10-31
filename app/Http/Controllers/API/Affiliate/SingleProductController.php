@@ -29,15 +29,24 @@ class SingleProductController extends Controller {
             $tenant_id,
             Product::class,
             function ( $query ) use ( $id ) {
-                return $query->with( ['category', 'subcategory', 'productImage', 'brand', 'productdetails' => function ( $query ) {
-                    $query->where( ['user_id' => auth()->id(), 'status' => 3] );
-                }] )
+                $query->with( [
+                    'category',
+                    'subcategory',
+                    'productImage',
+                    'brand',
+                    'productdetails' => function ( $query ) {
+                        $query->where( 'status', 'active' );
+                    },
+                    'productrating.affiliate:id,name,image',
+                    'productVariant.size',
+                    'productVariant.unit',
+                    'productVariant.color',
+                    'purchaseDetails.color',
+                    'purchaseDetails.size',
+                    'purchaseDetails.unit'
+                ] )
                     ->where( 'status', 'active' )
                     ->withAvg( 'productrating', 'rating' )
-                    ->with( 'productrating.affiliate:id,name,image' )
-                    ->with( 'productVariant', function ( $query ) {
-                        $query->with( 'size:id,name', 'unit:id,unit_name', 'color:id,name' );
-                    } )
                     ->where( 'id', $id );
             }
         );

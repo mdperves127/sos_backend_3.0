@@ -10,6 +10,8 @@ class ProductPurchaseDetails extends Model
 {
     use HasFactory,SoftDeletes;
 
+    protected $connection = 'tenant';
+    protected $table = 'product_purchase_details';
     protected $guarded = [];
 
     public function color()
