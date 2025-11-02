@@ -317,95 +317,117 @@ class CartController extends Controller {
 
     function affiliatorCart( $id ) {
         try {
-
-            $cart = Cart::where( 'user_id', userid() )
-                ->whereHas( 'product', function ( $query ) {
-
-                    $query->where( 'status', 'active' )
-                        ->whereHas( 'vendor', function ( $query ) {
-                            $query->withwhereHas( 'usersubscription', function ( $query ) {
-
-                                $query->where( function ( $query ) {
-                                    $query->whereHas( 'subscription', function ( $query ) {
-                                        $query->where( 'plan_type', 'freemium' );
-                                    } )
-                                        ->where( 'expire_date', '>', now() );
-                                } )
-                                    ->orwhere( function ( $query ) {
-                                        $query->whereHas( 'subscription', function ( $query ) {
-                                            $query->where( 'plan_type', '!=', 'freemium' );
-                                        } )
-                                            ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                                    } );
-                            } );
-                        } );
-                } )
-                ->find( $id );
-
-            $deliverCredential = DeliveryCharge::where( 'vendor_id', $cart->vendor_id )->select( 'id', 'area', 'charge' )->get() ?? [];
-
-            //Courier Credential
-
-            $courier = CourierCredential::where( 'vendor_id', $cart->vendor_id )->whereStatus( 'active' )->select( 'id', 'courier_name', 'status', 'default' )->get();
-            $default = CourierCredential::where( 'vendor_id', $cart->vendor_id )
-                ->where( 'default', 'yes' )
-                ->first();
-
-            if ( isset( $default ) && $default->courier_name == 'pathao' ) {
-                $access_token = PathaoService::getToken( $default->api_key, $default->secret_key, $default->client_email, $default->client_password );
-
-                $default = CourierCredential::find( $default->id )->only( 'id', 'courier_name', 'status', 'default' );
-
-                if ( $access_token ) {
-                    $cities = PathaoService::cities( $access_token ) ?? [];
-                }
-            } elseif ( isset( $default ) && $default && $default->courier_name == 'redx' ) {
-
-                $apiKey = courierCredential( $cart->vendor_id, 'redx' );
-
-                $areas = RedxService::getArea( $apiKey->api_key );
-                $areas = json_decode( $areas, true );
-            }
-
-            // $checkCourier = CourierCredential::where( [
-            //     'vendor_id' => vendorId(),
-            //     'status'    => "active",
-            //     'default'   => 'yes',
-            // ] )->exists();
-
-            // if ( $checkCourier ) {
-            //     $courier      = CourierCredential::where( 'vendor_id', $cart->vendor_id )->whereStatus( 'active' )->select( 'id', 'courier_name', 'status', 'default' )->get() ?? [];
-            //     $default      = CourierCredential::where( 'vendor_id', $cart->vendor_id )->whereDefault( 'yes' )->first() ?? "";
-            //     $access_token = PathaoService::getToken( $default->api_key, $default->secret_key, $default->client_email, $default->client_password );
-
-            //     if ( $access_token ) {
-            //         $cities = PathaoService::cities( $access_token ) ?? 'failed';
-            //     }
-            // }
+            // Step 1: Get cart from current tenant's database
+            $cart = Cart::with( ['cartDetails'] )->find( $id );
 
             if ( !$cart ) {
                 return response()->json( [
                     'status' => 'Not found',
-                ] );
-            } else {
-                $data              = Cart::find( $id )->load( ['product:id,name', 'cartDetails'] );
-                $deliverCredential = $deliverCredential;
-                return response()->json( [
-                    "data"            => $data,
-                    "deliveryArea"    => $deliverCredential,
-                    "courier"         => $courier ?? [],
-                    "cities"          => $cities ?? [],
-                    'default_courier' => $default,
-                    'areas'           => $areas ?? [],
+                    'message' => 'Cart not found',
                 ] );
             }
 
-        } catch ( \Exception $e ) {
-            // return responsejson( $e->getMessage() );
+            // Step 2: Get the tenant whose product is in this cart
+            if ( !$cart->tenant_id ) {
+                return response()->json( [
+                    'status' => 'error',
+                    'message' => 'Cart does not have tenant_id',
+                ] );
+            }
 
+            $productTenant = Tenant::on('mysql')->where('id', $cart->tenant_id)->first();
+
+            if ( !$productTenant ) {
+                return response()->json( [
+                    'status' => 'error',
+                    'message' => 'Product tenant not found',
+                ] );
+            }
+
+            // Step 3: Get product from product's tenant database
+            $product = CrossTenantQueryService::getSingleFromTenant(
+                $cart->tenant_id,
+                Product::class,
+                function ( $query ) use ( $cart ) {
+                    $query->where( 'id', $cart->product_id )
+                        ->where( 'status', 'active' );
+                }
+            );
+
+            if ( !$product ) {
+                return response()->json( [
+                    'status' => 'error',
+                    'message' => 'Product not found or inactive',
+                ] );
+            }
+
+            // Attach product to cart
+            $cart->product = $product;
+
+            // Step 4: Get delivery charge and courier credentials from product's tenant database
+            $deliverCredential = CrossTenantQueryService::queryTenant(
+                $productTenant,
+                DeliveryCharge::class,
+                function ( $query ) use ( $cart ) {
+                    $query->where( 'vendor_id', $cart->vendor_id )
+                        ->select( 'id', 'area', 'charge' );
+                }
+            );
+
+            // Step 5: Get courier credentials from product's tenant database
+            $courier = CrossTenantQueryService::queryTenant(
+                $productTenant,
+                CourierCredential::class,
+                function ( $query ) use ( $cart ) {
+                    $query->where( 'vendor_id', $cart->vendor_id )
+                        ->where( 'status', 'active' )
+                        ->select( 'id', 'courier_name', 'status', 'default' );
+                }
+            );
+
+            $default = CrossTenantQueryService::getSingleFromTenant(
+                $cart->tenant_id,
+                CourierCredential::class,
+                function ( $query ) use ( $cart ) {
+                    $query->where( 'vendor_id', $cart->vendor_id )
+                        ->where( 'default', 'yes' );
+                }
+            );
+
+            $cities = [];
+            $areas = [];
+
+            if ( $default && $default->courier_name == 'pathao' ) {
+                $access_token = PathaoService::getToken( $default->api_key, $default->secret_key, $default->client_email, $default->client_password );
+
+                if ( $access_token ) {
+                    $cities = PathaoService::cities( $access_token ) ?? [];
+                }
+
+                $default = $default->only( 'id', 'courier_name', 'status', 'default' );
+            } elseif ( $default && $default->courier_name == 'redx' ) {
+                $apiKey = courierCredential( $cart->vendor_id, 'redx' );
+
+                if ( $apiKey ) {
+                    $areas = RedxService::getArea( $apiKey->api_key );
+                    $areas = json_decode( $areas, true ) ?? [];
+                }
+            }
+
+            return response()->json( [
+                "data"            => $cart,
+                "deliveryArea"    => $deliverCredential->values()->all(),
+                "courier"         => $courier->values()->all(),
+                "cities"          => $cities,
+                'default_courier' => $default,
+                'areas'           => $areas,
+            ] );
+
+        } catch ( \Exception $e ) {
             return response()->json( [
                 'status'  => 403,
                 'message' => 'Your courier credential is invalid, please check and try again.',
+                'error' => $e->getMessage(),
             ] );
         }
     }

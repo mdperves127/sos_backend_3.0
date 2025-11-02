@@ -474,15 +474,12 @@ Route::middleware( [
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
             Route::get( 'single/product/{tenant_id}/{id}', [SingleProductController::class, 'AffiliatorProductSingle'] );
-
             Route::get( 'single/active/product/{id}', [SingleProductController::class, 'AffiliatoractiveProduct'] );
-
             Route::post( 'request/product/{tenant_id}/{id?}', [AffiliateProductStatusController::class, 'AffiliatorProductRequest'] );
-
             Route::get( 'single/page/{id}', [SingleProductController::class, 'AffiliatorProductSinglePage'] );
             Route::post( 'add-to-cart', [CartController::class, 'addtocart'] );
-
             Route::get( 'cart', [CartController::class, 'viewcart'] );
+
             Route::put( 'cart-updatequantity/{cart_id}/{scope}', [CartController::class, 'updatequantity'] );
             Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
             Route::post( 'place-order', [CheckoutController::class, 'placeorder'] );
@@ -502,6 +499,7 @@ Route::middleware( [
             Route::get( 'vendor-expire-products', [AffiliateProductStatusController::class, 'vendorexpireproducts'] );
 
             Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
+
             Route::get( 'cat/{id}', [CartController::class, 'affiliatorCart'] );
 
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
