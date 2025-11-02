@@ -24,7 +24,21 @@ class CartController extends Controller {
         $validatedData = $request->validated();
 
 
-        $getproduct = Product::find( request( 'product_id' ) );
+        $getproduct = CrossTenantQueryService::getSingleFromTenant(
+            request('tenant_id'),
+            Product::class,
+            function($query) {
+                $query->where('id', request('product_id'))
+                    ->where('status', 'active');
+            }
+        );
+
+        if (!$getproduct) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Product not found.',
+            ], 404);
+        }
 
         $totalqty   = collect( request( 'cartItems' ) )->sum( 'qty' );
 
