@@ -479,9 +479,11 @@ Route::middleware( [
             Route::get( 'single/page/{id}', [SingleProductController::class, 'AffiliatorProductSinglePage'] );
             Route::post( 'add-to-cart', [CartController::class, 'addtocart'] );
             Route::get( 'cart', [CartController::class, 'viewcart'] );
+            Route::get( 'cat/{id}', [CartController::class, 'affiliatorCart'] );
+            Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
+
 
             Route::put( 'cart-updatequantity/{cart_id}/{scope}', [CartController::class, 'updatequantity'] );
-            Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
             Route::post( 'place-order', [CheckoutController::class, 'placeorder'] );
 
             Route::post( 'order-create', [OrderController::class, 'store'] );
@@ -500,7 +502,6 @@ Route::middleware( [
 
             Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
 
-            Route::get( 'cat/{id}', [CartController::class, 'affiliatorCart'] );
 
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );

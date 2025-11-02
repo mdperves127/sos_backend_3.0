@@ -239,7 +239,19 @@ class CartController extends Controller {
             }
         }
 
-        // Step 4: Get all products from all tenants and combine into a single array
+        // Step 4: Create a mapping of cart items by tenant_id and product_id for quick lookup
+        $cartMap = [];
+        foreach ( $cartitems as $cartItem ) {
+            $key = $cartItem->tenant_id . '_' . $cartItem->product_id;
+            if ( !isset( $cartMap[$key] ) ) {
+                $cartMap[$key] = [];
+            }
+            $cartMap[$key][] = [
+                'id' => $cartItem->id,
+            ];
+        }
+
+        // Step 5: Get all products from all tenants and combine with cart data
         $allProducts = collect();
 
         foreach ( $productIdsByTenant as $tenantId => $productIds ) {
@@ -277,11 +289,24 @@ class CartController extends Controller {
                 $products = $allProductsForTenant;
             }
 
-            // Add each product to the unified array with tenant context
+            // Add each product to the unified array with tenant context and cart data
             foreach ( $products as $product ) {
                 // Ensure tenant context is attached to each product
                 $product->tenant_id = $tenant->id;
                 $product->tenant_name = $tenant->company_name;
+
+                // Find matching cart item(s) for this product
+                $key = $tenant->id . '_' . $product->id;
+                if ( isset( $cartMap[$key] ) && !empty( $cartMap[$key] ) ) {
+                    // If there's a cart item, add cart_id and cart data
+                    $cartItem = $cartMap[$key][0]; // Get first matching cart item
+                    $product->cart_id = $cartItem['id'];
+                    $product->cart_data = $cartItem;
+                } else {
+                    // If no cart item found, set cart_id to null
+                    $product->cart_id = null;
+                    $product->cart_data = null;
+                }
 
                 // Add to unified products array
                 $allProducts->push( $product );
@@ -296,7 +321,7 @@ class CartController extends Controller {
 
     public function deleteCartitem( $cart_id ) {
 
-        $cartitem = Cart::where( 'id', $cart_id )->where( 'user_id', userid() )->first();
+        $cartitem = Cart::where( 'id', $cart_id )->first();
         if ( $cartitem ) {
             $cartitem->delete();
             return response()->json( [
