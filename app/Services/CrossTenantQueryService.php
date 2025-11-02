@@ -46,7 +46,11 @@ class CrossTenantQueryService
 
                 // Apply the callback query builder
                 if ($queryCallback) {
-                    $baseQuery = $queryCallback($baseQuery);
+                    $result = $queryCallback($baseQuery);
+                    // Only update $baseQuery if callback returns a value, otherwise keep using $baseQuery
+                    if ($result !== null) {
+                        $baseQuery = $result;
+                    }
                 }
 
                 $tenantResults = $baseQuery->get();

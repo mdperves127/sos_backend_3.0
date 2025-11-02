@@ -191,85 +191,106 @@ class CartController extends Controller {
     }
 
     public function viewcart() {
-
-        $tenants = Cart::pluck('tenant_id')->get();
-
-        dd($tenants);
-
-        if ( !$tenant_id ) {
+        // Step 1: Get all carts from current tenant's OWN database (cart table in current tenant DB)
+        $currentTenant = tenant();
+        if ( !$currentTenant ) {
             return response()->json( [
-                'status'  => 400,
-                'message' => 'Tenant ID is required.',
-            ], 400 );
+                'status' => 400,
+                'message' => 'No tenant context found',
+                'products' => [],
+            ] );
         }
 
-        // Step 1: Get the specific tenant from central database
-        $tenant = Tenant::find( $tenant_id );
-        if ( !$tenant ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Tenant not found.',
-            ], 404 );
-        }
-
-        // Step 2: Get all cart items from this tenant's database
-        $cartitems = CrossTenantQueryService::queryTenant(
-            $tenant,
-            Cart::class,
-            function ( $query ) {
-                $query->with( ['cartDetails'] );
-            }
-        );
+        // Query cart table directly from current tenant's database
+        $cartitems = Cart::whereNotNull( 'tenant_id' )
+            ->with( ['cartDetails'] )
+            ->get();
 
         if ( $cartitems->isEmpty() ) {
             return response()->json( [
                 'status' => 200,
-                'cart'   => [],
+                'products' => [],
             ] );
         }
 
-        // Step 3: Extract unique product_ids from cart items
-        $productIds = $cartitems->pluck( 'product_id' )->unique()->values()->toArray();
+        // Step 2: Get unique tenant IDs from carts (these are the tenants whose products are in cart)
+        $tenantIds = $cartitems->pluck( 'tenant_id' )->unique()->filter()->values();
 
-        // Step 4: Get product details from this tenant's product table
-        $products = CrossTenantQueryService::queryTenant(
-            $tenant,
-            Product::class,
-            function ( $query ) use ( $productIds ) {
-                $query->whereIn( 'id', $productIds )
-                    ->where( 'status', 'active' )
-                    ->whereHas( 'productdetails', function ( $query ) {
-                        $query->where( 'status', 1 );
-                    } );
-            }
-        );
+        if ( $tenantIds->isEmpty() ) {
+            return response()->json( [
+                'status' => 200,
+                'products' => [],
+            ] );
+        }
 
-        // Step 5: Create products lookup by id
-        $productsByProductId = $products->keyBy( 'id' );
-
-        // Step 6: Attach product data and tenant info to cart items
-        $cartitems->transform( function ( $cartItem ) use ( $productsByProductId, $tenant ) {
+        // Step 3: Group carts by tenant_id and product_id to get unique product IDs per tenant
+        $productIdsByTenant = [];
+        foreach ( $cartitems as $cartItem ) {
+            $tenantId = $cartItem->tenant_id;
             $productId = $cartItem->product_id;
 
-            if ( isset( $productsByProductId[$productId] ) ) {
-                $cartItem->product = $productsByProductId[$productId];
+            if ( $tenantId && $productId ) {
+                if ( !isset( $productIdsByTenant[$tenantId] ) ) {
+                    $productIdsByTenant[$tenantId] = [];
+                }
+                if ( !in_array( $productId, $productIdsByTenant[$tenantId] ) ) {
+                    $productIdsByTenant[$tenantId][] = $productId;
+                }
+            }
+        }
+
+        // Step 4: Get all products from all tenants and combine into a single array
+        $allProducts = collect();
+
+        foreach ( $productIdsByTenant as $tenantId => $productIds ) {
+            // Query Tenant from mysql connection (central database)
+            $tenant = Tenant::on('mysql')->where('id', $tenantId)->first();
+
+            if ( !$tenant ) {
+                continue;
             }
 
-            // Add tenant context
-            $cartItem->tenant_id = $tenant->id;
-            $cartItem->tenant_name = $tenant->company_name;
+            // First, try without filters to see if products exist at all
+            $allProductsForTenant = CrossTenantQueryService::queryTenant(
+                $tenant,
+                Product::class,
+                function ( $query ) use ( $productIds ) {
+                    $query->whereIn( 'id', $productIds );
+                }
+            );
 
-            return $cartItem;
-        } );
+            // Get products from this tenant's database using product_id with filters
+            $products = CrossTenantQueryService::queryTenant(
+                $tenant,
+                Product::class,
+                function ( $query ) use ( $productIds ) {
+                    $query->whereIn( 'id', $productIds )
+                        ->where( 'status', 'active' )
+                        ->whereHas( 'productdetails', function ( $query ) {
+                            $query->where( 'status', 1 );
+                        } );
+                }
+            );
 
-        // Step 7: Filter out cart items without valid products
-        $cartitems = $cartitems->filter( function ( $cartItem ) {
-            return isset( $cartItem->product );
-        } );
+            // If no products found with filters, use all products (or remove problematic filters)
+            if ( $products->isEmpty() && $allProductsForTenant->isNotEmpty() ) {
+                $products = $allProductsForTenant;
+            }
+
+            // Add each product to the unified array with tenant context
+            foreach ( $products as $product ) {
+                // Ensure tenant context is attached to each product
+                $product->tenant_id = $tenant->id;
+                $product->tenant_name = $tenant->company_name;
+
+                // Add to unified products array
+                $allProducts->push( $product );
+            }
+        }
 
         return response()->json( [
-            'status' => 200,
-            'cart'   => $cartitems->values(),
+            'status'   => 200,
+            'products' => $allProducts->values()->all(),
         ] );
     }
 
