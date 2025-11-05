@@ -15,8 +15,6 @@ class BalanceController extends Controller
         ->where('status',Status::Pending->value)
         ->sum('amount');
         return response()->json($balance);
-
-
     }
     function ActiveBalance(){
         $balance = Order::where('affiliator_id',auth()->user()->id)

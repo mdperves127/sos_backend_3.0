@@ -336,10 +336,6 @@ class CartController extends Controller {
         }
     }
 
-    public function updatequantity() {
-        echo "DOne";
-    }
-
     function affiliatorCart( $id ) {
         try {
             // Step 1: Get cart from current tenant's database

@@ -479,30 +479,11 @@ Route::middleware( [
             Route::get( 'single/page/{id}', [SingleProductController::class, 'AffiliatorProductSinglePage'] );
             Route::post( 'add-to-cart', [CartController::class, 'addtocart'] );
             Route::get( 'cart', [CartController::class, 'viewcart'] );
-            Route::get( 'cat/{id}', [CartController::class, 'affiliatorCart'] );
+            Route::get( 'cart/{id}', [CartController::class, 'affiliatorCart'] );
             Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
-
-
-            Route::put( 'cart-updatequantity/{cart_id}/{scope}', [CartController::class, 'updatequantity'] );
-            Route::post( 'place-order', [CheckoutController::class, 'placeorder'] );
-
-            Route::post( 'order-create', [OrderController::class, 'store'] );
-
-            Route::get( 'pending-balance', [BalanceController::class, 'PendingBalance'] );
-            Route::get( 'active-balance', [BalanceController::class, 'ActiveBalance'] );
-
-            Route::get( 'profile', [ProfileController::class, 'AffiliatorProfile'] );
-            Route::post( 'update/profile', [ProfileController::class, 'AffiliatorUpdateProfile'] );
-
             Route::get( 'products', [AffiliateProductStatusController::class, 'AffiliatorProducts'] );
-
-            Route::get( 'request/pending/product', [AffiliateProductStatusController::class, 'AffiliatorProductPendingProduct'] );
-            Route::get( 'request/active/product', [AffiliateProductStatusController::class, 'AffiliatorProductActiveProduct'] );
-            Route::get( 'vendor-expire-products', [AffiliateProductStatusController::class, 'vendorexpireproducts'] );
-
-            Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
-
-
+// Done order related routes
+            Route::post( 'order-create', [OrderController::class, 'store'] );
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [OrderController::class, 'ProgressOrders'] );
@@ -513,17 +494,33 @@ Route::middleware( [
             Route::get( 'product-processing', [OrderController::class, 'ProductProcessing'] );
             Route::get( 'order-ready', [OrderController::class, 'OrderReady'] );
             Route::get( 'order-return', [OrderController::class, 'orderReturn'] );
-
             Route::get( 'order/view/{id}', [OrderController::class, 'orderView'] );
 
+
+
+            Route::get( 'pending-balance', [BalanceController::class, 'PendingBalance'] );
+            Route::get( 'active-balance', [BalanceController::class, 'ActiveBalance'] );
+
+            // Route::get( 'profile', [ProfileController::class, 'AffiliatorProfile'] );
+            // Route::post( 'update/profile', [ProfileController::class, 'AffiliatorUpdateProfile'] );
+
+
+            Route::get( 'request/pending/product', [AffiliateProductStatusController::class, 'AffiliatorProductPendingProduct'] );
+            Route::get( 'request/active/product', [AffiliateProductStatusController::class, 'AffiliatorProductActiveProduct'] );
+            Route::get( 'vendor-expire-products', [AffiliateProductStatusController::class, 'vendorexpireproducts'] );
+
+            Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
+
+
+
             //pending balance
-            Route::get( 'balance/history/{status?}', [PendingBalanceController::class, 'balance'] );
+            // Route::get( 'balance/history/{status?}', [PendingBalanceController::class, 'balance'] );
 
             //bank show
-            Route::get( 'banks', [AffiliateBankController::class, 'index'] );
+            // Route::get( 'banks', [AffiliateBankController::class, 'index'] );
 
-            Route::post( 'withdraw-post', [WithdrawController::class, 'withdraw'] );
-            Route::get( 'all-withdraw/{status?}', [WithdrawController::class, 'index'] );
+            // Route::post( 'withdraw-post', [WithdrawController::class, 'withdraw'] );
+            // Route::get( 'all-withdraw/{status?}', [WithdrawController::class, 'index'] );
 
             Route::get( 'dashboard-datas', [AffiliateDashboardController::class, 'index'] );
             Route::get( 'order-vs-comission', [AffiliateDashboardController::class, 'orderVsRevenue'] );
@@ -535,7 +532,7 @@ Route::middleware( [
                 Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
             } );
 
-            Route::post( 'get-token', [AffiliateDashboardController::class, 'getToken'] );
+            // Route::post( 'get-token', [AffiliateDashboardController::class, 'getToken'] );
             Route::post( 'get-cities', [AffiliateDashboardController::class, 'getCities'] );
             Route::post( 'get-zones/{city_id}/{vendor_id}', [AffiliateDashboardController::class, 'getZones'] );
             Route::post( 'get-area/{zone_id}/{vendor_id}', [AffiliateDashboardController::class, 'getArea'] );

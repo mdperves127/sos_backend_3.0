@@ -10,49 +10,31 @@ use App\Models\Order;
 use App\Models\PaymentStore;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Tenant;
 use App\Services\AamarPayService;
+use App\Services\CrossTenantQueryService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller {
 
     function store( ProductRequest $request ) {
+        dd($request->all());
 
-        // return request()->datas;
-        $request->validated();
         $cart = Cart::find( request( 'cart_id' ) );
 
-        $getmembershipdetails = getmembershipdetails();
-        if ( $getmembershipdetails == null ) {
-            return responsejson( 'You do not have a membership', 'fail' );
+        if ( !$cart || !$cart->tenant_id ) {
+            return responsejson( 'Cart not found or missing tenant information', 'fail' );
         }
 
-        if ( $getmembershipdetails->expire_date < now() ) {
-            return responsejson( 'Your membership expire', 'fail' );
-        }
-
-        $product = Product::query()
-            ->where( ['id' => $cart->product_id, 'status' => 'active'] )
-            ->whereHas( 'vendor', function ( $query ) {
-                $query->withwhereHas( 'usersubscription', function ( $query ) {
-                    $query->where( function ( $query ) {
-                        $query->whereHas( 'subscription', function ( $query ) {
-                            $query->where( 'plan_type', 'freemium' );
-                        } )
-                            ->where( 'expire_date', '>', now() );
-                    } )
-                        ->orwhere( function ( $query ) {
-                            $query->whereHas( 'subscription', function ( $query ) {
-                                $query->where( 'plan_type', '!=', 'freemium' );
-                            } )
-                                ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                        } );
-                } );
-            } )
-            ->whereHas( 'productdetails', function ( $query ) {
-                $query->where( ['user_id' => userid(), 'status' => 1] );
-            } )
-            ->first();
+        // Get product from cart's tenant database
+        $product = CrossTenantQueryService::getSingleFromTenant(
+            $cart->tenant_id,
+            Product::class,
+            function ( $query ) use ( $cart ) {
+                $query->where( ['id' => $cart->product_id, 'status' => 'active'] );
+            }
+        );
 
         if ( !$product ) {
             return responsejson( 'Product currently not available!' );
@@ -107,16 +89,18 @@ class OrderController extends Controller {
 
         }
 
-        $user           = User::find( auth()->id() );
+        // Get user - using auth()->user() or auth()->id() as needed
+        $user = auth()->user();
+        $currentTenant = tenant();
         $advancepayment = $cart->advancepayment * $totalqty;
 
         if ( request( 'payment_type' ) == 'my-wallet' ) {
-            if ( $user->balance < $advancepayment ) {
+            if ( $currentTenant->balance < $advancepayment ) {
                 return responsejson( 'You do not have sufficient balance.', 'fail' );
             }
-            $user->decrement( 'balance', $advancepayment );
+            $currentTenant->decrement( 'balance', $advancepayment );
 
-            return ProductCheckoutService::store( $cart->id, $product->id, $totalqty, $user->id, request( 'datas' ) );
+            return ProductCheckoutService::store( $cart->id, $product->id, $totalqty, $user->id, request( 'datas' ), 'aamarpay', $cart->tenant_id );
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
             PaymentStore::create( [
@@ -132,6 +116,7 @@ class OrderController extends Controller {
                     'totalqty'  => $totalqty,
                     'userid'    => $user->id,
                     'datas'     => request( 'datas' ),
+                    'tenant_id' => $cart->tenant_id,
                 ],
 
             ] );
