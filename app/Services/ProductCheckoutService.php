@@ -44,14 +44,28 @@ class ProductCheckoutService {
                 ] );
             }
 
-            // Get cart from tenant's database using CrossTenantQueryService
-            $cart = CrossTenantQueryService::getSingleFromTenant(
-                $tenantId,
-                Cart::class,
-                function ( $query ) use ( $cartId ) {
-                    $query->where( 'id', $cartId );
-                }
-            );
+            // Get connection name using CrossTenantQueryService approach
+            $connectionName = 'tenant_' . $tenant->id;
+            $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+            // Configure tenant connection using CrossTenantQueryService pattern
+            config([
+                'database.connections.' . $connectionName => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $databaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ]
+            ]);
+            DB::purge($connectionName);
+
+            // Get cart from current tenant's database (carts are stored in dropshipper tenant, not product tenant)
+            $cart = Cart::find( $cartId );
 
             if ( !$cart ) {
                 return response()->json( [
@@ -60,7 +74,7 @@ class ProductCheckoutService {
                 ] );
             }
 
-            // Get product from tenant's database using CrossTenantQueryService
+            // Get product from product's tenant database (request tenant - cart->tenant_id)
             $product = CrossTenantQueryService::getSingleFromTenant(
                 $tenantId,
                 Product::class,
@@ -84,84 +98,87 @@ class ProductCheckoutService {
 
                 $is_unlimited = 1;
                 if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
-                    // Update product quantity - get product, modify, then save using service
-                    $updatedProduct = CrossTenantQueryService::getSingleFromTenant(
-                        $tenantId,
-                        Product::class,
-                        function ( $query ) use ( $productid ) {
-                            $query->where( 'id', $productid );
-                        }
-                    );
+                    // Get current product qty using DB facade with CrossTenantQueryService connection
+                    $currentProduct = DB::connection($connectionName)->table('products')
+                        ->where('id', $productid)
+                        ->first();
 
-                    if ( $updatedProduct ) {
-                        $updatedProduct->qty -= $totalqty;
-                        $updatedProduct->setConnection( $updatedProduct->getConnectionName() );
-                        $updatedProduct->save();
+                    if ($currentProduct) {
+                        // Update product quantity using DB facade directly to avoid tenant attributes
+                        DB::connection($connectionName)->table('products')
+                            ->where('id', $productid)
+                            ->update(['qty' => $currentProduct->qty - $totalqty]);
                     }
 
-                    // Update product variants
-                    foreach ( $data['variants'] as $variant ) {
-                        $productVariant = CrossTenantQueryService::getSingleFromTenant(
-                            $tenantId,
-                            ProductVariant::class,
-                            function ( $query ) use ( $variant ) {
-                                $query->where( 'id', $variant['variant_id'] );
+                    // Update product variants from product's tenant database
+                    if (isset($data['variants']) && is_array($data['variants'])) {
+                        foreach ( $data['variants'] as $variant ) {
+                            if (!isset($variant['variant_id'])) {
+                                continue;
                             }
-                        );
 
-                        if ( $productVariant ) {
-                            $productVariant->qty -= $variant['qty'];
-                            $productVariant->setConnection( $productVariant->getConnectionName() );
-                            $productVariant->save();
+                            $currentVariant = DB::connection($connectionName)->table('product_variants')
+                                ->where('id', $variant['variant_id'])
+                                ->first();
+
+                            if ($currentVariant && isset($variant['qty'])) {
+                                // Update variant qty using DB facade directly
+                                DB::connection($connectionName)->table('product_variants')
+                                    ->where('id', $variant['variant_id'])
+                                    ->update(['qty' => $currentVariant->qty - $variant['qty']]);
+                            }
                         }
                     }
 
-                    // Update product variants array
-                    $result = [];
-                    $databaseValue = CrossTenantQueryService::getSingleFromTenant(
-                        $tenantId,
-                        Product::class,
-                        function ( $query ) use ( $productid ) {
-                            $query->where( 'id', $productid );
-                        }
-                    );
+                    // Update product variants array from product's tenant database
+                    $databaseValue = DB::connection($connectionName)->table('products')
+                        ->where('id', $productid)
+                        ->first();
 
                     if ( $databaseValue && $databaseValue->variants != '' ) {
-                        foreach ( $databaseValue->variants as $dbItem ) {
-                            foreach ( $data['variants'] as $userItem ) {
-                                if ( $dbItem['id'] == $userItem['variant_id'] ) {
-                                    $dbItem['qty'] -= $userItem['qty'];
-                                    break;
+                        $variantsArray = is_string($databaseValue->variants)
+                            ? json_decode($databaseValue->variants, true)
+                            : $databaseValue->variants;
+
+                        $result = [];
+                        if (is_array($variantsArray) && isset($data['variants']) && is_array($data['variants'])) {
+                            foreach ( $variantsArray as $dbItem ) {
+                                foreach ( $data['variants'] as $userItem ) {
+                                    if (isset($userItem['variant_id']) && isset($dbItem['id']) && isset($userItem['qty'])) {
+                                        if ( $dbItem['id'] == $userItem['variant_id'] ) {
+                                            $dbItem['qty'] -= $userItem['qty'];
+                                            break;
+                                        }
+                                    }
                                 }
+                                $result[] = $dbItem;
                             }
-                            $result[] = $dbItem;
                         }
 
-                        $databaseValue->variants = $result;
-                        $databaseValue->setConnection( $databaseValue->getConnectionName() );
-                        $databaseValue->save();
+                        // Update variants using DB facade directly
+                        DB::connection($connectionName)->table('products')
+                            ->where('id', $productid)
+                            ->update(['variants' => json_encode($result)]);
                     }
                     $is_unlimited = 0;
                 }
 
-                // Get vendor balance from tenant database
-                $vendor_balance = CrossTenantQueryService::getSingleFromTenant(
-                    $tenantId,
-                    User::class,
-                    function ( $query ) use ( $product ) {
-                        $query->where( 'id', $product->user_id );
-                    }
-                );
+                // Get vendor balance from product's tenant database using CrossTenantQueryService connection
+                $vendor_balance = DB::connection($connectionName)->table('users')
+                    ->where('id', $product->user_id)
+                    ->first();
 
                 $afi_amount = $totalqty * $cart->amount;
 
-                if ( $vendor_balance && $vendor_balance->balance >= $afi_amount ) {
+                // Check if vendor balance exists and has balance property
+                $vendorBalanceValue = ($vendor_balance && property_exists($vendor_balance, 'balance'))
+                    ? $vendor_balance->balance
+                    : 0;
+
+                if ( $vendorBalanceValue >= $afi_amount ) {
                     $status = Status::Pending->value;
-                    // $vendor_balance->balance = ( $vendor_balance->balance - $afi_amount );
-                    if ( $vendor_balance->getConnectionName() ) {
-                        $vendor_balance->setConnection( $vendor_balance->getConnectionName() );
-                        $vendor_balance->save();
-                    }
+                    // Balance update is commented out, so no need to save
+                    // If needed in future, use: DB::connection($connectionName)->table('users')->where('id', $product->user_id)->update(['balance' => $vendorBalanceValue - $afi_amount]);
                     // PaymentHistoryService::store( uniqid(), $afi_amount, 'My wallet', 'Affiliate commission', '-', '', $product->user_id );
 
                 } else {
@@ -171,13 +188,20 @@ class ProductCheckoutService {
                 $totalAmount         = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
                 $totaladvancepayment = $cart->advancepayment * $totalqty;
 
-                $totalDue = ( $totalAmount + $data['delivery_charge']['charge'] ) - $totaladvancepayment;
+                // Get delivery charge safely, default to 0 if not provided
+                $deliveryCharge = isset($data['delivery_charge']['charge'])
+                    ? $data['delivery_charge']['charge']
+                    : (isset($data['delivery_charge']) && is_numeric($data['delivery_charge'])
+                        ? $data['delivery_charge']
+                        : 0);
+
+                $totalDue = ( $totalAmount + $deliveryCharge ) - $totaladvancepayment;
 
                 // Create order using CrossTenantQueryService
                 $order = CrossTenantQueryService::saveToTenant(
                     $tenantId,
                     Order::class,
-                    function ( $model ) use ( $product, $userid, $data, $afi_amount, $cart, $totalqty, $totalAmount, $totalDue, $status, $categoryId, $totaladvancepayment, $is_unlimited ) {
+                    function ( $model ) use ( $product, $userid, $data, $afi_amount, $cart, $totalqty, $totalAmount, $totalDue, $status, $categoryId, $totaladvancepayment, $is_unlimited, $deliveryCharge ) {
                         $model->vendor_id           = $product->user_id;
                         $model->affiliator_id       = $userid;
                         $model->product_id          = $product->id;
@@ -195,7 +219,7 @@ class ProductCheckoutService {
                         $model->qty                 = $totalqty;
                         $model->totaladvancepayment = $totaladvancepayment;
                         $model->is_unlimited        = $is_unlimited;
-                        $model->delivery_charge     = $data['delivery_charge']['charge'];
+                        $model->delivery_charge     = $deliveryCharge;
                     }
                 );
 
@@ -304,17 +328,10 @@ class ProductCheckoutService {
 
             PaymentHistoryService::store( uniqid(), ( $cart->advancepayment * $totalquantity ), $paymentprocess, 'Advance payment', '-', '', $userid );
 
-            // Delete cart using CrossTenantQueryService - get cart first, then delete
-            $cartToDelete = CrossTenantQueryService::getSingleFromTenant(
-                $tenantId,
-                Cart::class,
-                function ( $query ) use ( $cartId ) {
-                    $query->where( 'id', $cartId );
-                }
-            );
+            // Delete cart from current tenant's database (carts are stored in dropshipper tenant, not product tenant)
+            $cartToDelete = Cart::find( $cartId );
 
             if ( $cartToDelete ) {
-                $cartToDelete->setConnection( $cartToDelete->getConnectionName() );
                 $cartToDelete->delete();
             }
 

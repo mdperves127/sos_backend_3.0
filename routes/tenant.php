@@ -484,6 +484,7 @@ Route::middleware( [
             Route::get( 'products', [AffiliateProductStatusController::class, 'AffiliatorProducts'] );
 // Done order related routes
             Route::post( 'order-create', [OrderController::class, 'store'] );
+
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [OrderController::class, 'ProgressOrders'] );

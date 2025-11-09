@@ -19,9 +19,9 @@ use Illuminate\Http\Request;
 class OrderController extends Controller {
 
     function store( ProductRequest $request ) {
-        dd($request->all());
 
-        $cart = Cart::find( request( 'cart_id' ) );
+        $cart = Cart::where('id', $request->cart_id)->first();
+
 
         if ( !$cart || !$cart->tenant_id ) {
             return responsejson( 'Cart not found or missing tenant information', 'fail' );

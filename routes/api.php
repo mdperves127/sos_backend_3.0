@@ -45,7 +45,6 @@ use App\Http\Controllers\RenewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
-use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
@@ -60,9 +59,9 @@ Route::post( 'logout', [AuthController::class, 'logout'] );
 Route::post( 'forgot/password', [ForgotPasswordController::class, 'sendResetLinkEmail'] );
 Route::post( 'password/reset', [ResetPasswordController::class, 'reset'] );
 Route::middleware( [
-    InitializeTenancyByDomain::class,
-    'auth:sanctum',
-    'userOnline',
+    'adminDatabase',
+    // 'auth:sanctum',
+    'isUser'
 ] )->group( function () {
 
     Route::resource( 'main-services', VendorServiceController::class );
@@ -99,14 +98,14 @@ Route::middleware( [
     Route::post( 'create-advertise', [AdminAdvertiseController::class, 'store'] );
     // advertise-success
 
-    Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
-    Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
-    Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
+    Route::get( 'user/all-advertise', [AdvertiseController::class, 'index'] );
+    Route::get( 'user/advertise-count', [AdvertiseController::class, 'advertiseCount'] );
+    Route::get( 'user/advertise/{id}', [AdvertiseController::class, 'show'] );
 
     Route::get( 'coupon-lists', [CouponListController::class, 'index'] );
     Route::post( 'renew-subscription', [RenewController::class, 'store'] );
 
-    Route::post( 'recharge', [RechargeController::class, 'recharge'] );
+    Route::post( 'user/recharge', [RechargeController::class, 'recharge'] );
 
     Route::post( 'service-rating', [ServiceRatingController::class, 'store'] );
     Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
@@ -115,7 +114,7 @@ Route::middleware( [
     Route::post( 'coupon-request-send', [CouponRequestController::class, 'store'] );
     Route::get( 'get-coupon-request', [CouponRequestController::class, 'getcouponrequest'] );
 
-    Route::get( 'all/banks', [BankController::class, 'index'] );
+    Route::get( 'user/all/banks', [BankController::class, 'index'] );
 
     Route::post( 'supportbox-close/{id}', [SupportBoxCloseController::class, 'index'] );
 
