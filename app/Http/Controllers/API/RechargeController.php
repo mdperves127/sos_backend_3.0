@@ -13,8 +13,7 @@ use App\Services\PaymentHistoryService;
 class RechargeController extends Controller {
 
     function recharge( RechargeRequest $request ) {
-        dd($request->all());
-        $setting = Settings::first();
+        $setting = Settings::on('mysql')->first();
 
         $validateData            = $request->validated();
         $validateData['user_id'] = auth()->id();
