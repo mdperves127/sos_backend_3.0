@@ -88,7 +88,7 @@ Route::middleware( [
     Route::get( 'service-buy-count', [ServiceOrderController::class, 'serviceOrderCount'] );
     Route::post( 'service/order/status', [ServiceOrderController::class, 'status'] );
     // Route::apiResource('coupon-list', CouponUsedController::class);
-    // Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
+    Route::get( 'user/all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
     Route::get( 'user/ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
 
     Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
