@@ -43,7 +43,6 @@ class RechargeController extends Controller {
         // return 2;
 
 
-        dd($successurl);
         return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl );
     }
 
