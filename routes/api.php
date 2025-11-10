@@ -77,19 +77,19 @@ Route::middleware( [
     Route::get( 'service-category-subcategory', [VendorServiceController::class, 'categorysubcategory'] );
     Route::resource( 'service/delivery-to-customer', OrderDeliveryController::class );
 
-    Route::resource( 'supportbox', SupportBoxController::class );
-    Route::post( 'ticket-review', [SupportBoxController::class, 'review'] );
-    Route::get( 'support-count', [SupportBoxController::class, 'supportCount'] );
+    Route::resource( 'user/supportbox', SupportBoxController::class );
+    Route::post( 'user/ticket-review', [SupportBoxController::class, 'review'] );
+    Route::get( 'user/support-count', [SupportBoxController::class, 'supportCount'] );
 
-    Route::post( 'ticket-replay', [SupportBoxController::class, 'supportreplay'] );
-    Route::get( 'ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
+    Route::post( 'user/ticket-replay', [SupportBoxController::class, 'supportreplay'] );
+    Route::get( 'user/ticket-replay-count', [SupportBoxController::class, 'supportReplyCount'] );
 
     Route::apiResource( 'service/order', ServiceOrderController::class );
     Route::get( 'service-buy-count', [ServiceOrderController::class, 'serviceOrderCount'] );
     Route::post( 'service/order/status', [ServiceOrderController::class, 'status'] );
     // Route::apiResource('coupon-list', CouponUsedController::class);
     // Route::get( 'all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
-    Route::get( 'ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
+    Route::get( 'user/ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
 
     Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
     Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
@@ -116,7 +116,7 @@ Route::middleware( [
 
     Route::get( 'user/all/banks', [BankController::class, 'index'] );
 
-    Route::post( 'supportbox-close/{id}', [SupportBoxCloseController::class, 'index'] );
+    Route::post( 'user/supportbox-close/{id}', [SupportBoxCloseController::class, 'index'] );
 
     Route::get( 'profile-data', [ProfileDataController::class, 'profile'] );
     Route::post( 'profile-data-update', [ProfileDataController::class, 'profileupdate'] );
