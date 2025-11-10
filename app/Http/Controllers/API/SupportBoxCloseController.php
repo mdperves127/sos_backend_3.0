@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class SupportBoxCloseController extends Controller
 {
     function index(int $id){
-        $supportbox = SupportBox::query()->where(['id'=>$id,'user_id'=>auth()->id()])->first();
+        $supportbox = SupportBox::on('mysql')->query()->where(['id'=>$id,'user_id'=>auth()->id()])->first();
         if(!$supportbox){
             return responsejson('Not found','fail');
         }
