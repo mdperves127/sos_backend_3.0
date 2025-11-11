@@ -1,12 +1,12 @@
 <?php
 
 // Test route to verify API routes are working
-Route::get('/test-api', function () {
-    return response()->json([
-        'message' => 'API routes are working!',
-        'timestamp' => now()
-    ]);
-});
+Route::get( '/test-api', function () {
+    return response()->json( [
+        'message'   => 'API routes are working!',
+        'timestamp' => now(),
+    ] );
+} );
 
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\AdvertiseController;
@@ -19,7 +19,6 @@ use App\Http\Controllers\API\ConversationController;
 use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\API\CouponRequestController;
 use App\Http\Controllers\API\ForgotPasswordController;
-use App\Http\Controllers\API\HistoryController;
 use App\Http\Controllers\API\MessageController;
 use App\Http\Controllers\API\ProfileDataController;
 use App\Http\Controllers\API\RechargeController;
@@ -61,7 +60,7 @@ Route::post( 'password/reset', [ResetPasswordController::class, 'reset'] );
 Route::middleware( [
     'adminDatabase',
     // 'auth:sanctum',
-    'isUser'
+    'isUser',
 ] )->group( function () {
 
     Route::resource( 'main-services', VendorServiceController::class );
@@ -108,7 +107,7 @@ Route::middleware( [
     Route::post( 'user/recharge', [RechargeController::class, 'recharge'] );
 
     Route::post( 'service-rating', [ServiceRatingController::class, 'store'] );
-    Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
+    Route::post( 'user/withdraw-money', [WithdrawController::class, 'withdraw'] );
     Route::get( 'all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
 
     Route::post( 'coupon-request-send', [CouponRequestController::class, 'store'] );
@@ -201,7 +200,6 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
-
 
 // cPanel API Routes (environment-based subdomain and database creation)
 Route::prefix( 'cpanel' )->group( function () {

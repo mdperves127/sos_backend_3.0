@@ -13,7 +13,7 @@ use App\Services\PaymentHistoryService;
 class RechargeController extends Controller {
 
     function recharge( RechargeRequest $request ) {
-        $setting = Settings::on('mysql')->first();
+        $setting = Settings::on( 'mysql' )->first();
 
         $validateData            = $request->validated();
         $validateData['user_id'] = auth()->id();
@@ -42,8 +42,7 @@ class RechargeController extends Controller {
         ] );
         // return 2;
 
-
-        dd($successurl);
+        // dd($successurl);
         return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl );
     }
 

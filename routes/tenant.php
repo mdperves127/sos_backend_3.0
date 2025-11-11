@@ -2,6 +2,13 @@
 
 declare ( strict_types = 1 );
 
+use App\Http\Controllers\API\Affiliate\BalanceController;
+use App\Http\Controllers\API\Affiliate\CartController;
+use App\Http\Controllers\API\Affiliate\DashboardController as AffiliateDashboardController;
+use App\Http\Controllers\API\Affiliate\OrderController;
+use App\Http\Controllers\API\Affiliate\ProductRatingController;
+use App\Http\Controllers\API\Affiliate\ProductStatusController as AffiliateProductStatusController;
+use App\Http\Controllers\API\Affiliate\SingleProductController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\API\HistoryController;
@@ -35,6 +42,7 @@ use App\Http\Controllers\API\Vendor\WarehouseController;
 use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommerceCredentialController;
 use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Tenant\AamarpayController;
 use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\Tenant\BankController;
@@ -49,22 +57,6 @@ use App\Http\Controllers\Tenant\TenantAuthController;
 use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
-
-
-
-use App\Http\Controllers\API\Affiliate\BalanceController;
-use App\Http\Controllers\API\Affiliate\BankController as AffiliateBankController;
-use App\Http\Controllers\API\Affiliate\CartController;
-use App\Http\Controllers\API\Affiliate\CheckoutController;
-use App\Http\Controllers\API\Affiliate\DashboardController as AffiliateDashboardController;
-use App\Http\Controllers\API\Affiliate\OrderController;
-use App\Http\Controllers\API\Affiliate\PendingBalanceController;
-use App\Http\Controllers\API\Affiliate\ProductRatingController;
-use App\Http\Controllers\API\Affiliate\ProductStatusController as AffiliateProductStatusController;
-use App\Http\Controllers\API\Affiliate\ProfileController as AffiliateProfileController;
-use App\Http\Controllers\API\Affiliate\SingleProductController;
-use App\Http\Controllers\API\Affiliate\WithdrawController as AffiliateWithdrawController;
-use App\Http\Controllers\NotificationController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -446,9 +438,9 @@ Route::middleware( [
         Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
         Route::get( 'tenant-withdraw-history/{status?}', [WithdrawController::class, 'index'] );
-        Route::post( 'withdraw-money', [WithdrawController::class, 'withdraw'] );
+        Route::post( 'tenant-withdraw-money', [WithdrawController::class, 'withdraw'] );
 
-        Route::get( 'all/banks', [BankController::class, 'index'] );
+        Route::get( 'tenant-all-banks', [BankController::class, 'index'] );
 
         //supportbox route
 
@@ -468,8 +460,6 @@ Route::middleware( [
         Route::get( 'all-advertise', [AdvertiseController::class, 'index'] );
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
         Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
-
-
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
@@ -497,22 +487,17 @@ Route::middleware( [
             Route::get( 'order-return', [OrderController::class, 'orderReturn'] );
             Route::get( 'order/view/{id}', [OrderController::class, 'orderView'] );
 
-
-
             Route::get( 'pending-balance', [BalanceController::class, 'PendingBalance'] );
             Route::get( 'active-balance', [BalanceController::class, 'ActiveBalance'] );
 
             // Route::get( 'profile', [ProfileController::class, 'AffiliatorProfile'] );
             // Route::post( 'update/profile', [ProfileController::class, 'AffiliatorUpdateProfile'] );
 
-
             Route::get( 'request/pending/product', [AffiliateProductStatusController::class, 'AffiliatorProductPendingProduct'] );
             Route::get( 'request/active/product', [AffiliateProductStatusController::class, 'AffiliatorProductActiveProduct'] );
             Route::get( 'vendor-expire-products', [AffiliateProductStatusController::class, 'vendorexpireproducts'] );
 
             Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
-
-
 
             //pending balance
             // Route::get( 'balance/history/{status?}', [PendingBalanceController::class, 'balance'] );
@@ -538,7 +523,7 @@ Route::middleware( [
             Route::post( 'get-zones/{city_id}/{vendor_id}', [AffiliateDashboardController::class, 'getZones'] );
             Route::post( 'get-area/{zone_id}/{vendor_id}', [AffiliateDashboardController::class, 'getArea'] );
             Route::post( 'new-order/{vendor_id}', [AffiliateDashboardController::class, 'newShipmentOrder'] );
-    } );
+        } );
 
     } );
 } );
