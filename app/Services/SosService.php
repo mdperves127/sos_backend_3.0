@@ -14,7 +14,8 @@ class SosService {
         $user                                 = tenant();
         $supportBox                           = new SupportBox();
         $supportBox->setConnection('mysql');
-        $supportBox->tenant_id                  = tenant()->id;
+        
+        $supportBox->tenant_id                  = tenant()->id ?? '';
         $supportBox->support_box_category_id  = $data['support_box_category_id'];
         $supportBox->support_problem_topic_id = $data['support_problem_topic_id'];
         if ( request()->hasFile( 'file' ) ) {

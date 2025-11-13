@@ -44,12 +44,11 @@ use App\Http\Controllers\RenewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantRegistrationController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\API\HistoryController;
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
 Route::post( 'resend/verify/code', [AuthController::class, 'resendVerifyCode'] );
-// Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
 //login
 Route::post( 'login', [AuthController::class, 'login'] );
@@ -61,8 +60,9 @@ Route::middleware( [
     'adminDatabase',
     // 'auth:sanctum',
     'isUser',
-] )->group( function () {
+    ] )->group( function () {
 
+    Route::get( 'user/transition-history', [HistoryController::class, 'index'] );
     Route::resource( 'main-services', VendorServiceController::class );
     Route::get( 'main-service-count', [VendorServiceController::class, 'serviceCount'] );
     Route::get( 'service/orders', [VendorServiceController::class, 'serviceorders'] );
@@ -94,7 +94,7 @@ Route::middleware( [
     Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
     Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
 
-    Route::post( 'create-advertise', [AdminAdvertiseController::class, 'store'] );
+    Route::post( 'user/create-advertise', [AdminAdvertiseController::class, 'store'] );
     // advertise-success
 
     Route::get( 'user/all-advertise', [AdvertiseController::class, 'index'] );
@@ -108,7 +108,7 @@ Route::middleware( [
 
     Route::post( 'service-rating', [ServiceRatingController::class, 'store'] );
     Route::post( 'user/withdraw-money', [WithdrawController::class, 'withdraw'] );
-    Route::get( 'all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
+    Route::get( 'user/all-withdraw/history/{status?}', [WithdrawController::class, 'index'] );
 
     Route::post( 'coupon-request-send', [CouponRequestController::class, 'store'] );
     Route::get( 'get-coupon-request', [CouponRequestController::class, 'getcouponrequest'] );
@@ -117,7 +117,7 @@ Route::middleware( [
 
     Route::post( 'user/supportbox-close/{id}', [SupportBoxCloseController::class, 'index'] );
 
-    Route::get( 'profile-data', [ProfileDataController::class, 'profile'] );
+    Route::get( 'user/profile-data', [ProfileDataController::class, 'profile'] );
     Route::post( 'profile-data-update', [ProfileDataController::class, 'profileupdate'] );
     Route::get( 'subscription-notification', [SubscriptionAlertController::class, 'index'] );
     Route::post( 'service-buy-status', [ServiceBuyStatusController::class, 'index'] );

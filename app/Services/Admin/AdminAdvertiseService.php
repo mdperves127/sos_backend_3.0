@@ -101,17 +101,25 @@ class AdminAdvertiseService {
         // }
 
         if ( request( 'paymethod' ) == 'my-wallet' ) {
-            $tenant = Tenant::on('mysql')->find( tenant()->id );
 
+            $user = null;
+            if (request('user_type') == 'user') {
+
+                $user = User::on('mysql')->where('id', userid() )->first();
+            } elseif(request('user_type') == 'tenant'){
+                $user = Tenant::on('mysql')->where('id', tenant()->id ?? '' )->first();
+            }
+
+            // dd($user);   
             // Validate balance
-            if ( $tenant->balance < $totalprice ) {
+            if ( $user->balance < $totalprice ) {
                 return responsejson( 'Insufficient balance!', 'fail' );
             }
 
-            $tenant->decrement( 'balance', $totalprice );
+            $user->decrement( 'balance', $totalprice );
             $adminadvaertise->is_paid = 1;
             $adminadvaertise->save();
-            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', tenant()->id );
+            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', $user->id );
             return responsejson( 'Successfull!' );
         } else {
 
