@@ -15,6 +15,8 @@ use App\Services\AamarPayService;
 use App\Services\CrossTenantQueryService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\ProductRating;
 
 class OrderController extends Controller {
 
@@ -126,201 +128,1209 @@ class OrderController extends Controller {
     }
 
     function pendingOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Pending->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by pending status
+                $query->where( 'status', Status::Pending->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function ProgressOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Progress->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by progress status
+                $query->where( 'status', Status::Progress->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
     function receivedOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', 'received' )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by received status
+                $query->where( 'status', 'received' );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function DeliveredOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Delivered->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by delivered status
+                $query->where( 'status', Status::Delivered->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
     function CanceldOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Cancel->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by cancel status
+                $query->where( 'status', Status::Cancel->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function ProductProcessing() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Processing->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by processing status
+                $query->where( 'status', Status::Processing->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function OrderReady() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Ready->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by ready status
+                $query->where( 'status', Status::Ready->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function orderReturn() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Return ->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by return status
+                $query->where( 'status', Status::Return->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function AllOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->with( ['product:id,name', 'vendor:id,name', 'affiliator:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load affiliator
+                    if ( isset( $order->affiliator_id ) ) {
+                        $affiliator = User::on( $connectionName )->select( 'id', 'name' )->find( $order->affiliator_id );
+                        $order->affiliator = $affiliator;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 
     function orderView( $id ) {
-        $order = Order::where( 'id', $id )->where( 'affiliator_id', auth()->user()->id )->first();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+
+        // Query order from all merchant tenant databases
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $id, $tenantId ) {
+                $query->where( 'id', $id );
+                // Filter by tenant_id
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+            }
+        );
+
+        $order = $allOrders->first();
+
         if ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
 
-            $allData =
-            Order::query()
-                ->with( [
-                    'productrating.affiliate',
-                    'product',
-                    'product.category:id,name',
-                    'product.subcategory:id,name',
-                    'product.brand:id,name',
-                ] )->find( $id );
+            // Load relationships manually
+            if ( isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
 
-            $allData->variants = json_decode( $allData->variants );
+                    // Configure connection
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product with relationships
+                    $product = Product::on( $connectionName )
+                        ->with( [
+                            'category:id,name',
+                            'subcategory:id,name',
+                            'brand:id,name',
+                        ] )
+                        ->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load product ratings with affiliate
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->with( 'affiliate:id,name' )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
 
             return response()->json( [
                 'status'  => 200,
-                'message' => $allData,
+                'message' => $order,
             ] );
         } else {
             return response()->json( [
@@ -330,22 +1340,128 @@ class OrderController extends Controller {
         }
     }
     function HoldOrders() {
-        $orders = Order::searchProduct()
-            ->where( 'affiliator_id', auth()->user()->id )
-            ->where( 'status', Status::Hold->value )
-            ->with( ['product:id,name', 'vendor:id,name', 'productrating'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        $currentTenant = tenant();
+        $tenantId = $currentTenant ? $currentTenant->id : null;
+        $search = request( 'search' );
 
-        $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+        // Query orders from all merchant tenant databases (get all results first)
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $tenantId, $search ) {
+                // Filter by tenant_id (query is already on orders table)
+                if ( $tenantId ) {
+                    $query->where( 'tenant_id', $tenantId );
+                }
+
+                // Filter by hold status
+                $query->where( 'status', Status::Hold->value );
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'orders.*' )
+                          ->groupBy( 'orders.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
+            }
+        );
+
+        // Convert stdClass objects and load relationships
+        $orders = collect( $allOrders )->map( function ( $order ) {
+            // Decode variants
+            if ( isset( $order->variants ) ) {
+                $order->variants = json_decode( $order->variants );
+            }
+
+            // Load relationships manually for each order
+            if ( isset( $order->product_id ) && isset( $order->tenant_id ) ) {
+                $tenant = Tenant::find( $order->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load product
+                    $product = Product::on( $connectionName )->select( 'id', 'name' )->find( $order->product_id );
+                    $order->product = $product;
+
+                    // Load vendor
+                    if ( isset( $order->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $order->vendor_id );
+                        $order->vendor = $vendor;
+                    }
+
+                    // Load product ratings
+                    $productRatings = ProductRating::on( $connectionName )
+                        ->where( 'order_id', $order->id )
+                        ->get();
+                    $order->productrating = $productRatings;
+                }
+            }
+
             return $order;
         } );
 
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $orders = $orders->sortByDesc( function ( $order ) {
+            return $order->created_at ?? '';
+        } )->values();
+
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedOrders = $orders->slice( $offset, $perPage );
+        $lastPage = ceil( $orders->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedOrders->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $orders->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $orders->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+        ];
+
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => $response,
         ] );
     }
 }

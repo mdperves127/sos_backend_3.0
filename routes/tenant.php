@@ -472,9 +472,9 @@ Route::middleware( [
             Route::get( 'cart/{id}', [CartController::class, 'affiliatorCart'] );
             Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
             Route::get( 'products', [AffiliateProductStatusController::class, 'AffiliatorProducts'] );
-// Done order related routes
-            Route::post( 'order-create', [OrderController::class, 'store'] );
 
+
+            Route::post( 'order-create', [OrderController::class, 'store'] );
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [OrderController::class, 'ProgressOrders'] );
@@ -486,6 +486,11 @@ Route::middleware( [
             Route::get( 'order-ready', [OrderController::class, 'OrderReady'] );
             Route::get( 'order-return', [OrderController::class, 'orderReturn'] );
             Route::get( 'order/view/{id}', [OrderController::class, 'orderView'] );
+
+
+
+            // Done order related routes
+
 
             Route::get( 'pending-balance', [BalanceController::class, 'PendingBalance'] );
             Route::get( 'active-balance', [BalanceController::class, 'ActiveBalance'] );
