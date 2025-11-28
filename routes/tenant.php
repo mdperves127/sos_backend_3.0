@@ -57,6 +57,7 @@ use App\Http\Controllers\Tenant\TenantAuthController;
 use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
+use App\Http\Controllers\Tenant\MerchantFrontendController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -77,6 +78,29 @@ Route::middleware( [
         Route::post( 'fail', [AamarpayController::class, 'fail'] );
         Route::get( 'cancel', [AamarpayController::class, 'cancel'] );
     } );
+
+
+
+
+    Route::prefix('merchant-frontend')->group(function () {
+        Route::get('products', [MerchantFrontendController::class, 'products']);
+        Route::get('product/{id}', [MerchantFrontendController::class, 'product']);
+
+    });
+
+
+    // Route::prefix('dropshipper-frontend')->group(function () {
+    //     Route::get('products', [DropshipperFrontendController::class, 'products']);
+    //     Route::get('product/{id}', [DropshipperFrontendController::class, 'product']);
+    // });
+
+
+
+
+
+
+
+
 
     // Protected tenant routes
     Route::middleware( 'tenantAuth' )->group( function () {
