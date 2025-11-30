@@ -10,18 +10,25 @@ use App\Models\ProductDetails;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use App\Models\VendorService;
+use App\Models\Tenant;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Http\Request;
 
 class StatisticsController extends Controller
 {
     function users()
     {
-        $user = User::query();
+        // Get vendors from tenants where type = 'merchant'
+        $totalvendor = Tenant::where('type', 'merchant')->count();
 
-        $totalmember = (clone $user)->where('role_as', '!=', 1)->count();
-        $totalvendor = (clone $user)->where('role_as', 2)->count();
-        $totalaffiliate = (clone $user)->where('role_as', 3)->count();
-        $totaluser = (clone $user)->where('role_as', 4)->count();
+        // Get affiliates from tenants where type = 'dropshipper'
+        $totalaffiliate = Tenant::where('type', 'dropshipper')->count();
+
+        // Get users from users table
+        $totaluser = User::where('role_as', 4)->count();
+
+        // Total members = users + vendors + affiliates
+        $totalmember = $totaluser + $totalvendor + $totalaffiliate;
 
         return $this->response([
             'totalmember' => $totalmember,
@@ -33,13 +40,33 @@ class StatisticsController extends Controller
 
     function products()
     {
-        $product = Product::query();
+        // Query Products from all merchant tenant databases
+        $allProducts = CrossTenantQueryService::queryAllTenants(
+            Product::class,
+            function ( $query ) {
+                // No additional filtering needed, we'll count in memory
+            }
+        );
 
-        $totalproduct = (clone $product)->count();
-        $totalactiveproduct = (clone $product)->where('status', 'active')->count();
-        $totalpendingproduct = (clone $product)->where('status', 'pending')->count();
-        $totaleditedproduct = (clone $product)->whereHas('pendingproduct')->count();
-        $totalrejectedproduct = (clone $product)->where('status', 'rejected')->count();
+        // Count by status from the collection
+        $totalproduct = $allProducts->count();
+        $totalactiveproduct = $allProducts->where( 'status', 'active' )->count();
+        $totalpendingproduct = $allProducts->where( 'status', 'pending' )->count();
+        $totalrejectedproduct = $allProducts->where( 'status', 'rejected' )->count();
+
+        // For edited products (products with pending_product), we need to query separately
+        // Query products with pending_products relationship
+        $productsWithPending = CrossTenantQueryService::queryAllTenants(
+            Product::class,
+            function ( $query ) {
+                $query->leftJoin( 'pending_products', 'products.id', '=', 'pending_products.product_id' )
+                      ->whereNotNull( 'pending_products.id' )
+                      ->select( 'products.*' )
+                      ->groupBy( 'products.id' );
+            }
+        );
+
+        $totaleditedproduct = $productsWithPending->count();
 
         return $this->response([
             'totalproduct' => $totalproduct,
@@ -52,12 +79,19 @@ class StatisticsController extends Controller
 
     function affiliaterequest()
     {
-        $affiliaterequest = ProductDetails::query();
+        // Query ProductDetails from all merchant tenant databases
+        $allProductDetails = CrossTenantQueryService::queryAllTenants(
+            ProductDetails::class,
+            function ( $query ) {
+                // No additional filtering needed, we'll count in memory
+            }
+        );
 
-        $totalrequest = (clone $affiliaterequest)->count();
-        $totalactiverequest = (clone $affiliaterequest)->where('status', 1)->count();
-        $totalpendingrequest = (clone $affiliaterequest)->where('status', 2)->count();
-        $totalrejectedrequest = (clone $affiliaterequest)->where('status', 3)->count();
+        // Count by status from the collection
+        $totalrequest = $allProductDetails->count();
+        $totalactiverequest = $allProductDetails->where( 'status', 1 )->count();
+        $totalpendingrequest = $allProductDetails->where( 'status', 2 )->count();
+        $totalrejectedrequest = $allProductDetails->where( 'status', 3 )->count();
 
         return $this->response([
             'totalrequest' => $totalrequest,

@@ -15,9 +15,12 @@ use App\Models\Subcategory;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\Tenant;
 use App\Notifications\VendorProductStatusNotification;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -26,48 +29,134 @@ use Illuminate\Support\Str;
 class ProductController extends Controller {
     public function ProductIndex() {
 
-        if ( !in_array( request( 'status' ), ['pending', 'active', 'rejected'] ) ) {
-            if ( checkpermission( 'all-products' ) != 1 ) {
-                return $this->permissionmessage();
+        // if ( !in_array( request( 'status' ), ['pending', 'active', 'rejected'] ) ) {
+        //     if ( checkpermission( 'all-products' ) != 1 ) {
+        //         return $this->permissionmessage();
+        //     }
+        // }
+
+        // if ( request( 'status' ) == 'pending' ) {
+        //     if ( checkpermission( 'pending-products' ) != 1 ) {
+        //         return $this->permissionmessage();
+        //     }
+        // }
+
+        // if ( request( 'status' ) == 'active' ) {
+        //     if ( checkpermission( 'active-products' ) != 1 ) {
+        //         return $this->permissionmessage();
+        //     }
+        // }
+
+        // if ( request( 'status' ) == 'rejected' ) {
+        //     if ( checkpermission( 'rejected-product' ) != 1 ) {
+        //         return $this->permissionmessage();
+        //     }
+        // }
+
+        $status = request( 'status' );
+        $search = request( 'search' );
+
+        // Query Products from all merchant tenant databases
+        $allProducts = CrossTenantQueryService::queryAllTenants(
+            Product::class,
+            function ( $query ) use ( $status, $search ) {
+                // Filter by status
+                if ( $status == 'pending' ) {
+                    $query->where( 'status', 'pending' );
+                } elseif ( $status == 'active' ) {
+                    $query->where( 'status', 'active' );
+                } elseif ( $status == 'rejected' ) {
+                    $query->where( 'status', 'rejected' );
+                }
+
+                // Handle search functionality
+                if ( $search ) {
+                    $query->where( function ( $q ) use ( $search ) {
+                        $q->where( 'name', 'like', "%{$search}%" )
+                          ->orWhere( 'uniqid', 'like', "%{$search}%" );
+                    } );
+                }
+
+                // Order by latest
+                $query->orderBy( 'created_at', 'desc' );
             }
-        }
+        );
 
-        if ( request( 'status' ) == 'pending' ) {
-            if ( checkpermission( 'pending-products' ) != 1 ) {
-                return $this->permissionmessage();
+        // Convert stdClass objects and load relationships
+        $products = collect( $allProducts )->map( function ( $product ) {
+            // Load vendor relationship manually
+            if ( isset( $product->user_id ) && isset( $product->tenant_id ) ) {
+                $tenant = Tenant::find( $product->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection using the same method as CrossTenantQueryService
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load vendor (user_id is the vendor)
+                    if ( isset( $product->user_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $product->user_id );
+                        $product->vendor = $vendor;
+                    }
+                }
             }
-        }
 
-        if ( request( 'status' ) == 'active' ) {
-            if ( checkpermission( 'active-products' ) != 1 ) {
-                return $this->permissionmessage();
-            }
-        }
+            return $product;
+        } );
 
-        if ( request( 'status' ) == 'rejected' ) {
-            if ( checkpermission( 'rejected-product' ) != 1 ) {
-                return $this->permissionmessage();
-            }
-        }
+        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
+        $products = $products->sortByDesc( function ( $product ) {
+            return $product->created_at ?? '';
+        } )->values();
 
-        $product = Product::when( request( 'status' ) == 'pending', function ( $q ) {
-            return $q->where( 'status', 'pending' );
-        } )
-            ->when( request( 'search' ), fn( $q, $name ) => $q->where( 'name', 'like', "%{$name}%" )->orWhere( 'uniqid', 'like', "%{$name}%" ) )
+        // Re-paginate after processing
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedProducts = $products->slice( $offset, $perPage );
+        $lastPage = ceil( $products->count() / $perPage );
 
-            ->when( request( 'status' ) == 'active', function ( $q ) {
-                return $q->where( 'status', 'active' );
-            } )
-            ->when( request( 'status' ) == 'rejected', function ( $q ) {
-                return $q->where( 'status', 'rejected' );
-            } )
-            ->with( 'vendor:id,name' )
-            ->latest()->paginate( 10 )
-            ->withQueryString();
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedProducts->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $products->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $products->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $buildUrl( $lastPage ),
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
             'status'  => 200,
-            'product' => $product,
+            'product' => $response,
         ] );
     }
 

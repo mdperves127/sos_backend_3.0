@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Models\Tenant;
 use App\Services\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -89,41 +90,177 @@ class UserController extends Controller {
     }
 
     function alluserlist( $status ) {
-        if ( !checkpermission( 'alluser' ) ) {
-            return $this->permissionmessage();
+        // if ( !checkpermission( 'alluser' ) ) {
+        //     return $this->permissionmessage();
+        // }
+
+        $type = request( 'type' );
+        $email = request( 'email' );
+        $from = request( 'from' );
+        $to = request( 'to' );
+
+        $allResults = collect();
+
+        // Get vendors from tenants (type = 'merchant')
+        if ( !$type || $type == 'vendor' ) {
+            $vendors = Tenant::where( 'type', 'merchant' )
+                ->when( $status == 'active', function ( $q ) {
+                    return $q->whereNull( 'deleted_at' );
+                } )
+                ->when( $status == 'pending', function ( $q ) {
+                    return $q->whereNotNull( 'deleted_at' );
+                } )
+                ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
+                    return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
+                } )
+                ->when( $email, function ( $q ) use ( $email ) {
+                    return $q->where( 'email', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'phone', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'company_name', 'LIKE', '%' . $email . "%" );
+                } )
+                ->latest()
+                ->get();
+
+            // Transform tenants to user-like format
+            $vendors->each( function ( $tenant ) use ( &$allResults ) {
+                $allResults->push( (object) [
+                    'id'         => $tenant->id,
+                    'name'       => $tenant->company_name,
+                    'email'      => $tenant->email,
+                    'number'     => $tenant->phone,
+                    'role_as'    => 2, // vendor
+                    'status'     => $tenant->deleted_at ? 'pending' : 'active',
+                    'uniqid'     => $tenant->id,
+                    'owner_name' => $tenant->owner_name,
+                    'address'    => $tenant->address,
+                    'balance'    => $tenant->balance ?? 0,
+                    'created_at' => $tenant->created_at,
+                    'updated_at' => $tenant->updated_at,
+                    'is_tenant'  => true,
+                    'tenant_type' => 'merchant',
+                ] );
+            } );
         }
 
-        $vendor = User::where( 'role_as', '!=', '1' )
-            ->when( $status == 'active', function ( $q ) {
-                return $q->where( 'status', 'active' );
-            } )
-            ->when( $status == 'pending', function ( $q ) {
-                return $q->where( 'status', 'pending' );
-            } )
-            ->when( request( 'type' ) == 'vendor', function ( $q ) {
-                return $q->where( 'role_as', '2' );
-            } )
-            ->when( request( 'type' ) == 'affiliate', function ( $q ) {
-                return $q->where( 'role_as', '3' );
-            } )
-            ->when( request( 'type' ) == 'user', function ( $q ) {
-                return $q->where( 'role_as', '4' );
-            } )
-            ->when( request( 'from' ) != '' && request( 'to' ) != '', function ( $q ) {
-                return $q->whereBetween( 'created_at', [Carbon::parse( request( 'from' ) ), Carbon::parse( request( 'to' ) )] );
-            } )
-            ->when( request( 'email' ), function ( $query, $email ) {
-                return $query->where( 'email', 'LIKE', '%' . $email . "%" )
-                    ->orWhere( 'number', 'LIKE', '%' . $email . "%" )
-                    ->orWhere( 'uniqid', 'LIKE', '%' . $email . "%" );
-            } )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        // Get affiliates from tenants (type = 'dropshipper')
+        if ( !$type || $type == 'affiliate' ) {
+            $affiliates = Tenant::where( 'type', 'dropshipper' )
+                ->when( $status == 'active', function ( $q ) {
+                    return $q->whereNull( 'deleted_at' );
+                } )
+                ->when( $status == 'pending', function ( $q ) {
+                    return $q->whereNotNull( 'deleted_at' );
+                } )
+                ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
+                    return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
+                } )
+                ->when( $email, function ( $q ) use ( $email ) {
+                    return $q->where( 'email', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'phone', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'company_name', 'LIKE', '%' . $email . "%" );
+                } )
+                ->latest()
+                ->get();
+
+            // Transform tenants to user-like format
+            $affiliates->each( function ( $tenant ) use ( &$allResults ) {
+                $allResults->push( (object) [
+                    'id'         => $tenant->id,
+                    'name'       => $tenant->company_name,
+                    'email'      => $tenant->email,
+                    'number'     => $tenant->phone,
+                    'role_as'    => 3, // affiliate
+                    'status'     => $tenant->deleted_at ? 'pending' : 'active',
+                    'uniqid'     => $tenant->id,
+                    'owner_name' => $tenant->owner_name,
+                    'address'    => $tenant->address,
+                    'balance'    => $tenant->balance ?? 0,
+                    'created_at' => $tenant->created_at,
+                    'updated_at' => $tenant->updated_at,
+                    'is_tenant'  => true,
+                    'tenant_type' => 'dropshipper',
+                ] );
+            } );
+        }
+
+        // Get users from users table (role_as = 4)
+        if ( !$type || $type == 'user' ) {
+            $users = User::where( 'role_as', '4' )
+                ->when( $status == 'active', function ( $q ) {
+                    return $q->where( 'status', 'active' );
+                } )
+                ->when( $status == 'pending', function ( $q ) {
+                    return $q->where( 'status', 'pending' );
+                } )
+                ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
+                    return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
+                } )
+                ->when( $email, function ( $query ) use ( $email ) {
+                    return $query->where( 'email', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'number', 'LIKE', '%' . $email . "%" )
+                        ->orWhere( 'uniqid', 'LIKE', '%' . $email . "%" );
+                } )
+                ->latest()
+                ->get();
+
+            // Add users to results
+            $users->each( function ( $user ) use ( &$allResults ) {
+                $allResults->push( (object) [
+                    'id'         => $user->id,
+                    'name'       => $user->name,
+                    'email'      => $user->email,
+                    'number'     => $user->number,
+                    'role_as'    => $user->role_as,
+                    'status'     => $user->status,
+                    'uniqid'     => $user->uniqid,
+                    'image'      => $user->image,
+                    'balance'    => $user->balance ?? 0,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                    'is_tenant'  => false,
+                ] );
+            } );
+        }
+
+        // Sort by latest
+        $allResults = $allResults->sortByDesc( function ( $item ) {
+            return $item->created_at ?? '';
+        } )->values();
+
+        // Manual pagination
+        $page = request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset = ( $page - 1 ) * $perPage;
+        $paginatedResults = $allResults->slice( $offset, $perPage );
+        $lastPage = ceil( $allResults->count() / $perPage );
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedResults->values(),
+            'current_page' => (int) $page,
+            'per_page' => $perPage,
+            'total' => $allResults->count(),
+            'last_page' => $lastPage,
+            'from' => $offset + 1,
+            'to' => min( $offset + $perPage, $allResults->count() ),
+            'path' => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url' => $buildUrl( $lastPage ),
+            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
             'status' => 200,
-            'all'    => $vendor,
+            'all'    => $response,
         ] );
     }
 
