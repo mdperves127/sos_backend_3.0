@@ -182,7 +182,7 @@ class ProductController extends Controller {
         }
     }
 
-    function updateStatus( Request $request, $id ) {
+    function updateStatus( Request $request, $tenant_id, $id ) {
 
         $validator = Validator::make(
             $request->all(),
@@ -198,14 +198,76 @@ class ProductController extends Controller {
                 'errors' => $validator->messages(),
             ] );
         } else {
-            $product                   = Product::findOrFail( $id );
-            $product->status           = $request->status;
-            $product->rejected_details = $request?->rejected_details ?? '';
-            $product->save();
+            // Get tenant from request
+            $tenant = Tenant::where('id', $tenant_id)->first();
 
-            $user = User::where( 'role_as', 2 )->where( 'id', $product->vendor_id )->first();
+            if (!$tenant) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Tenant not found',
+                ]);
+            }
 
-            Notification::send( $user, new VendorProductStatusNotification( $user, $product ) );
+            // Configure tenant connection
+            $connectionName = 'tenant_' . $tenant->id;
+            $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+            config([
+                'database.connections.' . $connectionName => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $databaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ]
+            ]);
+            DB::purge($connectionName);
+
+            // Check if Product exists and get user_id for notification
+            $product = Product::on($connectionName)->find($id);
+
+            if (!$product) {
+                // Restore default connection
+                DB::setDefaultConnection('mysql');
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Product not found',
+                ]);
+            }
+
+            // Store user_id before update
+            $userId = $product->user_id;
+
+            // Update the Product using query builder to avoid attribute issues
+            Product::on($connectionName)
+                ->where('id', $id)
+                ->update([
+                    'status' => $request->status,
+                    'rejected_details' => $request?->rejected_details ?? '',
+                ]);
+
+            // Get vendor user (Product uses user_id for vendor, not vendor_id)
+            // Note: tenant database users table doesn't have role_as column
+            $user = User::on($connectionName)
+                ->where('id', $userId)
+                ->first();
+
+            // Get product again for notification (with updated data) before restoring connection
+            $updatedProduct = null;
+            if ($user) {
+                $updatedProduct = Product::on($connectionName)->find($id);
+            }
+
+            // Restore default connection
+            DB::setDefaultConnection('mysql');
+
+            if ($user && $updatedProduct) {
+                Notification::send( $user, new VendorProductStatusNotification( $user, $updatedProduct ) );
+            }
 
             return response()->json( [
                 'status'   => 200,

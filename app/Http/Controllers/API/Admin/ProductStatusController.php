@@ -211,21 +211,43 @@ class ProductStatusController extends Controller
     }
 
 
-    function RequestUpdate(Request $request, $id)
+    function RequestUpdate(Request $request, $tenant_id, $id)
     {
-
-        $data =  ProductDetails::find($id);
-        if ($data) {
-            $data->status = $request->status;
-            $data->reason = $request->reason;
-            $data->save();
-        } else {
+        // Get tenant from request
+        $tenant = Tenant::where('id',$tenant_id)->first();
+        if (!$tenant) {
             return response()->json([
                 'status' => 404,
-                'message' => 'Not found',
+                'message' => 'Tenant not found',
             ]);
         }
 
+        // Get ProductDetails from tenant's database
+        $data = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
+            ProductDetails::class,
+            function ($query) use ($id) {
+                $query->where('id', $id);
+            }
+        );
+
+        if (!$data) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'ProductDetails not found',
+            ]);
+        }
+
+        // Remove tenant context attributes that were added by getSingleFromTenant
+        // These are not actual database columns and will cause errors if saved
+        unset($data->tenant_id);
+        unset($data->tenant_domain);
+        unset($data->tenant_name);
+
+        // Update the ProductDetails
+        $data->status = $request->status;
+        $data->reason = $request->reason;
+        $data->save();
         return response()->json([
             'status' => 200,
             'message' => 'updated successfully',

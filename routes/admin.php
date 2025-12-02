@@ -77,7 +77,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
 
     Route::get( 'admin/request/product/rejected', [ProductStatusController::class, 'RequestRejected'] );
     // Route::get('admin/request/product/view/{id}',[AdminController::class,'RequestView']);
-    Route::post( 'admin/request/product-update/{id}', [ProductStatusController::class, 'RequestUpdate'] );
+    Route::post( 'admin/request/product-update/{tenant_id}/{id}', [ProductStatusController::class, 'RequestUpdate'] );
 
     Route::get( 'admin/request/product/view/{id}', [ProductStatusController::class, 'AdminRequestView'] );
 
@@ -122,7 +122,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     Route::get( 'edit-product/{id}', [ProductController::class, 'ProductEdit'] );
     Route::put( 'update-product/{id}', [ProductController::class, 'UpdateProduct'] );
     Route::delete( 'delete-product/{id}', [ProductController::class, 'destroy'] );
-    Route::post( 'admin-product-status-update/{id}', [ProductController::class, 'updateStatus'] );
+    Route::post( 'admin-product-status-update/{tenant_id}/{id}', [ProductController::class, 'updateStatus'] );
     Route::get( 'product-edit-request', [ProductController::class, 'producteditrequest'] );
 
     Route::get( 'admin/product-rating', [ProductController::class, 'productRating'] );

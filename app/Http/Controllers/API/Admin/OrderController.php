@@ -47,7 +47,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+            $order->variants = json_decode( $order->variants );
             }
 
             // Load relationships manually for each order
