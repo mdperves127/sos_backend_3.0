@@ -28,7 +28,7 @@ class ProductRequest extends FormRequest {
             'payment_type'           => ['required', Rule::in( ['aamarpay', 'my-wallet'] )],
             'cart_id'                => ['required', function ( $attribute, $value, $fail ) {
 
-                $cart = Cart::where( ['user_id' => userid(), 'id' => request( 'cart_id' )] )->first();
+                $cart = Cart::where( ['tenant_id' => request('tenant_id'), 'id' => request( 'cart_id' )] )->first();
                 if ( !$cart ) {
                     return $fail( 'Invalid cart' );
                 }

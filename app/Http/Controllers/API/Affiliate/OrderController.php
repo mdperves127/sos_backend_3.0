@@ -24,7 +24,6 @@ class OrderController extends Controller {
 
         $cart = Cart::where('id', $request->cart_id)->first();
 
-
         if ( !$cart || !$cart->tenant_id ) {
             return responsejson( 'Cart not found or missing tenant information', 'fail' );
         }
@@ -96,6 +95,7 @@ class OrderController extends Controller {
         $currentTenant = tenant();
         $advancepayment = $cart->advancepayment * $totalqty;
 
+
         if ( request( 'payment_type' ) == 'my-wallet' ) {
             if ( $currentTenant->balance < $advancepayment ) {
                 return responsejson( 'You do not have sufficient balance.', 'fail' );
@@ -120,8 +120,7 @@ class OrderController extends Controller {
                     'datas'     => request( 'datas' ),
                     'tenant_id' => $cart->tenant_id,
                 ],
-
-            ] );
+                ] );
             $successurl = url( 'api/aaparpay/product-checkout-success' );
             return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl );
         }
