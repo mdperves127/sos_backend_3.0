@@ -141,7 +141,8 @@ class ProductOrderService {
             }
         }
 
-        $vendor = User::find( $order->vendor_id );
+        // $vendor = User::find( $order->vendor_id );
+        $vendor = Tenant::on('mysql')->find( tenant()->id );
         if ( $order->custom_order == 0 ) {
             $vendor->decrement( 'balance', $order->afi_amount );
         }
