@@ -45,11 +45,12 @@ class ProductOrderRequest extends FormRequest {
         $vendorbalance = function ( $attribute, $value, $fail ) use ( $order ) {
             if ( $order->status == 'hold' ) {
                 $balance = Tenant::on('mysql')->find( $order->tenant_id )->balance;
-                // if ( request( 'status' ) != 'cancel' ) {
-                //     if ( $balance < $order->afi_amount ) {
-                //         $fail( 'Balance not available!' );
-                //     }
-                // }
+                dd($balance, $order->afi_amount);
+                if ( request( 'status' ) != 'cancel' ) {
+                    if ( $balance < $order->afi_amount ) {
+                        $fail( 'Balance not available!' );
+                    }
+                }
             }
         };
 
