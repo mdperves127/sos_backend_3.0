@@ -17,6 +17,7 @@ use App\Services\PathaoService;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
+use App\Models\Tenant;
 
 /**
  * Class ProductOrderService.
