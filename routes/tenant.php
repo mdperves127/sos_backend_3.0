@@ -145,6 +145,7 @@ Route::middleware( [
             Route::get( 'hold-orders', [VendorOrderController::class, 'HoldOrders'] );
             Route::get( 'order-count', [VendorOrderController::class, 'orderCount'] );
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
+            Route::post( 'order/update/{id}', [VendorOrderController::class, 'productorderstatus'] );
         } );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );

@@ -207,9 +207,9 @@ class OrderController extends Controller {
 
     function productorderstatus( ProductOrderRequest $request, $id ) {
 
-        if ( isactivemembership() != 1 ) {
-            return responsejson( 'Membership Expire renew Now!' );
-        }
+        // if ( isactivemembership() != 1 ) {
+        //     return responsejson( 'Membership Expire renew Now!' );
+        // }
         $validatedData = $request->validated();
 
         return ProductOrderService::orderStatus( $validatedData, $id );
