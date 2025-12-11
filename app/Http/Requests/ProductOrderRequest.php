@@ -8,6 +8,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use App\Models\Tenant;
 
 class ProductOrderRequest extends FormRequest {
     /**
@@ -43,7 +44,7 @@ class ProductOrderRequest extends FormRequest {
 
         $vendorbalance = function ( $attribute, $value, $fail ) use ( $order ) {
             if ( $order->status == 'hold' ) {
-                $balance = User::find( $order->vendor_id )->balance;
+                $balance = Tenant::on('mysql')->find( $order->tenant_id )->balance;
                 if ( request( 'status' ) != 'cancel' ) {
                     if ( $balance < $order->afi_amount ) {
                         $fail( 'Balance not available!' );
