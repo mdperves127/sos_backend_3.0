@@ -105,7 +105,7 @@ class AdminAdvertiseService {
             $user = null;
             // if (request('user_type') == 'user') {
             if (auth()->check()) {
-                $user = User::on('mysql')->where('id', userid() )->first();
+                $user = User::on('mysql')->where('id', auth()->user()->id )->first();
             } else {
                 $user = Tenant::on('mysql')->where('id', tenant()->id ?? '' )->first();
             }
