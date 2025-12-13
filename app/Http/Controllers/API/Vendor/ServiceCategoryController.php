@@ -43,7 +43,7 @@ class ServiceCategoryController extends Controller
         // return $this->response('Service Category created successfulll');
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:service_categories|',
+            'name' => 'required|unique:service_categories',
         ]);
 
         if ($validator->fails()) {
@@ -81,8 +81,6 @@ class ServiceCategoryController extends Controller
     public function update(Request $request, $id)
     {
         // $validatedData = $request->validated();
-
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:service_categories,name,'.$id,
         ]);
