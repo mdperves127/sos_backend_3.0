@@ -103,14 +103,18 @@ class AdminAdvertiseService {
         if ( request( 'paymethod' ) == 'my-wallet' ) {
 
             $user = null;
-            if (request('user_type') == 'user') {
-
+            // if (request('user_type') == 'user') {
+            if (auth()->check()) {
                 $user = User::on('mysql')->where('id', userid() )->first();
-            } elseif(request('user_type') == 'tenant'){
+            } else {
                 $user = Tenant::on('mysql')->where('id', tenant()->id ?? '' )->first();
             }
 
-            // dd($user);   
+            // Check if user exists
+            if ( !$user ) {
+                return responsejson( 'User not found!', 'fail' );
+            }
+
             // Validate balance
             if ( $user->balance < $totalprice ) {
                 return responsejson( 'Insufficient balance!', 'fail' );
