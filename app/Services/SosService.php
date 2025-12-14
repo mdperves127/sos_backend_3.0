@@ -11,11 +11,18 @@ use App\Models\SupportBox;
 class SosService {
 
     static function ticketcreate( $data ) {
-        $user                                 = tenant();
+        if (auth()->check()) {
+            $user = auth()->user()->id;
+        }
+        else {
+            $user = tenant()->id;
+        }
         $supportBox                           = new SupportBox();
         $supportBox->setConnection('mysql');
-        
-        $supportBox->tenant_id                  = tenant()->id ?? '';
+
+        $supportBox->tenant_id                  = auth()->check() ? '' : tenant()->id;
+
+        $supportBox->user_id                  = auth()->check() ? auth()->user()->id : 0;
         $supportBox->support_box_category_id  = $data['support_box_category_id'];
         $supportBox->support_problem_topic_id = $data['support_problem_topic_id'];
         if ( request()->hasFile( 'file' ) ) {

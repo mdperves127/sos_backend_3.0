@@ -119,6 +119,7 @@ Route::middleware( [
 
     Route::get( 'user/profile-data', [ProfileDataController::class, 'profile'] );
     Route::post( 'profile-data-update', [ProfileDataController::class, 'profileupdate'] );
+
     Route::get( 'subscription-notification', [SubscriptionAlertController::class, 'index'] );
     Route::post( 'service-buy-status', [ServiceBuyStatusController::class, 'index'] );
     Route::post( 'cancel-own-serviceorder-request', [ServiceBuyStatusController::class, 'cancelownserviceorderrequest'] );

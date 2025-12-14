@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Auth;
  * Class AamarPayService.
  */
 class AamarPayService {
-    static function gateway( $price, $traxId, $type, $successUrl ) {
+    static function gateway( $price, $traxId, $type, $successUrl, $tenant_type ) {
         $success = $successUrl;
+
         $cancel  = url( 'api/aaparpay/cancel' );
         $fail    = url( 'api/aaparpay/fail' );
 
@@ -38,6 +39,7 @@ class AamarPayService {
                 'cancel_url'    => $cancel,
                 'type'          => 'json',
                 'opt_a'         => $type,
+                'opt_b'         => $tenant_type,
             ],
         ] );
 

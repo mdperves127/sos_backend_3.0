@@ -30,7 +30,7 @@ class RechargeController extends Controller {
 
         $trxid      = uniqid();
         $type       = "recharge";
-        $successurl = url( 'api/aaparpay/recharge-success-for-us' );
+        $successurl = url( 'api/aaparpay/recharge-success' );
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
         PaymentStore::create( [
@@ -42,7 +42,7 @@ class RechargeController extends Controller {
         ] );
         // return 2;
 
-        return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl );
+        return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl, $request->tenant_type );
     }
 
     public function allUserBalance() {

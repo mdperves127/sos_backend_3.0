@@ -48,7 +48,7 @@ class ProfileController extends Controller
         }
 
 
-        $data = User::find(userid());
+        $data = User::find(auth()->user()->id);
         $data->name = $request->name;
         $data->number = $request->number;
         $data->number2 = $request->number2;

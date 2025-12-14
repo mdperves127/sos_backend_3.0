@@ -86,8 +86,11 @@ class AamarpayController extends Controller
             'is_paid' => 1
         ]);
         $dollerRate  =  DollerRate::first()?->amount;
-
-        PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
+        // if($response['opt_b'] == 'user'){
+            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
+        // }else{
+        //     PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', tenant()->id);
+        // }
         $user = User::find($adminAdvertise->user_id);
         $path = paymentredirect($user->role_as);
         $url = config('app.redirecturl') . $path . '?message=Advertise payment successfull';
@@ -143,16 +146,23 @@ class AamarpayController extends Controller
 
     function rechargesuccess()
     {
-
         $response = request()->all();
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
-        PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['tenant_id']);
+
+        if($response['opt_b'] == 'user'){
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['user_id']);
+        }else{
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['user_id']);
+        }
 
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
 
-        // $tenant = Tenant::find(tenant()->id);
-        // dd(tenant());
-        if ($tenant) {
+        $tenant = null;
+        if($response['opt_b'] == 'tenant'){
+            $tenant = Tenant::find(tenant()->id);
+            $tenant->increment('balance', $data['info']['amount']);
+        }else{
+            $tenant = User::find($data['info']['user_id']);
             $tenant->increment('balance', $data['info']['amount']);
         }
 
@@ -165,13 +175,17 @@ class AamarpayController extends Controller
         if ($tenant) {
             Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         }
-        return redirect(
-            response()->json([
-                'success' => true,
-                'message' => 'Recharge successful',
-                'data' => $data
-            ])
-        );
+
+        // Redirect based on user type
+        if($response['opt_b'] == 'tenant'){
+            $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
+        } else {
+            $user = User::find($data['info']['user_id']);
+            $path = paymentredirect($user->role_as);
+            $url = config('app.redirecturl') . $path . '?message=Recharge successful';
+        }
+
+        return redirect($url);
     }
 
 

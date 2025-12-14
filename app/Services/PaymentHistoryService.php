@@ -13,6 +13,7 @@ class PaymentHistoryService
 {
     static function store($trxid, $amount, $payment_method, $transition_type, $balance_type, $coupon, $tenant_id) {
         $tenant = Tenant::find($tenant_id);
+
         if ($tenant) {
             $tenant->paymenthistories()->create([
                 'trxid' => $trxid,
@@ -21,6 +22,16 @@ class PaymentHistoryService
                 'transition_type' => $transition_type,
                 'balance_type' => $balance_type,
                 'coupon' => $coupon,
+            ]);
+        }else{
+            User::find($tenant_id)->paymenthistories()->create([
+                'trxid' => $trxid,
+                'amount' => $amount,
+                'payment_method' => $payment_method,
+                'transition_type' => $transition_type,
+                'balance_type' => $balance_type,
+                'coupon' => $coupon,
+                'user_id' => $tenant_id,
             ]);
         }
     }
