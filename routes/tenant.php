@@ -486,6 +486,13 @@ Route::middleware( [
         Route::get( 'advertise-count', [AdvertiseController::class, 'advertiseCount'] );
         Route::get( 'advertise/{id}', [AdvertiseController::class, 'show'] );
 
+
+        Route::prefix( 'notification' )->group( function () {
+            Route::get( '/', [NotificationController::class, 'notification'] );
+            Route::get( '/mark-as-read/{id}', [NotificationController::class, 'markAsRead'] );
+            Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
+        } );
+
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
             Route::get( 'single/product/{tenant_id}/{id}', [SingleProductController::class, 'AffiliatorProductSingle'] );
@@ -542,11 +549,6 @@ Route::middleware( [
             Route::get( 'order-vs-comission', [AffiliateDashboardController::class, 'orderVsRevenue'] );
             Route::post( 'product-rating', [ProductRatingController::class, 'rating'] );
 
-            Route::prefix( 'notification' )->group( function () {
-                Route::get( '/', [NotificationController::class, 'notification'] );
-                Route::get( '/mark-as-read/{id}', [NotificationController::class, 'markAsRead'] );
-                Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
-            } );
 
             // Route::post( 'get-token', [AffiliateDashboardController::class, 'getToken'] );
             Route::post( 'get-cities', [AffiliateDashboardController::class, 'getCities'] );
