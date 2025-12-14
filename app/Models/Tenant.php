@@ -36,7 +36,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'phone',
         'address',
         'type',
-        'balance'
+        'balance',
+        'password'
     ];
 
     /**
@@ -54,6 +55,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'address',
             'type',
             'balance',
+            'password',
             'data',
             'created_at',
             'updated_at',
