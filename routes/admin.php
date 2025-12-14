@@ -344,8 +344,8 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         //Note
         Route::get( 'note/index', [AdminNoteController::class, 'index'] );
         Route::post( 'note/store', [AdminNoteController::class, 'store'] );
-        Route::get( 'note/vendor/{vendor_id}', [AdminNoteController::class, 'vendorNote'] );
-        
+        Route::get( 'note/tenant/{tenant_id}', [AdminNoteController::class, 'tenantNote'] );
+
         Route::get( 'vendor/advertise/{vendor_id}', [AdminNoteController::class, 'vendorAdvertise'] );
         Route::get( 'vendor/service/order/{vendor_id}', [AdminNoteController::class, 'vendorServiceOrder'] );
         Route::get( 'vendor/payment/history/{vendor_id}', [AdminNoteController::class, 'vendorPaymentHistory'] );

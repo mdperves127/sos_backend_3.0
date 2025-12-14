@@ -16,7 +16,7 @@ class NoteController extends Controller {
 
         return response()->json( [
             'status' => 200,
-            'Note'   => Note::latest()->get(),
+            'Note'   => Note::on('mysql')->latest()->get(),
         ] );
     }
 
@@ -30,8 +30,8 @@ class NoteController extends Controller {
             ] );
         }
 
-        Note::create( [
-            'user_id' => $request->user_id,
+        Note::on('mysql')->create( [
+            'user_id' => $request->tenant_id,
             'note'    => $request->note,
             'status'  => "unread",
         ] );
@@ -42,9 +42,9 @@ class NoteController extends Controller {
         ] );
     }
 
-    public function vendorNote( $id ) {
+    public function tenantNote( $id ) {
 
-        $notes = Note::where( 'user_id', $id )->paginate( 10 );
+        $notes = Note::on('mysql')->where( 'user_id', $id )->paginate( 10 );
 
         return response()->json( [
             'status' => 200,
