@@ -58,6 +58,7 @@ use App\Http\Controllers\Tenant\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
+use App\Http\Controllers\Tenant\NoteController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -492,6 +493,8 @@ Route::middleware( [
             Route::get( '/mark-as-read/{id}', [NotificationController::class, 'markAsRead'] );
             Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
         } );
+
+        Route::get( 'my-note', [NoteController::class, 'myNote'] );
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 

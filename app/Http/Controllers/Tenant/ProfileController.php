@@ -45,7 +45,7 @@ class ProfileController extends Controller
         }
 
 
-        $data = Tenant::find(tenant()->id);
+        $data = User::find(Auth::user()->id);
         $data->name = $request->name;
         $data->number = $request->number;
         $data->number2 = $request->number2;
