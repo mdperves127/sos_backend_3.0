@@ -120,6 +120,8 @@ Route::middleware( [
             Route::post( 'update', [ProfileController::class, 'TenantUpdateProfile'] );
         } );
 
+        Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
+
         //vendor product
         Route::prefix( 'tenant-product' )->group( function () {
             Route::get( '/count-data', [ProductManageController::class, 'VendorProductCount'] );
