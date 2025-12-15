@@ -81,6 +81,8 @@ class ProfileController extends Controller
         return response()->json([
             'status' => 200,
             'message' => 'Profile updated Sucessfully!',
+            'user' => $data,
+            'tenant_type' => Tenant::on('mysql')->where('id', tenant()->id)->first()->type,
         ]);
     }
 
