@@ -104,7 +104,7 @@ class ProductController extends Controller
                 if ($discount_type == 'percent') {
                     $required_balance =  (request('selling_price') / 100) * $discount_rate;
                 }
-                if (Settings::find(1)->is_advance == 1) {
+                if (Settings::on('mysql')->find(1)->is_advance == 1) {
                     if ($required_balance != '') {
                         if ($required_balance > auth()->user()->balance) {
                             $validator->errors()->add('selling_price', 'At least one product should have  a commission balance');
