@@ -48,7 +48,7 @@ class ProfileController extends Controller
         $data = User::find(Auth::user()->id);
         $data->name = $request->name;
 
-        if($request->new_password ==  $request->old_password) {
+        if($request->has('new_password') ==  $request->has('old_password')) {
             return response()->json([
                 'status' => 400,
                 'message' => 'New Password and Old Password cannot be the same!'
