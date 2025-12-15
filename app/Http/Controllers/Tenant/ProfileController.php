@@ -86,12 +86,19 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function shopInfo()
+    {
+        $tenant = Tenant::on('mysql')->where('id', tenant()->id)->first();
+        return response()->json([
+            'status' => 200,
+            'shop_info' => $tenant,
+        ]);
+    }
 
     public function shopInfoUpdate(Request $request)
     {
 
         $tenant = Tenant::on('mysql')->where('id', tenant()->id)->first();
-// dd($tenant->id);
 
 
         $validator = Validator::make($request->all(), [

@@ -119,7 +119,7 @@ Route::middleware( [
             Route::get( '/', [ProfileController::class, 'TenantProfile'] );
             Route::post( 'update', [ProfileController::class, 'TenantUpdateProfile'] );
         } );
-
+        Route::get( 'shop-info', [ProfileController::class, 'shopInfo'] );
         Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
 
         //vendor product
