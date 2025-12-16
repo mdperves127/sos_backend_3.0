@@ -87,6 +87,11 @@ class ServiceController extends Controller
         return $this->response( 'Updated successfull!' );
     }
 
+    public function edit( UpdateVendorServiceRequest $request, $id ) {
+        $data = $request->validated();
+        ProductService::update( $data, $id );
+        return $this->response( 'Updated successfull!' );
+    }
 
     public function destroy( $id ) {
         $data = VendorService::on('mysql')->where( ['tenant_id' => tenant()->id, 'id' => $id] )->first();
