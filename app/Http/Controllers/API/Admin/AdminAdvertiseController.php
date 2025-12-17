@@ -79,7 +79,8 @@ class AdminAdvertiseController extends Controller {
         // $userID = userid();
 
         $userID         = userid();
-        $adminAdvertise = AdminAdvertise::with( 'AdvertiseAudienceFile', 'advertisePlacement', 'advertiseLocationFiles', 'files', 'user:id,name,email,number,uniqid' )->find( $id );
+
+        $adminAdvertise = AdminAdvertise::on('mysql')->with( 'AdvertiseAudienceFile', 'advertisePlacement', 'advertiseLocationFiles', 'files', 'user:id,name,email,number,uniqid', 'tenant:id,company_name,owner_name' )->find( $id );
         if ( $adminAdvertise ) {
             return response()->json( [
                 'status'  => 200,
