@@ -113,6 +113,15 @@ class CouponController extends Controller {
 
         return $this->response( 'Updated Successfull' );
     }
+    public function couponUpdate( UpdateCouponRequest $request, Coupon $coupon ) {
+        if ( !$coupon ) {
+            return responsejson( 'Not found', 'fail' );
+        }
+        $validatedData = $request->validated();
+        $coupon->update( $validatedData );
+
+        return $this->response( 'Updated Successfull' );
+    }
 
     /**
      * Remove the specified resource from storage.

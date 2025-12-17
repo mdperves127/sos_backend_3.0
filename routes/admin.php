@@ -243,6 +243,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'category-status', [DashboardController::class, 'categoryStatus'] );
 
         Route::resource( 'coupons', CouponController::class );
+        Route::post( 'coupon-update/{id}', [CouponController::class, 'couponUpdate'] );
         Route::get( 'coupon-users', [CouponController::class, 'couponusers'] );
 
         Route::resource( 'faq', FaqController::class );
