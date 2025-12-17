@@ -447,7 +447,7 @@ Route::middleware( [
             Route::resource( '/', TenantServiceController::class );
             Route::get( '/view/{id}', [TenantServiceController::class, 'view'] );
             Route::post( '/edit/{id}', [TenantServiceController::class, 'edit'] );
-            Route::post( '/delete/{id}', [TenantServiceController::class, 'delete'] );
+            Route::delete( '/delete/{id}', [TenantServiceController::class, 'delete'] );
 
             Route::get( '/count', [TenantServiceController::class, 'serviceCount'] );
             Route::get( 'order/count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
