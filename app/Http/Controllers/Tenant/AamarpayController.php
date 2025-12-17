@@ -77,7 +77,7 @@ class AamarpayController extends Controller
     function advertisesuccess()
     {
         $response = request()->all();
-        $adminAdvertise = AdminAdvertise::where('trxid', $response['mer_txnid'])->first();
+        $adminAdvertise = AdminAdvertise::on('mysql')->where('trxid', $response['mer_txnid'])->first();
 
         $adminAdvertise->update([
             'is_paid' => 1
