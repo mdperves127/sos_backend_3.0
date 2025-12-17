@@ -22,7 +22,7 @@ class SosService {
 
         $supportBox->tenant_id                  = $tenant_id ?? null;
 
-        $supportBox->user_id                  = $user_id ?? null;
+        $supportBox->user_id                  = $user_id ?? 0;
         $supportBox->support_box_category_id  = $data['support_box_category_id'];
         $supportBox->support_problem_topic_id = $data['support_problem_topic_id'];
         if ( request()->hasFile( 'file' ) ) {
