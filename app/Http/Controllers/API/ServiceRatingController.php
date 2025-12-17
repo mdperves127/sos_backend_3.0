@@ -14,6 +14,8 @@ class ServiceRatingController extends Controller
     function store(ServiceRatingRequest $request){
         $validateddata = $request->validated();
 
+
+
         ServiceRating::create([
             'user_id'=>auth()->id(),
             'vendor_service_id'=>request('vendor_service_id'),
