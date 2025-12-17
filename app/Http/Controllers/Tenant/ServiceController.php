@@ -191,4 +191,15 @@ class ServiceController extends Controller
 
         return $this->response( $order );
     }
+
+    public function serviceCount() {
+        $all     = VendorService::on('mysql')->where( 'tenant_id', tenant()->id )->count();
+        $active  = VendorService::on('mysql')->where( 'tenant_id', tenant()->id )->where( 'status', 'active' )->count();
+        $pending = VendorService::on('mysql')->where( 'tenant_id', tenant()->id )->where( 'status', 'pending' )->count();
+        return response()->json( [
+            'active'  => $active,
+            'pending' => $pending,
+            'all'     => $all,
+        ] );
+    }
 }
