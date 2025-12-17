@@ -11,7 +11,7 @@ use App\Http\Controllers\API\Affiliate\ProductStatusController as AffiliateProdu
 use App\Http\Controllers\API\Affiliate\SingleProductController;
 use App\Http\Controllers\API\ColorController;
 use App\Http\Controllers\API\CouponListController;
-use App\Http\Controllers\API\HistoryController;
+use App\Http\Controllers\Tenant\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\Vendor\BarcodeController;
