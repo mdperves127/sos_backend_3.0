@@ -152,7 +152,7 @@ class SupportBoxController extends Controller {
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
-        $closed = SupportBox::on( 'mysql' )->where( 'user_id', userid() )->where( 'is_close', 1 )->count();
+        $closed = SupportBox::on( 'mysql' )->where( 'tenant_id', tenant()->id )->where( 'is_close', 1 )->count();
 
         return response()->json( [
             'closed'      => $closed,
