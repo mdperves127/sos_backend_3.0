@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\RechargeNotification;
 use App\Notifications\SubscriptionNotification;
 use App\Models\Tenant;
+use App\Models\DollerRate;
 
 class AamarpayController extends Controller
 {
