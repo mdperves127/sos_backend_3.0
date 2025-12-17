@@ -217,7 +217,7 @@ class VendorServiceController extends Controller {
     function servicerating( $id ) {
         $data = VendorService::where( ['id' => $id, 'status' => 'active'] )->first()
             ->servicerating()
-            ->with( 'user:id,name,image' )
+            ->with( ['user:id,name,image','tenant:id,company_name,owner_name'] )
             ->when(
                 request( 'search' ) == 'top_review',
                 function ( $query ) {
