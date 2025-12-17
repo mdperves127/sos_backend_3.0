@@ -31,7 +31,7 @@ class NoteController extends Controller {
         }
 
         Note::on('mysql')->create( [
-            'user_id' => $request->tenant_id,
+            'tenant_id' => $request->tenant_id,
             'note'    => $request->note,
             'status'  => "unread",
         ] );
@@ -44,7 +44,7 @@ class NoteController extends Controller {
 
     public function tenantNote( $id ) {
 
-        $notes = Note::on('mysql')->where( 'user_id', $id )->paginate( 10 );
+        $notes = Note::on('mysql')->where( 'tenant_id', $id )->paginate( 10 );
 
         return response()->json( [
             'status' => 200,
@@ -53,7 +53,7 @@ class NoteController extends Controller {
 
     }
 
-    public function vendorAdvertise( $id ) {
+public function vendorAdvertise( $id ) {
 
         $advertise = AdminAdvertise::where( 'user_id', $id )->paginate( 10 );
 
