@@ -15,4 +15,7 @@ class ServiceRating extends Model
     function user(){
         return $this->belongsTo(User::class,'user_id');
     }
+    function tenant(){
+        return $this->belongsTo(Tenant::class,'tenant_id');
+    }
 }
