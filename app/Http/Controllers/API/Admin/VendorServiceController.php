@@ -26,7 +26,7 @@ class VendorServiceController extends Controller
         ->when(request('search'), function ($query) {
             $query->where('uniqueid', 'like', '%' . request('search') . '%');
         })
-        ->with('servicepackages', 'serviceimages', 'user')->latest()
+        ->with('servicepackages', 'serviceimages', 'tenant')->latest()
 
         ->paginate(10);
         return $this->response($data);

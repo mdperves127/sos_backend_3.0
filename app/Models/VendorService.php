@@ -42,7 +42,9 @@ class VendorService extends Model
     function user(){
         return $this->belongsTo(User::class);
     }
-
+    function tenant(){
+        return $this->belongsTo(Tenant::class);
+    }
     function serviceorders(){
         return $this->hasMany(ServiceOrder::class,'vendor_service_id');
     }
