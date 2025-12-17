@@ -14,7 +14,7 @@ class ShowAllService
     {
         $datas = VendorService::query()
             ->where('status', 'active')
-            ->with(['tenant:id,company_name', 'firstpackage:id,price,vendor_service_id'])
+            ->with(['tenant', 'firstpackage:id,price,vendor_service_id'])
             ->select('id', 'title', 'tenant_id', 'image', 'tags')
             ->withAvg('servicerating', 'rating')
             ->when(request('tags') != '', function ($query) {
