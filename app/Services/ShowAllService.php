@@ -14,8 +14,8 @@ class ShowAllService
     {
         $datas = VendorService::query()
             ->where('status', 'active')
-            ->with(['user:id,name,image', 'firstpackage:id,price,vendor_service_id'])
-            ->select('id', 'title', 'user_id', 'image', 'tags')
+            ->with(['tenant:id,company_name', 'firstpackage:id,price,vendor_service_id'])
+            ->select('id', 'title', 'tenant_id', 'image', 'tags')
             ->withAvg('servicerating', 'rating')
             ->when(request('tags') != '', function ($query) {
                 $query->whereJsonContains('tags', request('tags'));
