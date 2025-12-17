@@ -51,7 +51,7 @@ class CouponRequestController extends Controller
 
         $search = request('search', '');
         return CouponRequest::query()
-            ->with('user')
+            ->with('user','tenant')
             ->when(request('status') == 'reject', function ($query) use($search){
                 $query->where('status', 'reject');
             }, function ($query) use ($search) {
