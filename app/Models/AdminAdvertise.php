@@ -53,4 +53,8 @@ class AdminAdvertise extends Model
     {
         return $this->belongsTo(User::class);
     }
+    function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
 }
