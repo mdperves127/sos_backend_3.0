@@ -297,6 +297,7 @@ class ProductStatusController extends Controller {
                     $product->user_id    = userid(); // Current affiliate user ID
                     $product->reason     = request( 'reason' );
                     $product->uniqid     = uniqid();
+                    $product->tenant_id  = $tenant_id;
                 }
             );
 
