@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\NoteController;
+use App\Http\Controllers\Tenant\RequestProductController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -472,6 +473,19 @@ Route::middleware( [
         Route::post( 'tenant-withdraw-money', [WithdrawController::class, 'withdraw'] );
 
         Route::get( 'tenant-all-banks', [BankController::class, 'index'] );
+
+
+        Route::prefix( 'dropshipper' )->group( function () {
+            Route::get( 'request-count-{status?}', [RequestProductController::class, 'affiliateRequestCount'] );
+            Route::get( 'request/product/pending', [RequestProductController::class, 'RequestPending'] );
+            Route::get( 'request/product/active', [RequestProductController::class, 'RequestActive'] );
+            Route::get( 'request/product/all', [RequestProductController::class, 'RequestAll'] );
+            Route::get( 'request/product/rejected', [RequestProductController::class, 'RequestRejected'] );
+            Route::get( 'request/product/view/{id}', [RequestProductController::class, 'RequestView'] );
+            Route::post( 'product-update/{id}', [RequestProductController::class, 'RequestUpdate'] );
+            Route::get( 'membership-expire-product', [RequestProductController::class, 'membershipexpireactiveproduct'] );
+            Route::get( 'membership-expire-product-count', [RequestProductController::class, 'membershipexpireactiveproductCount'] );
+            } );
 
         //supportbox route
 

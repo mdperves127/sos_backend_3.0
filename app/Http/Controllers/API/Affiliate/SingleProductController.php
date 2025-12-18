@@ -38,9 +38,10 @@ class SingleProductController extends Controller {
                         $query->where( 'status', 'active' );
                     },
                     'productrating.affiliate:id,name,image',
-                    'productVariant' => function ( $q ) {
-                        $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
-                    },
+                    'productVariant.size',
+                    'productVariant.unit',
+                    'productVariant.color',
+                    'productVariant.product',
                     'purchaseDetails.color',
                     'purchaseDetails.size',
                     'purchaseDetails.unit'
