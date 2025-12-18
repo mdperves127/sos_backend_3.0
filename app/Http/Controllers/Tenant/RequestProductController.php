@@ -165,32 +165,71 @@ class RequestProductController extends Controller {
         // if ( Auth::user()->is_employee === 'yes' && employee( 'all_request' ) === null ) {
         //     return $this->employeeMessage();
         // }
-        $search = request('search');
 
-        $product = CrossTenantQueryService::queryAllTenants(
+        $search = request( 'search' );
+
+        // Get all matching ProductDetails across tenant databases
+        $allProductDetails = CrossTenantQueryService::queryAllTenants(
             ProductDetails::class,
-            function ($query) use ($search) {
+            function ( $query ) use ( $search ) {
+                // Optional: limit to specific tenant id stored on rows
+                $query->where( 'tenant_id', tenant()->id );
 
-                $query->where('tenant_id', tenant()->id)
-                    ->whereHas('product')
-                    ->when($search != '', function ($query) use ($search) {
-                        $query->whereHas('product', function ($query) use ($search) {
-                            $query->where('name', 'like', '%' . $search . '%');
-                        })
-                        ->orWhere('uniqid', 'like', '%' . $search . '%');
-                    })
-                    ->when(request('order_id'), function ($q, $orderid) {
-                        $q->where('id', 'like', "%{$orderid}%");
-                    })
-                    ->latest(); // ✅ only query-building here
+                // Handle search by joining products table
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'product_details.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'products.name', 'like', "%{$search}%" )
+                                ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'product_details.*' )
+                          ->groupBy( 'product_details.id' );
+                }
+
+                if ( $orderId = request( 'order_id' ) ) {
+                    $query->where( 'product_details.id', 'like', "%{$orderId}%" );
+                }
+
+                // Order by latest
+                $query->orderBy( 'product_details.created_at', 'desc' );
             }
-        )->paginate(10)->withQueryString();
+        );
 
+        // Manually paginate the collection returned by queryAllTenants
+        $page    = (int) request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset  = ( $page - 1 ) * $perPage;
 
+        $productDetails = collect( $allProductDetails );
+        $paginated      = $productDetails->slice( $offset, $perPage );
+        $total          = $productDetails->count();
+        $lastPage       = (int) max( 1, ceil( $total / $perPage ) );
+
+        $path        = request()->url();
+        $queryParams = request()->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $response = [
+            'data'           => $paginated->values(),
+            'current_page'   => $page,
+            'per_page'       => $perPage,
+            'total'          => $total,
+            'last_page'      => $lastPage,
+            'from'           => $total ? $offset + 1 : null,
+            'to'             => min( $offset + $perPage, $total ),
+            'path'           => $path,
+            'first_page_url' => $buildUrl( 1 ),
+            'last_page_url'  => $total ? $buildUrl( $lastPage ) : null,
+            'prev_page_url'  => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'  => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
             'status'  => 200,
-            'products' => $product,
+            'product' => $response,
         ] );
     }
 
