@@ -162,14 +162,14 @@ class RequestProductController extends Controller {
 
     public function RequestAll()
     {
-        $product = ProductDetails::query()
+        $products = ProductDetails::query()
             ->where( 'tenant_id', tenant()->id )
             ->whereHas( 'product' )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
 
-        return $product;
+        return $products;
     }
 
     function RequestRejected() {
