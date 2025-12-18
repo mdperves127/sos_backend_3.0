@@ -217,125 +217,67 @@ class ProductStatusController extends Controller {
         ] );
     }
 
-    public function AffiliatorProductRequest( Request $request, $tenant_id, $id = null ) {
-        // Membership and product count checks - COMMENTED OUT
+    public function AffiliatorProductRequest( Request $request, $tenant_id, $id ) {
+
         // $getmembershipdetails = getmembershipdetails();
-        // $acceptableproduct    = ProductDetails::where( ['user_id' => userid(), 'status' => 1] )->count();
-        //
+        $acceptableproduct    = ProductDetails::where( ['tenant_id' => tenant()->id, 'status' => 1] )->count();
+
         // $productecreateqty = $getmembershipdetails?->product_request;
-        //
-        // $totalcreatedproduct = ProductDetails::where( 'user_id', userid() )->count();
-        //
+
+        $totalcreatedproduct = ProductDetails::where( 'tenant_id', tenant()->id )->count();
+
         // if ( ismembershipexists() != 1 ) {
         //     return responsejson( 'You do not have a membership', 'fail' );
         // }
-        //
+
         // if ( isactivemembership() != 1 ) {
         //     return responsejson( 'Membership expired!', 'fail' );
         // }
-        //
+
         // if ( $productecreateqty <= $totalcreatedproduct ) {
         //     return responsejson( 'You can not send product request more then ' . $productecreateqty . '.', 'fail' );
         // }
-        //
+
         // if ($getmembershipdetails?->product_approve <= $acceptableproduct) {
         //     return responsejson('Vendor product accept limit over.', 'fail');
         // }
 
-        // Get product from specific tenant
-        $product_id = request( 'product_id' ) ?? $id;
 
-        $existproduct = CrossTenantQueryService::getSingleFromTenant(
-            $tenant_id,
+
+
+
+        $tenant = Tenant::find($tenant_id);
+        $existproduct = CrossTenantQueryService::queryAllTenants(
             Product::class,
-            function ( $query ) use ( $product_id ) {
-                $query->where( 'id', $product_id );
-
-                // Original filters - COMMENTED OUT
-                // ->where( 'status', 'active' )
-                // ->whereHas( 'vendor', function ( $query ) {
-                //     $query->withCount( ['vendoractiveproduct' => function ( $query ) {
-                //         $query->where( 'status', 1 );
-                //     }] )
-                //         ->withwhereHas( 'usersubscription', function ( $query ) {
-                //
-                //             $query->where( function ( $query ) {
-                //                 $query->whereHas( 'subscription', function ( $query ) {
-                //                     $query->where( 'plan_type', 'freemium' );
-                //                 } )
-                //                     ->where( 'expire_date', '>', now() );
-                //             } )
-                //                 ->orwhere( function ( $query ) {
-                //                     $query->whereHas( 'subscription', function ( $query ) {
-                //                         $query->where( 'plan_type', '!=', 'freemium' );
-                //                     } )
-                //                         ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                //                 } );
-                //         } )
-                //         ->withSum( 'usersubscription', 'affiliate_request' )
-                //         ->having( 'vendoractiveproduct_count', '<', \DB::raw( 'usersubscription_sum_affiliate_request' ) );
-                // } );
+            function ($query) use ($tenant) {
+                return $query
+                    ->where( 'status', 'active' )
+                    ->find( $id );
             }
         );
 
+
+
+
         if ( !$existproduct ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Product not found',
-            ] );
+            return $this->response( 'Product not fount' );
         }
 
-        try {
-            // Save ProductDetails to the vendor tenant's database (requested tenant)
-            $product = CrossTenantQueryService::saveToTenant(
-                $tenant_id,
-                ProductDetails::class,
-                function ( $product ) use ( $existproduct ) {
-                    $product->status     = 2;
-                    $product->product_id = $existproduct->id;
-                    $product->vendor_id  = $existproduct->user_id; // Vendor ID from the product
-                    $product->user_id    = 0; // Current affiliate user ID
-                    $product->reason     = request( 'reason' );
-                    $product->uniqid     = uniqid();
-                    $product->tenant_id  = $tenant_id;
-                }
-            );
+        $product             = new ProductDetails();
+        $product->status     = 2;
+        $product->product_id = $existproduct->id;
+        $product->vendor_id  = 0;
+        $product->user_id    = 0;
+        $product->reason     = request( 'reason' );
+        $product->tenant_id  = $tenant_id;
+        $product->uniqid     = uniqid();
+        $product->save();
 
-            if ( !$product ) {
-                return response()->json( [
-                    'status'  => 500,
-                    'message' => 'Failed to save product request',
-                ] );
-            }
-
-            // Get vendor user from the vendor tenant to send notification
-            $vendorUser = CrossTenantQueryService::getSingleFromTenant(
-                $tenant_id,
-                User::class,
-                function ( $query ) use ( $product ) {
-                    $query->where( 'id', $product->vendor_id );
-                }
-            );
-
-            if ( $vendorUser ) {
-                Notification::send( $vendorUser, new AffiliateProductRequestNotification( $vendorUser, $product ) );
-            }
-
-            return response()->json( [
-                'status'  => 200,
-                'message' => 'Product Request Successfully Please Wait',
-                'data'    => [
-                    'product_details_id' => $product->id,
-                ],
-            ] );
-        } catch ( \Exception $e ) {
-            \Log::error( 'Exception saving ProductDetails: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ] );
-            return response()->json( [
-                'status'  => 500,
-                'message' => 'Error saving product request: ' . $e->getMessage(),
-            ] );
-        }
+        // $user = User::where( 'id', $product->vendor_id )->first();
+        // Notification::send( $user, new AffiliateProductRequestNotification( $user, $product ) );
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Product Request Successfully Please Wait',
+        ] );
     }
 }
