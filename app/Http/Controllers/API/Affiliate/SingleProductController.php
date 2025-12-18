@@ -41,6 +41,7 @@ class SingleProductController extends Controller {
                     'productVariant.size',
                     'productVariant.unit',
                     'productVariant.color',
+                    'productVariant.product',
                     'purchaseDetails.color',
                     'purchaseDetails.size',
                     'purchaseDetails.unit'
