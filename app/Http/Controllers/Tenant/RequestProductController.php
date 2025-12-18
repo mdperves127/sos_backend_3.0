@@ -164,7 +164,6 @@ class RequestProductController extends Controller {
     {
         $product = ProductDetails::query()
             ->where( 'tenant_id', tenant()->id )
-            ->where( 'status', 1 )
             ->whereHas( 'product' )
             ->latest()
             ->paginate( 10 )
