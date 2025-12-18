@@ -161,131 +161,36 @@ class RequestProductController extends Controller {
     }
 
     function RequestAll() {
-
         // Check if the user is an employee and has permission
         // if ( Auth::user()->is_employee === 'yes' && employee( 'all_request' ) === null ) {
         //     return $this->employeeMessage();
         // }
 
         $search  = request( 'search' );
-        $orderId = request( 'order_id' );
-
-        // Query ProductDetails from all merchant tenant databases
-        $allProductDetails = CrossTenantQueryService::queryAllTenants(
+        $product = CrossTenantQueryService::queryAllTenants(
             ProductDetails::class,
-            function ( $query ) use ( $search, $orderId ) {
-                // Optional search by product name or uniqid
-                if ( $search ) {
-                    $query->leftJoin( 'products', 'product_details.product_id', '=', 'products.id' )
-                          ->where( function ( $q ) use ( $search ) {
-                              $q->where( 'products.name', 'like', "%{$search}%" )
-                                ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
-                          } )
-                          ->select( 'product_details.*' )
-                          ->groupBy( 'product_details.id' );
-                }
+            function ($query) use ($search) {
 
-                // Optional filter by order_id (ProductDetails id)
-                if ( $orderId ) {
-                    $query->where( 'product_details.id', 'like', "%{$orderId}%" );
-                }
-
-                // Order by latest
-                $query->orderBy( 'created_at', 'desc' );
+                $query->where('tenant_id', tenant()->id)
+                    ->whereHas('product')
+                    ->when($search != '', function ($query) use ($search) {
+                        $query->whereHas('product', function ($query) use ($search) {
+                            $query->where('name', 'like', '%' . $search . '%');
+                        })
+                        ->orWhere('uniqid', 'like', '%' . $search . '%');
+                    })
+                    ->when(request('order_id'), function ($q, $orderid) {
+                        $q->where('id', 'like', "%{$orderid}%");
+                    });
             }
-        );
-
-        // Convert stdClass objects and load related product, vendor and affiliator per tenant
-        $productDetails = collect( $allProductDetails )->map( function ( $productDetail ) {
-            if ( isset( $productDetail->product_id ) && isset( $productDetail->tenant_id ) ) {
-                $tenant = Tenant::find( $productDetail->tenant_id );
-                if ( $tenant ) {
-                    $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName   = 'sosanik_tenant_' . $tenant->id;
-
-                    // Configure connection using the same method as CrossTenantQueryService
-                    config( [
-                        'database.connections.' . $connectionName => [
-                            'driver'   => 'mysql',
-                            'host'     => config( 'database.connections.mysql.host' ),
-                            'port'     => config( 'database.connections.mysql.port' ),
-                            'database' => $databaseName,
-                            'username' => config( 'database.connections.mysql.username' ),
-                            'password' => config( 'database.connections.mysql.password' ),
-                            'charset'  => 'utf8mb4',
-                            'collation'=> 'utf8mb4_unicode_ci',
-                            'strict'   => false,
-                        ],
-                    ] );
-                    DB::purge( $connectionName );
-
-                    // Load product
-                    $product = Product::on( $connectionName )
-                        ->select( 'id', 'name', 'image', 'selling_price' )
-                        ->find( $productDetail->product_id );
-                    $productDetail->product = $product;
-
-                    // Load vendor
-                    if ( isset( $productDetail->vendor_id ) ) {
-                        $vendor = User::on( $connectionName )
-                            ->select( 'id', 'name' )
-                            ->find( $productDetail->vendor_id );
-                        $productDetail->vendor = $vendor;
-                    }
-
-                    // Load affiliator (user_id is the affiliator)
-                    if ( isset( $productDetail->user_id ) ) {
-                        $affiliator = User::on( $connectionName )
-                            ->select( 'id', 'name' )
-                            ->find( $productDetail->user_id );
-                        $productDetail->affiliator = $affiliator;
-                    }
-                }
-            }
-
-            return $productDetail;
-        } );
-
-        // Ensure consistent latest-first ordering
-        $productDetails = $productDetails->sortByDesc( function ( $productDetail ) {
-            return $productDetail->created_at ?? '';
-        } )->values();
-
-        // Manual pagination after processing
-        $page    = (int) request()->get( 'page', 1 );
-        $perPage = 10;
-        $offset  = ( $page - 1 ) * $perPage;
-
-        $paginatedProductDetails = $productDetails->slice( $offset, $perPage );
-        $total                   = $productDetails->count();
-        $lastPage                = (int) ceil( $total / $perPage );
-
-        // Build pagination URLs
-        $path        = request()->url();
-        $queryParams = request()->query();
-        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
-            $queryParams['page'] = $pageNum;
-            return $path . '?' . http_build_query( $queryParams );
-        };
-
-        $response = [
-            'data'            => $paginatedProductDetails->values(),
-            'current_page'    => $page,
-            'per_page'        => $perPage,
-            'total'           => $total,
-            'last_page'       => $lastPage,
-            'from'            => $offset + 1,
-            'to'              => min( $offset + $perPage, $total ),
-            'path'            => $path,
-            'first_page_url'  => $buildUrl( 1 ),
-            'last_page_url'   => $lastPage > 0 ? $buildUrl( $lastPage ) : null,
-            'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-        ];
+        )
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
 
         return response()->json( [
             'status'  => 200,
-            'product' => $response,
+            'product' => $product,
         ] );
     }
 
