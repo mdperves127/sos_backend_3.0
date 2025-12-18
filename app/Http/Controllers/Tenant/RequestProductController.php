@@ -189,7 +189,7 @@ class RequestProductController extends Controller {
 
         return response()->json( [
             'status'  => 200,
-            'product' => $product,
+            'products' => $product,
         ] );
     }
 
