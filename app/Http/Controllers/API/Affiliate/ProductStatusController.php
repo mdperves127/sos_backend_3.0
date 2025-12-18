@@ -294,7 +294,7 @@ class ProductStatusController extends Controller {
                     $product->status     = 2;
                     $product->product_id = $existproduct->id;
                     $product->vendor_id  = $existproduct->user_id; // Vendor ID from the product
-                    $product->user_id    = userid(); // Current affiliate user ID
+                    $product->user_id    = 0; // Current affiliate user ID
                     $product->reason     = request( 'reason' );
                     $product->uniqid     = uniqid();
                     $product->tenant_id  = $tenant_id;
