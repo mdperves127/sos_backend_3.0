@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductDetails extends Model
 {
-    use HasFactory;
+    use HasFactory ;
 
     protected $guarded = [];
     protected $connection = 'tenant';
+    protected $table = 'product_details';
 
     public function product(){
         return $this->belongsTo('App\Models\Product');

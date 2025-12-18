@@ -160,77 +160,17 @@ class RequestProductController extends Controller {
         ] );
     }
 
-    function RequestAll() {
-        // Check if the user is an employee and has permission
-        // if ( Auth::user()->is_employee === 'yes' && employee( 'all_request' ) === null ) {
-        //     return $this->employeeMessage();
-        // }
+    public function RequestAll()
+    {
+        $product = ProductDetails::query()
+            ->where( 'tenant_id', tenant()->id )
+            ->where( 'status', 1 )
+            ->whereHas( 'product' )
+            ->latest()
+            ->paginate( 10 )
+            ->withQueryString();
 
-        $search = request( 'search' );
-
-        // Get all matching ProductDetails across tenant databases
-        $allProductDetails = CrossTenantQueryService::queryAllTenants(
-            ProductDetails::class,
-            function ( $query ) use ( $search ) {
-                // Optional: limit to specific tenant id stored on rows
-                $query->where( 'tenant_id', tenant()->id );
-
-                // Handle search by joining products table
-                if ( $search ) {
-                    $query->leftJoin( 'products', 'product_details.product_id', '=', 'products.id' )
-                          ->where( function ( $q ) use ( $search ) {
-                              $q->where( 'products.name', 'like', "%{$search}%" )
-                                ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
-                          } )
-                          ->select( 'product_details.*' )
-                          ->groupBy( 'product_details.id' );
-                }
-
-                if ( $orderId = request( 'order_id' ) ) {
-                    $query->where( 'product_details.id', 'like', "%{$orderId}%" );
-                }
-
-                // Order by latest
-                $query->orderBy( 'product_details.created_at', 'desc' );
-            }
-        );
-
-        // Manually paginate the collection returned by queryAllTenants
-        $page    = (int) request()->get( 'page', 1 );
-        $perPage = 10;
-        $offset  = ( $page - 1 ) * $perPage;
-
-        $productDetails = collect( $allProductDetails );
-        $paginated      = $productDetails->slice( $offset, $perPage );
-        $total          = $productDetails->count();
-        $lastPage       = (int) max( 1, ceil( $total / $perPage ) );
-
-        $path        = request()->url();
-        $queryParams = request()->query();
-        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
-            $queryParams['page'] = $pageNum;
-            return $path . '?' . http_build_query( $queryParams );
-        };
-
-        $response = [
-            'data'           => $paginated->values(),
-            'current_page'   => $page,
-            'per_page'       => $perPage,
-            'total'          => $total,
-            'last_page'      => $lastPage,
-            'from'           => $total ? $offset + 1 : null,
-            'to'             => min( $offset + $perPage, $total ),
-            'path'           => $path,
-            'first_page_url' => $buildUrl( 1 ),
-            'last_page_url'  => $total ? $buildUrl( $lastPage ) : null,
-            'prev_page_url'  => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'next_page_url'  => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-        ];
-
-        return response()->json( [
-            'status'  => 200,
-            'product' => $response,
-        ] );
+        return $product;
     }
 
     function RequestRejected() {
