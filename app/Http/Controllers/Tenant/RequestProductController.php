@@ -181,12 +181,11 @@ class RequestProductController extends Controller {
                     })
                     ->when(request('order_id'), function ($q, $orderid) {
                         $q->where('id', 'like', "%{$orderid}%");
-                    });
+                    })
+                    ->latest();
             }
-        )
-        ->latest()
-        ->paginate(10)
-        ->withQueryString();
+        )->paginate(10)->withQueryString();
+
 
         return response()->json( [
             'status'  => 200,
