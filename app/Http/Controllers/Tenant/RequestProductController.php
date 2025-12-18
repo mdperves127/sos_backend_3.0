@@ -165,8 +165,8 @@ class RequestProductController extends Controller {
         // if ( Auth::user()->is_employee === 'yes' && employee( 'all_request' ) === null ) {
         //     return $this->employeeMessage();
         // }
+        $search = request('search');
 
-        $search  = request( 'search' );
         $product = CrossTenantQueryService::queryAllTenants(
             ProductDetails::class,
             function ($query) use ($search) {
@@ -182,9 +182,10 @@ class RequestProductController extends Controller {
                     ->when(request('order_id'), function ($q, $orderid) {
                         $q->where('id', 'like', "%{$orderid}%");
                     })
-                    ->latest()->paginate(10)->withQueryString();
+                    ->latest(); // ✅ only query-building here
             }
-        );
+        )->paginate(10)->withQueryString();
+
 
 
         return response()->json( [
