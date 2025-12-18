@@ -169,7 +169,10 @@ class RequestProductController extends Controller {
             ->paginate( 10 )
             ->withQueryString();
 
-        return $products;
+        return response()->json( [
+            'status'  => 200,
+            'products' => $products,
+        ] );
     }
 
     function RequestRejected() {
