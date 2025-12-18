@@ -246,20 +246,17 @@ class ProductStatusController extends Controller {
 
 
 
-        $tenant = Tenant::find($tenant_id);
-        $existproduct = CrossTenantQueryService::queryAllTenants(
+        // Get product from the specific tenant's database
+        $existproduct = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
             Product::class,
-            function ($query) use ($tenant) {
-                return $query
-                    ->where( 'status', 'active' )
-                    ->find( $id );
+            function ( $query ) use ( $id ) {
+                $query->where( 'id', $id )
+                      ->where( 'status', 'active' );
             }
         );
 
-
-
-
-        if ( !$existproduct ) {
+        if ( ! $existproduct ) {
             return $this->response( 'Product not fount' );
         }
 
