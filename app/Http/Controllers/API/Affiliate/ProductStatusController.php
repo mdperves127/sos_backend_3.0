@@ -112,7 +112,7 @@ class ProductStatusController extends Controller {
 
         $active = ProductDetails::query()
             ->with( 'product' )
-            ->where( ['user_id' => $userId, 'status' => 1] )
+            ->where( ['tenant_id' => tenant()->id, 'status' => 1] )
             ->whereHas( 'product' )
             ->when( $searchTerm != '', function ( $query ) use ( $searchTerm ) {
                 $query->whereHas( 'product', function ( $query ) use ( $searchTerm ) {
@@ -120,28 +120,28 @@ class ProductStatusController extends Controller {
                 } )
                     ->orWhere( 'uniqid', 'like', '%' . $searchTerm . '%' );
             } )
-            ->whereHas( 'vendor', function ( $query ) {
-                $query->withCount( ['vendoractiveproduct' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] )
-                    ->withwhereHas( 'usersubscription', function ( $query ) {
+            // ->whereHas( 'vendor', function ( $query ) {
+            //     $query->withCount( ['vendoractiveproduct' => function ( $query ) {
+            //         $query->where( 'status', 1 );
+            //     }] )
+            //         ->withwhereHas( 'usersubscription', function ( $query ) {
 
-                        $query->where( function ( $query ) {
-                            $query->whereHas( 'subscription', function ( $query ) {
-                                $query->where( 'plan_type', 'freemium' );
-                            } )
-                                ->where( 'expire_date', '>', now() );
-                        } )
-                            ->orwhere( function ( $query ) {
-                                $query->whereHas( 'subscription', function ( $query ) {
-                                    $query->where( 'plan_type', '!=', 'freemium' );
-                                } )
-                                    ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-                            } );
-                    } );
-                // ->withSum('usersubscription', 'affiliate_request')
-                // ->having('vendoractiveproduct_count', '<=', \DB::raw('usersubscription_sum_affiliate_request'));
-            } )
+            //             $query->where( function ( $query ) {
+            //                 $query->whereHas( 'subscription', function ( $query ) {
+            //                     $query->where( 'plan_type', 'freemium' );
+            //                 } )
+            //                     ->where( 'expire_date', '>', now() );
+            //             } )
+            //                 ->orwhere( function ( $query ) {
+            //                     $query->whereHas( 'subscription', function ( $query ) {
+            //                         $query->where( 'plan_type', '!=', 'freemium' );
+            //                     } )
+            //                         ->where( 'expire_date', '>', now()->subMonth( 1 ) );
+            //                 } );
+            //         } );
+            //     // ->withSum('usersubscription', 'affiliate_request')
+            //     // ->having('vendoractiveproduct_count', '<=', \DB::raw('usersubscription_sum_affiliate_request'));
+            // } )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
