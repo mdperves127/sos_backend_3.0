@@ -367,7 +367,7 @@ class CartController extends Controller {
 
             // Step 3: Get product from product's tenant database
             $product = CrossTenantQueryService::getSingleFromTenant(
-                $cart->tenant_id,
+                $tenant_id,
                 Product::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'id', $cart->product_id )
