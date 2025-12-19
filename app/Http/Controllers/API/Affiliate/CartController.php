@@ -337,7 +337,7 @@ class CartController extends Controller {
     }
 
     function affiliatorCart( $id ) {
-        try {
+        // try {
             // Step 1: Get cart from current tenant's database
             $cart = Cart::with( ['cartDetails'] )->where( 'tenant_id', $tenant_id )->find( $id );
 
@@ -447,12 +447,12 @@ class CartController extends Controller {
                 'areas'           => $areas,
             ] );
 
-        } catch ( \Exception $e ) {
-            return response()->json( [
-                'status'  => 403,
-                'message' => 'Your courier credential is invalid, please check and try again.',
-                'error' => $e->getMessage(),
-            ] );
-        }
+        // } catch ( \Exception $e ) {
+        //     return response()->json( [
+        //         'status'  => 403,
+        //         'message' => 'Your courier credential is invalid, please check and try again.',
+        //         'error' => $e->getMessage(),
+        //     ] );
+        // }
     }
 }
