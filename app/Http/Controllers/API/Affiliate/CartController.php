@@ -404,8 +404,7 @@ class CartController extends Controller {
                     $query->where( 'vendor_id', $cart->vendor_id )
                         ->where( 'status', 'active' )
                         ->select( 'id', 'courier_name', 'status', 'default' )
-                        ->with('colors', 'sizes', 'units')
-                        ;
+                        ->with('colors', 'sizes', 'units');
                 }
             );
 
