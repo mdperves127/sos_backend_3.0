@@ -193,7 +193,8 @@ class RequestProductController extends Controller {
                 DB::purge( $connectionName );
 
                 // Build query for this tenant's database
-                $query = DB::connection( $connectionName )->table( 'product_details' );
+                $query = DB::connection( $connectionName )->table( 'product_details' )
+                    ->where( 'product_details.tenant_id', tenant()->id );
 
                 // Handle search functionality - join with products table for search
                 if ( $search ) {
@@ -205,8 +206,6 @@ class RequestProductController extends Controller {
                           ->select(
                               'product_details.id',
                               'product_details.product_id',
-                              'product_details.user_id',
-                              'product_details.vendor_id',
                               'product_details.status',
                               'product_details.reason',
                               'product_details.uniqid',
@@ -220,8 +219,6 @@ class RequestProductController extends Controller {
                     $query->select(
                         'product_details.id',
                         'product_details.product_id',
-                        'product_details.user_id',
-                        'product_details.vendor_id',
                         'product_details.status',
                         'product_details.reason',
                         'product_details.uniqid',
@@ -246,12 +243,8 @@ class RequestProductController extends Controller {
                 $tenantResults->transform( function ( $item ) use ( $tenant ) {
                     $domain = $tenant->domains()->first();
                     $item->tenant_id = $tenant->id;
-                    $item->tenant_domain = $domain?->domain;
                     $item->tenant_name = $tenant->company_name;
-                    $item->tenant_type = $tenant->type;
-                    $item->tenant_email = $tenant->email;
                     $item->tenant_owner = $tenant->owner_name;
-                    $item->tenant_phone = $tenant->phone;
                     return $item;
                 } );
 
