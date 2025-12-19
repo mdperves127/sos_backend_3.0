@@ -107,7 +107,7 @@ class ProductStatusController extends Controller {
     }
 
     public function AffiliatorProductActiveProduct() {
-        $userId     = Auth::id();
+
         $searchTerm = request( 'search' );
 
         $active = ProductDetails::query()
@@ -148,7 +148,7 @@ class ProductStatusController extends Controller {
 
         return response()->json( [
             'status' => 200,
-            'active' => $active,
+            'product' => $active,
         ] );
     }
 
