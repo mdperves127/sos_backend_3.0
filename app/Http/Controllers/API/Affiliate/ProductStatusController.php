@@ -19,17 +19,19 @@ class ProductStatusController extends Controller {
 
     public function AffiliatorProducts() {
 
-        // Get product IDs the affiliate has already requested (from their tenant DB)
-        $requestedProductIds = ProductDetails::where('user_id', 1)->pluck('product_id')->toArray();
+        // Get all (product_id, tenant_id) pairs from ProductDetails to exclude
+        $excludedProducts = ProductDetails::select('product_id', 'tenant_id')->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->tenant_id . '_' . $item->product_id => true];
+            });
 
         // Query products across ALL vendor tenants
         $products = CrossTenantQueryService::queryAllTenants(
             Product::class,
-            function ($query) use ($requestedProductIds) {
+            function ($query) {
                 return $query
                     ->where('status', 'active')
                     ->where('is_affiliate', '1')
-                    ->whereNotIn('id', $requestedProductIds ?: [-1])
                     ->when(request('search'), fn($q, $name) => $q->where('name', 'like', "%{$name}%"))
                     ->when(request('warranty'), fn($q, $warranty) => $q->where('warranty', 'like', "%{$warranty}%"))
                     ->when(request('category_id'), function ($query) {
@@ -51,6 +53,12 @@ class ProductStatusController extends Controller {
                     });
             }
         );
+
+        // Filter out products that exist in ProductDetails
+        $products = $products->filter(function ($product) use ($excludedProducts) {
+            $key = ($product->tenant_id ?? '') . '_' . $product->id;
+            return !isset($excludedProducts[$key]);
+        });
 
         // Apply additional filters and sorting
         $filteredProducts = $products->when(request('high_to_low'), function ($collection) {
@@ -78,7 +86,7 @@ class ProductStatusController extends Controller {
 
         return response()->json( [
             'status'  => 200,
-            'product' => $product,
+            'products' => $product,
         ] );
     }
 
@@ -212,7 +220,7 @@ class ProductStatusController extends Controller {
 
         return response()->json( [
             'status'  => 200,
-            'pending' => $response,
+            'products' => $response,
         ] );
     }
 
@@ -346,7 +354,7 @@ class ProductStatusController extends Controller {
 
         return response()->json( [
             'status'  => 200,
-            'pending' => $response,
+            'products' => $response,
         ] );
     }
 
@@ -391,7 +399,8 @@ class ProductStatusController extends Controller {
         ] );
     }
 
-    public function AffiliatorProductRejct() { $search  = request( 'search' );
+    public function AffiliatorProductRejct() {
+        $search  = request( 'search' );
         $orderId = request( 'order_id' );
 
         // Step 1: Get all ProductDetails where status = 2 from current tenant's database
@@ -520,7 +529,7 @@ class ProductStatusController extends Controller {
 
         return response()->json( [
             'status'  => 200,
-            'pending' => $response,
+            'products' => $response,
         ] );
     }
 
