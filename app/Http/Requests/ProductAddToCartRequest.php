@@ -96,7 +96,7 @@ class ProductAddToCartRequest extends FormRequest {
                     if ( !$tenant ) {
                         $fail( 'Tenant not found!' );
                     }
-                    if ( $tenant->type != 'dropshipper' ) {
+                    if ( $tenant->type != 'merchant' ) {
                         $fail( 'This product is not available for this tenant!' );
                     }
                 }
