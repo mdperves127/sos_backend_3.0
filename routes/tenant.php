@@ -555,7 +555,6 @@ Route::middleware( [
             Route::get( 'request/pending/product', [AffiliateProductStatusController::class, 'AffiliatorProductPendingProduct'] );
             Route::get( 'request/active/product', [AffiliateProductStatusController::class, 'AffiliatorProductActiveProduct'] );
             Route::get( 'vendor-expire-products', [AffiliateProductStatusController::class, 'vendorexpireproducts'] );
-
             Route::get( 'request/reject/product', [AffiliateProductStatusController::class, 'AffiliatorProductRejct'] );
 
             //pending balance

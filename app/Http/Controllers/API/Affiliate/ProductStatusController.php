@@ -83,72 +83,270 @@ class ProductStatusController extends Controller {
     }
 
     public function AffiliatorProductPendingProduct() {
-        $userId     = Auth::id();
-        $searchTerm = request( 'search' );
+        $search  = request( 'search' );
+        $orderId = request( 'order_id' );
 
-        $pending = ProductDetails::with( 'product' )
-            ->where( 'user_id', $userId )
-            ->where( 'status', 2 )
-            ->whereHas( 'product' )
-            ->when( $searchTerm != '', function ( $query ) use ( $searchTerm ) {
-                $query->whereHas( 'product', function ( $query ) use ( $searchTerm ) {
-                    $query->where( 'name', 'like', '%' . $searchTerm . '%' );
-                } )
-                    ->orWhere( 'uniqid', 'like', '%' . $searchTerm . '%' );
-            } )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        // Step 1: Get all ProductDetails where status = 2 from current tenant's database
+        $query = ProductDetails::where( 'status', 2 );
+
+        // Filter by order_id if provided
+        if ( $orderId ) {
+            $query->where( 'id', 'like', "%{$orderId}%" );
+        }
+
+        // Get all ProductDetails records
+        $allProductDetails = $query->latest()->get();
+
+        // Step 2: For each ProductDetails, get tenant_id and load product from that tenant's database
+        $productDetailsWithProducts = collect();
+
+        foreach ( $allProductDetails as $productDetail ) {
+            // Get tenant_id from ProductDetails record
+            $storedTenantId = $productDetail->tenant_id;
+
+            if ( !$storedTenantId || !$productDetail->product_id ) {
+                continue;
+            }
+
+            // Lookup tenant from central database
+            $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
+            if ( !$tenant ) {
+                continue;
+            }
+
+            $connectionName = 'tenant_' . $tenant->id;
+            $databaseName   = 'sosanik_tenant_' . $tenant->id;
+
+            // Configure connection to the tenant database specified by tenant_id
+            config( [
+                'database.connections.' . $connectionName => [
+                    'driver'   => 'mysql',
+                    'host'     => config( 'database.connections.mysql.host' ),
+                    'port'     => config( 'database.connections.mysql.port' ),
+                    'database' => $databaseName,
+                    'username' => config( 'database.connections.mysql.username' ),
+                    'password' => config( 'database.connections.mysql.password' ),
+                    'charset'  => 'utf8mb4',
+                    'collation'=> 'utf8mb4_unicode_ci',
+                    'strict'   => false,
+                ],
+            ] );
+            DB::purge( $connectionName );
+
+            // Load product from the tenant database using product_id
+            // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
+            $product = Product::on( $connectionName )
+                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->find( $productDetail->product_id );
+
+            if ( $product ) {
+                $product->load( 'productImage' );
+                $productDetail->product = $product;
+
+                // Apply search filter after loading product
+                if ( $search ) {
+                    $matchesUniqid = stripos( $productDetail->uniqid, $search ) !== false;
+                    $matchesProductName = stripos( $product->name, $search ) !== false;
+
+                    if ( !$matchesUniqid && !$matchesProductName ) {
+                        continue; // Skip this record if it doesn't match search
+                    }
+                }
+
+                // Load vendor from the same tenant database
+                if ( $productDetail->vendor_id ) {
+                    $vendor = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->vendor_id );
+                    $productDetail->vendor = $vendor;
+                }
+
+                // Load affiliator from the same tenant database
+                if ( $productDetail->user_id ) {
+                    $affiliator = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->user_id );
+                    $productDetail->affiliator = $affiliator;
+                }
+
+                $productDetailsWithProducts->push( $productDetail );
+            }
+        }
+
+        // Sort by latest
+        $productDetailsWithProducts = $productDetailsWithProducts->sortByDesc( function ( $productDetail ) {
+            return $productDetail->created_at ?? '';
+        } )->values();
+
+        // Manual pagination after processing
+        $page    = (int) request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset  = ( $page - 1 ) * $perPage;
+
+        $paginatedProductDetails = $productDetailsWithProducts->slice( $offset, $perPage );
+        $total                   = $productDetailsWithProducts->count();
+        $lastPage                = (int) max( 1, ceil( $total / $perPage ) );
+
+        // Build pagination URLs
+        $path        = request()->url();
+        $queryParams = request()->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $response = [
+            'data'            => $paginatedProductDetails->values(),
+            'current_page'    => $page,
+            'per_page'        => $perPage,
+            'total'           => $total,
+            'last_page'       => $lastPage,
+            'from'            => $total ? $offset + 1 : null,
+            'to'              => min( $offset + $perPage, $total ),
+            'path'            => $path,
+            'first_page_url'  => $buildUrl( 1 ),
+            'last_page_url'  => $total ? $buildUrl( $lastPage ) : null,
+            'prev_page_url'  => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'  => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
             'status'  => 200,
-            'pending' => $pending,
+            'pending' => $response,
         ] );
     }
 
     public function AffiliatorProductActiveProduct() {
+        $search  = request( 'search' );
+        $orderId = request( 'order_id' );
 
-        $searchTerm = request( 'search' );
+        // Step 1: Get all ProductDetails where status = 2 from current tenant's database
+        $query = ProductDetails::where( 'status', 1 );
 
-        $active = ProductDetails::query()
-            ->with( 'product' )
-            ->where( ['tenant_id' => tenant()->id, 'status' => 1] )
-            ->whereHas( 'product' )
-            ->when( $searchTerm != '', function ( $query ) use ( $searchTerm ) {
-                $query->whereHas( 'product', function ( $query ) use ( $searchTerm ) {
-                    $query->where( 'name', 'like', '%' . $searchTerm . '%' );
-                } )
-                    ->orWhere( 'uniqid', 'like', '%' . $searchTerm . '%' );
-            } )
-            // ->whereHas( 'vendor', function ( $query ) {
-            //     $query->withCount( ['vendoractiveproduct' => function ( $query ) {
-            //         $query->where( 'status', 1 );
-            //     }] )
-            //         ->withwhereHas( 'usersubscription', function ( $query ) {
+        // Filter by order_id if provided
+        if ( $orderId ) {
+            $query->where( 'id', 'like', "%{$orderId}%" );
+        }
 
-            //             $query->where( function ( $query ) {
-            //                 $query->whereHas( 'subscription', function ( $query ) {
-            //                     $query->where( 'plan_type', 'freemium' );
-            //                 } )
-            //                     ->where( 'expire_date', '>', now() );
-            //             } )
-            //                 ->orwhere( function ( $query ) {
-            //                     $query->whereHas( 'subscription', function ( $query ) {
-            //                         $query->where( 'plan_type', '!=', 'freemium' );
-            //                     } )
-            //                         ->where( 'expire_date', '>', now()->subMonth( 1 ) );
-            //                 } );
-            //         } );
-            //     // ->withSum('usersubscription', 'affiliate_request')
-            //     // ->having('vendoractiveproduct_count', '<=', \DB::raw('usersubscription_sum_affiliate_request'));
-            // } )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        // Get all ProductDetails records
+        $allProductDetails = $query->latest()->get();
+
+        // Step 2: For each ProductDetails, get tenant_id and load product from that tenant's database
+        $productDetailsWithProducts = collect();
+
+        foreach ( $allProductDetails as $productDetail ) {
+            // Get tenant_id from ProductDetails record
+            $storedTenantId = $productDetail->tenant_id;
+
+            if ( !$storedTenantId || !$productDetail->product_id ) {
+                continue;
+            }
+
+            // Lookup tenant from central database
+            $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
+            if ( !$tenant ) {
+                continue;
+            }
+
+            $connectionName = 'tenant_' . $tenant->id;
+            $databaseName   = 'sosanik_tenant_' . $tenant->id;
+
+            // Configure connection to the tenant database specified by tenant_id
+            config( [
+                'database.connections.' . $connectionName => [
+                    'driver'   => 'mysql',
+                    'host'     => config( 'database.connections.mysql.host' ),
+                    'port'     => config( 'database.connections.mysql.port' ),
+                    'database' => $databaseName,
+                    'username' => config( 'database.connections.mysql.username' ),
+                    'password' => config( 'database.connections.mysql.password' ),
+                    'charset'  => 'utf8mb4',
+                    'collation'=> 'utf8mb4_unicode_ci',
+                    'strict'   => false,
+                ],
+            ] );
+            DB::purge( $connectionName );
+
+            // Load product from the tenant database using product_id
+            // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
+            $product = Product::on( $connectionName )
+                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->find( $productDetail->product_id );
+
+            if ( $product ) {
+                $product->load( 'productImage' );
+                $productDetail->product = $product;
+
+                // Apply search filter after loading product
+                if ( $search ) {
+                    $matchesUniqid = stripos( $productDetail->uniqid, $search ) !== false;
+                    $matchesProductName = stripos( $product->name, $search ) !== false;
+
+                    if ( !$matchesUniqid && !$matchesProductName ) {
+                        continue; // Skip this record if it doesn't match search
+                    }
+                }
+
+                // Load vendor from the same tenant database
+                if ( $productDetail->vendor_id ) {
+                    $vendor = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->vendor_id );
+                    $productDetail->vendor = $vendor;
+                }
+
+                // Load affiliator from the same tenant database
+                if ( $productDetail->user_id ) {
+                    $affiliator = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->user_id );
+                    $productDetail->affiliator = $affiliator;
+                }
+
+                $productDetailsWithProducts->push( $productDetail );
+            }
+        }
+
+        // Sort by latest
+        $productDetailsWithProducts = $productDetailsWithProducts->sortByDesc( function ( $productDetail ) {
+            return $productDetail->created_at ?? '';
+        } )->values();
+
+        // Manual pagination after processing
+        $page    = (int) request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset  = ( $page - 1 ) * $perPage;
+
+        $paginatedProductDetails = $productDetailsWithProducts->slice( $offset, $perPage );
+        $total                   = $productDetailsWithProducts->count();
+        $lastPage                = (int) max( 1, ceil( $total / $perPage ) );
+
+        // Build pagination URLs
+        $path        = request()->url();
+        $queryParams = request()->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $response = [
+            'data'            => $paginatedProductDetails->values(),
+            'current_page'    => $page,
+            'per_page'        => $perPage,
+            'total'           => $total,
+            'last_page'       => $lastPage,
+            'from'            => $total ? $offset + 1 : null,
+            'to'              => min( $offset + $perPage, $total ),
+            'path'            => $path,
+            'first_page_url'  => $buildUrl( 1 ),
+            'last_page_url'  => $total ? $buildUrl( $lastPage ) : null,
+            'prev_page_url'  => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'  => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
-            'status' => 200,
-            'product' => $active,
+            'status'  => 200,
+            'pending' => $response,
         ] );
     }
 
@@ -193,27 +391,136 @@ class ProductStatusController extends Controller {
         ] );
     }
 
-    public function AffiliatorProductRejct() {
-        $userId     = Auth::id();
-        $searchTerm = request( 'search' );
+    public function AffiliatorProductRejct() { $search  = request( 'search' );
+        $orderId = request( 'order_id' );
 
-        $reject = ProductDetails::query()
-            ->with( ['product', 'vendor:id,name'] )
-            ->where( ['user_id' => $userId, 'status' => 3] )
-            ->whereHas( 'product' )
-            ->when( $searchTerm != '', function ( $query ) use ( $searchTerm ) {
-                $query->whereHas( 'product', function ( $query ) use ( $searchTerm ) {
-                    $query->where( 'name', 'like', '%' . $searchTerm . '%' );
-                } )
-                    ->orWhere( 'uniqid', 'like', '%' . $searchTerm . '%' );
-            } )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
+        // Step 1: Get all ProductDetails where status = 2 from current tenant's database
+        $query = ProductDetails::where( 'status', 3 );
+
+        // Filter by order_id if provided
+        if ( $orderId ) {
+            $query->where( 'id', 'like', "%{$orderId}%" );
+        }
+
+        // Get all ProductDetails records
+        $allProductDetails = $query->latest()->get();
+
+        // Step 2: For each ProductDetails, get tenant_id and load product from that tenant's database
+        $productDetailsWithProducts = collect();
+
+        foreach ( $allProductDetails as $productDetail ) {
+            // Get tenant_id from ProductDetails record
+            $storedTenantId = $productDetail->tenant_id;
+
+            if ( !$storedTenantId || !$productDetail->product_id ) {
+                continue;
+            }
+
+            // Lookup tenant from central database
+            $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
+            if ( !$tenant ) {
+                continue;
+            }
+
+            $connectionName = 'tenant_' . $tenant->id;
+            $databaseName   = 'sosanik_tenant_' . $tenant->id;
+
+            // Configure connection to the tenant database specified by tenant_id
+            config( [
+                'database.connections.' . $connectionName => [
+                    'driver'   => 'mysql',
+                    'host'     => config( 'database.connections.mysql.host' ),
+                    'port'     => config( 'database.connections.mysql.port' ),
+                    'database' => $databaseName,
+                    'username' => config( 'database.connections.mysql.username' ),
+                    'password' => config( 'database.connections.mysql.password' ),
+                    'charset'  => 'utf8mb4',
+                    'collation'=> 'utf8mb4_unicode_ci',
+                    'strict'   => false,
+                ],
+            ] );
+            DB::purge( $connectionName );
+
+            // Load product from the tenant database using product_id
+            // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
+            $product = Product::on( $connectionName )
+                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->find( $productDetail->product_id );
+
+            if ( $product ) {
+                $product->load( 'productImage' );
+                $productDetail->product = $product;
+
+                // Apply search filter after loading product
+                if ( $search ) {
+                    $matchesUniqid = stripos( $productDetail->uniqid, $search ) !== false;
+                    $matchesProductName = stripos( $product->name, $search ) !== false;
+
+                    if ( !$matchesUniqid && !$matchesProductName ) {
+                        continue; // Skip this record if it doesn't match search
+                    }
+                }
+
+                // Load vendor from the same tenant database
+                if ( $productDetail->vendor_id ) {
+                    $vendor = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->vendor_id );
+                    $productDetail->vendor = $vendor;
+                }
+
+                // Load affiliator from the same tenant database
+                if ( $productDetail->user_id ) {
+                    $affiliator = User::on( $connectionName )
+                        ->select( 'id', 'name' )
+                        ->find( $productDetail->user_id );
+                    $productDetail->affiliator = $affiliator;
+                }
+
+                $productDetailsWithProducts->push( $productDetail );
+            }
+        }
+
+        // Sort by latest
+        $productDetailsWithProducts = $productDetailsWithProducts->sortByDesc( function ( $productDetail ) {
+            return $productDetail->created_at ?? '';
+        } )->values();
+
+        // Manual pagination after processing
+        $page    = (int) request()->get( 'page', 1 );
+        $perPage = 10;
+        $offset  = ( $page - 1 ) * $perPage;
+
+        $paginatedProductDetails = $productDetailsWithProducts->slice( $offset, $perPage );
+        $total                   = $productDetailsWithProducts->count();
+        $lastPage                = (int) max( 1, ceil( $total / $perPage ) );
+
+        // Build pagination URLs
+        $path        = request()->url();
+        $queryParams = request()->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $response = [
+            'data'            => $paginatedProductDetails->values(),
+            'current_page'    => $page,
+            'per_page'        => $perPage,
+            'total'           => $total,
+            'last_page'       => $lastPage,
+            'from'            => $total ? $offset + 1 : null,
+            'to'              => min( $offset + $perPage, $total ),
+            'path'            => $path,
+            'first_page_url'  => $buildUrl( 1 ),
+            'last_page_url'  => $total ? $buildUrl( $lastPage ) : null,
+            'prev_page_url'  => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'  => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        ];
 
         return response()->json( [
             'status'  => 200,
-            'pending' => $reject,
+            'pending' => $response,
         ] );
     }
 
