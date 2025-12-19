@@ -356,7 +356,7 @@ class CartController extends Controller {
                 ] );
             }
 
-            $productTenant = Tenant::on('mysql')->where('id', $cart->tenant_id)->first();
+            $productTenant = Tenant::on('mysql')->where('id', $tenant_id)->first();
 
             if ( !$productTenant ) {
                 return response()->json( [
@@ -367,7 +367,7 @@ class CartController extends Controller {
 
             // Step 3: Get product from product's tenant database
             $product = CrossTenantQueryService::getSingleFromTenant(
-                $tenant_id,
+                $productTenant,
                 Product::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'id', $cart->product_id )
