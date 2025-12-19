@@ -96,7 +96,7 @@ class ProductAddToCartRequest extends FormRequest {
                     if ( !$tenant ) {
                         $fail( 'Tenant not found!' );
                     }
-                    if ( $tenant->type != 'merchant' ) {
+                    if ( $tenant->type != 'affiliator' ) {
                         $fail( 'This product is not available for this tenant!' );
                     }
                 }
