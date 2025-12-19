@@ -523,7 +523,7 @@ Route::middleware( [
             Route::get( 'single/page/{id}', [SingleProductController::class, 'AffiliatorProductSinglePage'] );
             Route::post( 'add-to-cart', [CartController::class, 'addtocart'] );
             Route::get( 'cart', [CartController::class, 'viewcart'] );
-            Route::get( 'cart/{id}', [CartController::class, 'affiliatorCart'] );
+            Route::get( 'cart/{tenant_id}/{id}', [CartController::class, 'affiliatorCart'] );
             Route::delete( 'delete-cartitem/{cart_id}', [CartController::class, 'deleteCartitem'] );
             Route::get( 'products', [AffiliateProductStatusController::class, 'AffiliatorProducts'] );
 

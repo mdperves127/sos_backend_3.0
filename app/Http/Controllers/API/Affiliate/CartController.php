@@ -339,7 +339,7 @@ class CartController extends Controller {
     function affiliatorCart( $id ) {
         try {
             // Step 1: Get cart from current tenant's database
-            $cart = Cart::with( ['cartDetails'] )->find( $id );
+            $cart = Cart::with( ['cartDetails'] )->where( 'tenant_id', $tenant_id )->find( $id );
 
             if ( !$cart ) {
                 return response()->json( [
@@ -371,7 +371,8 @@ class CartController extends Controller {
                 Product::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'id', $cart->product_id )
-                        ->where( 'status', 'active' );
+                        ->where( 'status', 'active' )
+                        ->with('colors', 'sizes', 'units');
                 }
             );
 
