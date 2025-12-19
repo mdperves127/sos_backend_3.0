@@ -376,12 +376,12 @@ class CartController extends Controller {
                 }
             );
 
-            if ( !$product ) {
-                return response()->json( [
-                    'status' => 'error',
-                    'message' => 'Product not found or inactive',
-                ] );
-            }
+            // if ( !$product ) {
+            //     return response()->json( [
+            //         'status' => 'error',
+            //         'message' => 'Product not found or inactive',
+            //     ] );
+            // }
 
             // Attach product to cart
             $cart->product = $product;
