@@ -122,7 +122,7 @@ class OrderController extends Controller {
                 ],
                 ] );
             $successurl = url( 'api/aaparpay/product-checkout-success' );
-            return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl );
+            return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );
         }
     }
 

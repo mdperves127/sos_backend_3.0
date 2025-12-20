@@ -220,6 +220,7 @@ class ProductCheckoutService {
                         $model->totaladvancepayment = $totaladvancepayment;
                         $model->is_unlimited        = $is_unlimited;
                         $model->delivery_charge     = $deliveryCharge;
+                        $model->tenant_id           = $tenantId;
                     }
                 );
 
