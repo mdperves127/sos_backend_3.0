@@ -444,11 +444,41 @@ class RequestProductController extends Controller {
             //     }
             // }
 
+            // Get the original tenant_id from the database before it was overwritten by getSingleFromTenant
+            // We need to query it directly from the database to get the actual stored value
+            $connectionName = 'tenant_' . $tenant_id;
+            $databaseName   = 'sosanik_tenant_' . $tenant_id;
+
+            config( [
+                'database.connections.' . $connectionName => [
+                    'driver'   => 'mysql',
+                    'host'     => config( 'database.connections.mysql.host' ),
+                    'port'     => config( 'database.connections.mysql.port' ),
+                    'database' => $databaseName,
+                    'username' => config( 'database.connections.mysql.username' ),
+                    'password' => config( 'database.connections.mysql.password' ),
+                    'charset'  => 'utf8mb4',
+                    'collation'=> 'utf8mb4_unicode_ci',
+                    'strict'   => false,
+                ],
+            ] );
+            DB::purge( $connectionName );
+
+            $originalTenantId = DB::connection( $connectionName )
+                ->table( 'product_details' )
+                ->where( 'id', $id )
+                ->value( 'tenant_id' );
+
             // Remove tenant context attributes that were added by getSingleFromTenant
             // These are not actual database columns and will cause errors if saved
             unset($data->tenant_domain);
             unset($data->tenant_name);
-            // Note: tenant_id is a real column, so we keep it
+
+            // Restore the original tenant_id value (the one stored in the database)
+            // The getSingleFromTenant overwrites it with the queried tenant's ID, but we need to keep the original
+            if ( $originalTenantId !== null ) {
+                $data->tenant_id = $originalTenantId;
+            }
 
             $data->status = request( 'status' );
             $data->reason = request( 'reason' );
