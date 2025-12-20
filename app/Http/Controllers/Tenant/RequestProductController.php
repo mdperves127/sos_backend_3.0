@@ -444,6 +444,12 @@ class RequestProductController extends Controller {
             //     }
             // }
 
+            // Remove tenant context attributes that were added by getSingleFromTenant
+            // These are not actual database columns and will cause errors if saved
+            unset($data->tenant_domain);
+            unset($data->tenant_name);
+            // Note: tenant_id is a real column, so we keep it
+
             $data->status = request( 'status' );
             $data->reason = request( 'reason' );
             $data->save();
