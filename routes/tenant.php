@@ -482,7 +482,7 @@ Route::middleware( [
             Route::get( 'request/product/all', [RequestProductController::class, 'RequestAll'] );
             Route::get( 'request/product/rejected', [RequestProductController::class, 'RequestRejected'] );
             Route::get( 'request/product/view/{id}', [RequestProductController::class, 'RequestView'] );
-            Route::post( 'product-update/{id}', [RequestProductController::class, 'RequestUpdate'] );
+            Route::post( 'request/product-update/{tenant_id}/{id}', [RequestProductController::class, 'RequestUpdate'] );
             Route::get( 'membership-expire-product', [RequestProductController::class, 'membershipexpireactiveproduct'] );
             Route::get( 'membership-expire-product-count', [RequestProductController::class, 'membershipexpireactiveproductCount'] );
             } );

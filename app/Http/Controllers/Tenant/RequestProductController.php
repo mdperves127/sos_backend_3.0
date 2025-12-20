@@ -408,48 +408,58 @@ class RequestProductController extends Controller {
         ] );
     }
 
-    function RequestUpdate( VendorProductrequestRequest $request, $id ) {
+    function RequestUpdate( VendorProductrequestRequest $request, $tenant_id, $id ) {
         $validatedData = $request->validated();
-        $data          = ProductDetails::find( $id );
+
+
+        $tenant = Tenant::on( 'mysql' )->find( $tenant_id );
+
+        $data = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
+            ProductDetails::class,
+            function ( $query ) use ( $id ) {
+                $query->where( 'id', $id );
+            }
+        );
 
         if ( $data ) {
 
-            if ( request( 'status' ) == 1 ) {
-                $getmembershipdetails = getmembershipdetails();
+            // if ( request( 'status' ) == 1 ) {
+            //     $getmembershipdetails = getmembershipdetails();
 
-                $affiliaterequest = $getmembershipdetails?->affiliate_request;
+            //     $affiliaterequest = $getmembershipdetails?->affiliate_request;
 
-                $totalrequest = ProductDetails::where( ['vendor_id' => vendorId(), 'status' => 1] )->count();
+            //     $totalrequest = ProductDetails::where( ['vendor_id' => vendorId(), 'status' => 1] )->count();
 
-                if ( ismembershipexists( vendorId() ) != 1 ) {
-                    return responsejson( 'You do not have a membership', 'fail' );
-                }
+            //     if ( ismembershipexists( vendorId() ) != 1 ) {
+            //         return responsejson( 'You do not have a membership', 'fail' );
+            //     }
 
-                if ( isactivemembership( vendorId() ) != 1 ) {
-                    return responsejson( 'Membership expired!', 'fail' );
-                }
+            //     if ( isactivemembership( vendorId() ) != 1 ) {
+            //         return responsejson( 'Membership expired!', 'fail' );
+            //     }
 
-                if ( $affiliaterequest <= $totalrequest ) {
-                    return responsejson( 'You can not accept product request more than ' . $affiliaterequest . '.', 'fail' );
-                }
-            }
+            //     if ( $affiliaterequest <= $totalrequest ) {
+            //         return responsejson( 'You can not accept product request more than ' . $affiliaterequest . '.', 'fail' );
+            //     }
+            // }
 
             $data->status = request( 'status' );
             $data->reason = request( 'reason' );
             $data->save();
 
-            $existingConversation = Conversation::where( 'sender_id', vendorId() )
-                ->where( 'receiver_id', $request->user_id )
-                ->orWhere( 'sender_id', $request->user_id )
-                ->where( 'receiver_id', vendorId() )
-                ->first();
+            // $existingConversation = Conversation::on( $connectionName )->where( 'sender_id', vendorId() )
+            //     ->where( 'receiver_id', $request->user_id )
+            //     ->orWhere( 'sender_id', $request->user_id )
+            //     ->where( 'receiver_id', vendorId() )
+            //     ->first();
 
-            if ( request( 'status' ) == 1 AND !$existingConversation ) {
-                Conversation::create( [
-                    'sender_id'   => vendorId(),
-                    'receiver_id' => $data->user_id,
-                ] );
-            }
+            // if ( request( 'status' ) == 1 AND !$existingConversation ) {
+            //     Conversation::create( [
+            //         'sender_id'   => vendorId(),
+            //         'receiver_id' => $data->user_id,
+            //     ] );
+            // }
 
             //For Notification
             // $user = User::where('id',$data->user_id)->first();
