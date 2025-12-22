@@ -80,18 +80,18 @@ class AamarpayController extends Controller
     function advertisesuccess()
     {
         $response = request()->all();
-        $adminAdvertise = AdminAdvertise::on('mysql')->where('trxid', $response['mer_txnid'])->first();
+        $adminAdvertise = AdminAdvertise::where('trxid', $response['mer_txnid'])->first();
 
         $adminAdvertise->update([
             'is_paid' => 1
         ]);
-        $dollerRate  =  DollerRate::on('mysql')->first()?->amount;
+        $dollerRate  =  DollerRate::first()?->amount;
         // if($response['opt_b'] == 'user'){
-            PaymentHistoryService::on('mysql')->store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
+            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
         // }else{
         //     PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', tenant()->id);
         // }
-        $user = User::on('mysql')->find($adminAdvertise->user_id);
+        $user = User::find($adminAdvertise->user_id);
         $path = paymentredirect($user->role_as);
         $url = config('app.redirecturl') . $path . '?message=Advertise payment successfull';
         return redirect($url);

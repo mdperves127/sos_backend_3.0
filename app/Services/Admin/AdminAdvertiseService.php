@@ -127,7 +127,7 @@ class AdminAdvertiseService {
             return responsejson( 'Successfull!' );
         } else {
 
-            $successurl = url( 'api/aaparpay/advertise-success' );
+            $successurl = url( 'api/user/aaparpay/advertise-success' );
             return AamarPayService::gateway( $totalprice, $trxid, 'advertise', $successurl, 'user' );
         }
     }

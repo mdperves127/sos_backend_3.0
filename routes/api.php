@@ -136,7 +136,7 @@ Route::middleware( [
 
 } );
 
-Route::prefix( 'aaparpay' )->group( function () {
+Route::prefix( 'user/aaparpay' )->group( function () {
 
     Route::post( 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
     Route::post( 'service-success', [AamarpayController::class, 'servicesuccess'] );
