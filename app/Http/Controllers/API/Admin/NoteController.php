@@ -31,7 +31,7 @@ class NoteController extends Controller {
         }
 
         Note::on('mysql')->create( [
-            'tenant_id' => $request->tenant_id,
+            'tenant_id' => $request->user_id,
             'note'    => $request->note,
             'status'  => "unread",
         ] );
