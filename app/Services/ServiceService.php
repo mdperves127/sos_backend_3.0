@@ -47,7 +47,6 @@ class ServiceService
             $user->save();
 
             PaymentHistoryService::store($serviceOrder->trxid, $serviceOrder->amount, 'My wallet', 'Service', '-', '', $serviceOrder->user_id);
-            return $this->response($serviceOrder);
 
         }else{
 
@@ -56,7 +55,11 @@ class ServiceService
 
         }
 
-        return "Success";
+        return $this->response([
+            'status' => 200,
+            'message' => 'Service order created successfully',
+            'data' => $serviceOrder,
+        ]);
     }
 
 }
