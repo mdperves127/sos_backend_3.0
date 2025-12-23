@@ -47,6 +47,7 @@ class ServiceService
             $user->save();
 
             PaymentHistoryService::store($serviceOrder->trxid, $serviceOrder->amount, 'My wallet', 'Service', '-', '', $serviceOrder->user_id);
+            return $this->response($serviceOrder);
 
         }else{
 
