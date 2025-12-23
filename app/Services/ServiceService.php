@@ -55,7 +55,7 @@ class ServiceService
 
         }
 
-        return $this->response([
+        return response()->json([
             'status' => 200,
             'message' => 'Service order created successfully',
             'data' => $serviceOrder,
