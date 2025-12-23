@@ -34,7 +34,11 @@ class ServiceOrderController extends Controller
             ->latest()
             ->paginate(10);
 
-        return $this->response($serviceOrder);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Service orders fetched successfully',
+            'data' => $serviceOrder,
+        ]);
     }
 
     /**
