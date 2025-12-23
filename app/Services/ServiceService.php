@@ -18,15 +18,17 @@ class ServiceService
         $trxid = uniqid();
 
         $serviceOrder =  ServiceOrder::create([
-            'user_id' => userid(),
-            'vendor_id' => $vendorService->user_id,
+            'user_id' => userid() ?? null,
+            'vendor_id' => $vendorService->user_id ?? null,
             'vendor_service_id' => $validateData['vendor_service_id'],
             'service_package_id' => $validateData['service_package_id'],
             'amount' => $package->price,
             'commission_amount' =>  $vendorService->commission,
             'commission_type' => $vendorService->commission_type,
             'details'=>request('details'),
-            'trxid'=>$trxid
+            'trxid'=>$trxid,
+            'tenant_id'=>tenant()->id ?? null
+
         ]);
 
         if(request()->hasFile('files')){

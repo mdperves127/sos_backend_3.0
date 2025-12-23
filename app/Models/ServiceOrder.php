@@ -41,4 +41,5 @@ class ServiceOrder extends Model
     function servicerating(){
         return $this->hasOne(ServiceRating::class,'service_order_id');
     }
+    
 }
