@@ -48,7 +48,7 @@ class ProductPurchaseController extends Controller {
     }
 
     function supplierProduct( $supplier_id ) {
-        return response()->json( [a
+        return response()->json( [
             'status'   => 200,
             'products' => Product::latest()->where( 'supplier_id', $supplier_id )->select( 'id', 'name', 'original_price' )->where( ['status' => 'active'] )->get(),
         ] );
