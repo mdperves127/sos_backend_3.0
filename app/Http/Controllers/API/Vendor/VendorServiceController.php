@@ -204,7 +204,7 @@ class VendorServiceController extends Controller {
 
         return VendorService::query()
             ->where( ['id' => $id, 'status' => 'active'] )
-            ->select( 'id', 'user_id', 'service_category_id', 'service_sub_category_id', 'title', 'description', 'tags', 'image' )
+            ->select( 'id', 'user_id', 'service_category_id', 'service_sub_category_id', 'title', 'description', 'tags', 'image', 'tenant_id' )
             ->with( ['servicepackages', 'serviceimages', 'user:id,name,image', 'servicecategory:id,name', 'servicesubcategory:id,name'] )
             ->first();
 
