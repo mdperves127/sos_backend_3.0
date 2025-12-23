@@ -27,8 +27,7 @@ class ServiceService
             'commission_type' => $vendorService->commission_type,
             'details'=>request('details'),
             'trxid'=>$trxid,
-            'tenant_id'=> $validateData['tenant_id'] ?? null
-
+            'tenant_id'=> $validateData['tenant_id']
         ]);
 
         if(request()->hasFile('files')){
