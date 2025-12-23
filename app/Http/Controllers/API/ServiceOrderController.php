@@ -11,6 +11,7 @@ use App\Models\ServicePackage;
 use App\Services\CustomerService;
 use App\Services\ServiceService;
 use App\Services\SosService;
+use Illuminate\Support\Facades\Auth;
 
 class ServiceOrderController extends Controller
 {

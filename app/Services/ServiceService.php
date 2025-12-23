@@ -61,5 +61,4 @@ class ServiceService
             'data' => $serviceOrder,
         ]);
     }
-
 }
