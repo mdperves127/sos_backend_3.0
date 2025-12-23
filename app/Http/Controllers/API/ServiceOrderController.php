@@ -22,7 +22,7 @@ class ServiceOrderController extends Controller
     public function index()
     {
         $serviceOrder = ServiceOrder::query()
-            ->where(['user_id' => userid(), 'is_paid' => 1])
+            ->where(['user_id' => Auth::id()])
             ->when(request('search') != '', function ($query) {
                 $query->where('trxid', 'like', '%' . request('search') . '%');
             })
