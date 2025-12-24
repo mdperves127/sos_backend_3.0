@@ -60,6 +60,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
+use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -151,6 +152,7 @@ Route::middleware( [
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
             Route::post( 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
         } );
+        Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
         Route::get( 'vendor-all-subcategory', [VendorController::class, 'AllSubCategory'] );
