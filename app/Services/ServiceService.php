@@ -17,6 +17,9 @@ class ServiceService
         $package = ServicePackage::on('mysql')->find($validateData['service_package_id']);
         $trxid = uniqid();
 
+        // Get tenant_id from vendorService, or fallback to tenant context
+        $tenantId = $vendorService->tenant_id;
+
         $serviceOrder =  ServiceOrder::on('mysql')->create([
             'user_id' => userid() ?? null,
             'vendor_id' => $vendorService->user_id ?? null,
@@ -27,7 +30,7 @@ class ServiceService
             'commission_type' => $vendorService->commission_type,
             'details'=>request('details'),
             'trxid'=>$trxid,
-            'tenant_id'=> $vendorService->tenant_id ?? null
+            'tenant_id'=> $tenantId
         ]);
 
         if(request()->hasFile('files')){
@@ -43,7 +46,7 @@ class ServiceService
             $serviceOrder->update([
                 'is_paid'=>1
             ]);
-            $user = User::find(userid());
+            $user = User::on('mysql')->find(userid());
             $user->balance = convertfloat($user->balance)- $package->price;
             $user->save();
 
