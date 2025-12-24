@@ -51,12 +51,10 @@ class OrderDeliveryController extends Controller
         ]);
 
         foreach (request('files') as $file) {
-            $deliveryFile = new DeliveryFile();
-            $deliveryFile->on('mysql');
-
-            $deliveryFile->order_delivery_id = $orderDelivery->id;
-            $deliveryFile->files = uploadany_file($file, 'uploads/deliveryfile/');
-            $deliveryFile->save();
+            DeliveryFile::on('mysql')->create([
+                'order_delivery_id' => $orderDelivery->id,
+                'files' => uploadany_file($file, 'uploads/deliveryfile/')
+            ]);
         }
 
         $order->status = 'delivered';
