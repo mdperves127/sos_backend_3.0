@@ -15,7 +15,7 @@ class CustomerService
 
     static function service($validateData)
     {
-        $serviceOrder = ServiceOrder::find($validateData['service_order_id']);
+        $serviceOrder = ServiceOrder::on('mysql')->find($validateData['service_order_id']);
 
         if ($validateData['status'] == 'success') {
 
@@ -37,7 +37,7 @@ class CustomerService
 
             $totalsellerCommition = ($serviceOrder->amount - $amount);
 
-            $vendor = User::find($serviceOrder->vendor_id);
+            $vendor = User::on('mysql')->find($serviceOrder->vendor_id);
             $vendor->balance = $totalsellerCommition;
             $vendor->save();
 
@@ -47,8 +47,8 @@ class CustomerService
 
         if ($validateData['status'] == 'revision') {
 
-            $servicePackage = ServicePackage::find($serviceOrder->service_package_id);
-            $orderDeliveryCount = OrderDelivery::where('service_order_id', $serviceOrder->id)->count();
+            $servicePackage = ServicePackage::on('mysql')->find($serviceOrder->service_package_id);
+            $orderDeliveryCount = OrderDelivery::on('mysql')->where('service_order_id', $serviceOrder->id)->count();
 
             if ($servicePackage->revision_max_time < $orderDeliveryCount) {
                 return responsejson('Revision limit over!');
