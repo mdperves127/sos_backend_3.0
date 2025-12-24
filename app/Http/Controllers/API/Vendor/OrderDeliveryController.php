@@ -29,7 +29,7 @@ class OrderDeliveryController extends Controller
      */
     public function store(StoreOrderDeliveryRequest $request)
     {
-        $validateData = $request->validated();
+        $validateData = $request->validated($request->all());
 
         $order =  ServiceOrder::on('mysql')->find($validateData['service_order_id']);
 
