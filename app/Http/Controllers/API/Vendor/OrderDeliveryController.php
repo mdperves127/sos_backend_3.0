@@ -46,7 +46,6 @@ class OrderDeliveryController extends Controller
 
         $orderDelivery = OrderDelivery::on('mysql')->create([
             'description' => $validateData['description'],
-            'tenant_id' => $order->tenant_id ?? null,
             'service_order_id' => $validateData['service_order_id'],
             'customer_id' => $order->user_id
         ]);

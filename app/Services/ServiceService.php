@@ -13,11 +13,11 @@ use App\Models\VendorService;
 class ServiceService
 {
     static function store($validateData){
-        $vendorService = VendorService::find($validateData['vendor_service_id']);
-        $package = ServicePackage::find($validateData['service_package_id']);
+        $vendorService = VendorService::on('mysql')->find($validateData['vendor_service_id']);
+        $package = ServicePackage::on('mysql')->find($validateData['service_package_id']);
         $trxid = uniqid();
 
-        $serviceOrder =  ServiceOrder::create([
+        $serviceOrder =  ServiceOrder::on('mysql')->create([
             'user_id' => userid() ?? null,
             'vendor_id' => $vendorService->user_id ?? null,
             'vendor_service_id' => $validateData['vendor_service_id'],
@@ -27,7 +27,7 @@ class ServiceService
             'commission_type' => $vendorService->commission_type,
             'details'=>request('details'),
             'trxid'=>$trxid,
-            'tenant_id'=> $validateData['tenant_id']
+            'tenant_id'=> $vendorService->tenant_id ?? null
         ]);
 
         if(request()->hasFile('files')){
