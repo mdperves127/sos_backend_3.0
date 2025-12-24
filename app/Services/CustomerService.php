@@ -58,6 +58,9 @@ class CustomerService
 
             $serviceOrder->save();
         }
-        return "Successfull!";
+        return [
+            'status' => 200,
+            'message' => 'Service status updated successfully',
+        ];
     }
 }
