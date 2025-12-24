@@ -30,7 +30,7 @@ class StoreOrderDeliveryRequest extends FormRequest
             'description' => 'required',
             'files' => 'required|array',
             'files.*' => 'file|max:102400',
-            'service_order_id'=>['required',Rule::exists('mysql.service_orders','id')->whereIn('status',['progress','delivered','revision'])],
+            // 'service_order_id'=>['required',Rule::exists('mysql.service_orders','id')->whereIn('status',['progress','delivered','revision'])],
         ];
     }
 
