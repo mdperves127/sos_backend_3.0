@@ -66,7 +66,7 @@ class ServiceOrderController extends Controller
             return responsejson('Not found', 'fail');
         }
 
-        $serviceOrder = ServiceOrder::where('user_id', userid())->with(['servicedetails', 'packagedetails', 'requirementsfiles', 'vendor:id,name,email', 'orderdelivery' => function ($query) {
+        $serviceOrder = ServiceOrder::where('user_id', userid())->with(['servicedetails', 'packagedetails', 'requirementsfiles', 'vendor:id,name,email', 'servicerating', 'orderdelivery' => function ($query) {
             $query->with('deliveryfiles');
         }])->find($id);
         return $this->response($serviceOrder);
