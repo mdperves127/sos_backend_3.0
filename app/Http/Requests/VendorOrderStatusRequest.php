@@ -34,13 +34,13 @@ class VendorOrderStatusRequest extends FormRequest
             'delivered' => ['cancel_request'],
         ];
 
-        $serviceorder = ServiceOrder::find(request('service_order_id'));
+        $serviceorder = ServiceOrder::on('mysql')->find(request('service_order_id'));
 
         return [
             'service_order_id' => [
                 'required',
                 'integer',
-                Rule::exists('service_orders', 'id')
+                Rule::exists('mysql.service_orders', 'id')
             ],
             'status' => [
                 'required',
