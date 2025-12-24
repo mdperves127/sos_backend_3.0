@@ -13,6 +13,6 @@ class OrderDelivery extends Model
     protected $guarded = [];
 
     function deliveryfiles(){
-        return $this->hasMany(DeliveryFile::on('mysql'),'order_delivery_id');
+        return $this->hasMany(DeliveryFile::class,'order_delivery_id');
     }
 }
