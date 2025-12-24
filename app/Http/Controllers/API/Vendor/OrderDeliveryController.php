@@ -29,27 +29,34 @@ class OrderDeliveryController extends Controller
      */
     public function store(StoreOrderDeliveryRequest $request)
     {
-        $validateData = $request->validated($request->all());
+        $validateData = $request->validated();
 
-        $order =  ServiceOrder::on('mysql')->find($validateData['service_order_id']);
+        $order = ServiceOrder::on('mysql')->find($validateData['service_order_id']);
 
-        OrderDelivery::on('mysql')->where('service_order_id',$order->id)->update([
-            'type'=>'inactive'
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Service order not found.'
+            ], 404);
+        }
+
+        OrderDelivery::on('mysql')->where('service_order_id', $order->id)->update([
+            'type' => 'inactive'
         ]);
 
         $orderDelivery = OrderDelivery::on('mysql')->create([
-            'description'=>$validateData['description'],
-            'vendor_id'=>userid() ?? null,
-            'service_order_id'=>$validateData['service_order_id'],
-            'customer_id'=>$order->user_id
+            'description' => $validateData['description'],
+            'tenant_id' => $order->tenant_id ?? null,
+            'service_order_id' => $validateData['service_order_id'],
+            'customer_id' => $order->user_id
         ]);
 
-        foreach(request('files') as $file){
+        foreach (request('files') as $file) {
             $deliveryFile = new DeliveryFile();
             $deliveryFile->on('mysql');
 
             $deliveryFile->order_delivery_id = $orderDelivery->id;
-            $deliveryFile->files = uploadany_file($file,'uploads/deliveryfile/');
+            $deliveryFile->files = uploadany_file($file, 'uploads/deliveryfile/');
             $deliveryFile->save();
         }
 
