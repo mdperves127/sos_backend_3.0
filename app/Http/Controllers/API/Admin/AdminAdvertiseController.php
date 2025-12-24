@@ -162,13 +162,13 @@ class AdminAdvertiseController extends Controller {
 
     function cancel( CancelAdminAdvertiseRequest $request ) {
 
-        $advertise         = AdminAdvertise::find( request( 'advertise_id' ) );
+        $advertise         = AdminAdvertise::on('mysql')->find( request( 'advertise_id' ) );
         $advertise->status = "cancel";
         $advertise->reason = request( 'reason' );
         $advertise->save();
 
-        $user       = User::find( $advertise->user_id );
-        $dollerrate = DollerRate::first()?->amount;
+        $user       = User::on('mysql')->find( $advertise->user_id );
+        $dollerrate = DollerRate::on('mysql')->first()?->amount;
 
         $totalreturn = $dollerrate * request( 'return_balance' );
         $user->increment( 'balance', $totalreturn );
