@@ -31,13 +31,13 @@ class OrderDeliveryController extends Controller
     {
         $validateData = $request->validated();
 
-        $order =  ServiceOrder::find($validateData['service_order_id']);
+        $order =  ServiceOrder::on('mysql')->find($validateData['service_order_id']);
 
-        OrderDelivery::where('service_order_id',$order->id)->update([
+        OrderDelivery::on('mysql')->where('service_order_id',$order->id)->update([
             'type'=>'inactive'
         ]);
 
-        $orderDelivery = OrderDelivery::create([
+        $orderDelivery = OrderDelivery::on('mysql')->create([
             'description'=>$validateData['description'],
             'vendor_id'=>userid(),
             'service_order_id'=>$validateData['service_order_id'],
@@ -46,6 +46,8 @@ class OrderDeliveryController extends Controller
 
         foreach(request('files') as $file){
             $deliveryFile = new DeliveryFile();
+            $deliveryFile->on('mysql');
+
             $deliveryFile->order_delivery_id = $orderDelivery->id;
             $deliveryFile->files = uploadany_file($file,'uploads/deliveryfile/');
             $deliveryFile->save();
