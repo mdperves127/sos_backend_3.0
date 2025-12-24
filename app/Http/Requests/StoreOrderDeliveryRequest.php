@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ServiceOrder;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -24,13 +25,26 @@ class StoreOrderDeliveryRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules( $validateData )
+    public function rules()
     {
         return [
             'description' => 'required',
             'files' => 'required|array',
             'files.*' => 'file|max:102400',
-            'service_order_id'=>['required',Rule::exists('mysql.service_orders','id')->where('tenant_id',$validateData['tenant_id'])->whereIn('status',['progress','delivered','revision'])],
+            'service_order_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    $order = ServiceOrder::on('mysql')->find($value);
+                    if (!$order) {
+                        $fail('The selected service order does not exist.');
+                        return;
+                    }
+                    if (!in_array($order->status, ['progress', 'delivered', 'revision'])) {
+                        $fail('The service order status must be progress, delivered, or revision.');
+                    }
+                },
+            ],
         ];
     }
 
