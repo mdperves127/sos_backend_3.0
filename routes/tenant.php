@@ -60,6 +60,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
+use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -372,7 +373,7 @@ Route::middleware( [
             Route::get( 'list/{id}', [SupplierProductReturnController::class, 'returnListDetails'] );
             Route::post( '/{id}', [SupplierProductReturnController::class, 'returnToSupplier'] );
         } );
-
+        Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
         //Pos Sales Route
         Route::prefix( 'tenant-product-pos-sales' )->group( function () {
             Route::get( '/orders', [ProductPosSaleController::class, 'index'] );
