@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductAddToCartRequest;
 use App\Models\Cart;
 use App\Models\CartDetails;
+use App\Models\Color;
 use App\Models\CourierCredential;
 use App\Models\DeliveryCharge;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\Size;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
 use App\Services\PathaoService;
@@ -239,13 +243,94 @@ class CartController extends Controller {
             }
         }
 
-        // Step 4: Create a mapping of cart items by tenant_id and product_id for quick lookup
+        // Step 4: Load cartDetails relationships from product tenant's database
+        foreach ( $cartitems as $cartItem ) {
+            if ( $cartItem->cartDetails && $cartItem->cartDetails->count() > 0 ) {
+                // Get the product tenant
+                $productTenant = Tenant::on('mysql')->where('id', $cartItem->tenant_id)->first();
+
+                if ( $productTenant ) {
+                    // Configure tenant connection for this product tenant
+                    $connectionName = 'tenant_' . $productTenant->id;
+                    $databaseName = 'sosanik_tenant_' . $productTenant->id;
+                    $originalTenantConfig = config('database.connections.tenant');
+
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ],
+                        'database.connections.tenant' => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge($connectionName);
+                    DB::purge('tenant');
+
+                    // Load relationships for each cartDetail
+                    foreach ( $cartItem->cartDetails as $cartDetail ) {
+                        // Load color from product tenant database
+                        if ( $cartDetail->color ) {
+                            $colorModel = Color::on('tenant')->where('id', $cartDetail->color)->first();
+                            $cartDetail->setRelation('color', $colorModel);
+                        }
+
+                        // Load size from product tenant database
+                        if ( $cartDetail->size ) {
+                            $sizeModel = Size::on('tenant')->where('id', $cartDetail->size)->first();
+                            $cartDetail->setRelation('size', $sizeModel);
+                        }
+
+                        // Load unit from product tenant database
+                        if ( $cartDetail->unit_id ) {
+                            $unitModel = Unit::on('tenant')->where('id', $cartDetail->unit_id)->first();
+                            $cartDetail->setRelation('unit', $unitModel);
+                        }
+
+                        // Load variant from product tenant database with relationships
+                        if ( $cartDetail->variant_id ) {
+                            $variantModel = ProductVariant::on('tenant')
+                                ->where('id', $cartDetail->variant_id)
+                                ->with(['color', 'size', 'unit'])
+                                ->first();
+                            $cartDetail->setRelation('variant', $variantModel);
+                        }
+                    }
+
+                    // Restore original tenant connection config
+                    if ( $originalTenantConfig !== null ) {
+                        config(['database.connections.tenant' => $originalTenantConfig]);
+                    } else {
+                        config(['database.connections.tenant' => null]);
+                    }
+                    DB::purge('tenant');
+                }
+            }
+        }
+
+        // Step 5: Create a mapping of cart items by tenant_id and product_id for quick lookup
         $cartMap = [];
         foreach ( $cartitems as $cartItem ) {
             $key = $cartItem->tenant_id . '_' . $cartItem->product_id;
             if ( !isset( $cartMap[$key] ) ) {
                 $cartMap[$key] = [];
             }
+
             // Store full cart item data including quantity and cartDetails
             $cartMap[$key][] = [
                 'id' => $cartItem->id,
@@ -298,7 +383,7 @@ class CartController extends Controller {
                 $products = $allProductsForTenant;
             }
 
-            // Add each product to the unified array with tenant context and cart data
+            // Step 6: Add each product to the unified array with tenant context and cart data
             foreach ( $products as $product ) {
                 // Ensure tenant context is attached to each product
                 $product->tenant_id = $tenant->id;
@@ -434,6 +519,39 @@ class CartController extends Controller {
                         ]);
                 }
             );
+
+            // Load cartDetails relationships (color, size, unit, variant) from product tenant's database
+            // These need to be loaded while the tenant connection is still configured
+            if ($cart->cartDetails && $cart->cartDetails->count() > 0) {
+                foreach ($cart->cartDetails as $cartDetail) {
+                    // Load color from product tenant database
+                    if ($cartDetail->color) {
+                        $colorModel = Color::on('tenant')->where('id', $cartDetail->color)->first();
+                        $cartDetail->setRelation('color', $colorModel);
+                    }
+
+                    // Load size from product tenant database
+                    if ($cartDetail->size) {
+                        $sizeModel = Size::on('tenant')->where('id', $cartDetail->size)->first();
+                        $cartDetail->setRelation('size', $sizeModel);
+                    }
+
+                    // Load unit from product tenant database
+                    if ($cartDetail->unit_id) {
+                        $unitModel = Unit::on('tenant')->where('id', $cartDetail->unit_id)->first();
+                        $cartDetail->setRelation('unit', $unitModel);
+                    }
+
+                    // Load variant from product tenant database with relationships
+                    if ($cartDetail->variant_id) {
+                        $variantModel = ProductVariant::on('tenant')
+                            ->where('id', $cartDetail->variant_id)
+                            ->with(['color', 'size', 'unit'])
+                            ->first();
+                        $cartDetail->setRelation('variant', $variantModel);
+                    }
+                }
+            }
 
             // Restore original tenant connection config
             if ($originalTenantConfig !== null) {

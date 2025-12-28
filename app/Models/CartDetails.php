@@ -23,4 +23,8 @@ class CartDetails extends Model {
     public function color() {
         return $this->belongsTo( Color::class, 'color' )->select( 'id', 'name' );
     }
+
+    public function variant() {
+        return $this->belongsTo( ProductVariant::class, 'variant_id' );
+    }
 }
