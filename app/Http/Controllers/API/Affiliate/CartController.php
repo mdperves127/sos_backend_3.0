@@ -246,8 +246,17 @@ class CartController extends Controller {
             if ( !isset( $cartMap[$key] ) ) {
                 $cartMap[$key] = [];
             }
+            // Store full cart item data including quantity and cartDetails
             $cartMap[$key][] = [
                 'id' => $cartItem->id,
+                'product_qty' => $cartItem->product_qty,
+                'cartDetails' => $cartItem->cartDetails,
+                'product_price' => $cartItem->product_price,
+                'totalproductprice' => $cartItem->totalproductprice,
+                'total_affiliate_commission' => $cartItem->total_affiliate_commission,
+                'purchase_type' => $cartItem->purchase_type,
+                'advancepayment' => $cartItem->advancepayment,
+                'totaladvancepayment' => $cartItem->totaladvancepayment,
             ];
         }
 
@@ -298,14 +307,22 @@ class CartController extends Controller {
                 // Find matching cart item(s) for this product
                 $key = $tenant->id . '_' . $product->id;
                 if ( isset( $cartMap[$key] ) && !empty( $cartMap[$key] ) ) {
-                    // If there's a cart item, add cart_id and cart data
+                    // If there's a cart item, add cart_id and cart data with quantity
                     $cartItem = $cartMap[$key][0]; // Get first matching cart item
                     $product->cart_id = $cartItem['id'];
+                    $product->cart_qty = $cartItem['product_qty'] ?? 0; // Add quantity from cart
                     $product->cart_data = $cartItem;
+
+                    // If cartDetails exist, also attach them
+                    if ( isset( $cartItem['cartDetails'] ) && $cartItem['cartDetails'] ) {
+                        $product->cart_details = $cartItem['cartDetails'];
+                    }
                 } else {
                     // If no cart item found, set cart_id to null
                     $product->cart_id = null;
+                    $product->cart_qty = 0;
                     $product->cart_data = null;
+                    $product->cart_details = null;
                 }
 
                 // Add to unified products array
