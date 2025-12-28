@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class CartDetails extends Model {
     use HasFactory;
 
-    protected $connection = 'tenant';
-    protected $table = 'cart_details';
+    // protected $connection = 'tenant';
+    // protected $table = 'cart_details';
     protected $guarded = [];
-    
+
     public function size() {
         return $this->belongsTo( Size::class, 'size' )->select( 'id', 'name' );
     }
