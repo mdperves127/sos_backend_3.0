@@ -346,70 +346,96 @@ class ProductController extends Controller {
 
     public function ProductEdit( $tenant_id,$id ) {
 
-        // Get Product from tenant's database
-        $vendorproduct = CrossTenantQueryService::getSingleFromTenant(
-            $tenant_id,
-            Product::class,
-            function ( $query ) use ( $id ) {
-                $query->where( 'id', $id )
-                    ->with( [
-                        'category',
-                        'subcategory',
-                        'brand',
-                        'productImage',
-                        'productdetails',
-                        'vendor',
-                        'productrating.affiliate:id,name,image'
-                    ] )
-                    ->withAvg( 'productrating', 'rating' );
-            }
-        );
+        // Get tenant from request
+        $tenant = Tenant::where('id', $tenant_id)->first();
 
-        if ( $vendorproduct ) {
-            if ( $vendorproduct->status == 'active' ) {
-                if ( ( checkpermission( 'all-products' ) != 1 ) ) {
+        if (!$tenant) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Tenant not found',
+            ]);
+        }
 
-                    if ( checkpermission( 'active-products' ) != 1 ) {
-                        return $this->permissionmessage();
-                    }
-                }
-            }
+        // Configure tenant connection
+        $connectionName = 'tenant_' . $tenant->id;
+        $databaseName = 'sosanik_tenant_' . $tenant->id;
 
-            if ( $vendorproduct->status == 'pending' ) {
-                if ( ( checkpermission( 'all-products' ) != 1 ) ) {
+        config([
+            'database.connections.' . $connectionName => [
+                'driver' => 'mysql',
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
+                'database' => $databaseName,
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'strict' => false,
+            ]
+        ]);
+        DB::purge($connectionName);
 
-                    if ( checkpermission( 'pending-products' ) != 1 ) {
-                        return $this->permissionmessage();
-                    }
-                }
-            }
+        // Query product from tenant database
+        $vendorproduct = Product::on($connectionName)
+            ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor', 'productrating.affiliate:id,name,image' )
+            ->withAvg( 'productrating', 'rating' )
+            ->find( $id );
 
-            if ( $vendorproduct->status == 'rejected' ) {
-                if ( ( checkpermission( 'all-products' ) != 1 ) ) {
-
-                    if ( checkpermission( 'rejected-product' ) != 1 ) {
-                        return $this->permissionmessage();
-                    }
-                }
-            }
-
-            return response()->json( [
-                'status'               => 200,
-                'product'              => $vendorproduct,
-                'vendor_all_color'     => Color::where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
-                'vendor_all_size'      => Size::where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
-                'all_category_list'    => Category::where( 'status', 'active' )->get(),
-                'all_subcategory_list' => Subcategory::where( 'status', 'active' )->get(),
-                'all_brand_list'       => Brand::where( 'status', 'active' )->get(),
-                'suppliers'            => Supplier::where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
-                'warehouse'            => Warehouse::where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
-            ] );
-        } else {
+        if ( !$vendorproduct ) {
+            // Restore default connection
+            DB::setDefaultConnection('mysql');
             return response()->json( [
                 'status'  => 404,
                 'message' => 'No Product Id Found',
             ] );
         }
+
+        if ( $vendorproduct->status == 'active' ) {
+            if ( ( checkpermission( 'all-products' ) != 1 ) ) {
+
+                if ( checkpermission( 'active-products' ) != 1 ) {
+                    DB::setDefaultConnection('mysql');
+                    return $this->permissionmessage();
+                }
+            }
+        }
+
+        if ( $vendorproduct->status == 'pending' ) {
+            if ( ( checkpermission( 'all-products' ) != 1 ) ) {
+
+                if ( checkpermission( 'pending-products' ) != 1 ) {
+                    DB::setDefaultConnection('mysql');
+                    return $this->permissionmessage();
+                }
+            }
+        }
+
+        if ( $vendorproduct->status == 'rejected' ) {
+            if ( ( checkpermission( 'all-products' ) != 1 ) ) {
+
+                if ( checkpermission( 'rejected-product' ) != 1 ) {
+                    DB::setDefaultConnection('mysql');
+                    return $this->permissionmessage();
+                }
+            }
+        }
+
+        $response = response()->json( [
+            'status'               => 200,
+            'product'              => $vendorproduct,
+            'vendor_all_color'     => Color::on($connectionName)->where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
+            'vendor_all_size'      => Size::on($connectionName)->where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
+            'all_category_list'    => Category::on($connectionName)->where( 'status', 'active' )->get(),
+            'all_subcategory_list' => Subcategory::on($connectionName)->where( 'status', 'active' )->get(),
+            'all_brand_list'       => Brand::on($connectionName)->where( 'status', 'active' )->get(),
+            'suppliers'            => Supplier::on($connectionName)->where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
+            'warehouse'            => Warehouse::on($connectionName)->where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
+        ] );
+
+        // Restore default connection
+        DB::setDefaultConnection('mysql');
+
+        return $response;
     }
 
     public function destroy( $id ) {
