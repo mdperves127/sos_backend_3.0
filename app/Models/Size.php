@@ -9,6 +9,8 @@ class Size extends Model
 {
     use HasFactory;
 
+    protected $connection = 'tenant';
+
     public function products()
     {
         return $this->belongsToMany('App\Models\Product')->withTimestamps();
