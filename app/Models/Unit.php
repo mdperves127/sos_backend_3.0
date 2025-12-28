@@ -10,7 +10,6 @@ class Unit extends Model
 {
     use HasFactory;
 
-    protected $connection = 'tenant';
     protected $guarded = [];
 
     public function sub_unit()

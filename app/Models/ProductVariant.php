@@ -11,7 +11,6 @@ class ProductVariant extends Model
 {
     use HasFactory;
 
-    protected $connection = 'tenant';
     protected $guarded = [];
 
     public function color()
