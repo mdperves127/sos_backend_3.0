@@ -382,16 +382,66 @@ class CartController extends Controller {
                 ] );
             }
 
-            // Step 3: Get product from product's tenant database
+            // Step 3: Configure tenant connection for eager loading relationships
+            $connectionName = 'tenant_' . $productTenant->id;
+            $databaseName = 'sosanik_tenant_' . $productTenant->id;
+
+            // Store original tenant connection config if it exists
+            $originalTenantConfig = config('database.connections.tenant');
+
+            // Configure both the dynamic connection name and the 'tenant' connection
+            // The 'tenant' connection is needed because related models use protected $connection = 'tenant'
+            config([
+                'database.connections.' . $connectionName => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $databaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ],
+                'database.connections.tenant' => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $databaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ]
+            ]);
+            DB::purge($connectionName);
+            DB::purge('tenant');
+
+            // Get product from product's tenant database with relationships
             $product = CrossTenantQueryService::getSingleFromTenant(
                 $productTenant,
                 Product::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'id', $cart->product_id )
                         ->where( 'status', 'active' )
-                        ->with('colors', 'sizes', 'units');
+                        ->with([
+                            'colors',
+                            'sizes',
+                            'productVariant.unit',
+                            'productVariant.color',
+                            'productVariant.size'
+                        ]);
                 }
             );
+
+            // Restore original tenant connection config
+            if ($originalTenantConfig !== null) {
+                config(['database.connections.tenant' => $originalTenantConfig]);
+            } else {
+                config(['database.connections.tenant' => null]);
+            }
+            DB::purge('tenant');
 
             // if ( !$product ) {
             //     return response()->json( [
