@@ -351,7 +351,7 @@ class ProductController extends Controller {
             $tenant_id,
             Product::class,
             function ( $query ) use ( $id ) {
-                $query->with( [
+                $query->where( 'id', $id )->with( [
                     'category',
                     'subcategory',
                     'brand',
@@ -359,9 +359,7 @@ class ProductController extends Controller {
                     'productdetails',
                     'vendor',
                     'productrating.affiliate:id,name,image'
-                ] )
-                ->withAvg( 'productrating', 'rating' )
-                ->where( 'id', $id );
+                ] )->withAvg( 'productrating', 'rating' )->first();
             }
         );
 
