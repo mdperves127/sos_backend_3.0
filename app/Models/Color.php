@@ -9,6 +9,7 @@ class Color extends Model
 {
     use HasFactory;
 
+
     public function products()
     {
         return $this->belongsToMany('App\Models\Product')->withTimestamps();
