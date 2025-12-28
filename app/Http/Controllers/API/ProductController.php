@@ -356,12 +356,28 @@ class ProductController extends Controller {
             ]);
         }
 
-        // Configure tenant connection
+        // Configure tenant connection (use 'tenant' name since models use protected $connection = 'tenant')
         $connectionName = 'tenant_' . $tenant->id;
         $databaseName = 'sosanik_tenant_' . $tenant->id;
 
+        // Store original tenant connection config if it exists
+        $originalTenantConfig = config('database.connections.tenant');
+
+        // Configure both the dynamic connection name and the 'tenant' connection
+        // The 'tenant' connection is needed because related models use protected $connection = 'tenant'
         config([
             'database.connections.' . $connectionName => [
+                'driver' => 'mysql',
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
+                'database' => $databaseName,
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'strict' => false,
+            ],
+            'database.connections.tenant' => [
                 'driver' => 'mysql',
                 'host' => config('database.connections.mysql.host'),
                 'port' => config('database.connections.mysql.port'),
@@ -374,6 +390,7 @@ class ProductController extends Controller {
             ]
         ]);
         DB::purge($connectionName);
+        DB::purge('tenant');
 
         // Query product from tenant database
         $vendorproduct = Product::on($connectionName)
@@ -382,8 +399,14 @@ class ProductController extends Controller {
             ->find( $id );
 
         if ( !$vendorproduct ) {
-            // Restore default connection
-            DB::setDefaultConnection('mysql');
+            // Restore original tenant connection config before returning
+            if ($originalTenantConfig !== null) {
+                config(['database.connections.tenant' => $originalTenantConfig]);
+            } else {
+                config(['database.connections.tenant' => null]);
+            }
+            DB::purge('tenant');
+
             return response()->json( [
                 'status'  => 404,
                 'message' => 'No Product Id Found',
@@ -394,7 +417,6 @@ class ProductController extends Controller {
             if ( ( checkpermission( 'all-products' ) != 1 ) ) {
 
                 if ( checkpermission( 'active-products' ) != 1 ) {
-                    DB::setDefaultConnection('mysql');
                     return $this->permissionmessage();
                 }
             }
@@ -404,7 +426,6 @@ class ProductController extends Controller {
             if ( ( checkpermission( 'all-products' ) != 1 ) ) {
 
                 if ( checkpermission( 'pending-products' ) != 1 ) {
-                    DB::setDefaultConnection('mysql');
                     return $this->permissionmessage();
                 }
             }
@@ -414,7 +435,6 @@ class ProductController extends Controller {
             if ( ( checkpermission( 'all-products' ) != 1 ) ) {
 
                 if ( checkpermission( 'rejected-product' ) != 1 ) {
-                    DB::setDefaultConnection('mysql');
                     return $this->permissionmessage();
                 }
             }
@@ -432,8 +452,14 @@ class ProductController extends Controller {
             'warehouse'            => Warehouse::on($connectionName)->where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
         ] );
 
-        // Restore default connection
-        DB::setDefaultConnection('mysql');
+        // Restore original tenant connection config to avoid conflicts
+        if ($originalTenantConfig !== null) {
+            config(['database.connections.tenant' => $originalTenantConfig]);
+        } else {
+            // If it didn't exist, unset it
+            config(['database.connections.tenant' => null]);
+        }
+        DB::purge('tenant');
 
         return $response;
     }
