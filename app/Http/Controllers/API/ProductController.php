@@ -344,15 +344,28 @@ class ProductController extends Controller {
         }
     }
 
-    public function ProductEdit( $id ) {
+    public function ProductEdit( $tenant_id,$id ) {
 
-        $product = Product::find( $id );
-        if ( $product ) {
-            $vendorproduct = Product::query()
-                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor', 'productrating.affiliate:id,name,image' )
+        // Get Product from tenant's database
+        $vendorproduct = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
+            Product::class,
+            function ( $query ) use ( $id ) {
+                $query->with( [
+                    'category',
+                    'subcategory',
+                    'brand',
+                    'productImage',
+                    'productdetails',
+                    'vendor',
+                    'productrating.affiliate:id,name,image'
+                ] )
                 ->withAvg( 'productrating', 'rating' )
-                ->find( $id );
+                ->where( 'id', $id );
+            }
+        );
 
+        if ( $vendorproduct ) {
             if ( $vendorproduct->status == 'active' ) {
                 if ( ( checkpermission( 'all-products' ) != 1 ) ) {
 
@@ -383,13 +396,13 @@ class ProductController extends Controller {
             return response()->json( [
                 'status'               => 200,
                 'product'              => $vendorproduct,
-                'vendor_all_color'     => Color::where( ['user_id' => $product->user_id, 'status' => 'active'] )->get(),
-                'vendor_all_size'      => Size::where( ['user_id' => $product->user_id, 'status' => 'active'] )->get(),
+                'vendor_all_color'     => Color::where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
+                'vendor_all_size'      => Size::where( ['user_id' => $vendorproduct->user_id, 'status' => 'active'] )->get(),
                 'all_category_list'    => Category::where( 'status', 'active' )->get(),
                 'all_subcategory_list' => Subcategory::where( 'status', 'active' )->get(),
                 'all_brand_list'       => Brand::where( 'status', 'active' )->get(),
-                'suppliers'            => Supplier::where( ['vendor_id' => $product->vendor_id, 'status' => 'active'] )->get(),
-                'warehouse'            => Warehouse::where( ['vendor_id' => $product->vendor_id, 'status' => 'active'] )->get(),
+                'suppliers'            => Supplier::where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
+                'warehouse'            => Warehouse::where( ['vendor_id' => $vendorproduct->vendor_id, 'status' => 'active'] )->get(),
             ] );
         } else {
             return response()->json( [
