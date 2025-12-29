@@ -453,6 +453,7 @@ Route::middleware( [
             Route::delete( '/delete/{id}', [TenantServiceController::class, 'delete'] );
 
             Route::get( '/count', [TenantServiceController::class, 'serviceCount'] );
+            Route::get('buy-count', [TenantServiceController::class, 'serviceBuyCount'] );
             Route::get( 'order/count', [TenantServiceOrderController::class, 'serviceOrderCount'] );
 
             Route::get( '/orders', [TenantServiceController::class, 'serviceorders'] );
