@@ -604,18 +604,33 @@ class UserController extends Controller {
             ] );
         }
     }
-    public function UserEdit( $id ) {
-        $user = User::find( $id );
-        if ( $user ) {
-            return response()->json( [
-                'status' => 200,
-                'user'   => $user,
-            ] );
+    public function UserEdit( $type, $id ) {
+        if ( $type == 'tenant' ) {
+            $tenant = Tenant::on('mysql')->find( $id );
+            if ( $tenant ) {
+                return response()->json( [
+                    'status' => 200,
+                    'tenant' => $tenant,
+                ] );
+            } else {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'No Tenant Id Found',
+                ] );
+            }
         } else {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'No User Id Found',
-            ] );
+            $user = User::find( $id );
+            if ( $user ) {
+                return response()->json( [
+                    'status' => 200,
+                    'user'   => $user,
+                ] );
+            } else {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'No User Id Found',
+                ] );
+            }
         }
     }
 
