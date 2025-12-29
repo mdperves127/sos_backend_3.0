@@ -59,7 +59,17 @@ class RechargeController extends Controller {
     }
 
     public function addUserBalance( $id ) {
-        $user  = User::find( $id )->increment( 'balance', request( 'amount' ) );
+        $type = request('type');
+
+        if ( $type == 'tenant' ) {
+            $tenant = Tenant::on('mysql')->find( $id );
+            $tenant->increment( 'balance', request( 'amount' ) );
+        } else {
+            $user = User::on('mysql')->find( $id );
+            $user->increment( 'balance', request( 'amount' ) );
+        }
+
+        // $user  = User::find( $id )->increment( 'balance', request( 'amount' ) );
         $trxid = uniqid();
         $type  = "recharge";
 
@@ -72,9 +82,21 @@ class RechargeController extends Controller {
     }
 
     public function editUserBalance( $id ) {
-        $user          = User::find( $id );
-        $user->balance = request( 'amount' );
-        $user->save();
+        $type = request('type');
+
+        if ( $type == 'tenant' ) {
+            $tenant = Tenant::on('mysql')->find( $id );
+            $tenant->balance = request( 'amount' );
+            $tenant->save();
+        } else {
+            $user = User::on('mysql')->find( $id );
+            $user->balance = request( 'amount' );
+            $user->save();
+        }
+
+        // $user          = User::find( $id );
+        // $user->balance = request( 'amount' );
+        // $user->save();
 
         PaymentHistoryService::store( uniqid(), request( 'amount' ), 'Edited by admin', 'Edit', '-+', '', $id );
 
@@ -85,16 +107,18 @@ class RechargeController extends Controller {
     }
 
     public function RemoveUserBalance( $id ) {
-        $user = User::find( $id );
 
-        if ( $user->balance < request( 'amount' ) ) {
-            return response()->json( [
-                'status'  => 400,
-                'message' => 'Insufficient Balance !',
-            ] );
+        $type = request('type');
+
+        if ( $type == 'tenant' ) {
+            $tenant = Tenant::on('mysql')->find( $id );
+            $tenant->decrement( 'balance', request( 'amount' ) );
+        } else {
+            $user = User::on('mysql')->find( $id );
+            $user->decrement( 'balance', request( 'amount' ) );
         }
 
-        $user->decrement( 'balance', request( 'amount' ) );
+
         $trxid = uniqid();
         $type  = "recharge";
 

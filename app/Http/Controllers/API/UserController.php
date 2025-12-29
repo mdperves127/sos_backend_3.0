@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller {
 
     function updateStatus( Request $request, $id ) {
+        $type = request('type');
         $validator = Validator::make( $request->all(), [
             'status' => 'required',
         ] );
@@ -28,9 +29,19 @@ class UserController extends Controller {
                 'errors' => $validator->messages(),
             ] );
         } else {
-            $user         = User::find( $id );
-            $user->status = $request->status;
-            $user->save();
+
+            if ( $type == 'tenant' ) {
+                $tenant = Tenant::on('mysql')->find( $id );
+                $tenant->status = $request->status;
+                $tenant->save();
+            } else {
+                $user = User::on('mysql')->find( $id );
+                $user->status = $request->status;
+                $user->save();
+            }
+            // $user         = User::find( $id );
+            // $user->status = $request->status;
+            // $user->save();
 
             return response()->json( [
                 'status'  => 200,
