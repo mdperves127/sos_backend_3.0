@@ -604,7 +604,8 @@ class UserController extends Controller {
             ] );
         }
     }
-    public function UserEdit( $type, $id ) {
+    public function UserEdit( $id ) {
+        $type = request('type');
         if ( $type == 'tenant' ) {
             $tenant = Tenant::on('mysql')->find( $id );
             if ( $tenant ) {
@@ -619,7 +620,7 @@ class UserController extends Controller {
                 ] );
             }
         } else {
-            $user = User::find( $id );
+            $user = User::on('mysql')->find( $id );
             if ( $user ) {
                 return response()->json( [
                     'status' => 200,

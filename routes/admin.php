@@ -145,7 +145,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     // user
     Route::get( 'user/view/{name?}', [UserController::class, 'user'] );
     Route::post( 'user/store', [UserController::class, 'UserStore'] );
-    Route::get( 'edit-user/{type}/{id}', [UserController::class, 'UserEdit'] );
+    Route::get( 'edit-user/{id}', [UserController::class, 'UserEdit'] );
     Route::post( 'update-user/{id}', [UserController::class, 'Updateuser'] );
     Route::delete( 'delete-user/{id}', [UserController::class, 'UserDelete'] );
 
