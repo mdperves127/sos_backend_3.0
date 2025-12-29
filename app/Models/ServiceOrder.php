@@ -10,6 +10,7 @@ class ServiceOrder extends Model
 {
     use HasFactory,SoftDeletes;
 
+    protected $connection = 'mysql';
     protected $guarded = [];
 
     function customerdetails(){
@@ -41,5 +42,5 @@ class ServiceOrder extends Model
     function servicerating(){
         return $this->hasOne(ServiceRating::class,'service_order_id');
     }
-    
+
 }
