@@ -611,7 +611,7 @@ class UserController extends Controller {
             if ( $tenant ) {
                 return response()->json( [
                     'status' => 200,
-                    'tenant' => $tenant,
+                    'user' => $tenant,
                 ] );
             } else {
                 return response()->json( [
