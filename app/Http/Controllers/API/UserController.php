@@ -136,7 +136,7 @@ class UserController extends Controller {
             $vendors->each( function ( $tenant ) use ( &$allResults ) {
                 $allResults->push( (object) [
                     'id'         => $tenant->id,
-                    'name'       => $tenant->company_name,
+                    'company_name'       => $tenant->company_name,
                     'email'      => $tenant->email,
                     'number'     => $tenant->phone,
                     'role_as'    => 2, // vendor
@@ -177,7 +177,7 @@ class UserController extends Controller {
             $affiliates->each( function ( $tenant ) use ( &$allResults ) {
                 $allResults->push( (object) [
                     'id'         => $tenant->id,
-                    'name'       => $tenant->company_name,
+                    'company_name'       => $tenant->company_name,
                     'email'      => $tenant->email,
                     'number'     => $tenant->phone,
                     'role_as'    => 3, // affiliate
