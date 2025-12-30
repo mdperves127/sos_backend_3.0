@@ -54,8 +54,14 @@ class NoteController extends Controller {
     }
 
 public function vendorAdvertise( $id ) {
+        $type = request('type');
 
-        $advertise = AdminAdvertise::where( 'user_id', $id )->paginate( 10 );
+        if( $type == 'tenant' ) {
+            $advertise = AdminAdvertise::where( 'tenant_id', $id )->paginate( 10 );
+        } else {
+            $advertise = AdminAdvertise::where( 'user_id', $id )->paginate( 10 );
+        }
+
 
         return response()->json( [
             'status'    => 200,
@@ -66,7 +72,13 @@ public function vendorAdvertise( $id ) {
 
     public function vendorServiceOrder( $id ) {
 
-        $serviceOrder = ServiceOrder::where( 'user_id', $id )->with( ['servicedetails:id,title', 'packagedetails:id,package_title', 'vendor:id,name'] )->paginate( 10 );
+        $type = request('type');
+        if( $type == 'tenant' ) {
+            $serviceOrder = ServiceOrder::where( 'tenant_id', $id )->paginate( 10 );
+        } else {
+            $serviceOrder = ServiceOrder::where( 'user_id', $id )->paginate( 10 );
+        }
+
 
         return response()->json( [
             'status'       => 200,
