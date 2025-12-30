@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RechargeRequest;
 use App\Models\PaymentStore;
 use App\Models\Settings;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AamarPayService;
 use App\Services\PaymentHistoryService;

@@ -6,22 +6,91 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductEditRequest;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Models\PendingProduct;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VendorProductController extends Controller
 {
     function index()
     {
-        if(checkpermission('edit-products') != 1){
-            return $this->permissionmessage();
-        }
-        return Product::query()
-            ->with('vendor')
-            ->withwhereHas('pendingproduct',function($query){
-                $query->select('id','product_id','is_reject');
-            })
-            ->latest()
-            ->paginate(10);
+        // if(checkpermission('edit-products') != 1){
+        //     return $this->permissionmessage();
+        // }
+
+        // Query Products from all merchant tenant databases with pendingproduct filter
+        $allProducts = CrossTenantQueryService::queryAllTenants(
+            Product::class,
+            function ( $query ) {
+                // Join with pending_products table to filter products that have pendingproduct
+                $query->join('pending_products', 'products.id', '=', 'pending_products.product_id')
+                      ->select('products.*')
+                      ->orderBy('products.created_at', 'desc');
+            }
+        );
+
+        // Load relationships for each product
+        $products = collect( $allProducts )->map( function ( $product ) {
+            // Get tenant from the product
+            if ( isset( $product->tenant_id ) ) {
+                $tenant = Tenant::on('mysql')->find( $product->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load vendor relationship
+                    if ( isset( $product->user_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $product->user_id );
+                        $product->vendor = $vendor;
+                    }
+
+                    // Load pendingproduct relationship
+                    if ( isset( $product->id ) ) {
+                        $pendingProduct = PendingProduct::on( $connectionName )
+                            ->select( 'id', 'product_id', 'is_reject' )
+                            ->where( 'product_id', $product->id )
+                            ->first();
+                        $product->pendingproduct = $pendingProduct;
+                    }
+                }
+            }
+            return $product;
+        } )->values();
+
+        // Manual pagination
+        $page = request()->get('page', 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $paginatedProducts = $products->slice($offset, $perPage);
+
+        return response()->json([
+            'data' => $paginatedProducts->values(),
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $products->count(),
+            'last_page' => ceil($products->count() / $perPage),
+            'from' => $offset + 1,
+            'to' => min($offset + $perPage, $products->count()),
+        ]);
     }
 
 

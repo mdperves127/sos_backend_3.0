@@ -42,27 +42,100 @@ class ProductStatusController extends Controller
 
     public function AdminRequestActive()
     {
-        if(checkpermission('active-request') != 1){
-            return $this->permissionmessage();
-        }
+        // if(checkpermission('active-request') != 1){
+        //     return $this->permissionmessage();
+        // }
 
         $search = request('search');
-        $product = ProductDetails::query()
-            ->with(['vendor:id,name', 'affiliator:id,name', 'product:id,name,image,discount_rate',])
-            ->where('status', '1')
-            ->when($search != '', function ($query) use ($search) {
-                $query->whereHas('product', function ($query) use ($search) {
-                    $query->where('name', 'like', '%' . $search . '%');
-                })
-                    ->orWhere('uniqid', 'like', '%' . $search . '%');
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+
+        // Query ProductDetails from all merchant tenant databases with status = 1
+        $allProductDetails = CrossTenantQueryService::queryAllTenants(
+            ProductDetails::class,
+            function ( $query ) use ( $search ) {
+                $query->where('status', '1');
+
+                // Handle search functionality - join with products table for search
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'product_details.product_id', '=', 'products.id' )
+                          ->where( function ( $q ) use ( $search ) {
+                              $q->where( 'products.name', 'like', "%{$search}%" )
+                                ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
+                          } )
+                          ->select( 'product_details.*' )
+                          ->groupBy( 'product_details.id' );
+                }
+
+                // Order by latest
+                $query->orderBy( 'product_details.created_at', 'desc' );
+            }
+        );
+
+        // Load relationships for each product detail
+        $productDetails = collect( $allProductDetails )->map( function ( $productDetail ) {
+            // Load relationships manually for each product detail
+            if ( isset( $productDetail->product_id ) && isset( $productDetail->tenant_id ) ) {
+                $tenant = Tenant::on('mysql')->find( $productDetail->tenant_id );
+                if ( $tenant ) {
+                    $connectionName = 'tenant_' . $tenant->id;
+                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+
+                    // Configure connection
+                    config([
+                        'database.connections.' . $connectionName => [
+                            'driver' => 'mysql',
+                            'host' => config('database.connections.mysql.host'),
+                            'port' => config('database.connections.mysql.port'),
+                            'database' => $databaseName,
+                            'username' => config('database.connections.mysql.username'),
+                            'password' => config('database.connections.mysql.password'),
+                            'charset' => 'utf8mb4',
+                            'collation' => 'utf8mb4_unicode_ci',
+                            'strict' => false,
+                        ]
+                    ]);
+                    DB::purge( $connectionName );
+
+                    // Load vendor relationship
+                    if ( isset( $productDetail->vendor_id ) ) {
+                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $productDetail->vendor_id );
+                        $productDetail->vendor = $vendor;
+                    }
+
+                    // Load affiliator relationship (from Tenant table where type = dropshipper)
+                    if ( isset( $productDetail->tenant_id ) ) {
+                        $affiliator = Tenant::on('mysql')->select('id', 'company_name as name')->find( $productDetail->tenant_id );
+                        $productDetail->affiliator = $affiliator;
+                    }
+
+                    // Load product relationship
+                    if ( isset( $productDetail->product_id ) ) {
+                        $product = Product::on( $connectionName )
+                            ->select( 'id', 'name', 'image', 'discount_rate' )
+                            ->find( $productDetail->product_id );
+                        $productDetail->product = $product;
+                    }
+                }
+            }
+            return $productDetail;
+        } )->values();
+
+        // Manual pagination
+        $page = request()->get('page', 1);
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $paginatedProductDetails = $productDetails->slice($offset, $perPage);
 
         return response()->json([
             'status' => 200,
-            'product' => $product,
+            'product' => [
+                'data' => $paginatedProductDetails->values(),
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $productDetails->count(),
+                'last_page' => ceil($productDetails->count() / $perPage),
+                'from' => $offset + 1,
+                'to' => min($offset + $perPage, $productDetails->count()),
+            ],
         ]);
     }
 
@@ -130,9 +203,9 @@ class ProductStatusController extends Controller
                         $productDetail->vendor = $vendor;
                     }
 
-                    // Load affiliator (user_id is the affiliator)
-                    if ( isset( $productDetail->user_id ) ) {
-                        $affiliator = User::on( $connectionName )->select( 'id', 'name' )->find( $productDetail->user_id );
+                    // Load affiliator (from Tenant table where type = dropshipper)
+                    if ( isset( $productDetail->tenant_id ) ) {
+                        $affiliator = Tenant::on('mysql')->select('id', 'company_name as name')->find( $productDetail->tenant_id );
                         $productDetail->affiliator = $affiliator;
                     }
                 }
