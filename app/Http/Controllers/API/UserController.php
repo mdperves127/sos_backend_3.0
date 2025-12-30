@@ -715,12 +715,14 @@ class UserController extends Controller {
     }
 
     public function Updateuser( Request $request, $id ) {
+
         $validator = Validator::make( $request->all(), [
             'name'    => 'required|max:191',
             'status'  => 'required|max:191',
             'email'   => 'required',
             'number'  => 'required',
             'balance' => ['required', 'numeric'],
+            'type' => 'required|in:user,tenant',
         ] );
 
         if ( $validator->fails() ) {
@@ -729,37 +731,62 @@ class UserController extends Controller {
                 'errors' => $validator->messages(),
             ] );
         } else {
-            $user = User::find( $id );
-            if ( $user ) {
-
-                $user->name    = $request->input( 'name' );
-                $user->email   = $request->input( 'email' );
-                $user->status  = $request->input( 'status' );
-                $user->number  = $request->input( 'number' );
-                $user->balance = request( 'balance' );
-
-                if ( $request->hasFile( 'image' ) ) {
-                    $path = $user->image;
-                    if ( File::exists( $path ) ) {
-                        File::delete( $path );
-                    }
-
-                    $img = fileUpload( $request->file( 'image' ), 'uploads/affiliator', 125, 125 );
-
-                    $user->image = $img;
+            if($request->type == 'tenant'){
+                $tenant = Tenant::find( $id );
+                if ( $tenant ) {
+                    $tenant->company_name    = $request->input( 'company_name' );
+                    $tenant->email   = $request->input( 'email' );
+                    $tenant->owner_name  = $request->input( 'owner_name' );
+                    $tenant->phone  = $request->input( 'phone' );
+                    $tenant->address  = $request->input( 'address' );
+                    $tenant->balance = request( 'balance' );
                 }
-
-                $user->update();
+                else {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Tenant Not Found',
+                    ] );
+                }
+                $tenant->update();
 
                 return response()->json( [
                     'status'  => 200,
-                    'message' => 'Affiliator Updated Successfully',
+                    'message' => 'Tenant Updated Successfully',
                 ] );
-            } else {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Affiliator Not Found',
-                ] );
+            }
+            else {
+                $user = User::find( $id );
+                if ( $user ) {
+
+                    $user->name    = $request->input( 'name' );
+                    $user->email   = $request->input( 'email' );
+                    $user->status  = $request->input( 'status' );
+                    $user->number  = $request->input( 'number' );
+                    $user->balance = request( 'balance' );
+
+                    if ( $request->hasFile( 'image' ) ) {
+                        $path = $user->image;
+                        if ( File::exists( $path ) ) {
+                            File::delete( $path );
+                        }
+
+                        $img = fileUpload( $request->file( 'image' ), 'uploads/affiliator', 125, 125 );
+
+                        $user->image = $img;
+                    }
+
+                    $user->update();
+
+                    return response()->json( [
+                        'status'  => 200,
+                        'message' => 'Affiliator Updated Successfully',
+                    ] );
+                } else {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Affiliator Not Found',
+                    ] );
+                }
             }
         }
     }
