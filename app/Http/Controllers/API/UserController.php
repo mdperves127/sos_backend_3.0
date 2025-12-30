@@ -36,7 +36,7 @@ class UserController extends Controller {
                     return response()->json( [
                         'status'  => 404,
                         'message' => 'Tenant not found',
-                    ] );
+                    ]);
                 }
                 $tenant->status = $request->status;
                 $tenant->save();
@@ -152,7 +152,7 @@ class UserController extends Controller {
                     'email'      => $tenant->email,
                     'number'     => $tenant->phone,
                     'role_as'    => 2, // vendor
-                    'status'     => $tenant->deleted_at ? 'pending' : 'active',
+                    'status'     => $tenant->status,
                     'uniqid'     => $tenant->id,
                     'owner_name' => $tenant->owner_name,
                     'address'    => $tenant->address,
@@ -193,7 +193,7 @@ class UserController extends Controller {
                     'email'      => $tenant->email,
                     'number'     => $tenant->phone,
                     'role_as'    => 3, // affiliate
-                    'status'     => $tenant->deleted_at ? 'pending' : 'active',
+                    'status'     => $tenant->status,
                     'uniqid'     => $tenant->id,
                     'owner_name' => $tenant->owner_name,
                     'address'    => $tenant->address,
