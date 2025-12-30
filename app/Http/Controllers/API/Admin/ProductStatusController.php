@@ -48,11 +48,36 @@ class ProductStatusController extends Controller
 
         $search = request('search');
 
-        // Query ProductDetails from all merchant tenant databases with status = 1
-        $allProductDetails = CrossTenantQueryService::queryAllTenants(
-            ProductDetails::class,
-            function ( $query ) use ( $search ) {
-                $query->where('status', '1');
+        // Step 1: Get all dropshipper tenants
+        $dropshipperTenants = Tenant::on('mysql')->where('type', 'dropshipper')->get();
+
+        // Step 2: Query ProductDetails from ALL dropshipper tenant databases with status = 1
+        $allProductDetails = collect();
+
+        foreach ( $dropshipperTenants as $dropshipperTenant ) {
+            try {
+                $connectionName = 'tenant_' . $dropshipperTenant->id;
+                $databaseName = 'sosanik_tenant_' . $dropshipperTenant->id;
+
+                // Configure dropshipper tenant connection
+                config([
+                    'database.connections.' . $connectionName => [
+                        'driver' => 'mysql',
+                        'host' => config('database.connections.mysql.host'),
+                        'port' => config('database.connections.mysql.port'),
+                        'database' => $databaseName,
+                        'username' => config('database.connections.mysql.username'),
+                        'password' => config('database.connections.mysql.password'),
+                        'charset' => 'utf8mb4',
+                        'collation' => 'utf8mb4_unicode_ci',
+                        'strict' => false,
+                    ]
+                ]);
+                DB::purge( $connectionName );
+
+                // Build query for this dropshipper tenant's database
+                $query = DB::connection( $connectionName )->table( 'product_details' )
+                    ->where('status', '1');
 
                 // Handle search functionality - join with products table for search
                 if ( $search ) {
@@ -61,61 +86,96 @@ class ProductStatusController extends Controller
                               $q->where( 'products.name', 'like', "%{$search}%" )
                                 ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
                           } )
-                          ->select( 'product_details.*' )
+                          ->select(
+                              'product_details.*',
+                              DB::raw( 'product_details.tenant_id as merchant_tenant_id' )
+                          )
                           ->groupBy( 'product_details.id' );
+                } else {
+                    $query->select(
+                        'product_details.*',
+                        DB::raw( 'product_details.tenant_id as merchant_tenant_id' )
+                    );
                 }
 
                 // Order by latest
                 $query->orderBy( 'product_details.created_at', 'desc' );
-            }
-        );
 
-        // Load relationships for each product detail
+                // Execute query for this dropshipper tenant
+                $tenantResults = $query->get();
+
+                // Add dropshipper tenant context to each result
+                $tenantResults->transform( function ( $item ) use ( $dropshipperTenant ) {
+                    $item->dropshipper_tenant_id = $dropshipperTenant->id;
+                    $item->dropshipper_tenant_name = $dropshipperTenant->company_name;
+                    return $item;
+                } );
+
+                $allProductDetails = $allProductDetails->merge( $tenantResults );
+            } catch ( \Exception $e ) {
+                \Log::warning( "Failed to query dropshipper tenant {$dropshipperTenant->id}: " . $e->getMessage() );
+                continue;
+            } finally {
+                // Reconnect to central database
+                DB::setDefaultConnection( 'mysql' );
+            }
+        }
+
+        // Step 3: For each ProductDetails, load product from merchant tenant database (using tenant_id from product_details)
         $productDetails = collect( $allProductDetails )->map( function ( $productDetail ) {
-            // Load relationships manually for each product detail
-            if ( isset( $productDetail->product_id ) && isset( $productDetail->tenant_id ) ) {
-                $tenant = Tenant::on('mysql')->find( $productDetail->tenant_id );
-                if ( $tenant ) {
-                    $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+            // The tenant_id in product_details points to the merchant tenant where the product exists
+            $merchantTenantId = $productDetail->merchant_tenant_id ?? $productDetail->tenant_id ?? null;
+            $dropshipperTenantId = $productDetail->dropshipper_tenant_id;
 
-                    // Configure connection
-                    config([
-                        'database.connections.' . $connectionName => [
-                            'driver' => 'mysql',
-                            'host' => config('database.connections.mysql.host'),
-                            'port' => config('database.connections.mysql.port'),
-                            'database' => $databaseName,
-                            'username' => config('database.connections.mysql.username'),
-                            'password' => config('database.connections.mysql.password'),
-                            'charset' => 'utf8mb4',
-                            'collation' => 'utf8mb4_unicode_ci',
-                            'strict' => false,
-                        ]
-                    ]);
-                    DB::purge( $connectionName );
-
-                    // Load vendor relationship
-                    if ( isset( $productDetail->vendor_id ) ) {
-                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $productDetail->vendor_id );
-                        $productDetail->vendor = $vendor;
-                    }
-
-                    // Load affiliator relationship (from Tenant table where type = dropshipper)
-                    if ( isset( $productDetail->tenant_id ) ) {
-                        $affiliator = Tenant::on('mysql')->select('id', 'company_name as name')->find( $productDetail->tenant_id );
-                        $productDetail->affiliator = $affiliator;
-                    }
-
-                    // Load product relationship
-                    if ( isset( $productDetail->product_id ) ) {
-                        $product = Product::on( $connectionName )
-                            ->select( 'id', 'name', 'image', 'discount_rate' )
-                            ->find( $productDetail->product_id );
-                        $productDetail->product = $product;
-                    }
-                }
+            if ( !$merchantTenantId || !isset( $productDetail->product_id ) ) {
+                return $productDetail;
             }
+
+            // Get merchant tenant
+            $merchantTenant = Tenant::on('mysql')->find( $merchantTenantId );
+            if ( !$merchantTenant ) {
+                return $productDetail;
+            }
+
+            $merchantConnectionName = 'tenant_' . $merchantTenant->id;
+            $merchantDatabaseName = 'sosanik_tenant_' . $merchantTenant->id;
+
+            // Configure merchant tenant connection
+            config([
+                'database.connections.' . $merchantConnectionName => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $merchantDatabaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ]
+            ]);
+            DB::purge( $merchantConnectionName );
+
+            // Load product from merchant tenant database
+            if ( isset( $productDetail->product_id ) ) {
+                $product = Product::on( $merchantConnectionName )
+                    ->select( 'id', 'name', 'image', 'discount_rate' )
+                    ->find( $productDetail->product_id );
+                $productDetail->product = $product;
+            }
+
+            // Load vendor from merchant tenant database
+            if ( isset( $productDetail->vendor_id ) ) {
+                $vendor = User::on( $merchantConnectionName )->select( 'id', 'name' )->find( $productDetail->vendor_id );
+                $productDetail->vendor = $vendor;
+            }
+
+            // Load affiliator (dropshipper tenant)
+            if ( $dropshipperTenantId ) {
+                $affiliator = Tenant::on('mysql')->select('id', 'company_name as name')->find( $dropshipperTenantId );
+                $productDetail->affiliator = $affiliator;
+            }
+
             return $productDetail;
         } )->values();
 
