@@ -32,10 +32,22 @@ class UserController extends Controller {
 
             if ( $type == 'tenant' ) {
                 $tenant = Tenant::on('mysql')->find( $id );
+                if ( !$tenant ) {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Tenant not found',
+                    ] );
+                }
                 $tenant->status = $request->status;
                 $tenant->save();
             } else {
                 $user = User::on('mysql')->find( $id );
+                if ( !$user ) {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'User not found',
+                    ] );
+                }
                 $user->status = $request->status;
                 $user->save();
             }
