@@ -128,10 +128,10 @@ class UserController extends Controller {
         if ( !$type || $type == 'vendor' ) {
             $vendors = Tenant::where( 'type', 'merchant' )
                 ->when( $status == 'active', function ( $q ) {
-                    return $q->whereNull( 'deleted_at' );
+                    return $q->where( 'status', 'active' );
                 } )
                 ->when( $status == 'pending', function ( $q ) {
-                    return $q->whereNotNull( 'deleted_at' );
+                    return $q->where( 'status', 'pending' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
@@ -169,10 +169,10 @@ class UserController extends Controller {
         if ( !$type || $type == 'affiliate' ) {
             $affiliates = Tenant::where( 'type', 'dropshipper' )
                 ->when( $status == 'active', function ( $q ) {
-                    return $q->whereNull( 'deleted_at' );
+                    return $q->where( 'status', 'active' );
                 } )
                 ->when( $status == 'pending', function ( $q ) {
-                    return $q->whereNotNull( 'deleted_at' );
+                    return $q->where( 'status', 'pending' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
@@ -265,6 +265,28 @@ class UserController extends Controller {
             return $path . '?' . http_build_query( $queryParams );
         };
 
+        // Build links array
+        $links = [];
+        $links[] = [
+            'url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label' => '&laquo; Previous',
+            'active' => false
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url' => $buildUrl( $i ),
+                'label' => (string) $i,
+                'active' => $i == $page
+            ];
+        }
+
+        $links[] = [
+            'url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label' => 'Next &raquo;',
+            'active' => false
+        ];
+
         // Build pagination response
         $response = [
             'data' => $paginatedResults->values(),
@@ -279,6 +301,7 @@ class UserController extends Controller {
             'last_page_url' => $buildUrl( $lastPage ),
             'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
             'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'links' => $links,
         ];
 
         return response()->json( [

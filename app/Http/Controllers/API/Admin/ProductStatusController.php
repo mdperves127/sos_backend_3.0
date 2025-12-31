@@ -317,17 +317,54 @@ class ProductStatusController extends Controller
         $perPage = 10;
         $offset = ($page - 1) * $perPage;
         $paginatedProductDetails = $productDetails->slice($offset, $perPage);
+        $lastPage = ceil($productDetails->count() / $perPage);
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build links array
+        $links = [];
+        $links[] = [
+            'url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label' => '&laquo; Previous',
+            'active' => false
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url' => $buildUrl( $i ),
+                'label' => (string) $i,
+                'active' => $i == $page
+            ];
+        }
+
+        $links[] = [
+            'url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label' => 'Next &raquo;',
+            'active' => false
+        ];
 
         return response()->json([
             'status' => 200,
             'product' => [
                 'data' => $paginatedProductDetails->values(),
-                'current_page' => $page,
+                'current_page' => (int) $page,
                 'per_page' => $perPage,
                 'total' => $productDetails->count(),
-                'last_page' => ceil($productDetails->count() / $perPage),
+                'last_page' => $lastPage,
                 'from' => $offset + 1,
                 'to' => min($offset + $perPage, $productDetails->count()),
+                'path' => $path,
+                'first_page_url' => $buildUrl( 1 ),
+                'last_page_url' => $buildUrl( $lastPage ),
+                'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+                'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+                'links' => $links,
             ],
         ]);
     }
@@ -594,17 +631,54 @@ class ProductStatusController extends Controller
         $perPage = 10;
         $offset = ($page - 1) * $perPage;
         $paginatedProductDetails = $productDetails->slice($offset, $perPage);
+        $lastPage = ceil($productDetails->count() / $perPage);
+
+        // Build pagination URLs
+        $path = request()->url();
+        $queryParams = request()->query();
+        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        // Build links array
+        $links = [];
+        $links[] = [
+            'url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label' => '&laquo; Previous',
+            'active' => false
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url' => $buildUrl( $i ),
+                'label' => (string) $i,
+                'active' => $i == $page
+            ];
+        }
+
+        $links[] = [
+            'url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label' => 'Next &raquo;',
+            'active' => false
+        ];
 
         return response()->json([
             'status' => 200,
             'product' => [
                 'data' => $paginatedProductDetails->values(),
-                'current_page' => $page,
+                'current_page' => (int) $page,
                 'per_page' => $perPage,
                 'total' => $productDetails->count(),
-                'last_page' => ceil($productDetails->count() / $perPage),
+                'last_page' => $lastPage,
                 'from' => $offset + 1,
                 'to' => min($offset + $perPage, $productDetails->count()),
+                'path' => $path,
+                'first_page_url' => $buildUrl( 1 ),
+                'last_page_url' => $buildUrl( $lastPage ),
+                'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
+                'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+                'links' => $links,
             ],
         ]);
     }
