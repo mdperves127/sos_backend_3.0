@@ -104,19 +104,25 @@ class Product extends Model {
 
     public function marketplaceBrand() {
         $relation = $this->belongsTo( Brand::class, 'market_place_brand_id', 'id' );
-        $relation->getRelated()->setConnection( 'mysql' );
+        // Force the query to use mysql connection
+        $query = $relation->getQuery();
+        $query->connection = app('db')->connection('mysql');
         return $relation;
     }
 
     public function marketplaceCategory() {
         $relation = $this->belongsTo( Category::class, 'market_place_category_id', 'id' );
-        $relation->getRelated()->setConnection( 'mysql' );
+        // Force the query to use mysql connection
+        $query = $relation->getQuery();
+        $query->connection = app('db')->connection('mysql');
         return $relation;
     }
 
     public function marketplaceSubcategory() {
         $relation = $this->belongsTo( Subcategory::class, 'market_place_subcategory_id', 'id' );
-        $relation->getRelated()->setConnection( 'mysql' );
+        // Force the query to use mysql connection
+        $query = $relation->getQuery();
+        $query->connection = app('db')->connection('mysql');
         return $relation;
     }
 }
