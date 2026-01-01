@@ -101,4 +101,16 @@ class Product extends Model {
     public function orderDetails() {
         return $this->hasMany( OrderDetails::class );
     }
+
+    public function marketplaceBrand() {
+        return $this->belongsTo( Brand::on('mysql'), 'market_place_brand_id', 'id' );
+    }
+
+    public function marketplaceCategory() {
+        return $this->belongsTo( Category::on('mysql'), 'market_place_category_id', 'id' );
+    }
+
+    public function marketplaceSubcategory() {
+        return $this->belongsTo( Subcategory::on('mysql'), 'market_place_subcategory_id', 'id' );
+    }
 }
