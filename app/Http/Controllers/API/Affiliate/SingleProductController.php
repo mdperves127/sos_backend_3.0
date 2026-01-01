@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDetails;
 use App\Services\CrossTenantQueryService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class SingleProductController extends Controller {
@@ -111,7 +112,7 @@ class SingleProductController extends Controller {
         }
     }
 
-    public function AffiliatorProductSingleAddProfile( Request $request, $id ) {
+    public function AffiliatorProductSingleAddProfit( Request $request, $id ) {
         $productDetails = ProductDetails::where('id', $id)->first();
 
         $productDetails->update([
