@@ -30,13 +30,13 @@ class SingleProductController extends Controller {
             Product::class,
             function ( $query ) use ( $id ) {
                 $query->with( [
-                    'category',
-                    'subcategory',
+                    // 'category',
+                    // 'subcategory',
                     'productImage',
-                    'brand',
-                    'marketplaceCategory',
-                    'marketplaceSubcategory',
-                    'marketplaceBrand',
+                    // 'brand',
+                    'marketplaceCategory as category',
+                    'marketplaceSubcategory as subcategory',
+                    'marketplaceBrand as brand',
                     'productdetails' => function ( $query ) {
                         $query->where( 'status', 'active' );
                     },
