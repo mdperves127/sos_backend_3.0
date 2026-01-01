@@ -115,11 +115,11 @@ class SingleProductController extends Controller {
         $productDetails = ProductDetails::where('id', $id)->first();
 
         $productDetails->update([
-            'profile_amount' => $request->profile_amount,
+            'profit_amount' => $request->profit_amount,
         ]);
         return response()->json( [
             'status'  => 200,
-            'message' => 'Profile amount updated successfully',
+            'message' => 'Profit amount updated successfully',
             'productDetails' => $productDetails,
         ]);
     }
