@@ -61,6 +61,7 @@ use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
+use App\Http\Controllers\API\MarketplaceController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -123,6 +124,12 @@ Route::middleware( [
         } );
         Route::get( 'shop-info', [ProfileController::class, 'shopInfo'] );
         Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
+
+        // Marketplace routes for category, subcategory & brand
+
+        Route::prefix( 'tenant-marketplace' )->group( function () {
+            Route::get( 'utilities', [MarketplaceController::class, 'categorySubcategoryBrand'] );
+        });
 
         //vendor product
         Route::prefix( 'tenant-product' )->group( function () {
