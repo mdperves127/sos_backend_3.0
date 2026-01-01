@@ -238,6 +238,9 @@ class ProductManageController extends Controller {
             } )->toArray();
 
             $product->specifications = $specificationdata;
+            $product->market_place_brand_id = $request->market_place_brand_id ?? null;
+            $product->market_place_category_id = $request->market_place_category_id ?? null;
+            $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
             $product->uniqid         = uniqid();
             $product->save();
 
@@ -415,6 +418,9 @@ class ProductManageController extends Controller {
                 $product->advance_payment             = request( 'advance_payment' );
                 $product->single_advance_payment_type = request( 'single_advance_payment_type' );
                 $product->is_connect_bulk_single      = request( 'is_connect_bulk_single' );
+                $product->market_place_brand_id = $request->market_place_brand_id ?? null;
+                $product->market_place_category_id = $request->market_place_category_id ?? null;
+                $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
 
                 $product->update();
 
