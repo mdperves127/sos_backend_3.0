@@ -17,16 +17,14 @@ class BrandController extends Controller
         if(checkpermission('brand') != 1){
             return $this->permissionmessage();
         }
-        $brand = MPBrand::where('created_by',Status::Admin->value)
-        ->when(request('search'),fn($q, $name)=>$q->where('name','like',"%{$name}%"))
+        $brand = MPBrand::when(request('search'),fn($q, $name)=>$q->where('name','like',"%{$name}%"))
         ->latest()->paginate(12);
 
         return $this->response($brand);
     }
 
     function BrandActive(){
-        $brand = MPBrand::where('created_by',Status::Admin->value)
-        ->latest()->get();
+        $brand = MPBrand::latest()->get();
 
         return response()->json([
             'status' => 200,
@@ -55,7 +53,6 @@ class BrandController extends Controller
             $brand->slug = Str::slug($request->name);
             $brand->status = $request->input('status');
             $brand->user_id = auth()->user()->id;
-            $brand->created_by = Status::Admin->value;
 
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
