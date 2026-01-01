@@ -103,14 +103,20 @@ class Product extends Model {
     }
 
     public function marketplaceBrand() {
-        return $this->belongsTo( Brand::on('mysql'), 'market_place_brand_id', 'id' );
+        $relation = $this->belongsTo( Brand::class, 'market_place_brand_id', 'id' );
+        $relation->getRelated()->setConnection( 'mysql' );
+        return $relation;
     }
 
     public function marketplaceCategory() {
-        return $this->belongsTo( Category::on('mysql'), 'market_place_category_id', 'id' );
+        $relation = $this->belongsTo( Category::class, 'market_place_category_id', 'id' );
+        $relation->getRelated()->setConnection( 'mysql' );
+        return $relation;
     }
 
     public function marketplaceSubcategory() {
-        return $this->belongsTo( Subcategory::on('mysql'), 'market_place_subcategory_id', 'id' );
+        $relation = $this->belongsTo( Subcategory::class, 'market_place_subcategory_id', 'id' );
+        $relation->getRelated()->setConnection( 'mysql' );
+        return $relation;
     }
 }
