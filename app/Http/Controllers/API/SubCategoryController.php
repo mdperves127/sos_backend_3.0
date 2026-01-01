@@ -5,8 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Subcategory;
-use App\Models\Category;
+use App\Models\MPSubCategory;
+use App\Models\MPCategory;
 use Illuminate\Support\Str;
 
 class SubCategoryController extends Controller
@@ -17,7 +17,7 @@ class SubCategoryController extends Controller
             return $this->permissionmessage();
         }
 
-        $subcategory = Subcategory::with('category')->latest()->paginate(10);
+        $subcategory = MPSubCategory::with('category')->latest()->paginate(10);
         return response()->json([
             'status' => 200,
             'subcategory' => $subcategory,
@@ -38,10 +38,10 @@ class SubCategoryController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $subcategory = new Subcategory;
+            $subcategory = new MPSubCategory;
             $subcategory->category_id = $request->input('category_id');
             $subcategory->name = $request->input('name');
-            $subcategory->slug = slugCreate(Subcategory::class, $request->name);
+            $subcategory->slug = slugCreate(MPSubCategory::class, $request->name);
             $subcategory->status = $request->input('status');
             $subcategory->save();
             return response()->json([
@@ -53,7 +53,7 @@ class SubCategoryController extends Controller
 
     public function SubCategoryEdit($id)
     {
-        $subcategory = Subcategory::find($id);
+        $subcategory = MPSubCategory::find($id);
         if ($subcategory) {
             return response()->json([
                 'status' => 200,
@@ -80,11 +80,11 @@ class SubCategoryController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $subcategory = Subcategory::find($id);
+            $subcategory = MPSubCategory::find($id);
             if ($subcategory) {
 
                 $subcategory->name = $request->input('name');
-                $subcategory->slug = slugUpdate(Subcategory::class, $request->name, $id);
+                $subcategory->slug = slugUpdate(MPSubCategory::class, $request->name, $id);
                 $subcategory->category_id = $request->input('category_id');
                 $subcategory->status = $request->input('status');
                 $subcategory->save();
@@ -103,7 +103,7 @@ class SubCategoryController extends Controller
 
     public function destroy($id)
     {
-        $subcategory = Subcategory::find($id);
+        $subcategory = MPSubCategory::find($id);
         if ($subcategory) {
             $subcategory->delete();
             return response()->json([
@@ -132,7 +132,7 @@ class SubCategoryController extends Controller
             ]);
         }
 
-        $subcategory = Subcategory::find($id);
+        $subcategory = MPSubCategory::find($id);
         $subcategory->status = $request->status;
         $subcategory->save();
 

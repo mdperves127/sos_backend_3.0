@@ -6,7 +6,7 @@ use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Brand;
+use App\Models\MPBrand;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -17,7 +17,7 @@ class BrandController extends Controller
         if(checkpermission('brand') != 1){
             return $this->permissionmessage();
         }
-        $brand = Brand::where('created_by',Status::Admin->value)
+        $brand = MPBrand::where('created_by',Status::Admin->value)
         ->when(request('search'),fn($q, $name)=>$q->where('name','like',"%{$name}%"))
         ->latest()->paginate(12);
 
@@ -25,7 +25,7 @@ class BrandController extends Controller
     }
 
     function BrandActive(){
-        $brand = Brand::where('created_by',Status::Admin->value)
+        $brand = MPBrand::where('created_by',Status::Admin->value)
         ->latest()->get();
 
         return response()->json([
@@ -50,7 +50,7 @@ class BrandController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $brand = new Brand;
+            $brand = new MPBrand;
             $brand->name = $request->input('name');
             $brand->slug = Str::slug($request->name);
             $brand->status = $request->input('status');
@@ -75,7 +75,7 @@ class BrandController extends Controller
 
     public function BrandEdit($id)
     {
-        $category = Brand::find($id);
+        $category = MPBrand::find($id);
         if ($category) {
             return response()->json([
                 'status' => 200,
@@ -103,12 +103,12 @@ class BrandController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $brand = Brand::find($id);
+            $brand = MPBrand::find($id);
             if ($brand) {
 
 
                 $brand->name = $request->input('name');
-                $brand->slug = slugCreate(Brand::class,$request->name);
+                $brand->slug = slugCreate(MPBrand::class,$request->name);
                 $brand->status = $request->input('status');
 
 
@@ -143,7 +143,7 @@ class BrandController extends Controller
 
     public function destroy($id)
     {
-        $category = Brand::find($id);
+        $category = MPBrand::find($id);
 
 
         $image_path = app_path("uploads/brand/{$category->image}");

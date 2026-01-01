@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Category;
+use App\Models\MPCategory;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -18,7 +18,7 @@ class CategoryController extends Controller
             return $this->permissionmessage();
         }
 
-        $category = Category::latest()->paginate(10);
+        $category = MPCategory::latest()->paginate(10);
         return response()->json([
             'status' => 200,
             'category' => $category,
@@ -38,7 +38,7 @@ class CategoryController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $category = new Category;
+            $category = new MPCategory;
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $extension = $file->getClientOriginalExtension();
@@ -66,7 +66,7 @@ class CategoryController extends Controller
 
     public function CategoryEdit($id)
     {
-        $category = Category::find($id);
+        $category = MPCategory::find($id);
         if ($category) {
             return response()->json([
                 'status' => 200,
@@ -92,7 +92,7 @@ class CategoryController extends Controller
                 'errors' => $validator->messages(),
             ]);
         } else {
-            $category = Category::find($id);
+            $category = MPCategory::find($id);
             if ($category) {
                 $category->meta_title = $request->input('meta_title');
                 $category->meta_keywords = $request->input('meta_keywords');
@@ -131,7 +131,7 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
-        $category = Category::find($id);
+        $category = MPCategory::find($id);
         if ($category) {
             $category->delete();
             return response()->json([
@@ -158,7 +158,7 @@ class CategoryController extends Controller
             ]);
         }
 
-        $category = Category::find($id);
+        $category = MPCategory::find($id);
         $category->status = $request->status;
         $category->save();
 
