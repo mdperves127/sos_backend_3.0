@@ -4,9 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Category;
-use App\Models\Subcategory;
-use App\Models\Brand;
+use App\Models\MPCategory;
+use App\Models\MPSubCategory;
+use App\Models\MPBrand;
 
 class MarketplaceController extends Controller
 {
@@ -16,9 +16,9 @@ class MarketplaceController extends Controller
             'status' => 200,
             'message' => 'Category, Subcategory & Brand fetched successfully',
             'data' => [
-                'categories' => Category::on('mysql')->get(),
-                'subcategories' => Subcategory::on('mysql')->get(),
-                'brands' => Brand::on('mysql')->get(),
+                'categories' => MPCategory::on('mysql')->get(),
+                'subcategories' => MPSubCategory::on('mysql')->get(),
+                'brands' => MPBrand::on('mysql')->get(),
             ]
         ]);
     }
