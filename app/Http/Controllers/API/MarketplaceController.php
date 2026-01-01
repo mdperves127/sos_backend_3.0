@@ -16,9 +16,9 @@ class MarketplaceController extends Controller
             'status' => 200,
             'message' => 'Category, Subcategory & Brand fetched successfully',
             'data' => [
-                'categories' => Category::on('mysql')->all(),
-                'subcategories' => Subcategory::on('mysql')->all(),
-                'brands' => Brand::on('mysql')->all(),
+                'categories' => Category::on('mysql')->get(),
+                'subcategories' => Subcategory::on('mysql')->get(),
+                'brands' => Brand::on('mysql')->get(),
             ]
         ]);
     }
