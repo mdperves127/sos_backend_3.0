@@ -34,6 +34,9 @@ class SingleProductController extends Controller {
                     'subcategory',
                     'productImage',
                     'brand',
+                    'marketplaceCategory',
+                    'marketplaceSubcategory',
+                    'marketplaceBrand',
                     'productdetails' => function ( $query ) {
                         $query->where( 'status', 'active' );
                     },
