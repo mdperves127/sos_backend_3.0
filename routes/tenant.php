@@ -532,7 +532,7 @@ Route::middleware( [
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
             Route::get( 'single/product/{tenant_id}/{id}', [SingleProductController::class, 'AffiliatorProductSingle'] );
-            Route::get( 'single/product/add-profile/{id}', [SingleProductController::class, 'AffiliatorProductSingleAddProfile'] );
+            Route::post( 'single/product/add-profit/{id}', [SingleProductController::class, 'AffiliatorProductSingleAddProfit'] );
             Route::get( 'single/active/product/{id}', [SingleProductController::class, 'AffiliatoractiveProduct'] );
             Route::post( 'request/product/{tenant_id}/{id?}', [AffiliateProductStatusController::class, 'AffiliatorProductRequest'] );
             Route::get( 'single/page/{id}', [SingleProductController::class, 'AffiliatorProductSinglePage'] );
