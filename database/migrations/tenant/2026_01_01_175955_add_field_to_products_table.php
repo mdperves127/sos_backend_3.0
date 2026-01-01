@@ -14,9 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->string('market_place_brand_id')->nullable();
-            $table->string('market_place_category_id')->nullable();
-            $table->string('market_place_subcategory_id')->nullable();
+            $table->integer('market_place_brand_id')->nullable();
+            $table->integer('market_place_category_id')->nullable();
+            $table->integer('market_place_subcategory_id')->nullable();
         });
     }
 

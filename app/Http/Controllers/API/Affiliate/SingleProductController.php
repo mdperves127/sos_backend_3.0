@@ -110,4 +110,17 @@ class SingleProductController extends Controller {
             ] );
         }
     }
+
+    public function AffiliatorProductSingleAddProfile( Request $request, $id ) {
+        $productDetails = ProductDetails::where('id', $id)->first();
+
+        $productDetails->update([
+            'profile_amount' => $request->profile_amount,
+        ]);
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Profile amount updated successfully',
+            'productDetails' => $productDetails,
+        ]);
+    }
 }
