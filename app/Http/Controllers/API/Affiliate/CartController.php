@@ -504,26 +504,7 @@ class CartController extends Controller {
             DB::purge($connectionName);
             DB::purge('tenant');
 
-            // Get product from product's tenant database with relationships
-            // CrossTenantQueryService handles connection internally, but relationships need 'tenant' connection
-            $product = CrossTenantQueryService::getSingleFromTenant(
-                $cart->tenant_id,
-                Product::class,
-                function ( $query ) use ( $cart ) {
-                    $query->where( 'id', $cart->product_id )
-                        ->where( 'status', 'active' )
-                        ->with([
-                            'colors',
-                            'sizes',
-                            'productVariant.unit',
-                            'productVariant.color',
-                            'productVariant.size'
-                        ]);
-                }
-            );
-
-            // Re-configure 'tenant' connection for cartDetails relationship loading
-            // (CrossTenantQueryService uses dynamic connection, but relationships need 'tenant' connection)
+            // Re-configure 'tenant' connection for Product query (Product model uses 'tenant' connection)
             config([
                 'database.connections.tenant' => [
                     'driver' => 'mysql',
@@ -538,6 +519,18 @@ class CartController extends Controller {
                 ]
             ]);
             DB::purge('tenant');
+
+            // Get product from product's tenant database with relationships
+            // Note: 'colors' and 'sizes' relationships removed as they require pivot tables that may not exist in all tenant databases
+            $product = Product::on('tenant')
+                ->where( 'id', $cart->product_id )
+                ->where( 'status', 'active' )
+                ->with([
+                    'productVariant.unit',
+                    'productVariant.color',
+                    'productVariant.size'
+                ])
+                ->first();
 
             // Load cartDetails relationships (color, size, unit, variant) from product tenant's database
             // These need to be loaded while the tenant connection is still configured
