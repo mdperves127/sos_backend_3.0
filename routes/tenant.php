@@ -523,10 +523,6 @@ Route::middleware( [
             Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
         } );
 
-
-
-
-
         Route::get( 'my-note', [NoteController::class, 'myNote'] );
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {

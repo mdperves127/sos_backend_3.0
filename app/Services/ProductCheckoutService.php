@@ -197,32 +197,33 @@ class ProductCheckoutService {
 
                 $totalDue = ( $totalAmount + $deliveryCharge ) - $totaladvancepayment;
 
-                // Create order using CrossTenantQueryService
-                $order = CrossTenantQueryService::saveToTenant(
-                    $tenantId,
-                    Order::class,
-                    function ( $model ) use ( $product, $userid, $data, $afi_amount, $cart, $totalqty, $totalAmount, $totalDue, $status, $categoryId, $totaladvancepayment, $is_unlimited, $deliveryCharge ) {
-                        $model->vendor_id           = $product->user_id;
-                        $model->affiliator_id       = $userid;
-                        $model->product_id          = $product->id;
-                        $model->name                = $data['name'];
-                        $model->phone               = $data['phone'];
-                        $model->email               = $data['email'];
-                        $model->city                = $data['city'];
-                        $model->address             = $data['address'];
-                        $model->variants            = json_encode( $data['variants'] );
-                        $model->afi_amount          = $afi_amount;
-                        $model->product_amount      = $totalAmount;
-                        $model->due_amount          = $totalDue;
-                        $model->status              = $status;
-                        $model->category_id         = $categoryId;
-                        $model->qty                 = $totalqty;
-                        $model->totaladvancepayment = $totaladvancepayment;
-                        $model->is_unlimited        = $is_unlimited;
-                        $model->delivery_charge     = $deliveryCharge;
-                        $model->tenant_id           = $tenant->id;
-                    }
-                );
+                // Generate unique order_id using the tenant connection
+                $orderId = self::generateUniqueOrderId($connectionName);
+
+                // Create order directly in the tenant database (not using CrossTenantQueryService)
+                $order = new Order();
+                $order->setConnection($connectionName);
+                $order->order_id            = $orderId;
+                $order->vendor_id           = $product->user_id;
+                $order->affiliator_id       = $userid;
+                $order->product_id          = $product->id;
+                $order->name                = $data['name'];
+                $order->phone               = $data['phone'];
+                $order->email               = $data['email'];
+                $order->city                = $data['city'];
+                $order->address             = $data['address'];
+                $order->variants            = json_encode( $data['variants'] );
+                $order->afi_amount          = $afi_amount;
+                $order->product_amount      = $totalAmount;
+                $order->due_amount          = $totalDue;
+                $order->status              = $status;
+                $order->category_id         = $categoryId;
+                $order->qty                 = $totalqty;
+                $order->totaladvancepayment = $totaladvancepayment;
+                $order->is_unlimited        = $is_unlimited;
+                $order->delivery_charge     = $deliveryCharge;
+                $order->tenant_id           = $tenant->id;
+                $order->save();
 
                 // Check courier using CrossTenantQueryService
                 $courierCredentials = CrossTenantQueryService::queryTenant(
@@ -346,5 +347,28 @@ class ProductCheckoutService {
                 'message' => $e->getMessage(),
             ] );
         }
+    }
+
+    /**
+     * Generate unique order ID for a specific tenant database
+     *
+     * @param string $connectionName
+     * @return string
+     */
+    private static function generateUniqueOrderId($connectionName)
+    {
+        do {
+            $text = 'OR';
+            $number = str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            $orderId = $text . $number;
+
+            // Check if order_id exists in the tenant database
+            $exists = DB::connection($connectionName)
+                ->table('orders')
+                ->where('order_id', $orderId)
+                ->exists();
+        } while ($exists);
+
+        return $orderId;
     }
 }
