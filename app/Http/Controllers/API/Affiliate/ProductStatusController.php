@@ -144,7 +144,7 @@ class ProductStatusController extends Controller {
             // Load product from the tenant database using product_id
             // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
             $product = Product::on( $connectionName )
-                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->select( 'id', 'name', 'selling_price', 'discount_price', 'image' )
                 ->find( $productDetail->product_id );
 
             if ( $product ) {
@@ -278,7 +278,7 @@ class ProductStatusController extends Controller {
             // Load product from the tenant database using product_id
             // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
             $product = Product::on( $connectionName )
-                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->select( 'id', 'name', 'selling_price', 'discount_price', 'image' )
                 ->find( $productDetail->product_id );
 
             if ( $product ) {
@@ -453,7 +453,7 @@ class ProductStatusController extends Controller {
             // Load product from the tenant database using product_id
             // Example: if tenant_id = "two" and product_id = 1, get product id=1 from tenant "two"'s database
             $product = Product::on( $connectionName )
-                ->select( 'id', 'name', 'selling_price', 'image' )
+                ->select( 'id', 'name', 'selling_price', 'discount_price', 'image' )
                 ->find( $productDetail->product_id );
 
             if ( $product ) {
