@@ -625,7 +625,7 @@ class CartController extends Controller {
 
             // Get profit_amount from ProductDetails in the product tenant's database
             $productDetails = CrossTenantQueryService::getSingleFromTenant(
-                $cart->tenant_id,
+                tenant()->id,
                 ProductDetails::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'product_id', $cart->product_id );
