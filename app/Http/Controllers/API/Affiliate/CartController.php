@@ -525,6 +525,7 @@ class CartController extends Controller {
             $product = Product::on('tenant')
                 ->where( 'id', $cart->product_id )
                 ->where( 'status', 'active' )
+                ->select( 'id', 'name', 'selling_price', 'discount_price' )
                 ->with([
                     'productVariant.unit',
                     'productVariant.color',
