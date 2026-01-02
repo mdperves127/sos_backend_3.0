@@ -113,11 +113,18 @@ class SingleProductController extends Controller {
     }
 
     public function AffiliatorProductSingleAddProfit( Request $request, $id ) {
-        $productDetails = ProductDetails::where('id', $id)->first();
+        $productDetails = ProductDetails::find($id);
 
-        $productDetails->update([
-            'profit_amount' => $request->profit_amount,
-        ]);
+        if (!$productDetails) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Product details not found',
+            ], 404);
+        }
+
+        $productDetails->profit_amount = $request->profit_amount;
+        $productDetails->save();
+
         return response()->json( [
             'status'  => 200,
             'message' => 'Profit amount updated successfully',
