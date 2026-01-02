@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductCheckoutService {
 
-    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $tenantId = null ) {
+    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $tenantId ) {
 
         try {
             // Get tenant_id from parameter or from cart
@@ -200,7 +200,7 @@ class ProductCheckoutService {
                 // Generate unique order_id using the tenant connection
                 $orderId = self::generateUniqueOrderId($connectionName);
 
-                // Create order directly in the tenant database (not using CrossTenantQueryService)
+                // Create order directly in the tenant database (cart->tenant_id is the product tenant)
                 $order = new Order();
                 $order->setConnection($connectionName);
                 $order->order_id            = $orderId;
