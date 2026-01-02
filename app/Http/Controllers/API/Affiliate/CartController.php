@@ -622,6 +622,9 @@ class CartController extends Controller {
                 }
             }
 
+            $profit_amount = ProductDetails::where('product_id', $cart->product_id)->where('tenant_id', $cart->tenant_id)->profit_amount;
+
+
             return response()->json( [
                 "data"            => $cart,
                 "deliveryArea"    => $deliverCredential->values()->all(),
@@ -629,6 +632,7 @@ class CartController extends Controller {
                 "cities"          => $cities,
                 'default_courier' => $default,
                 'areas'           => $areas,
+                'profit_amount'   => $profit_amount,
             ] );
 
         } catch ( \Exception $e ) {
