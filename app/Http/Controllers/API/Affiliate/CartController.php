@@ -505,6 +505,7 @@ class CartController extends Controller {
             DB::purge('tenant');
 
             // Get product from product's tenant database with relationships
+            // CrossTenantQueryService handles connection internally, but relationships need 'tenant' connection
             $product = CrossTenantQueryService::getSingleFromTenant(
                 $cart->tenant_id,
                 Product::class,
@@ -520,6 +521,23 @@ class CartController extends Controller {
                         ]);
                 }
             );
+
+            // Re-configure 'tenant' connection for cartDetails relationship loading
+            // (CrossTenantQueryService uses dynamic connection, but relationships need 'tenant' connection)
+            config([
+                'database.connections.tenant' => [
+                    'driver' => 'mysql',
+                    'host' => config('database.connections.mysql.host'),
+                    'port' => config('database.connections.mysql.port'),
+                    'database' => $databaseName,
+                    'username' => config('database.connections.mysql.username'),
+                    'password' => config('database.connections.mysql.password'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                    'strict' => false,
+                ]
+            ]);
+            DB::purge('tenant');
 
             // Load cartDetails relationships (color, size, unit, variant) from product tenant's database
             // These need to be loaded while the tenant connection is still configured
