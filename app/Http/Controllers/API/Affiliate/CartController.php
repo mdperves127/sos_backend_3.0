@@ -505,9 +505,8 @@ class CartController extends Controller {
             DB::purge('tenant');
 
             // Get product from product's tenant database with relationships
-            // Pass tenant ID instead of tenant object, and CrossTenantQueryService will handle connection internally
             $product = CrossTenantQueryService::getSingleFromTenant(
-                $productTenant->id,
+                $productTenant,
                 Product::class,
                 function ( $query ) use ( $cart ) {
                     $query->where( 'id', $cart->product_id )
@@ -521,23 +520,6 @@ class CartController extends Controller {
                         ]);
                 }
             );
-
-            // Re-configure tenant connection for cartDetails relationship loading
-            // (CrossTenantQueryService may have changed the connection)
-            config([
-                'database.connections.tenant' => [
-                    'driver' => 'mysql',
-                    'host' => config('database.connections.mysql.host'),
-                    'port' => config('database.connections.mysql.port'),
-                    'database' => $databaseName,
-                    'username' => config('database.connections.mysql.username'),
-                    'password' => config('database.connections.mysql.password'),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                    'strict' => false,
-                ]
-            ]);
-            DB::purge('tenant');
 
             // Load cartDetails relationships (color, size, unit, variant) from product tenant's database
             // These need to be loaded while the tenant connection is still configured
@@ -580,12 +562,12 @@ class CartController extends Controller {
             }
             DB::purge('tenant');
 
-            if ( !$product ) {
-                return response()->json( [
-                    'status' => 'error',
-                    'message' => 'Product not found or inactive',
-                ] );
-            }
+            // if ( !$product ) {
+            //     return response()->json( [
+            //         'status' => 'error',
+            //         'message' => 'Product not found or inactive',
+            //     ] );
+            // }
 
             // Attach product to cart
             $cart->product = $product;
