@@ -86,9 +86,12 @@ Route::middleware( [
 
 
 
-    Route::prefix('merchant-frontend')->group(function () {
+    Route::prefix('tenant-frontend')->group(function () {
         Route::get('products', [MerchantFrontendController::class, 'products']);
         Route::get('product/{id}', [MerchantFrontendController::class, 'product']);
+        Route::get('categories', [MerchantFrontendController::class, 'categories']);
+        Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
+        Route::get('brands', [MerchantFrontendController::class, 'brands']);
 
     });
 
