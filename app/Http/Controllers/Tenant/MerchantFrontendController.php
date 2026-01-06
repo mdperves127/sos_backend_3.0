@@ -315,6 +315,9 @@ class MerchantFrontendController extends Controller
             $product = Product::on( $connectionName )
                 ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
                 ->where('slug', $slug)->first();
+            $related_products = Product::on( $connectionName )
+                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                ->where('market_place_category_id', $product->market_place_category_id)->where('id', '!=', $product->id)->get();
 
             if ( !$product ) {
                 return response()->json( [
@@ -326,6 +329,7 @@ class MerchantFrontendController extends Controller
         } else {
             $product = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('slug', $slug)->first();
 
+            $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
             if ( !$product ) {
                 return response()->json( [
                     'status'  => 404,
@@ -334,7 +338,7 @@ class MerchantFrontendController extends Controller
             }
         }
 
-        return response()->json(compact('product'));
+        return response()->json(compact('product', 'related_products'));
     }
 
     public function categories()
