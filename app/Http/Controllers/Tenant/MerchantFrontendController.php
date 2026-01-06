@@ -313,8 +313,27 @@ class MerchantFrontendController extends Controller
 
             // Load product from the tenant database using product_id
             $product = Product::on( $connectionName )
-                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                ->with( [
+                    'category',
+                    'subcategory',
+                    'brand',
+                    'productImage',
+                    'productdetails',
+                    'vendor',
+                    'productVariant.size',
+                    'productVariant.unit',
+                    'productVariant.color',
+                    'productVariant.product'
+                ] )
                 ->where('slug', $slug)->first();
+
+            if ( !$product ) {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'Product not found in tenant database',
+                ] );
+            }
+
             $related_products = Product::on( $connectionName )
                 ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
                 ->where('market_place_category_id', $product->market_place_category_id)->where('id', '!=', $product->id)->get();
@@ -327,15 +346,27 @@ class MerchantFrontendController extends Controller
             }
 
         } else {
-            $product = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('slug', $slug)->first();
+            $product = Product::with( [
+                'category',
+                'subcategory',
+                'brand',
+                'productImage',
+                'productdetails',
+                'vendor',
+                'productVariant.size',
+                'productVariant.unit',
+                'productVariant.color',
+                'productVariant.product'
+            ] )->where('slug', $slug)->first();
 
-            $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
             if ( !$product ) {
                 return response()->json( [
                     'status'  => 404,
                     'message' => 'Product not found',
                 ] );
             }
+
+            $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
         }
 
         return response()->json(compact('product', 'related_products'));
