@@ -260,11 +260,11 @@ class MerchantFrontendController extends Controller
 
         return response()->json($response);
     }
-    public function product($id)
+    public function product($slug)
     {
         if(tenant()->type == 'dropshipper') {
             // Step 1: Get ProductDetails from current tenant's database by ID
-            $productDetail = ProductDetails::find($id);
+            $productDetail = ProductDetails::where('slug', $slug)->first();
 
             if ( !$productDetail ) {
                 return response()->json( [
@@ -314,7 +314,7 @@ class MerchantFrontendController extends Controller
             // Load product from the tenant database using product_id
             $product = Product::on( $connectionName )
                 ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                ->find( $productDetail->product_id );
+                ->where('slug', $slug)->first();
 
             if ( !$product ) {
                 return response()->json( [
@@ -324,7 +324,7 @@ class MerchantFrontendController extends Controller
             }
 
         } else {
-            $product = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->find($id);
+            $product = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('slug', $slug)->first();
 
             if ( !$product ) {
                 return response()->json( [
