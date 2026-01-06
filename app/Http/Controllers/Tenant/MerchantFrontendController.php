@@ -22,6 +22,8 @@ class MerchantFrontendController extends Controller
     {
         // Get filter parameters
         $categoryId = $request->get('category_id');
+        // Handle comma-separated category IDs
+        $categoryIds = $categoryId ? array_filter(array_map('trim', explode(',', $categoryId))) : [];
         $minPrice = $request->get('min_price');
         $maxPrice = $request->get('max_price');
         $colorId = $request->get('color_id');
@@ -71,11 +73,11 @@ class MerchantFrontendController extends Controller
                 $productQuery = Product::on( $connectionName )
                     ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' );
 
-                // Apply category filter
-                if ( $categoryId ) {
-                    $productQuery->where( function( $q ) use ( $categoryId ) {
-                        $q->where( 'category_id', $categoryId )
-                          ->orWhere( 'market_place_category_id', $categoryId );
+                // Apply category filter (support multiple categories)
+                if ( !empty( $categoryIds ) ) {
+                    $productQuery->where( function( $q ) use ( $categoryIds ) {
+                        $q->whereIn( 'category_id', $categoryIds )
+                          ->orWhereIn( 'market_place_category_id', $categoryIds );
                     } );
                 }
 
@@ -143,11 +145,11 @@ class MerchantFrontendController extends Controller
             $productQuery = Product::where('status', 'active')
                 ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
 
-            // Apply category filter
-            if ( $categoryId ) {
-                $productQuery->where( function( $q ) use ( $categoryId ) {
-                    $q->where( 'category_id', $categoryId )
-                      ->orWhere( 'market_place_category_id', $categoryId );
+            // Apply category filter (support multiple categories)
+            if ( !empty( $categoryIds ) ) {
+                $productQuery->where( function( $q ) use ( $categoryIds ) {
+                    $q->whereIn( 'category_id', $categoryIds )
+                      ->orWhereIn( 'market_place_category_id', $categoryIds );
                 } );
             }
 
