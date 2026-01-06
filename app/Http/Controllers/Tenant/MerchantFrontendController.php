@@ -18,8 +18,15 @@ use Illuminate\Support\Facades\DB;
 
 class MerchantFrontendController extends Controller
 {
-    public function products()
+    public function products(Request $request)
     {
+        // Get filter parameters
+        $categoryId = $request->get('category_id');
+        $minPrice = $request->get('min_price');
+        $maxPrice = $request->get('max_price');
+        $colorId = $request->get('color_id');
+        $sizeId = $request->get('size_id');
+
         if(tenant()->type == 'dropshipper') {
             // Step 1: Get all ProductDetails from current tenant's database
             $allProductDetails = ProductDetails::where('status', 1)->get();
@@ -60,10 +67,43 @@ class MerchantFrontendController extends Controller
                 ] );
                 DB::purge( $connectionName );
 
-                // Load product from the tenant database using product_id
-                $product = Product::on( $connectionName )
-                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                    ->find( $productDetail->product_id );
+                // Build query with filters
+                $productQuery = Product::on( $connectionName )
+                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor', 'colors', 'sizes' );
+
+                // Apply category filter
+                if ( $categoryId ) {
+                    $productQuery->where( function( $q ) use ( $categoryId ) {
+                        $q->where( 'category_id', $categoryId )
+                          ->orWhere( 'market_place_category_id', $categoryId );
+                    } );
+                }
+
+                // Apply price range filter
+                if ( $minPrice !== null || $maxPrice !== null ) {
+                    $productQuery->where( function( $q ) use ( $minPrice, $maxPrice ) {
+                        // Use discount_price if available, otherwise selling_price
+                        $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [$minPrice ?? 0] )
+                          ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [$maxPrice ?? 999999999] );
+                    } );
+                }
+
+                // Apply color filter
+                if ( $colorId ) {
+                    $productQuery->whereHas( 'colors', function( $q ) use ( $colorId ) {
+                        $q->where( 'colors.id', $colorId );
+                    } );
+                }
+
+                // Apply size filter
+                if ( $sizeId ) {
+                    $productQuery->whereHas( 'sizes', function( $q ) use ( $sizeId ) {
+                        $q->where( 'sizes.id', $sizeId );
+                    } );
+                }
+
+                // Load product
+                $product = $productQuery->find( $productDetail->product_id );
 
                 if ( $product ) {
                     $products->push( $product );
@@ -71,9 +111,101 @@ class MerchantFrontendController extends Controller
             }
 
         } else {
-            $products = Product::where('status', 'active')->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails')->get();
+            // Build query with filters for non-dropshippers
+            $productQuery = Product::where('status', 'active')
+                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'colors', 'sizes' );
+
+            // Apply category filter
+            if ( $categoryId ) {
+                $productQuery->where( function( $q ) use ( $categoryId ) {
+                    $q->where( 'category_id', $categoryId )
+                      ->orWhere( 'market_place_category_id', $categoryId );
+                } );
+            }
+
+            // Apply price range filter
+            if ( $minPrice !== null || $maxPrice !== null ) {
+                $productQuery->where( function( $q ) use ( $minPrice, $maxPrice ) {
+                    // Use discount_price if available, otherwise selling_price
+                    $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [$minPrice ?? 0] )
+                      ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [$maxPrice ?? 999999999] );
+                } );
+            }
+
+            // Apply color filter
+            if ( $colorId ) {
+                $productQuery->whereHas( 'colors', function( $q ) use ( $colorId ) {
+                    $q->where( 'colors.id', $colorId );
+                } );
+            }
+
+            // Apply size filter
+            if ( $sizeId ) {
+                $productQuery->whereHas( 'sizes', function( $q ) use ( $sizeId ) {
+                    $q->where( 'sizes.id', $sizeId );
+                } );
+            }
+
+            $products = $productQuery->get();
         }
-        return response()->json($products);
+
+        // Manual pagination
+        $page = (int) $request->get('page', 1);
+        $perPage = (int) $request->get('per_page', 10);
+        $offset = ($page - 1) * $perPage;
+
+        $total = $products->count();
+        $paginatedProducts = $products->slice($offset, $perPage);
+        $lastPage = (int) max(1, ceil($total / $perPage));
+
+        // Build pagination URLs
+        $path = $request->url();
+        $queryParams = $request->query();
+        $buildUrl = function ($pageNum) use ($path, $queryParams) {
+            $queryParams['page'] = $pageNum;
+            return $path . '?' . http_build_query($queryParams);
+        };
+
+        // Build links array
+        $links = [];
+        $links[] = [
+            'url' => $page > 1 ? $buildUrl($page - 1) : null,
+            'label' => '&laquo; Previous',
+            'active' => false
+        ];
+
+        for ($i = 1; $i <= $lastPage; $i++) {
+            $links[] = [
+                'url' => $buildUrl($i),
+                'label' => (string) $i,
+                'active' => $i == $page
+            ];
+        }
+
+        $links[] = [
+            'url' => $page < $lastPage ? $buildUrl($page + 1) : null,
+            'label' => 'Next &raquo;',
+            'active' => false
+        ];
+
+        // Build pagination response
+        $response = [
+            'data' => $paginatedProducts->values(),
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => $lastPage,
+            'from' => $total > 0 ? $offset + 1 : null,
+            'to' => $total > 0 ? min($offset + $perPage, $total) : null,
+            'path' => $path,
+            'first_page_url' => $buildUrl(1),
+            'last_page_url' => $buildUrl($lastPage),
+            'prev_page_url' => $page > 1 ? $buildUrl($page - 1) : null,
+            'next_page_url' => $page < $lastPage ? $buildUrl($page + 1) : null,
+            'links' => $links,
+        ];
+
+        return response()->json($response);
     }
     public function product($id)
     {

@@ -92,7 +92,6 @@ Route::middleware( [
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
-
     });
 
 
