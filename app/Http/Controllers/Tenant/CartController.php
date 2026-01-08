@@ -10,6 +10,7 @@ use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductAddToCartRequest;
 use App\Models\CartDetails;
+use App\Models\DeliveryCharge;
 
 
 class CartController extends Controller
@@ -186,11 +187,19 @@ class CartController extends Controller
     public function cart(Request $request)
     {
         $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails')->get();
+        $deliverCredential = CrossTenantQueryService::queryTenant(
+                tenant()->id,
+                DeliveryCharge::class,
+                function ( $query ) {
+                    $query->select( 'id', 'area', 'charge' );
+                }
+            );
         return response()->json(
             [
                 'message' => 'Cart fetched successfully',
                 'success' => true,
                 'cart' => $cart,
+                'deliveryCredential' => $deliverCredential,
             ]
         );
     }
