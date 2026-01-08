@@ -25,7 +25,7 @@ class WishListController extends Controller
     }
     public function wishlist(Request $request)
     {
-        $wishlist = WishList::where('user_id', auth()->user()->id)->get();
+        $wishlist = WishList::where('user_id', auth()->user()->id)->with('product')->get();
         return response()->json(
             [
                 'message' => 'Wishlist fetched successfully',
