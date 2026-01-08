@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductAddToCartRequest;
+use App\Models\CartDetails;
 
 
 class CartController extends Controller
