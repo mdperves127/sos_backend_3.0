@@ -179,8 +179,14 @@ Route::middleware( [
         } );
         Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
 
+        Route::prefix('tenant-coupon')->group(function () {
+            Route::get('/', [TenantCouponController::class, 'index']);
+            Route::post('store', [TenantCouponController::class, 'store']);
+            Route::get('show/{id}', [TenantCouponController::class, 'show']);
+            Route::post('update/{id}', [TenantCouponController::class, 'update']);
+            Route::delete('delete/{id}', [TenantCouponController::class, 'destroy']);
+        });
 
-        Route::resource( 'tenant-coupon', TenantCouponController::class );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
         Route::get( 'vendor-all-subcategory', [VendorController::class, 'AllSubCategory'] );
