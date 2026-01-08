@@ -191,7 +191,8 @@ class CartController extends Controller
                 tenant()->id,
                 DeliveryCharge::class,
                 function ( $query ) {
-                    $query->select( 'id', 'area', 'charge' );
+                    $query->where('status', 'active')
+                    ->select( 'id', 'area', 'charge' )->get();
                 }
             );
         return response()->json(
