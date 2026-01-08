@@ -55,10 +55,10 @@ class ProductAddToCartRequest extends FormRequest {
                     }
                     if ( $selling_type == 'both' ) {
                         $purchase_waya = ['single', 'bulk'];
-                    } elseif ( $selling_type == 'single' ) {
-                        $purchase_waya = ['single'];
-                    } else {
+                    } elseif ( $selling_type == 'bulk' ) {
                         $purchase_waya = ['bulk'];
+                    } else {
+                        $purchase_waya = ['single'];
                     }
 
                     if ( in_array( request( 'purchase_type' ), $purchase_waya ) ) {

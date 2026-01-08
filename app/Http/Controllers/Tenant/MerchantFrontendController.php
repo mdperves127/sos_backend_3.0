@@ -344,7 +344,6 @@ class MerchantFrontendController extends Controller
                     'message' => 'Product not found in tenant database',
                 ] );
             }
-
         } else {
             $product = Product::with( [
                 'category',
@@ -369,7 +368,10 @@ class MerchantFrontendController extends Controller
             $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
         }
 
-        return response()->json(compact('product', 'related_products'));
+        return response()->json([
+            'product' => $product,
+            'related_products' => $related_products,
+        ]);
     }
 
     public function categories()

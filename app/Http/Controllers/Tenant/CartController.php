@@ -16,7 +16,6 @@ class CartController extends Controller
 {
     public function addToCart(ProductAddToCartRequest $request)
     {
-
         $validatedData = $request->validated();
 
 
