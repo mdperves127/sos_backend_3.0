@@ -51,8 +51,12 @@ class ProductAddToCartRequest extends FormRequest {
                 if ( request( 'purchase_type' ) != '' && $getproduct ) {
                     $selling_type = $getproduct->selling_type;
                     if ( $selling_type == null ) {
-                        $fail( 'No selling type found in this product' );
-                    }
+                        if (request('frontend_purchase') == 'yes') {
+                            return true;
+                        } else {
+                            $fail( 'No selling type found in this product' );
+                        }
+                    } 
                     if ( $selling_type == 'both' ) {
                         $purchase_waya = ['single', 'bulk'];
                     } elseif ( $selling_type == 'bulk' ) {
