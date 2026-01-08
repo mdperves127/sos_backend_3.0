@@ -36,7 +36,8 @@ class WishListController extends Controller
     }
     public function deleteWishlist(Request $request)
     {
-        $wishlist = WishList::where('user_id', auth()->user()->id)->where('product_id', $request->product_id)->delete();
+        $wishlist = WishList::find($request->id)->delete();
+
         return response()->json([
             'message' => 'Wishlist deleted successfully',
             'success' => true,
