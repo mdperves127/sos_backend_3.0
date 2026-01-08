@@ -55,6 +55,9 @@ use App\Http\Controllers\Tenant\SupportBoxCategoryController;
 use App\Http\Controllers\Tenant\SupportBoxController;
 use App\Http\Controllers\Tenant\TenantAuthController;
 use App\Http\Controllers\Tenant\WithdrawController;
+use App\Http\Controllers\Tenant\TenantCouponController;
+use App\Http\Controllers\Tenant\WishListController;
+use App\Http\Controllers\Tenant\CartController as TenantCartController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
@@ -92,6 +95,19 @@ Route::middleware( [
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
+
+        // authenticated routes
+        Route::middleware('tenantAuth')->group(function () {
+            Route::post('add-to-wishlist', [WishListController::class, 'addToWishlist']);
+            Route::get('wishlist', [WishListController::class, 'wishlist']);
+            Route::delete('wishlist/{id}', [WishListController::class, 'deleteWishlist']);
+
+            Route::post('add-to-cart', [TenantCartController::class, 'addToCart']);
+            Route::get('cart', [TenantCartController::class, 'cart']);
+            Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
+
+        });
+
     });
 
 
@@ -162,6 +178,9 @@ Route::middleware( [
             Route::post( 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
         } );
         Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
+
+
+        Route::resource( 'tenant-coupon', TenantCouponController::class );
 
         Route::get( 'vendor-all-category', [VendorController::class, 'AllCategory'] );
         Route::get( 'vendor-all-subcategory', [VendorController::class, 'AllSubCategory'] );
