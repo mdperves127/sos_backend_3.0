@@ -65,6 +65,7 @@ use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
+use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -512,6 +513,8 @@ Route::middleware( [
         Route::get( 'tenant-all-banks', [BankController::class, 'index'] );
 
 
+        Route::post( 'frontend-order-create', [TenantOrderController::class, 'store'] );
+        
         Route::prefix( 'dropshipper' )->group( function () {
             Route::get( 'request-count-{status?}', [RequestProductController::class, 'affiliateRequestCount'] );
             Route::get( 'request/product/pending', [RequestProductController::class, 'RequestPending'] );
@@ -567,6 +570,8 @@ Route::middleware( [
 
 
             Route::post( 'order-create', [OrderController::class, 'store'] );
+
+            
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [OrderController::class, 'ProgressOrders'] );
