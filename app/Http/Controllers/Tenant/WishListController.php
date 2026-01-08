@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\WishList;
 
 class WishListController extends Controller
 {
@@ -24,7 +25,7 @@ class WishListController extends Controller
     }
     public function wishlist(Request $request)
     {
-        $wishlist = WishList::where('user_id', tenant()->auth()->user()->id)->get();
+        $wishlist = WishList::where('user_id', auth()->user()->id)->get();
         return response()->json(
             [
                 'message' => 'Wishlist fetched successfully',
