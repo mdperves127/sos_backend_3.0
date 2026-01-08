@@ -187,20 +187,14 @@ class CartController extends Controller
     public function cart(Request $request)
     {
         $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails')->get();
-        $deliverCredential = CrossTenantQueryService::queryTenant(
-                tenant()->id,
-                DeliveryCharge::class,
-                function ( $query ) {
-                    $query->where('status', 'active')
-                    ->select( 'id', 'area', 'charge' )->get();
-                }
-            );
+        
+        $deliveryCharge = DeliveryCharge::where('status', 'active')->select('id', 'area', 'charge')->get();
         return response()->json(
             [
                 'message' => 'Cart fetched successfully',
                 'success' => true,
                 'cart' => $cart,
-                'deliveryCredential' => $deliverCredential,
+                'deliveryCharge' => $deliveryCharge,
             ]
         );
     }
