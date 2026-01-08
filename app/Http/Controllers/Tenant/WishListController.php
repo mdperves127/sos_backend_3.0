@@ -14,7 +14,7 @@ class WishListController extends Controller
             'product_id' => 'required|exists:products,id',
         ]);
         $wishlist = WishList::create([
-            'user_id' => $request->user_id,
+            'user_id' => auth()->user()->id,
             'product_id' => $request->product_id,
             'tenant_id' => $request->tenant_id ?? null,
         ]);
@@ -36,7 +36,7 @@ class WishListController extends Controller
     }
     public function deleteWishlist(Request $request)
     {
-        $wishlist = WishList::where('user_id', tenant()->auth()->user()->id)->where('product_id', $request->product_id)->delete();
+        $wishlist = WishList::where('user_id', auth()->user()->id)->where('product_id', $request->product_id)->delete();
         return response()->json([
             'message' => 'Wishlist deleted successfully',
             'success' => true,
