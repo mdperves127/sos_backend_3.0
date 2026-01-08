@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\Product;
+use App\Services\CrossTenantQueryService;
+use Illuminate\Support\Facades\DB;
+
 
 class CartController extends Controller
 {
-    public function addToCart(Request $request)
+    public function addToCart(ProductAddToCartRequest $request)
     {
 
         $validatedData = $request->validated();
