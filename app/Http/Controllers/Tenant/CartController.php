@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Cart;
 
 class CartController extends Controller
 {
@@ -179,7 +180,7 @@ class CartController extends Controller
     }
     public function cart(Request $request)
     {
-        $cart = Cart::where('user_id', tenant()->auth()->user()->id)->get();
+        $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails')->get();
         return response()->json(
             [
                 'message' => 'Cart fetched successfully',
@@ -190,7 +191,7 @@ class CartController extends Controller
     }
     public function deleteCart(Request $request)
     {
-        $cart = Cart::where('user_id', tenant()->auth()->user()->id)->where('product_id', $request->product_id)->delete();
+        $cart = Cart::find($request->id)->delete();
         return response()->json([
             'message' => 'Cart deleted successfully',
             'success' => true,
