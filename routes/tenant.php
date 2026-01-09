@@ -555,8 +555,11 @@ Route::middleware( [
         } );
 
         Route::get( 'my-note', [NoteController::class, 'myNote'] );
-        Route::get('cms', [CmsController::class, 'index']);
-        Route::post('cms', [CmsController::class, 'update']);   
+
+        Route::prefix('tenant')->group(function () {
+            Route::get('cms', [CmsController::class, 'index']);
+            Route::post('cms', [CmsController::class, 'update']);   
+        });
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
