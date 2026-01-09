@@ -66,6 +66,7 @@ use App\Http\Controllers\Tenant\RequestProductController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
+use App\Http\Controllers\Tenant\CmsController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -554,6 +555,8 @@ Route::middleware( [
         } );
 
         Route::get( 'my-note', [NoteController::class, 'myNote'] );
+        Route::get('cms', [CmsController::class, 'index']);
+        Route::post('cms', [CmsController::class, 'update']);   
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {
 
