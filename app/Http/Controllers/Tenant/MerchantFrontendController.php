@@ -620,22 +620,16 @@ class MerchantFrontendController extends Controller
 
         return response()->json($brands);
     }
-
-    public function contentServiceFront()
-    {
-        $contentServices = ContentService::orderBy('order', 'asc')->get();
-        return response()->json($contentServices);
-    }
-
-    public function bannerFront()
-    {
-        $banners = Banner::orderBy('order', 'asc')->get();
-        return response()->json($banners);
-    }
-
+    
     public function cmsFront()
     {
+        $contentServices = ContentService::orderBy('order', 'asc')->get();
+        $banners = Banner::orderBy('order', 'asc')->get();
         $cms = Cms::first();
-        return response()->json($cms);
+        return response()->json([
+            'content_services' => $contentServices,
+            'banners' => $banners,
+            'cms' => $cms
+        ]);
     }
 }
