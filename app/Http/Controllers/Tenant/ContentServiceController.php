@@ -42,6 +42,13 @@ class ContentServiceController extends Controller
     public function update(Request $request)
     {
         $contentService = ContentService::find($request->id);
+
+        if (!$contentService) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Content Service not found'
+            ], 404);
+        }
         
         if ($request->hasFile('icon')) {
             $file = $request->file('icon');

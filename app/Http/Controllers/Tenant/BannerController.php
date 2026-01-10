@@ -43,6 +43,13 @@ class BannerController extends Controller
     {
         $banner = Banner::find($request->id);
 
+        if (!$banner) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Banner not found'
+            ], 404);
+        }
+
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $extension = $file->getClientOriginalExtension();
