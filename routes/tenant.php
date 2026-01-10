@@ -67,6 +67,8 @@ use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 use App\Http\Controllers\Tenant\CmsController;
+use App\Http\Controllers\Tenant\BannerController;
+use App\Http\Controllers\Tenant\ContentServiceController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -559,6 +561,19 @@ Route::middleware( [
         Route::prefix('tenant')->group(function () {
             Route::get('cms', [CmsController::class, 'index']);
             Route::post('cms', [CmsController::class, 'update']);   
+        });
+        Route::prefix('tenant')->group(function () {
+            Route::get('banner', [BannerController::class, 'index']);
+            Route::post('banner', [BannerController::class, 'update']);
+            Route::get('banner/{id}', [BannerController::class, 'show']);
+            Route::delete('banner/{id}', [BannerController::class, 'destroy']);
+        });
+        
+        Route::prefix('tenant')->group(function () {
+            Route::get('content-service', [ContentServiceController::class, 'index']);
+            Route::post('content-service', [ContentServiceController::class, 'update']);
+            Route::get('content-service/{id}', [ContentServiceController::class, 'show']);
+            Route::delete('content-service/{id}', [ContentServiceController::class, 'destroy']);
         });
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {

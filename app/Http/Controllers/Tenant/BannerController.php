@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Http\Controllers\Tenant;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Banner;
+
+class BannerController extends Controller
+{
+    public function index()
+    {
+        $banners = Banner::orderBy('order', 'asc')->get();
+        return response()->json($banners);
+    }
+    
+    public function store(Request $request)
+    {
+        $banner = Banner::create($request->all());
+        
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/banner/', $filename);
+            $banner->image = 'uploads/banner/' . $filename;
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Banner created successfully',
+            'data' => $banner
+        ]);
+    }
+    
+    public function show($id)
+    {
+        $banner = Banner::find($id);
+        return response()->json($banner);
+    }
+
+    public function update(Request $request)
+    {
+        $banner = Banner::find($request->id);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/banner/', $filename);
+            $banner->image = 'uploads/banner/' . $filename;
+        }
+        $banner->update($request->all());
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Banner updated successfully',
+            'data' => $banner
+        ]);
+    }
+
+
+    public function destroy($id)
+    {
+        $banner = Banner::find($id);
+        $banner->delete();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Banner deleted successfully',
+            'data' => $banner
+        ]);
+    }
+}
