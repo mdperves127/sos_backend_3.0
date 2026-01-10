@@ -17,7 +17,7 @@ use App\Models\MPBrand;
 use Illuminate\Support\Facades\DB;
 use App\Models\ServiceContent;
 use App\Models\Banner;
-use App\Models\Cms;
+use App\Models\CmsSetting;
 
 class MerchantFrontendController extends Controller
 {
@@ -625,7 +625,7 @@ class MerchantFrontendController extends Controller
     {
         $contentServices = ServiceContent::orderBy('order', 'asc')->get();
         $banners = Banner::orderBy('order', 'asc')->get();
-        $cms = Cms::first();
+        $cms = CmsSetting::first();
         return response()->json([
             'content_services' => $contentServices,
             'banners' => $banners,
