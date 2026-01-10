@@ -561,17 +561,16 @@ Route::middleware( [
         Route::prefix('tenant')->group(function () {
             Route::get('cms', [CmsController::class, 'index']);
             Route::post('cms', [CmsController::class, 'update']);   
-        });
-        Route::prefix('tenant')->group(function () {
+
             Route::get('banner', [BannerController::class, 'index']);
-            Route::post('banner', [BannerController::class, 'update']);
+            Route::post('banner', [BannerController::class, 'store']);
+            Route::post('banner/{id}', [BannerController::class, 'update']);
             Route::get('banner/{id}', [BannerController::class, 'show']);
             Route::delete('banner/{id}', [BannerController::class, 'destroy']);
-        });
-        
-        Route::prefix('tenant')->group(function () {
+
             Route::get('content-service', [ContentServiceController::class, 'index']);
-            Route::post('content-service', [ContentServiceController::class, 'update']);
+            Route::post('content-service', [ContentServiceController::class, 'store']);
+            Route::post('content-service/{id}', [ContentServiceController::class, 'update']);
             Route::get('content-service/{id}', [ContentServiceController::class, 'show']);
             Route::delete('content-service/{id}', [ContentServiceController::class, 'destroy']);
         });
