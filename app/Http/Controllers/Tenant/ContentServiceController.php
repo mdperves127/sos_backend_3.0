@@ -4,19 +4,19 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ContentService;
+use App\Models\ServiceContent;
 
 class ContentServiceController extends Controller
 {
     public function index()
     {
-        $contentServices = ContentService::orderBy('order', 'asc')->get();
+        $contentServices = ServiceContent::orderBy('order', 'asc')->get();
         return response()->json($contentServices);
     }
 
     public function store(Request $request)
     {
-        $contentService = ContentService::create($request->all());
+        $contentService = ServiceContent::create($request->all());
         
             if ($request->hasFile('icon')) {
                 $file = $request->file('icon');
@@ -36,13 +36,13 @@ class ContentServiceController extends Controller
 
     public function show($id)
     {
-        $contentService = ContentService::find($id);
+        $contentService = ServiceContent::find($id);
         return response()->json($contentService);
     }
 
     public function update(Request $request)
     {
-        $contentService = ContentService::find($request->id);
+        $contentService = ServiceContent::find($request->id);
 
         if (!$contentService) {
             return response()->json([
@@ -68,7 +68,7 @@ class ContentServiceController extends Controller
 
     public function destroy($id)
     {
-        $contentService = ContentService::find($id);
+        $contentService = ServiceContent::find($id);
         $contentService->delete();
         return response()->json([
             'status' => 'success',
