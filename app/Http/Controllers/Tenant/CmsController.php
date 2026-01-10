@@ -36,7 +36,8 @@ class CmsController extends Controller
             $data->footer_logo = 'uploads/footer-logo/' . $filename;
         }
 
-        $data->update($request->all());
+        $data->fill($request->except(['logo', 'footer_logo']));
+        $data->save();
         
         return response()->json([
             'status' => true,

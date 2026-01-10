@@ -26,6 +26,7 @@ class ContentServiceController extends Controller
                 $contentService->icon = 'uploads/content-service/' . $filename;
             }
 
+        $contentService->fill($request->except(['icon']));
         $contentService->save();
         return response()->json([
             'status' => 'success',
@@ -58,7 +59,8 @@ class ContentServiceController extends Controller
             $file->move('uploads/content-service/', $filename);
             $contentService->icon = 'uploads/content-service/' . $filename;
         }
-        $contentService->update($request->all());
+        $contentService->fill($request->except(['icon']));
+        $contentService->save();
         return response()->json([
             'status' => 'success',
             'message' => 'Content Service updated successfully',

@@ -25,7 +25,8 @@ class BannerController extends Controller
             $file->move('uploads/banner/', $filename);
             $banner->image = 'uploads/banner/' . $filename;
         }
-        
+        $banner->fill($request->except(['image']));
+        $banner->save();
         return response()->json([
             'status' => 'success',
             'message' => 'Banner created successfully',
@@ -57,7 +58,8 @@ class BannerController extends Controller
             $file->move('uploads/banner/', $filename);
             $banner->image = 'uploads/banner/' . $filename;
         }
-        $banner->update($request->all());
+        $banner->fill($request->except(['image']));
+        $banner->save();
         return response()->json([
             'status' => 'success',
             'message' => 'Banner updated successfully',
