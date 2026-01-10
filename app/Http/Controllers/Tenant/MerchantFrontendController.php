@@ -15,7 +15,7 @@ use App\Models\MPCategory;
 use App\Models\MPSubCategory;
 use App\Models\MPBrand;
 use Illuminate\Support\Facades\DB;
-use App\Models\ContentService;
+use App\Models\ServiceContent;
 use App\Models\Banner;
 use App\Models\Cms;
 
@@ -623,7 +623,7 @@ class MerchantFrontendController extends Controller
     
     public function cmsFront()
     {
-        $contentServices = ContentService::orderBy('order', 'asc')->get();
+        $contentServices = ServiceContent::orderBy('order', 'asc')->get();
         $banners = Banner::orderBy('order', 'asc')->get();
         $cms = Cms::first();
         return response()->json([
