@@ -99,6 +99,9 @@ Route::middleware( [
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
+        Route::get('content-service', [MerchantFrontendController::class, 'contentServiceFront']);
+        Route::get('banner', [MerchantFrontendController::class, 'bannerFront']);
+        Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
 
         // authenticated routes
         Route::middleware('tenantAuth')->group(function () {
@@ -111,6 +114,8 @@ Route::middleware( [
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
 
         });
+
+
 
     });
 
