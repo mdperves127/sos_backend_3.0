@@ -35,8 +35,16 @@ class CmsController extends Controller
             $file->move('uploads/footer-logo/', $filename);
             $data->footer_logo = 'uploads/footer-logo/' . $filename;
         }
+        
+        if($request->hasFile('populer_section_banner')){
+            $file = $request->file('populer_section_banner');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/populer-section-banner/', $filename);
+            $data->populer_section_banner = 'uploads/populer-section-banner/' . $filename;
+        }
 
-        $data->fill($request->except(['logo', 'footer_logo']));
+        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner']));
         $data->save();
         
         return response()->json([

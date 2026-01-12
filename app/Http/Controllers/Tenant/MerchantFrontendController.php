@@ -633,11 +633,7 @@ class MerchantFrontendController extends Controller
         ]);
     }
 
-    public function productsFilter($category_id = null, $sub_category_id = null) {
-        if ($category_id != null) {
-            $products = Product::where('category_id', $category_id)->get();
-        }
-
+    public function productsFilter($sub_category_id) {
         if ($sub_category_id != null) {
             $products = Product::where('sub_category_id', $sub_category_id)->get();
         }
