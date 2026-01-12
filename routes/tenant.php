@@ -102,7 +102,11 @@ Route::middleware( [
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
 
+        Route::get('search/item/{search}', [MerchantFrontendController::class, 'searchItem']);
+
         Route::get('products/{sub_category_id}', [MerchantFrontendController::class, 'productsFilter']);
+
+        Route::post('contact', [MerchantFrontendController::class, 'contact']);
 
         // authenticated routes
         Route::middleware('tenantAuth')->group(function () {
@@ -113,24 +117,10 @@ Route::middleware( [
             Route::post('add-to-cart', [TenantCartController::class, 'addToCart']);
             Route::get('cart', [TenantCartController::class, 'cart']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
+            Route::get('dashboard/orders', [MerchantFrontendController::class, 'orders']);
 
         });
     });
-
-
-    // Route::prefix('dropshipper-frontend')->group(function () {
-    //     Route::get('products', [DropshipperFrontendController::class, 'products']);
-    //     Route::get('product/{id}', [DropshipperFrontendController::class, 'product']);
-    // });
-
-
-
-
-
-
-
-
-
     // Protected tenant routes
     Route::middleware( 'tenantAuth' )->group( function () {
 

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ServiceContent;
 use App\Models\Banner;
 use App\Models\CmsSetting;
+use App\Models\TenantContactFormData;
 
 class MerchantFrontendController extends Controller
 {
@@ -639,5 +640,37 @@ class MerchantFrontendController extends Controller
         }
 
         return response()->json($products);
+    }
+
+    public function searchItem($search) {
+        $products = Product::where('name', 'like', '%' . $search . '%')->get();
+        return response()->json($products);
+    }
+
+    public function orders() {
+        $orders = Order::where('vendor_id', auth()->user()->id)->where('tenant_id', tenant()->id)->get();
+        $all_order = $orders->count();
+        $pending_order = $orders->where('status', 'pending')->count();
+        $processing_order = $orders->where('status', 'processing')->count();
+        $completed_order = $orders->where('status', 'completed')->count();
+        $cancelled_order = $orders->where('status', 'cancelled')->count();
+        return response()->json([
+            'orders' => $orders,
+            'all_order' => $all_order,
+            'pending_order' => $pending_order,
+            'processing_order' => $processing_order,
+            'completed_order' => $completed_order,
+            'cancelled_order' => $cancelled_order
+        ]);
+    }
+
+    public function contact(Request $request) {
+        $contact = new TenantContactFormData();
+        $contact->name = $request->name;
+        $contact->email = $request->email;
+        $contact->subject = $request->subject;
+        $contact->message = $request->message;
+        $contact->save();
+        return response()->json($contact);
     }
 }
