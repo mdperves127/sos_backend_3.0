@@ -102,6 +102,8 @@ Route::middleware( [
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
 
+        Route::get('products/{category_id}/{sub_category_id}', [MerchantFrontendController::class, 'productsFilter']);
+
         // authenticated routes
         Route::middleware('tenantAuth')->group(function () {
             Route::post('add-to-wishlist', [WishListController::class, 'addToWishlist']);
