@@ -576,6 +576,12 @@ Route::middleware( [
             Route::post('content-service/{id}', [ContentServiceController::class, 'update']);
             Route::get('content-service/{id}', [ContentServiceController::class, 'show']);
             Route::delete('content-service/{id}', [ContentServiceController::class, 'destroy']);
+
+            Route::get('offer', [OfferController::class, 'index']);
+            Route::post('offer', [OfferController::class, 'store']);
+            Route::post('offer/{id}', [OfferController::class, 'update']);
+            Route::get('offer/{id}', [OfferController::class, 'show']);
+            Route::delete('offer/{id}', [OfferController::class, 'destroy']);
         });
 
         Route::prefix( 'tenant-dropshipper' )->group( function () {

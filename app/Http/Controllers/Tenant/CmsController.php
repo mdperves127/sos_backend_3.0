@@ -44,7 +44,66 @@ class CmsController extends Controller
             $data->populer_section_banner = 'uploads/populer-section-banner/' . $filename;
         }
 
-        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner']));
+        if ($request->hasFile('banner_1')) {
+            $file = $request->file('banner_1');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/banner-1/', $filename);
+            $data->banner_1 = 'uploads/banner-1/' . $filename;
+        }
+        if ($request->hasFile('banner_2')) {
+            $file = $request->file('banner_2');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/banner-2/', $filename);
+            $data->banner_2 = 'uploads/banner-2/' . $filename;
+        }
+        if ($request->hasFile('banner_3')) {
+            $file = $request->file('banner_3');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/banner-3/', $filename);
+            $data->banner_3 = 'uploads/banner-3/' . $filename;
+        }
+
+        if ($request->hasFile('three_column_banner_1')) {
+            $file = $request->file('three_column_banner_1');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/three-column-banner-1/', $filename);
+            $data->three_column_banner_1 = 'uploads/three-column-banner-1/' . $filename;
+        }
+        if ($request->hasFile('three_column_banner_2')) {
+            $file = $request->file('three_column_banner_2');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/three-column-banner-2/', $filename);
+            $data->three_column_banner_2 = 'uploads/three-column-banner-2/' . $filename;
+        }
+        if ($request->hasFile('three_column_banner_3')) {
+            $file = $request->file('three_column_banner_3');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/three-column-banner-3/', $filename);
+            $data->three_column_banner_3 = 'uploads/three-column-banner-3/' . $filename;
+        }
+
+        if ($request->hasFile('two_column_banner_1')) {
+            $file = $request->file('two_column_banner_1');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/two-column-banner-1/', $filename);
+            $data->two_column_banner_1 = 'uploads/two-column-banner-1/' . $filename;
+        }
+        if ($request->hasFile('two_column_banner_2')) {
+            $file = $request->file('two_column_banner_2');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/two-column-banner-2/', $filename);
+            $data->two_column_banner_2 = 'uploads/two-column-banner-2/' . $filename;
+        }
+
+        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2']));
         $data->save();
         
         return response()->json([
