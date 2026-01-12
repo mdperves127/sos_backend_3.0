@@ -80,7 +80,7 @@ class CpanelService
         $mainDomain = env('MAIN_DOMAIN'); // e.g., example.com
 
         // Define the directory for the subdomain (point to the same directory as main app)
-        $subdomainDir = "public_html/";
+        $subdomainDir = env('CPANEL_TENANT_ROOT', 'public_html/storeeb.com/public');
 
         $url = "https://$cpanelHost:2083/json-api/cpanel?cpanel_jsonapi_user=$cpanelUser&cpanel_jsonapi_apiversion=2&cpanel_jsonapi_module=SubDomain&cpanel_jsonapi_func=addsubdomain&domain=$subdomain&rootdomain=$mainDomain&dir=$subdomainDir";
 
@@ -123,36 +123,27 @@ class CpanelService
 
         $createDbResult = json_decode($createDbResponse, true);
 
-        if (isset($createDbResult['status']) && $createDbResult['status'] == 1) {
-            // Step 3: Assign the user to the database
-            $assignUserUrl = "https://$cpanelHost:2083/execute/Mysql/set_privileges_on_database?user=$dbUsername&database=$dbname&privileges=ALL";
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $assignUserUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $assignUserResponse = curl_exec($ch);
-            curl_close($ch);
+        // Check if creation was successful OR if it failed (likely because it already exists). 
+        // We attempt to assign the user in either case to ensure permissions are correct (Idempotency).
+        
+        // Step 3: Assign the user to the database
+        $assignUserUrl = "https://$cpanelHost:2083/execute/Mysql/set_privileges_on_database?user=$dbUsername&database=$dbname&privileges=ALL";
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $assignUserUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $assignUserResponse = curl_exec($ch);
+        curl_close($ch);
 
-            $assignUserResult = json_decode($assignUserResponse, true);
+        $assignUserResult = json_decode($assignUserResponse, true);
 
-            if (isset($assignUserResult['status']) && $assignUserResult['status'] == 1) {
-                return [
-                    'database' => $createDbResult,
-                    'assignment' => $assignUserResult,
-                ];
-            } else {
-                return [
-                    'error' => 'Failed to assign user to database',
-                    'response' => $assignUserResult,
-                ];
-            }
-        } else {
-            return [
-                'error' => 'Failed to create database',
-                'response' => $createDbResult,
-            ];
-        }
+        // Return combined result
+        return [
+            'database' => $createDbResult,
+            'assignment' => $assignUserResult,
+            'status' => (isset($createDbResult['status']) && $createDbResult['status'] == 1) || (isset($assignUserResult['status']) && $assignUserResult['status'] == 1) ? 1 : 0
+        ];
     }
 
     /**
