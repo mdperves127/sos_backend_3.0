@@ -635,7 +635,7 @@ class MerchantFrontendController extends Controller
 
     public function productsFilter($sub_category_id) {
         if ($sub_category_id != null) {
-            $products = Product::where('sub_category_id', $sub_category_id)->get();
+            $products = Product::where('subcategory_id', $sub_category_id)->get();
         }
 
         return response()->json($products);
