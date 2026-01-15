@@ -90,9 +90,9 @@ Route::middleware( [
     Route::get( 'user/all-ticket-category', [SupportBoxCategoryController::class, 'index'] );
     Route::get( 'user/ticket-category-to-problem/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
 
-    Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
-    Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
-    Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
+    // Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
+    // Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
+    // Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
 
     Route::post( 'user/create-advertise', [AdminAdvertiseController::class, 'store'] );
     // advertise-success

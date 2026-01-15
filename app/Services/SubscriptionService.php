@@ -14,12 +14,19 @@ use Illuminate\Support\Facades\Notification;
  * Class SubscriptionService.
  */
 class SubscriptionService {
-    static function store( $subscription, $user, $totalamount = null, $coupon = null, $paymentmethod = null ) {
+    static function store( $subscription, $entity, $totalamount = null, $coupon = null, $paymentmethod = null ) {
         $trxid        = uniqid();
         $subscription = Subscription::find( $subscription->id );
 
         $userSubscription                     = new UserSubscription();
-        $userSubscription->user_id            = $user->id;
+        if ( $entity instanceof User ) {
+            $userSubscription->user_id = $entity->id;
+        } else {
+            $userSubscription->tenant_id = $entity->id;
+            // For tenant, we might still want to link to the owner user if possible
+            // But if it's strictly tenant-level, we leave user_id null or set a default
+            $userSubscription->user_id = Auth::check() ? Auth::id() : 0;
+        }
         $userSubscription->trxid              = $trxid;
         $userSubscription->subscription_id    = $subscription->id;
         $userSubscription->expire_date        = membershipexpiredate( $subscription->subscription_package_type );
@@ -46,7 +53,7 @@ class SubscriptionService {
             false;
         }
 
-        PaymentHistoryService::store( $trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $user->id );
+        PaymentHistoryService::store( $trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $entity->id );
         $getcoupon = Coupon::find( $coupon );
 
         if ( $getcoupon ) {
@@ -63,9 +70,9 @@ class SubscriptionService {
             PaymentHistoryService::store( $trxid, $totalreffralBonus, 'My wallet', 'Referral bonus', '+', $coupon, $couponUser->id );
         }
 
-        if ( userrole( $user->role_as ) == 'user' ) {
+        if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
 
-            $getuser = User::find( $user->id );
+            $getuser = User::find( $entity->id );
             if ( $subscription->subscription_user_type == "vendor" ) {
                 $getuser->role_as = 2;
             }
@@ -79,15 +86,28 @@ class SubscriptionService {
 
         }
 
-        //For user
+        //For entity (User or Tenant)
         $subscriptionText = "Congratulations! Your package was successfully purchased!";
-        Notification::send( $user, new SubscriptionNotification( $user, $subscriptionText ) );
+        // If it's a tenant, we notify the tenant's email or owner
+        $notificationTarget = $entity;
+        if ( !( $entity instanceof User ) ) {
+            // For Tenant, we might need a different notification approach or just use the Tenant model if it supports notifications
+            // If Tenant doesn't support notifications, we might need to find the owner user
+            // Assuming Tenant can receive notifications or we just skip it for now if not applicable
+        }
+        
+        try {
+            Notification::send( $notificationTarget, new SubscriptionNotification( $notificationTarget, $subscriptionText ) );
+        } catch (\Exception $e) {
+            \Log::error("Failed to send subscription notification: " . $e->getMessage());
+        }
 
         //For admin
-        $normalUser       = $user; // Vendor or affiliate
-        $user             = User::where( 'role_as', 1 )->first(); //Admin
-        $subscriptionText = $normalUser->email . "Purchase a new package";
-        Notification::send( $user, new SubscriptionNotification( $user, $subscriptionText ) );
+        $normalUser       = $entity; // Vendor or affiliate or Tenant
+        $admin            = User::where( 'role_as', 1 )->first(); //Admin
+        $entityName       = ($entity instanceof User) ? $entity->email : ($entity->company_name ?? $entity->id);
+        $subscriptionText = $entityName . " Purchase a new package";
+        Notification::send( $admin, new SubscriptionNotification( $admin, $subscriptionText ) );
         return responsejson( 'Successfull', 'success' );
     }
 }

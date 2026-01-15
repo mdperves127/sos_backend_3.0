@@ -11,23 +11,27 @@ use Carbon\Carbon;
  */
 class SubscriptionDueService
 {
-    static function subscriptiondue(int $userid)
+    static function subscriptiondue($userid)
     {
-        $user = User::find($userid)?->usersubscription;
-
-        if (!$user) {
-            return 0;
-        }
-        if ($user->subscription->plan_type == 'freemium') {
-            return 0;
+        if (is_numeric($userid)) {
+            $userSub = \App\Models\UserSubscription::on('mysql')->where('user_id', $userid)->first();
+        } else {
+            $userSub = \App\Models\UserSubscription::on('mysql')->where('tenant_id', $userid)->first();
         }
 
-        $userdate = Carbon::parse($user?->expire_date);
+        if (!$userSub) {
+            return 0;
+        }
+        if ($userSub->subscription->plan_type == 'freemium') {
+            return 0;
+        }
+
+        $userdate = Carbon::parse($userSub?->expire_date);
         $currentdate = now();
 
         if ($userdate < now()) {
             $totaldueday =  $userdate->diffInDays($currentdate);
-            $usersubscription =  $user->subscription;
+            $usersubscription =  $userSub->subscription;
             $userpackagetype =  $usersubscription?->subscription_package_type;
 
             if ($totaldueday >= 30) {
@@ -51,7 +55,12 @@ class SubscriptionDueService
 
     static function membership_credit($userid, $packageId)
     {
-        $usersubscription =  User::find($userid)?->vendorsubscription;
+        if (is_numeric($userid)) {
+            $usersubscription = \App\Models\UserSubscription::on('mysql')->where('user_id', $userid)->first();
+        } else {
+            $usersubscription = \App\Models\UserSubscription::on('mysql')->where('tenant_id', $userid)->first();
+        }
+
         if (!$usersubscription) {
             return 0;
         }
@@ -63,7 +72,7 @@ class SubscriptionDueService
         if ($mainsubscription->plan_type == 'freemium') {
             return 0;
         }
-        $userseelctSubscription = Subscription::query()->findOr($packageId,function(){
+        $userseelctSubscription = Subscription::on('mysql')->findOr($packageId,function(){
             return 0;
         });
 

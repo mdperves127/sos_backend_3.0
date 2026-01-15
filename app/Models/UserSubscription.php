@@ -22,6 +22,10 @@ class UserSubscription extends Model {
         return $this->belongsTo( User::class );
     }
 
+    function tenant() {
+        return $this->belongsTo( Tenant::class, 'tenant_id' );
+    }
+
     function product_details() {
 
         if ( Auth::user()->role_as == 2 ) {

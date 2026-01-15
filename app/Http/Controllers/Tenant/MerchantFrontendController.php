@@ -19,6 +19,8 @@ use App\Models\ServiceContent;
 use App\Models\Banner;
 use App\Models\CmsSetting;
 use App\Models\TenantContactFormData;
+use App\Models\Order;
+use App\Models\Offer;
 
 class MerchantFrontendController extends Controller
 {
@@ -626,6 +628,7 @@ class MerchantFrontendController extends Controller
     {
         $contentServices = ServiceContent::orderBy('order', 'asc')->get();
         $banners = Banner::orderBy('order', 'asc')->get();
+        $offers = Offer::orderBy('order', 'asc')->get();
         $cms = CmsSetting::first();
         $populer_section_category_id_1 = Category::find($cms->populer_section_category_id_1);
         $populer_section_category_id_2 = Category::find($cms->populer_section_category_id_2);
@@ -635,7 +638,7 @@ class MerchantFrontendController extends Controller
         $populer_section_subcategory_id_2 = Subcategory::find($cms->populer_section_subcategory_id_2);
         $populer_section_subcategory_id_3 = Subcategory::find($cms->populer_section_subcategory_id_3);
         $populer_section_subcategory_id_4 = Subcategory::find($cms->populer_section_subcategory_id_4);
-        
+
         $recomended_category_id_1 = Category::find($cms->recomended_category_id_1);
         $recomended_category_id_2 = Category::find($cms->recomended_category_id_2);
         $recomended_category_id_3 = Category::find($cms->recomended_category_id_3);
@@ -644,7 +647,7 @@ class MerchantFrontendController extends Controller
         $recomended_sub_category_id_2 = Subcategory::find($cms->recomended_sub_category_id_2);
         $recomended_sub_category_id_3 = Subcategory::find($cms->recomended_sub_category_id_3);
         $recomended_sub_category_id_4 = Subcategory::find($cms->recomended_sub_category_id_4);
-        
+
         $best_setting_category_id_1 = Category::find($cms->best_setting_category_id_1);
         $best_setting_category_id_2 = Category::find($cms->best_setting_category_id_2);
         $best_setting_category_id_3 = Category::find($cms->best_setting_category_id_3);
@@ -659,6 +662,7 @@ class MerchantFrontendController extends Controller
             'content_services' => $contentServices,
             'banners' => $banners,
             'cms' => $cms,
+            'offers' => $offers,
             'populer_section_category_id_1' => $populer_section_category_id_1,
             'populer_section_category_id_2' => $populer_section_category_id_2,
             'populer_section_category_id_3' => $populer_section_category_id_3,

@@ -69,6 +69,8 @@ use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 use App\Http\Controllers\Tenant\CmsController;
 use App\Http\Controllers\Tenant\BannerController;
 use App\Http\Controllers\Tenant\ContentServiceController;
+use App\Http\Controllers\Tenant\OfferController;
+use App\Http\Controllers\BuySubscription;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -118,7 +120,6 @@ Route::middleware( [
             Route::get('cart', [TenantCartController::class, 'cart']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
             Route::get('dashboard/orders', [MerchantFrontendController::class, 'orders']);
-
         });
     });
     // Protected tenant routes
@@ -469,6 +470,13 @@ Route::middleware( [
 
         } );
 
+        
+        Route::prefix( 'tenant-subscription' )->group( function () {
+            Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
+            Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
+            Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
+        });
+
         Route::prefix( 'tenant-advertise' )->group( function () {
             Route::get( '/', [AdvertiseController::class, 'index'] );
             Route::get( 'count', [AdvertiseController::class, 'advertiseCount'] );
@@ -510,7 +518,7 @@ Route::middleware( [
 
 
         Route::post( 'frontend-order-create', [TenantOrderController::class, 'store'] );
-        
+
         Route::prefix( 'dropshipper' )->group( function () {
             Route::get( 'request-count-{status?}', [RequestProductController::class, 'affiliateRequestCount'] );
             Route::get( 'request/product/pending', [RequestProductController::class, 'RequestPending'] );
@@ -553,7 +561,7 @@ Route::middleware( [
 
         Route::prefix('tenant')->group(function () {
             Route::get('cms', [CmsController::class, 'index']);
-            Route::post('cms', [CmsController::class, 'update']);   
+            Route::post('cms', [CmsController::class, 'update']);
 
             Route::get('banner', [BannerController::class, 'index']);
             Route::post('banner', [BannerController::class, 'store']);
@@ -590,7 +598,7 @@ Route::middleware( [
 
             Route::post( 'order-create', [OrderController::class, 'store'] );
 
-            
+
             Route::get( 'all-orders', [OrderController::class, 'AllOrders'] );
             Route::get( 'pending-orders', [OrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [OrderController::class, 'ProgressOrders'] );

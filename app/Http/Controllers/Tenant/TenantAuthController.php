@@ -324,6 +324,7 @@ class TenantAuthController extends Controller {
     }
     public function profileData( Request $request ): JsonResponse {
         $tenant_data = tenant()->id;
+        
         return response()->json( [
             'success'     => true,
             'message'     => 'Profile data fetched successfully',
