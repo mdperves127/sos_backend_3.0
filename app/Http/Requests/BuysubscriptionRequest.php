@@ -29,17 +29,23 @@ class BuysubscriptionRequest extends FormRequest
     public function rules()
     {
         return [
-            'subscription_id' => ['required', Rule::exists('subscriptions', 'id')],
-            'coupon_id' => ['nullable', Rule::exists('coupons', 'id'), function ($ttribute, $value, $fail) {
+            'subscription_id' => ['required', function ($attribute, $value, $fail) {
+                if (!Subscription::on('mysql')->where('id', $value)->exists()) {
+                    return $fail('The selected subscription is invalid.');
+                }
+            }],
+            'coupon_id' => ['nullable', function ($attribute, $value, $fail) {
+                if ($value && !Coupon::on('mysql')->where('id', $value)->exists()) {
+                    return $fail('The selected coupon is invalid.');
+                }
                 if (request('subscription_id') != '' && request('coupon_id') != '') {
-                    $subscription = Subscription::find(request('subscription_id'));
-                    $coupon = Coupon::find(request('coupon_id'));
+                    $subscription = Subscription::on('mysql')->find(request('subscription_id'));
+                    $coupon = Coupon::on('mysql')->find(request('coupon_id'));
 
-                    if ($subscription->subscription_amount < $coupon->amount || $subscription->subscription_amount == 0) {
+                    if ($subscription && $coupon && ($subscription->subscription_amount < $coupon->amount || $subscription->subscription_amount == 0)) {
                         return $fail('You can not use this coupon');
                     }
                 }
-                return true;
             }],
             'payment_type' => ['required', Rule::in(['my-wallet', 'aamarpay','free'])],
         ];
