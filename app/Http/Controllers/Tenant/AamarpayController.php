@@ -132,7 +132,7 @@ class AamarpayController extends Controller
 
         //For admin
         $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
-        $user = User::where('role_as',1)->first(); //Admin
+        $user = User::on('mysql')->where('role_as',1)->first(); //Admin
         $subscriptionText = $normalUser->email ."Purchase a new package";
         Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
 
