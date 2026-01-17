@@ -116,6 +116,12 @@ class TenantAuthController extends Controller {
             // Update last seen
             $user->update( ['last_seen' => now()] );
 
+            // Load usersubscription with subscription relationship for tenant
+            $usersubscription = \App\Models\UserSubscription::on('mysql')
+                ->where('tenant_id', tenant()->id)
+                ->with('subscription:id,card_heading')
+                ->first();
+
             // Generate token
             $token = $user->createToken( 'tenant-auth-token' )->plainTextToken;
 
@@ -129,6 +135,10 @@ class TenantAuthController extends Controller {
                         'email'     => $user->email,
                         'last_seen' => $user->last_seen,
                         'role_type' => $user->role_type,
+                        'usersubscription' => $usersubscription ? [
+                            'id' => $usersubscription->id,
+                            'subscription' => $usersubscription->subscription,
+                        ] : null,
                     ],
                     'token'       => $token,
                     'tenant_id'   => tenant( 'id' ),
@@ -324,7 +334,7 @@ class TenantAuthController extends Controller {
     }
     public function profileData( Request $request ): JsonResponse {
         $tenant_data = tenant()->id;
-        
+
         return response()->json( [
             'success'     => true,
             'message'     => 'Profile data fetched successfully',

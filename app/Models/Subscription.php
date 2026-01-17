@@ -12,6 +12,8 @@ class Subscription extends Model
 
     protected $guarded = [];
 
+    protected $connection = 'mysql';
+
     protected $casts = [
         'card_facilities_title' => 'json',
     ];
