@@ -139,9 +139,10 @@ class CouponController extends Controller {
     }
 
     function couponusers() {
-        $data = DB::table( 'users' )->whereIn( 'role_as', [2, 3] )->where( 'deleted_at', null )
-            ->select( 'id', 'email' )
-            ->get();
+        // $data = DB::table( 'users' )->whereIn( 'role_as', [2, 3] )->where( 'deleted_at', null )
+        //     ->select( 'id', 'email' )
+        //     ->get();
+        $data = Tenant::on('mysql')->select('id', 'email')->get();
         return $this->response( $data );
     }
 
