@@ -120,6 +120,7 @@ class TenantAuthController extends Controller {
             $usersubscription = \App\Models\UserSubscription::on('mysql')
                 ->where('tenant_id', tenant()->id)
                 ->with('subscription:id,card_heading')
+                ->without('user') // Explicitly prevent loading user relationship
                 ->first();
 
             // Generate token
