@@ -17,9 +17,11 @@ class ProfileController extends Controller
     {
         $user = User::where('id', Auth::user()->id)->first();
 
+        $usersubscription = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->with('subscription:id,card_heading')->first();
         return response()->json([
             'status' => 200,
-            'user' => $user
+            'user' => $user,
+            'usersubscription' => $usersubscription
         ]);
     }
 
