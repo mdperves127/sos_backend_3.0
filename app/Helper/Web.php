@@ -206,7 +206,7 @@ function couponget( $coupon_id ) {
         ->where( ['id' => $coupon_id, 'status' => 'active'] )
         ->whereDate( 'expire_date', '>=', now() )
         ->withCount( 'couponused' )
-        ->where( 'user_id', '!=', Auth::id() )
+        ->where( 'tenant_id', '!=', tenant()->id )
         ->first();
 
     if ( $coupon ) {
