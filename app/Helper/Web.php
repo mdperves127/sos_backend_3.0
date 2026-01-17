@@ -202,7 +202,7 @@ function paymentredirect( $role ) {
 }
 
 function couponget( $coupon_id ) {
-    $coupon = Coupon::query()
+    $coupon = Coupon::on('mysql')
         ->where( ['id' => $coupon_id, 'status' => 'active'] )
         ->whereDate( 'expire_date', '>=', now() )
         ->withCount( 'couponused' )

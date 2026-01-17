@@ -27,7 +27,7 @@ class CouponNameExistsForDate implements Rule
      */
     public function passes($attribute, $value)
     {
-        return  Coupon::query()
+        return  Coupon::on('mysql')
         ->where(['name'=> $value ,'status'=>'active'])
         ->whereDate('expire_date', '>', now())
         ->withCount('couponused')
