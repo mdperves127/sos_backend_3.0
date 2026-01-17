@@ -48,7 +48,8 @@ class SosService {
 
         $uniqueId          = uniqid();
         $successurl        = url( 'api/aaparpay/subscription-success' );
-        $result            = AamarPayService::gateway( $price, $uniqueId, 'subscription', $successurl );
+        $tenant_type       = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
+        $result            = AamarPayService::gateway( $price, $uniqueId, 'subscription', $successurl, $tenant_type );
         $info['user_id']   = userid();
         $info['tenant_id'] = function_exists( 'tenant' ) && tenant() ? tenant()->id : null;
         $info['coupon_id'] = $coupon;

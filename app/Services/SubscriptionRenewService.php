@@ -132,7 +132,8 @@ class SubscriptionRenewService {
                 'info'            => $validatedData,
             ] );
 
-            return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl );
+            $tenant_type = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
+            return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl, $tenant_type );
         }
     }
 
