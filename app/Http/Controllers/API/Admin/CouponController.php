@@ -12,6 +12,7 @@ use App\Services\Admin\CouponService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Tenant;
 
 class CouponController extends Controller {
     /**
