@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Notifications\SubscriptionNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Notification;
 class SubscriptionService {
     static function store( $subscription, $entity, $totalamount = null, $coupon = null, $paymentmethod = null ) {
         $trxid        = uniqid();
-        $subscription = Subscription::find( $subscription->id );
+        $subscription = Subscription::on('mysql')->find( $subscription->id );
 
         $userSubscription                     = new UserSubscription();
         if ( $entity instanceof User ) {
@@ -54,10 +55,10 @@ class SubscriptionService {
         }
 
         PaymentHistoryService::store( $trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $entity->id );
-        $getcoupon = Coupon::find( $coupon );
+        $getcoupon = Coupon::on('mysql')->find( $coupon );
 
         if ( $getcoupon ) {
-            $couponUser        = User::find( $getcoupon->user_id );
+            $couponUser        = User::on('mysql')->find( $getcoupon->user_id );
             $totalreffralBonus = colculateflatpercentage( $getcoupon->commission_type, $subscription->subscription_amount, $getcoupon->commission );
             $couponUser->increment( 'balance', $totalreffralBonus );
 
@@ -72,7 +73,7 @@ class SubscriptionService {
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
 
-            $getuser = User::find( $entity->id );
+            $getuser = User::on('mysql')->find( $entity->id );
             if ( $subscription->subscription_user_type == "vendor" ) {
                 $getuser->role_as = 2;
             }
@@ -95,7 +96,7 @@ class SubscriptionService {
             // If Tenant doesn't support notifications, we might need to find the owner user
             // Assuming Tenant can receive notifications or we just skip it for now if not applicable
         }
-        
+
         try {
             Notification::send( $notificationTarget, new SubscriptionNotification( $notificationTarget, $subscriptionText ) );
         } catch (\Exception $e) {
@@ -104,7 +105,7 @@ class SubscriptionService {
 
         //For admin
         $normalUser       = $entity; // Vendor or affiliate or Tenant
-        $admin            = User::where( 'role_as', 1 )->first(); //Admin
+        $admin            = User::on('mysql')->where( 'role_as', 1 )->first(); //Admin
         $entityName       = ($entity instanceof User) ? $entity->email : ($entity->company_name ?? $entity->id);
         $subscriptionText = $entityName . " Purchase a new package";
         Notification::send( $admin, new SubscriptionNotification( $admin, $subscriptionText ) );
