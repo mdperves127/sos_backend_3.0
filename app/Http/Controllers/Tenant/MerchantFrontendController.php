@@ -630,34 +630,36 @@ class MerchantFrontendController extends Controller
         $banners = Banner::orderBy('order', 'asc')->get();
         $offers = Offer::latest()->get();
         $cms = CmsSetting::first();
-        $populer_section_category_id_1 = Category::find($cms->populer_section_category_id_1);
-        $populer_section_category_id_2 = Category::find($cms->populer_section_category_id_2);
-        $populer_section_category_id_3 = Category::find($cms->populer_section_category_id_3);
-        $populer_section_category_id_4 = Category::find($cms->populer_section_category_id_4);
-        $populer_section_subcategory_id_1 = Subcategory::find($cms->populer_section_subcategory_id_1);
-        $populer_section_subcategory_id_2 = Subcategory::find($cms->populer_section_subcategory_id_2);
-        $populer_section_subcategory_id_3 = Subcategory::find($cms->populer_section_subcategory_id_3);
-        $populer_section_subcategory_id_4 = Subcategory::find($cms->populer_section_subcategory_id_4);
 
-        $recomended_category_id_1 = Category::find($cms->recomended_category_id_1);
-        $recomended_category_id_2 = Category::find($cms->recomended_category_id_2);
-        $recomended_category_id_3 = Category::find($cms->recomended_category_id_3);
-        $recomended_category_id_4 = Category::find($cms->recomended_category_id_4);
-        $recomended_sub_category_id_1 = Subcategory::find($cms->recomended_sub_category_id_1);
-        $recomended_sub_category_id_2 = Subcategory::find($cms->recomended_sub_category_id_2);
-        $recomended_sub_category_id_3 = Subcategory::find($cms->recomended_sub_category_id_3);
-        $recomended_sub_category_id_4 = Subcategory::find($cms->recomended_sub_category_id_4);
+        // Use null-safe operator to prevent errors when $cms is null
+        $populer_section_category_id_1 = $cms ? Category::find($cms->populer_section_category_id_1) : null;
+        $populer_section_category_id_2 = $cms ? Category::find($cms->populer_section_category_id_2) : null;
+        $populer_section_category_id_3 = $cms ? Category::find($cms->populer_section_category_id_3) : null;
+        $populer_section_category_id_4 = $cms ? Category::find($cms->populer_section_category_id_4) : null;
+        $populer_section_subcategory_id_1 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_1) : null;
+        $populer_section_subcategory_id_2 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_2) : null;
+        $populer_section_subcategory_id_3 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_3) : null;
+        $populer_section_subcategory_id_4 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_4) : null;
 
-        $best_setting_category_id_1 = Category::find($cms->best_setting_category_id_1);
-        $best_setting_category_id_2 = Category::find($cms->best_setting_category_id_2);
-        $best_setting_category_id_3 = Category::find($cms->best_setting_category_id_3);
-        $best_setting_category_id_4 = Category::find($cms->best_setting_category_id_4);
-        $best_setting_sub_category_id_1 = Subcategory::find($cms->best_setting_sub_category_id_1);
-        $best_setting_sub_category_id_2 = Subcategory::find($cms->best_setting_sub_category_id_2);
-        $best_setting_sub_category_id_3 = Subcategory::find($cms->best_setting_sub_category_id_3);
-        $best_setting_sub_category_id_4 = Subcategory::find($cms->best_setting_sub_category_id_4);
-        $best_category_id = Category::find($cms->best_category_id);
-        $best_sub_category_id = Subcategory::find($cms->best_sub_category_id);
+        $recomended_category_id_1 = $cms ? Category::find($cms->recomended_category_id_1) : null;
+        $recomended_category_id_2 = $cms ? Category::find($cms->recomended_category_id_2) : null;
+        $recomended_category_id_3 = $cms ? Category::find($cms->recomended_category_id_3) : null;
+        $recomended_category_id_4 = $cms ? Category::find($cms->recomended_category_id_4) : null;
+        $recomended_sub_category_id_1 = $cms ? Subcategory::find($cms->recomended_sub_category_id_1) : null;
+        $recomended_sub_category_id_2 = $cms ? Subcategory::find($cms->recomended_sub_category_id_2) : null;
+        $recomended_sub_category_id_3 = $cms ? Subcategory::find($cms->recomended_sub_category_id_3) : null;
+        $recomended_sub_category_id_4 = $cms ? Subcategory::find($cms->recomended_sub_category_id_4) : null;
+
+        $best_setting_category_id_1 = $cms ? Category::find($cms->best_setting_category_id_1) : null;
+        $best_setting_category_id_2 = $cms ? Category::find($cms->best_setting_category_id_2) : null;
+        $best_setting_category_id_3 = $cms ? Category::find($cms->best_setting_category_id_3) : null;
+        $best_setting_category_id_4 = $cms ? Category::find($cms->best_setting_category_id_4) : null;
+        $best_setting_sub_category_id_1 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_1) : null;
+        $best_setting_sub_category_id_2 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_2) : null;
+        $best_setting_sub_category_id_3 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_3) : null;
+        $best_setting_sub_category_id_4 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_4) : null;
+        $best_category_id = $cms ? Category::find($cms->best_category_id) : null;
+        $best_sub_category_id = $cms ? Subcategory::find($cms->best_sub_category_id) : null;
         return response()->json([
             'content_services' => $contentServices,
             'banners' => $banners,
