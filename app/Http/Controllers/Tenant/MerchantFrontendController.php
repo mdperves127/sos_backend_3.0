@@ -628,7 +628,7 @@ class MerchantFrontendController extends Controller
     {
         $contentServices = ServiceContent::orderBy('order', 'asc')->get();
         $banners = Banner::orderBy('order', 'asc')->get();
-        $offers = Offer::orderBy('order', 'asc')->get();
+        $offers = Offer::latest()->get();
         $cms = CmsSetting::first();
         $populer_section_category_id_1 = Category::find($cms->populer_section_category_id_1);
         $populer_section_category_id_2 = Category::find($cms->populer_section_category_id_2);
