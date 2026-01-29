@@ -63,6 +63,7 @@ class TenantAuthController extends Controller {
                     ],
                     'token'     => $token,
                     'tenant_id' => tenant( 'id' ),
+                    'tenant_type' => tenant( 'type' ),
                 ],
             ], 201 );
 
