@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role_type')->nullable()->after('password')->comment('e.g. merchant, dropshipper or 2=vendor, 3=affiliate');
+            $table->enum('role_type', ['admin', 'tenant_user'])->nullable()->after('password');
         });
     }
 
