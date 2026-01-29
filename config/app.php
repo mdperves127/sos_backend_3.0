@@ -17,8 +17,8 @@ return [
 
     'name'            => env( 'APP_NAME', 'Laravel' ),
     'aamarpay'        => env( 'APP_ENV' ) == 'production' ? 'https://secure.aamarpay.com/' : 'https://sandbox.aamarpay.com/index.php',
-    'redirecturl'     => 'https://dashboard.startownstartup.com/',
-    'maindomain'      => 'https://startownstartup.com/',
+    'redirecturl'     => 'https://dashboard.affsell.com/',
+    'maindomain'      => 'https://affsell.com/',
 
     /*
     |--------------------------------------------------------------------------

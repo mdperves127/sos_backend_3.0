@@ -88,8 +88,51 @@ class TenantService
                 'tenant_id' => $tenantId,
             ]);
 
+            // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
+            $subdomainPart = $data['domain'];
+            if (env('APP_ENV') === 'production') {
+                $mainDomain = env('MAIN_DOMAIN');
+                // If domain contains the main domain, extract just the subdomain part
+                if ($mainDomain && str_contains($domain, $mainDomain)) {
+                    $subdomainPart = str_replace('.' . $mainDomain, '', $domain);
+                }
+            }
+
             // Create subdomain infrastructure based on environment
-            $subdomainResult = $this->cpanelService->createSubdomain($data['domain']);
+            // Wrap in try-catch so tenant creation doesn't fail if subdomain creation fails
+            $subdomainResult = null;
+            try {
+                \Log::info('TenantService: Creating subdomain', [
+                    'subdomain_part' => $subdomainPart,
+                    'full_domain' => $domain,
+                    'environment' => env('APP_ENV')
+                ]);
+                $subdomainResult = $this->cpanelService->createSubdomain($subdomainPart);
+
+                \Log::info('TenantService: Subdomain creation result', [
+                    'subdomain_result' => $subdomainResult
+                ]);
+
+                // Log warning if subdomain creation failed but don't throw exception
+                if (isset($subdomainResult['status']) && $subdomainResult['status'] == 0) {
+                    \Log::warning('TenantService: Subdomain creation failed but tenant was created', [
+                        'tenant_id' => $tenantId,
+                        'subdomain_result' => $subdomainResult
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail tenant creation
+                \Log::error('TenantService: Subdomain creation exception (non-blocking)', [
+                    'tenant_id' => $tenantId,
+                    'subdomain_part' => $subdomainPart,
+                    'exception' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                $subdomainResult = [
+                    'status' => 0,
+                    'error' => 'Exception during subdomain creation: ' . $e->getMessage()
+                ];
+            }
 
             return [
                 'tenant' => $tenant,

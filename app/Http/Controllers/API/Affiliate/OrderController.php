@@ -171,7 +171,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -297,7 +297,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -422,7 +422,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -548,7 +548,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -673,7 +673,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -799,7 +799,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -925,7 +925,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1051,7 +1051,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1174,7 +1174,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1290,7 +1290,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection
                     config([
@@ -1383,7 +1383,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'sosanik_tenant_' . $tenant->id;
+                    $databaseName = 'storebz_tenant_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([

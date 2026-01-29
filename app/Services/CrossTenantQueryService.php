@@ -304,7 +304,7 @@ class CrossTenantQueryService
      */
     protected static function getDatabaseName($tenant): string
     {
-        return 'sosanik_tenant_' . $tenant->id;
+        return 'storebz_tenant_' . $tenant->id;
     }
 }
 

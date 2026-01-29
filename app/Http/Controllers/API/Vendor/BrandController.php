@@ -107,7 +107,6 @@ class BrandController extends Controller {
         }
 
         $brand = Brand::where( [
-            'user_id' => auth()->id(),
             'id'      => $id,
         ] )->first();
 

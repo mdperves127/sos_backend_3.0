@@ -33,11 +33,11 @@ class ProductPurchaseController extends Controller {
     function create() {
 
         $data = [
-            'supplier'       => Supplier::latest()->where( 'vendor_id', vendorId() )->where( 'status', 'active' )->select( 'id', 'supplier_name', 'business_name' )->get(),
-            'unit'           => Unit::where( ['status' => 'active', 'vendor_id' => vendorId()] )->select( 'id', 'unit_name' )->get(),
-            'color'          => Color::where( ['status' => 'active', 'vendor_id' => vendorId()] )->select( 'id', 'name' )->get(),
-            'variation'      => Size::where( ['status' => 'active', 'vendor_id' => vendorId()] )->select( 'id', 'name' )->get(),
-            'payment_method' => PaymentMethod::where( ['status' => 'active', 'vendor_id' => vendorId()] )->select( 'id', 'payment_method_name', 'acc_no' )->get(),
+            'supplier'       => Supplier::latest()->where( 'status', 'active' )->select( 'id', 'supplier_name', 'business_name' )->get(),
+            'unit'           => Unit::where( ['status' => 'active'] )->select( 'id', 'unit_name' )->get(),
+            'color'          => Color::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
+            'variation'      => Size::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
+            'payment_method' => PaymentMethod::where( ['status' => 'active'] )->select( 'id', 'payment_method_name', 'acc_no' )->get(),
         ];
 
         return response()->json( [

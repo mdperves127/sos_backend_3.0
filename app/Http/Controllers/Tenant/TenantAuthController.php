@@ -45,6 +45,7 @@ class TenantAuthController extends Controller {
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make( $request->password ),
+                'role_type' => 'tenant_user',
             ] );
 
             // Generate token for the new user

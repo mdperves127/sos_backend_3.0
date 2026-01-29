@@ -174,7 +174,7 @@ class RequestProductController extends Controller {
         foreach ( $tenants as $tenant ) {
             try {
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'sosanik_tenant_' . $tenant->id;
+                $databaseName   = 'storebz_tenant_' . $tenant->id;
 
                 // Configure tenant connection
                 config( [
@@ -276,7 +276,7 @@ class RequestProductController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'sosanik_tenant_' . $tenant->id;
+            $databaseName   = 'storebz_tenant_' . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id column
             config( [
