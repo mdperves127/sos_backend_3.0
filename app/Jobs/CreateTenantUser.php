@@ -37,7 +37,8 @@ class CreateTenantUser implements ShouldQueue
         $userData = [
             'name' => $this->tenant->owner_name,
             'email' => $this->tenant->email,
-            'password' => $password
+            'password' => $password,
+            'role_type' => 'admin',
         ];
 
         \Log::info('CreateTenantUser: Attempting to create user', [
@@ -53,6 +54,7 @@ class CreateTenantUser implements ShouldQueue
                     'email' => $userData['email'],
                     'password' => Hash::make($userData['password']),
                     'last_seen' => now(),
+                    'role_type' => $userData['role_type'],
                 ]);
 
                 \Log::info('CreateTenantUser: User created successfully', [
