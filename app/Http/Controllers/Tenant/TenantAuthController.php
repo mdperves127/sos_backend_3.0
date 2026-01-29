@@ -59,6 +59,7 @@ class TenantAuthController extends Controller {
                         'id'    => $user->id,
                         'name'  => $user->name,
                         'email' => $user->email,
+                        'role_type' => $user->role_type,
                     ],
                     'token'     => $token,
                     'tenant_id' => tenant( 'id' ),
