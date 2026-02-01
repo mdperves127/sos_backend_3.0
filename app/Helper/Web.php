@@ -201,6 +201,20 @@ function paymentredirect( $role ) {
     }
 }
 
+/**
+ * Get redirect URL - when in tenant context returns tenant subdomain URL dynamically.
+ *
+ * @return string Base URL for redirects (with trailing slash)
+ */
+function getRedirectUrl() {
+    if ( function_exists( 'tenant' ) && tenant() && request() ) {
+        $scheme = request()->secure() ? 'https' : 'http';
+        $host   = request()->getHost();
+        return $scheme . '://' . $host . '/';
+    }
+    return rtrim( config( 'app.redirecturl' ), '/' ) . '/';
+}
+
 function couponget( $coupon_id ) {
     $coupon = Coupon::on('mysql')
         ->where( ['id' => $coupon_id, 'status' => 'active'] )

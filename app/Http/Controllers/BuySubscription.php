@@ -11,6 +11,7 @@ use App\Models\UserSubscription;
 use App\Services\SosService;
 use App\Services\SubscriptionDueService;
 use App\Services\SubscriptionService;
+use App\Helper\RedirectHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -55,13 +56,13 @@ class BuySubscription extends Controller {
     function buysubscription( BuysubscriptionRequest $request ) {
         $validateData = $request->validated();
 
-        if ( function_exists( 'tenant' ) && tenant() ) {
+        // if ( function_exists( 'tenant' ) && tenant() ) {
             $entity = tenant();
             $id     = $entity->id;
-        } else {
-            $entity = User::on('mysql')->find( vendorId() );
-            $id     = $entity->id;
-        }
+        // } else {
+        //     $entity = User::on('mysql')->find( vendorId() );
+        //     $id     = $entity->id;
+        // }
 
         if ( $entity instanceof User ) {
             $hasSubscription = $entity->usersubscription;
@@ -123,7 +124,7 @@ class BuySubscription extends Controller {
 
                 if ( $data == '2' || $data == '3' ) {
                     $path = paymentredirect( $data );
-                    return config( 'app.redirecturl' ) . $path . '?message=successful';
+                    return RedirectHelper::getRedirectUrl() . $path . '?message=successful';
                 }
 
                 return $data;

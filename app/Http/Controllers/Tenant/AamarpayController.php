@@ -18,6 +18,7 @@ use App\Notifications\RechargeNotification;
 use App\Notifications\SubscriptionNotification;
 use App\Models\Tenant;
 use App\Models\DollerRate;
+use App\Helper\RedirectHelper;
 
 class AamarpayController extends Controller
 {
@@ -32,7 +33,7 @@ class AamarpayController extends Controller
 
         $user = User::find($vendorservice->user_id);
         $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Service purchase successfully';
+        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Service purchase successfully';
         return redirect($url);
 
 
@@ -54,7 +55,7 @@ class AamarpayController extends Controller
 
         $user = User::find($info['userid']);
         $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Product purchase successfully';
+        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Product purchase successfully';
         return redirect($url);
 
     }
@@ -72,7 +73,7 @@ class AamarpayController extends Controller
 
 
         $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Renew successfull';
+        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Renew successfull';
         return redirect($url);
     }
     function advertisesuccess()
@@ -88,7 +89,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
         $user = User::find($adminAdvertise->user_id);
         $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Advertise payment successfull';
+        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Advertise payment successfull';
         return redirect($url);
     }
 
@@ -124,7 +125,7 @@ class AamarpayController extends Controller
 
 
         $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Subscription added successfull';
+        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Subscription added successfull';
 
         //For user
         $subscriptionText = "Congratulations! Your package was successfully purchased!";
@@ -175,7 +176,7 @@ class AamarpayController extends Controller
             $tenant->increment('balance', $data['info']['amount']);
         }
 
-        $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
+        $url = RedirectHelper::getRedirectUrl() . 'tenant/dashboard?message=Recharge successful';
         // if ($tenant) {
         //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         // }

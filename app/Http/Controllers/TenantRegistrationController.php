@@ -55,4 +55,19 @@ class TenantRegistrationController extends Controller
             ], 500);
         }
     }
+    public function haveTenant($tenant)
+    {
+        $tenant = Tenant::find($tenant);
+        if(!$tenant){
+            return response()->json([
+                'success' => false,
+                'message' => 'Tenant not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tenant found successfully',
+        ]);
+    }
 }
