@@ -716,13 +716,14 @@ class MerchantFrontendController extends Controller
         return response()->json($products);
     }
 
-    public function searchItem($search) {
-        $category_id = request('category_id');
+    public function searchItem(Request $request, $search, $category_id = null) {
+        // category_id from route (search/item/term/2) or query string (?category_id=2)
+        $category_id = $category_id ?? $request->query('category_id');
 
         $query = Product::where('name', 'like', '%' . $search . '%');
 
-        if ($category_id) {
-            $query->where('category_id', $category_id);
+        if ($category_id !== null && $category_id !== '' && (int) $category_id > 0) {
+            $query->where('category_id', (int) $category_id);
         }
 
         $products = $query->get();

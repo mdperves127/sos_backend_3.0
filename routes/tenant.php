@@ -108,7 +108,7 @@ Route::middleware( [
         Route::get('colors', [MerchantFrontendController::class, 'colors']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
 
-        Route::get('search/item/{search}', [MerchantFrontendController::class, 'searchItem']);
+        Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 
         Route::get('products/{sub_category_id}', [MerchantFrontendController::class, 'productsFilter']);
 
