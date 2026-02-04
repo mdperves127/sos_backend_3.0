@@ -159,11 +159,11 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [NewsController::class, 'destroy'] );
         });
         Route::prefix( 'tenant-news-category' )->group( function () {
-            Route::get( 'index', [NewsCategoryController::class, 'index'] );
-            Route::post( 'store', [NewsCategoryController::class, 'store'] );
-            Route::get( 'edit/{id}', [NewsCategoryController::class, 'edit'] );
-            Route::post( 'update/{id}', [NewsCategoryController::class, 'update'] );
-            Route::delete( 'delete/{id}', [NewsCategoryController::class, 'destroy'] );
+            Route::get( 'index', [NcategoryController::class, 'index'] );
+            Route::post( 'store', [NcategoryController::class, 'store'] );
+            Route::get( 'edit/{id}', [NcategoryController::class, 'edit'] );
+            Route::post( 'update/{id}', [NcategoryController::class, 'update'] );
+            Route::delete( 'delete/{id}', [NcategoryController::class, 'destroy'] );
         });
 
         //vendor product
