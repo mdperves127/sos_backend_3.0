@@ -98,23 +98,25 @@ class MerchantFrontendController extends Controller
                     } );
                 }
 
-                // Apply color filter (pivot: color_product; colors table: colors)
+                // Apply color filter (product_variants has product_id, color_id; colors table: colors)
                 if ( $colorId ) {
                     $productQuery->whereExists( function ( $q ) use ( $colorId ) {
                         $q->select( DB::raw( 1 ) )
-                            ->from( 'color_product' )
-                            ->whereColumn( 'color_product.product_id', 'products.id' )
-                            ->where( 'color_product.color_id', (int) $colorId );
+                            ->from( 'product_variants' )
+                            ->whereColumn( 'product_variants.product_id', 'products.id' )
+                            ->where( 'product_variants.color_id', (int) $colorId )
+                            ->whereNull( 'product_variants.deleted_at' );
                     } );
                 }
 
-                // Apply size filter (pivot: product_size; sizes table: sizes)
+                // Apply size filter (product_variants has product_id, size_id; sizes table: sizes)
                 if ( $sizeId ) {
                     $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
                         $q->select( DB::raw( 1 ) )
-                            ->from( 'product_size' )
-                            ->whereColumn( 'product_size.product_id', 'products.id' )
-                            ->where( 'product_size.size_id', (int) $sizeId );
+                            ->from( 'product_variants' )
+                            ->whereColumn( 'product_variants.product_id', 'products.id' )
+                            ->where( 'product_variants.size_id', (int) $sizeId )
+                            ->whereNull( 'product_variants.deleted_at' );
                     } );
                 }
 
@@ -153,23 +155,25 @@ class MerchantFrontendController extends Controller
                 } );
             }
 
-            // Apply color filter (pivot: color_product; colors table: colors)
+            // Apply color filter (product_variants has product_id, color_id; colors table: colors)
             if ( $colorId ) {
                 $productQuery->whereExists( function ( $q ) use ( $colorId ) {
                     $q->select( DB::raw( 1 ) )
-                        ->from( 'color_product' )
-                        ->whereColumn( 'color_product.product_id', 'products.id' )
-                        ->where( 'color_product.color_id', (int) $colorId );
+                        ->from( 'product_variants' )
+                        ->whereColumn( 'product_variants.product_id', 'products.id' )
+                        ->where( 'product_variants.color_id', (int) $colorId )
+                        ->whereNull( 'product_variants.deleted_at' );
                 } );
             }
 
-            // Apply size filter (pivot: product_size; sizes table: sizes)
+            // Apply size filter (product_variants has product_id, size_id; sizes table: sizes)
             if ( $sizeId ) {
                 $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
                     $q->select( DB::raw( 1 ) )
-                        ->from( 'product_size' )
-                        ->whereColumn( 'product_size.product_id', 'products.id' )
-                        ->where( 'product_size.size_id', (int) $sizeId );
+                        ->from( 'product_variants' )
+                        ->whereColumn( 'product_variants.product_id', 'products.id' )
+                        ->where( 'product_variants.size_id', (int) $sizeId )
+                        ->whereNull( 'product_variants.deleted_at' );
                 } );
             }
 
