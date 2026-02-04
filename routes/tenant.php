@@ -71,6 +71,8 @@ use App\Http\Controllers\Tenant\BannerController;
 use App\Http\Controllers\Tenant\ContentServiceController;
 use App\Http\Controllers\Tenant\OfferController;
 use App\Http\Controllers\BuySubscription;
+use App\Http\Controllers\Tenant\NcategoryController;
+use App\Http\Controllers\Tenant\NewsController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -102,6 +104,8 @@ Route::middleware( [
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
+        Route::get('size', [MerchantFrontendController::class, 'size']);
+        Route::get('colors', [MerchantFrontendController::class, 'colors']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
 
         Route::get('search/item/{search}', [MerchantFrontendController::class, 'searchItem']);
@@ -145,6 +149,21 @@ Route::middleware( [
 
         Route::prefix( 'tenant-marketplace' )->group( function () {
             Route::get( 'utilities', [MarketplaceController::class, 'categorySubcategoryBrand'] );
+        });
+
+        Route::prefix( 'tenant-news' )->group( function () {
+            Route::get( 'index', [NewsController::class, 'index'] );
+            Route::post( 'store', [NewsController::class, 'store'] );
+            Route::get( 'edit/{id}', [NewsController::class, 'edit'] );
+            Route::post( 'update/{id}', [NewsController::class, 'update'] );
+            Route::delete( 'delete/{id}', [NewsController::class, 'destroy'] );
+        });
+        Route::prefix( 'tenant-news-category' )->group( function () {
+            Route::get( 'index', [NewsCategoryController::class, 'index'] );
+            Route::post( 'store', [NewsCategoryController::class, 'store'] );
+            Route::get( 'edit/{id}', [NewsCategoryController::class, 'edit'] );
+            Route::post( 'update/{id}', [NewsCategoryController::class, 'update'] );
+            Route::delete( 'delete/{id}', [NewsCategoryController::class, 'destroy'] );
         });
 
         //vendor product
@@ -470,7 +489,7 @@ Route::middleware( [
 
         } );
 
-        
+
         Route::prefix( 'tenant-subscription' )->group( function () {
             Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
             Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );

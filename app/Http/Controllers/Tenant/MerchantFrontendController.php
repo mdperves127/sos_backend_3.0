@@ -21,6 +21,8 @@ use App\Models\CmsSetting;
 use App\Models\TenantContactFormData;
 use App\Models\Order;
 use App\Models\Offer;
+use App\Models\Color;
+use App\Models\Size;
 
 class MerchantFrontendController extends Controller
 {
@@ -461,6 +463,18 @@ class MerchantFrontendController extends Controller
 
         return response()->json($categories);
     }
+    public function colors()
+    {
+        $colors = Color::where('status', 'active')->get();
+
+        return response()->json($colors);
+    }
+    public function size()
+    {
+        $sizes = Size::where('status', 'active')->get();
+
+        return response()->json($sizes);
+    }
     public function subcategories()
     {
         if (tenant()->type == 'dropshipper') {
@@ -703,7 +717,15 @@ class MerchantFrontendController extends Controller
     }
 
     public function searchItem($search) {
-        $products = Product::where('name', 'like', '%' . $search . '%')->get();
+        $category_id = request('category_id');
+
+        $query = Product::where('name', 'like', '%' . $search . '%');
+
+        if ($category_id) {
+            $query->where('category_id', $category_id);
+        }
+
+        $products = $query->get();
         return response()->json($products);
     }
 

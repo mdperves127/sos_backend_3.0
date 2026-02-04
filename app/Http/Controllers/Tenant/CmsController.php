@@ -35,7 +35,7 @@ class CmsController extends Controller
             $file->move('uploads/footer-logo/', $filename);
             $data->footer_logo = 'uploads/footer-logo/' . $filename;
         }
-        
+
         if($request->hasFile('populer_section_banner')){
             $file = $request->file('populer_section_banner');
             $extension = $file->getClientOriginalExtension();
@@ -102,10 +102,17 @@ class CmsController extends Controller
             $file->move('uploads/two-column-banner-2/', $filename);
             $data->two_column_banner_2 = 'uploads/two-column-banner-2/' . $filename;
         }
+        if ($request->hasFile('footer_payment_methods')) {
+            $file = $request->file('footer_payment_methods');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/footer-payment-methods/', $filename);
+            $data->footer_payment_methods = 'uploads/footer-payment-methods/' . $filename;
+        }
 
-        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2']));
+        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2', 'footer_payment_methods']));
         $data->save();
-        
+
         return response()->json([
             'status' => true,
             'message' => 'Cms Setting Updated Successfully',
