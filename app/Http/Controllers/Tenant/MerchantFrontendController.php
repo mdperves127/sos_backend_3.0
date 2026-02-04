@@ -98,41 +98,24 @@ class MerchantFrontendController extends Controller
                     } );
                 }
 
-                // Apply color filter (only if color_product table exists)
+                // Apply color filter (pivot: color_product; colors table: colors)
                 if ( $colorId ) {
-                    try {
-                        // Check if color_product table exists
-                        $tableExists = DB::connection( $connectionName )
-                            ->select( "SHOW TABLES LIKE 'color_product'" );
-                        if ( !empty( $tableExists ) ) {
-                            $productQuery->whereHas( 'colors', function( $q ) use ( $colorId ) {
-                                $q->where( 'colors.id', $colorId );
-                            } );
-                        }
-                    } catch ( \Exception $e ) {
-                        // Table doesn't exist or error, skip color filter
-                    }
+                    $productQuery->whereExists( function ( $q ) use ( $colorId ) {
+                        $q->select( DB::raw( 1 ) )
+                            ->from( 'color_product' )
+                            ->whereColumn( 'color_product.product_id', 'products.id' )
+                            ->where( 'color_product.color_id', (int) $colorId );
+                    } );
                 }
 
-                // Apply size filter (only if product_size table exists)
+                // Apply size filter (pivot: product_size; sizes table: sizes)
                 if ( $sizeId ) {
-                    try {
-                        // Check if product_size table exists (or size_product depending on pivot table name)
-                        $tableExists = DB::connection( $connectionName )
-                            ->select( "SHOW TABLES LIKE 'product_size'" );
-                        if ( empty( $tableExists ) ) {
-                            // Try alternative table name
-                            $tableExists = DB::connection( $connectionName )
-                                ->select( "SHOW TABLES LIKE 'size_product'" );
-                        }
-                        if ( !empty( $tableExists ) ) {
-                            $productQuery->whereHas( 'sizes', function( $q ) use ( $sizeId ) {
-                                $q->where( 'sizes.id', $sizeId );
-                            } );
-                        }
-                    } catch ( \Exception $e ) {
-                        // Table doesn't exist or error, skip size filter
-                    }
+                    $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
+                        $q->select( DB::raw( 1 ) )
+                            ->from( 'product_size' )
+                            ->whereColumn( 'product_size.product_id', 'products.id' )
+                            ->where( 'product_size.size_id', (int) $sizeId );
+                    } );
                 }
 
                 // Load product
@@ -170,41 +153,24 @@ class MerchantFrontendController extends Controller
                 } );
             }
 
-            // Apply color filter (only if color_product table exists)
+            // Apply color filter (pivot: color_product; colors table: colors)
             if ( $colorId ) {
-                try {
-                    // Check if color_product table exists
-                    $tableExists = DB::connection( 'tenant' )
-                        ->select( "SHOW TABLES LIKE 'color_product'" );
-                    if ( !empty( $tableExists ) ) {
-                        $productQuery->whereHas( 'colors', function( $q ) use ( $colorId ) {
-                            $q->where( 'colors.id', $colorId );
-                        } );
-                    }
-                } catch ( \Exception $e ) {
-                    // Table doesn't exist or error, skip color filter
-                }
+                $productQuery->whereExists( function ( $q ) use ( $colorId ) {
+                    $q->select( DB::raw( 1 ) )
+                        ->from( 'color_product' )
+                        ->whereColumn( 'color_product.product_id', 'products.id' )
+                        ->where( 'color_product.color_id', (int) $colorId );
+                } );
             }
 
-            // Apply size filter (only if product_size table exists)
+            // Apply size filter (pivot: product_size; sizes table: sizes)
             if ( $sizeId ) {
-                try {
-                    // Check if product_size table exists (or size_product depending on pivot table name)
-                    $tableExists = DB::connection( 'tenant' )
-                        ->select( "SHOW TABLES LIKE 'product_size'" );
-                    if ( empty( $tableExists ) ) {
-                        // Try alternative table name
-                        $tableExists = DB::connection( 'tenant' )
-                            ->select( "SHOW TABLES LIKE 'size_product'" );
-                    }
-                    if ( !empty( $tableExists ) ) {
-                        $productQuery->whereHas( 'sizes', function( $q ) use ( $sizeId ) {
-                            $q->where( 'sizes.id', $sizeId );
-                        } );
-                    }
-                } catch ( \Exception $e ) {
-                    // Table doesn't exist or error, skip size filter
-                }
+                $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
+                    $q->select( DB::raw( 1 ) )
+                        ->from( 'product_size' )
+                        ->whereColumn( 'product_size.product_id', 'products.id' )
+                        ->where( 'product_size.size_id', (int) $sizeId );
+                } );
             }
 
             $products = $productQuery->get();
