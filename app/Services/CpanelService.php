@@ -167,8 +167,8 @@ class CpanelService
             }
 
             if ($success) {
-                // Set PHP version for the subdomain (default: 8.2)
-                $phpVersion = env('CPANEL_PHP_VERSION', '82'); // Default to PHP 8.2
+                // Set PHP version for the subdomain (production: default PHP 8.2, cPanel format: ea-php82)
+                $phpVersion = env('CPANEL_PHP_VERSION', 'ea-php82');
                 $phpVersionResult = $this->setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion);
 
                 \Log::info('cPanel subdomain creation: PHP version setting result', [
@@ -212,35 +212,39 @@ class CpanelService
     }
 
     /**
-     * Set PHP version for a subdomain/domain
+     * Set PHP version for a subdomain/domain via cPanel LangPHP (EasyApache 4).
      *
      * @param string $subdomain
      * @param string $mainDomain
-     * @param string $phpVersion PHP version (e.g., '82' for 8.2, '81' for 8.1)
+     * @param string $phpVersion PHP version: cPanel format (e.g. 'ea-php82', 'ea-php81') or short '82'/'81'
      * @return array
      */
-    private function setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion = '82')
+    private function setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion = 'ea-php82')
     {
         try {
             $cpanelUser = env('CPANEL_USER');
             $cpanelPassword = env('CPANEL_PASSWORD');
             $cpanelHost = env('CPANEL_HOST');
 
-            // Full domain name (subdomain.maindomain.com)
+            // Full domain name (subdomain.maindomain.com) = vhost name
             $fullDomain = $subdomain . '.' . $mainDomain;
 
-            // Use UAPI execute endpoint for PHP Selector
-            $url = "https://$cpanelHost:2083/execute/PhpSelector/set_php_version";
+            // cPanel expects ea-phpXX format (e.g. ea-php82). Normalize if env has short form like "82"
+            if (preg_match('/^\d{2}$/', $phpVersion)) {
+                $phpVersion = 'ea-php' . $phpVersion;
+            }
+
+            // UAPI: LangPHP php_set_vhost_versions (required for EasyApache 4; overrides "Inherited")
+            $url = "https://$cpanelHost:2083/execute/LangPHP/php_set_vhost_versions";
 
             \Log::info('cPanel PHP version setting: Making API call', [
-                'domain' => $fullDomain,
+                'vhost' => $fullDomain,
                 'php_version' => $phpVersion
             ]);
 
-            // Prepare POST data
             $postData = [
-                'domain' => $fullDomain,
-                'php_version' => $phpVersion
+                'vhost' => $fullDomain,
+                'version' => $phpVersion
             ];
 
             $ch = curl_init();
@@ -275,14 +279,17 @@ class CpanelService
             $result = json_decode($response, true);
 
             \Log::info('cPanel PHP version setting: API response', [
-                'domain' => $fullDomain,
+                'vhost' => $fullDomain,
                 'php_version' => $phpVersion,
                 'response' => $result,
                 'http_code' => $httpCode
             ]);
 
-            // Check if the result indicates success
-            if (isset($result['status']) && $result['status'] == 1) {
+            // LangPHP returns result under 'result' key with result.status
+            $status = $result['result']['status'] ?? $result['status'] ?? 0;
+            $errors = $result['result']['errors'] ?? $result['errors'] ?? null;
+
+            if ($status == 1) {
                 return [
                     'status' => 1,
                     'message' => 'PHP version set to ' . $phpVersion . ' successfully',
@@ -290,10 +297,12 @@ class CpanelService
                     'php_version' => $phpVersion,
                     'full_response' => $result
                 ];
-            } elseif (isset($result['errors'])) {
-                $errorMessage = is_array($result['errors']) ? implode(', ', $result['errors']) : $result['errors'];
+            }
+
+            if ($errors) {
+                $errorMessage = is_array($errors) ? implode(', ', $errors) : $errors;
                 \Log::error('cPanel PHP version setting: API error', [
-                    'domain' => $fullDomain,
+                    'vhost' => $fullDomain,
                     'php_version' => $phpVersion,
                     'error' => $errorMessage
                 ]);
@@ -302,19 +311,18 @@ class CpanelService
                     'error' => $errorMessage,
                     'full_response' => $result
                 ];
-            } else {
-                // If no clear error but status is not 1, log and return
-                \Log::warning('cPanel PHP version setting: Unexpected response', [
-                    'domain' => $fullDomain,
-                    'php_version' => $phpVersion,
-                    'response' => $result
-                ]);
-                return [
-                    'status' => isset($result['status']) ? $result['status'] : 0,
-                    'message' => 'PHP version setting completed with unexpected response',
-                    'full_response' => $result
-                ];
             }
+
+            \Log::warning('cPanel PHP version setting: Unexpected response', [
+                'vhost' => $fullDomain,
+                'php_version' => $phpVersion,
+                'response' => $result
+            ]);
+            return [
+                'status' => 0,
+                'message' => 'PHP version setting completed with unexpected response',
+                'full_response' => $result
+            ];
         } catch (\Exception $e) {
             \Log::error('cPanel PHP version setting: Exception', [
                 'domain' => $subdomain . '.' . $mainDomain,
