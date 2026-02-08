@@ -107,6 +107,9 @@ Route::middleware( [
         Route::get('size', [MerchantFrontendController::class, 'size']);
         Route::get('colors', [MerchantFrontendController::class, 'colors']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
+        Route::get('news', [MerchantFrontendController::class, 'newsFront']);
+        Route::get('news/{slug}', [MerchantFrontendController::class, 'newsDetail']);
+        Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 

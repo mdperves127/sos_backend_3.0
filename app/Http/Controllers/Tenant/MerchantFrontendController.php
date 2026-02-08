@@ -23,6 +23,8 @@ use App\Models\Order;
 use App\Models\Offer;
 use App\Models\Color;
 use App\Models\Size;
+use App\Models\News;
+use App\Models\NCategory;
 
 class MerchantFrontendController extends Controller
 {
@@ -725,5 +727,29 @@ class MerchantFrontendController extends Controller
         $contact->message = $request->message;
         $contact->save();
         return response()->json($contact);
+    }
+    public function newsFront()
+    {
+        $news = News::with('nCategory')->get();
+        return response()->json([
+            'status' => 200,
+            'news' => $news,
+        ]);
+    }
+    public function newsDetail($slug)
+    {
+        $news = News::with('nCategory')->where('slug', $slug)->first();
+        return response()->json([
+            'status' => 200,
+            'news' => $news,
+        ]);
+    }
+    public function newsCategory()
+    {
+        $categories = NCategory::all();
+        return response()->json([
+            'status' => 200,
+            'categories' => $categories,
+        ]);
     }
 }

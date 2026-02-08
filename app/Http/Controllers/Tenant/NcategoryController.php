@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\NCategory;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\File;
 
 class NcategoryController extends Controller
 {

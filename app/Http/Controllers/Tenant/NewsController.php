@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\News;
+use Illuminate\Support\Facades\Validator;
+use App\Models\NCategory;
+use Illuminate\Support\Facades\File;
 
 class NewsController extends Controller
 {
     public function index()
     {
-        $news = News::all();
+        $news = News::with('nCategory')->get();
         return response()->json($news);
     }
     public function store(Request $request)
