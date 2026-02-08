@@ -186,8 +186,8 @@ class CartController extends Controller
     }
     public function cart(Request $request)
     {
-        $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails')->get();
-        
+        $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails', 'product')->get();
+
         $deliveryCharge = DeliveryCharge::where('status', 'active')->select('id', 'area', 'charge')->get();
         return response()->json(
             [
