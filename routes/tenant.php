@@ -73,6 +73,8 @@ use App\Http\Controllers\Tenant\OfferController;
 use App\Http\Controllers\BuySubscription;
 use App\Http\Controllers\Tenant\NcategoryController;
 use App\Http\Controllers\Tenant\NewsController;
+use App\Http\Controllers\Tenant\ForgotPasswordController as TenantForgotPasswordController;
+use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -81,6 +83,10 @@ Route::middleware( [
     // Public tenant routes
     Route::post( '/auth/login', [TenantAuthController::class, 'login'] );
     Route::post( '/auth/register', [TenantAuthController::class, 'register'] );
+
+
+    Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
+    Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
 
     // Aamarpay callback routes (public - no auth required)
     Route::prefix( 'aaparpay' )->group( function () {
