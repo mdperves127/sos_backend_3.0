@@ -27,13 +27,19 @@ class RenewPackageId implements Rule
      */
     public function passes($attribute, $value)
     {
-        $user = ( function_exists( 'tenant' ) && tenant() )
-            ? User::on( 'tenant' )->find( auth()->id() )
-            : User::on( 'mysql' )->find( auth()->id() );
-        if ( ! $user ) {
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            // Tenant: map tenant type to subscription_user_type (merchant=vendor, dropshipper=affiliate)
+            $tenantType = tenant()->type ?? 'merchant';
+            $userrole   = $tenantType === 'dropshipper' ? 'affiliate' : 'vendor';
+        } else {
+            // Central: use user role_as (2=vendor, 3=affiliate)
+            $user = User::on( 'mysql' )->find( auth()->id() );
+            $userrole = userrole( $user->role_as ?? 0 );
+        }
+
+        if ( ! $userrole ) {
             return false;
         }
-        $userrole = userrole( $user->role_as ?? 0 );
 
         $subscription = Subscription::on( 'mysql' )
             ->where( 'id', $value )

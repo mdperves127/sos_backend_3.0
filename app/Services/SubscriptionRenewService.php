@@ -119,10 +119,9 @@ class SubscriptionRenewService {
      */
     protected static function renewForTenant( $validatedData ) {
         $tenant          = tenant();
-        $tenantUser      = User::on( 'tenant' )->find( auth()->id() );
         $usersubscription = UserSubscription::on( 'mysql' )->where( 'tenant_id', $tenant->id )->first();
 
-        if ( ! $usersubscription && in_array( $tenantUser->role_as ?? 0, [ 2, 3 ] ) ) {
+        if ( ! $usersubscription && in_array( $tenant->type ?? '', [ 'merchant', 'dropshipper' ] ) ) {
             return responsejson( 'You have not subscription.', 'fail' );
         }
 
@@ -131,8 +130,10 @@ class SubscriptionRenewService {
         $getsubscription = Subscription::on( 'mysql' )->find( $subscriptionid );
         $entityId        = $tenant->id;
         $subscriptiondue = ( SubscriptionDueService::subscriptiondue( $entityId ) - SubscriptionDueService::membership_credit( $entityId, $subscriptionid ) );
-        $getusertype     = userrole( $tenantUser->role_as ?? 0 );
-        $servicecreated  = VendorService::on( 'tenant' )->where( 'user_id', auth()->id() )->count();
+        // Tenant: map type (merchant=vendor, dropshipper=affiliate) - tenant users don't have role_as
+        $getusertype     = ( $tenant->type ?? 'merchant' ) === 'dropshipper' ? 'affiliate' : 'vendor';
+        // vendor_services is in central DB (mysql) with tenant_id - not in tenant DB
+        $servicecreated  = VendorService::on( 'mysql' )->where( 'tenant_id', $tenant->id )->count();
 
         if ( $getusertype == 'vendor' ) {
             $productcreated   = Product::on( 'tenant' )->where( 'user_id', auth()->id() )->count();
@@ -193,13 +194,15 @@ class SubscriptionRenewService {
             $validatedData['user_id']    = auth()->id();
             $validatedData['tenant_id']  = $tenant->id;
             $validatedData['coupon']     = request( 'coupon_id' );
-            PaymentStore::on( 'mysql' )->create( [
+            $store = new PaymentStore( [
                 'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
                 'status'          => 'pending',
                 'payment_type'    => 'renew',
                 'info'            => $validatedData,
             ] );
+            $store->setConnection( 'mysql' );
+            $store->save();
             return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl, 'tenant' );
         }
     }
@@ -236,7 +239,8 @@ class SubscriptionRenewService {
         $usersubscriptionPlan    = Subscription::on( 'mysql' )->find( $userCurrentSubscription->subscription_id );
         $addMonth                = getmonth( $getsubscription->subscription_package_type );
         $entityId                = $entity->id;
-        $roleAs                  = $isTenant ? ( auth()->user()->role_as ?? 0 ) : $entity->role_as;
+        // For tenant: map type to role_as (merchant=2=vendor, dropshipper=3=affiliate)
+        $roleAs                  = $isTenant ? ( ( $entity->type ?? 'merchant' ) === 'dropshipper' ? 3 : 2 ) : $entity->role_as;
 
         PaymentHistoryService::store( $trxid, ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ), $payment_method, $transition_type, '-', ( $couponName ), $entityId );
 

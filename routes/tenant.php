@@ -504,9 +504,9 @@ Route::middleware( [
             Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
             Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
             Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
+            Route::post( 'renew-subscription', [RenewController::class, 'store'] );
         });
 
-        Route::post( 'renew-subscription', [RenewController::class, 'store'] );
 
         Route::prefix( 'tenant-advertise' )->group( function () {
             Route::get( '/', [AdvertiseController::class, 'index'] );
