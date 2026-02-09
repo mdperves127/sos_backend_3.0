@@ -161,14 +161,14 @@ Route::middleware( [
         });
 
         Route::prefix( 'tenant-news' )->group( function () {
-            Route::get( 'index', [NewsController::class, 'index'] );
+            Route::get( '/', [NewsController::class, 'index'] );
             Route::post( 'store', [NewsController::class, 'store'] );
             Route::get( 'edit/{id}', [NewsController::class, 'edit'] );
             Route::post( 'update/{id}', [NewsController::class, 'update'] );
             Route::delete( 'delete/{id}', [NewsController::class, 'destroy'] );
         });
         Route::prefix( 'tenant-news-category' )->group( function () {
-            Route::get( 'index', [NcategoryController::class, 'index'] );
+            Route::get( '/', [NcategoryController::class, 'index'] );
             Route::post( 'store', [NcategoryController::class, 'store'] );
             Route::get( 'edit/{id}', [NcategoryController::class, 'edit'] );
             Route::post( 'update/{id}', [NcategoryController::class, 'update'] );
