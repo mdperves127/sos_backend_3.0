@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\UserSubscription;
 
 class WebsiteVisitController extends Controller
 {
@@ -11,7 +12,9 @@ class WebsiteVisitController extends Controller
     {
         $userSubscription = UserSubscription::on('mysql')->where('tenant_id', $tenant_id)->first();
 
-        $userSubscription->already_visits++;
+        if($userSubscription->has_website == 'yes'){
+            $userSubscription->already_visits++;
+        }
         $userSubscription->save();
     }
 }
