@@ -216,12 +216,18 @@ function getRedirectUrl() {
 }
 
 function couponget( $coupon_id ) {
-    $coupon = Coupon::on('mysql')
+    $query = Coupon::on('mysql')
         ->where( ['id' => $coupon_id, 'status' => 'active'] )
         ->whereDate( 'expire_date', '>=', now() )
-        ->withCount( 'couponused' )
-        ->where( 'tenant_id', '!=', tenant()->id )
-        ->first();
+        ->withCount( 'couponused' );
+
+    if ( function_exists( 'tenant' ) && tenant() ) {
+        $query->where( 'tenant_id', '!=', tenant()->id );
+    } else {
+        $query->where( 'user_id', '!=', auth()->id() );
+    }
+
+    $coupon = $query->first();
 
     if ( $coupon ) {
         $couponused = $coupon->couponused()->count();

@@ -78,7 +78,7 @@ class NewsController extends Controller
     {
         $news = News::find($id);
 
-        if($news){
+        if(!$news){
             return response()->json([
                 'status' => 400,
                 'message' => 'News not found',

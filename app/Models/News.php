@@ -8,10 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class News extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = [];
 
-
     protected $table = 'news';
+
+    public function nCategory()
+    {
+        return $this->belongsTo(NCategory::class, 'n_category_id', 'id');
+    }
 }

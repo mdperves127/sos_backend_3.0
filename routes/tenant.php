@@ -75,6 +75,7 @@ use App\Http\Controllers\Tenant\NcategoryController;
 use App\Http\Controllers\Tenant\NewsController;
 use App\Http\Controllers\Tenant\ForgotPasswordController as TenantForgotPasswordController;
 use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordController;
+use App\Http\Controllers\RenewController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -504,6 +505,8 @@ Route::middleware( [
             Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
             Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
         });
+
+        Route::post( 'renew-subscription', [RenewController::class, 'store'] );
 
         Route::prefix( 'tenant-advertise' )->group( function () {
             Route::get( '/', [AdvertiseController::class, 'index'] );

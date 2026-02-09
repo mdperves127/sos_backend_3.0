@@ -18,9 +18,21 @@ use Carbon\Carbon;
  */
 class SubscriptionRenewService {
     static function renew( $validatedData ) {
+        $isTenant = function_exists( 'tenant' ) && tenant();
 
-        $user = User::find( userid() );
-        if ( !$user->usersubscription ) {
+        if ( $isTenant ) {
+            return self::renewForTenant( $validatedData );
+        }
+
+        return self::renewForUser( $validatedData );
+    }
+
+    /**
+     * Renew subscription for central (non-tenant) users.
+     */
+    protected static function renewForUser( $validatedData ) {
+        $user = User::on( 'mysql' )->find( userid() );
+        if ( ! $user->usersubscription ) {
             if ( $user->role_as == 2 || $user->role_as == 3 ) {
                 return responsejson( 'You have not subscription.', 'fail' );
             }
@@ -28,13 +40,10 @@ class SubscriptionRenewService {
 
         $subscriptionid  = $validatedData['package_id'];
         $trxid           = uniqid();
-        $getsubscription = Subscription::find( $subscriptionid );
-
-        // subscription due balance - membership credit
+        $getsubscription  = Subscription::on( 'mysql' )->find( $subscriptionid );
         $subscriptiondue = ( SubscriptionDueService::subscriptiondue( auth()->id() ) - SubscriptionDueService::membership_credit( auth()->id(), $subscriptionid ) );
-
-        $getusertype    = userrole( $user->role_as );
-        $servicecreated = VendorService::where( 'user_id', auth()->id() )->count();
+        $getusertype     = userrole( $user->role_as );
+        $servicecreated  = VendorService::where( 'user_id', auth()->id() )->count();
 
         if ( $getusertype == 'vendor' ) {
             $productcreated   = Product::where( 'user_id', auth()->id() )->count();
@@ -44,12 +53,10 @@ class SubscriptionRenewService {
                 $qty = $servicecreated - $getsubscription->service_qty;
                 return responsejson( 'You can not renew now. You should delete ' . $qty . ' service', 'fail' );
             }
-
             if ( $getsubscription->product_qty < $productcreated ) {
                 $qty = $productcreated - $getsubscription->product_qty;
                 return responsejson( 'You can not renew now. You should delete ' . $qty . ' product ', 'fail' );
             }
-
             if ( $getsubscription->affiliate_request < $affiliaterequest ) {
                 $qty = $affiliaterequest - $getsubscription->affiliate_request;
                 return responsejson( 'You can not renew now. You should delete ' . $qty . ' product request ', 'fail' );
@@ -57,7 +64,6 @@ class SubscriptionRenewService {
         }
 
         if ( $getusertype == 'affiliate' ) {
-
             if ( $getsubscription->service_create < $servicecreated ) {
                 $qty = $servicecreated - $getsubscription->service_create;
                 return responsejson( 'You can not renew now. You should delete ' . $qty . ' service', 'fail' );
@@ -68,62 +74,35 @@ class SubscriptionRenewService {
             if ( $getsubscription->product_request < $product_request ) {
                 return responsejson( 'You can not renew now. You should contact to admin', 'fail' );
             }
-
             if ( $getsubscription->product_approve < $product_approve ) {
                 return responsejson( 'You can not renew now. You should contact to admin', 'fail' );
             }
         }
 
         $totalprice = $getsubscription->subscription_amount + $subscriptiondue;
-
-        if ( request( 'coupon_id' ) != '' ) {
-
-            $coupondata = couponget( request( 'coupon_id' ) );
-            if ( !$coupondata ) {
-                return responsejson( 'Invaild coupon', 'fail' );
-            }
-
-            if ( $coupondata->type == 'flat' ) {
-                $totalprice = ( $totalprice - $coupondata->amount );
-            } else {
-                $totalprice = ( $totalprice - ( ( $totalprice / 100 ) * $coupondata->amount ) );
-            }
-
-            if ( $totalprice < 1 ) {
-                return responsejson( 'You can not use this coupon!', 'fail' );
-            }
+        $couponResult = self::applyCoupon( $totalprice );
+        if ( $couponResult instanceof \Illuminate\Http\JsonResponse ) {
+            return $couponResult;
         }
+        $totalprice = $couponResult;
 
         if ( request( 'payment_method' ) == 'my-wallet' ) {
             $userbalance = $user->balance;
-            if ( request( 'package_id' ) ) {
-                if ( $userbalance < ( $totalprice ) ) {
-                    return responsejson( 'You have not enough balance. You should recharge', 'fail' );
-                }
+            if ( request( 'package_id' ) && $userbalance < $totalprice ) {
+                return responsejson( 'You have not enough balance. You should recharge', 'fail' );
             }
         }
 
         if ( $validatedData['payment_method'] == 'my-wallet' ) {
-            $user->balance = convertfloat( $user->balance ) - ( $totalprice );
+            $user->balance = convertfloat( $user->balance ) - $totalprice;
             $user->save();
-            return self::subscriptionadd( $user, $subscriptionid, $trxid, 'My wallet', 'Renew', $totalsubscriptionamount = $totalprice, $couponName = request( 'coupon_id' ) );
+            return self::subscriptionadd( $user, $subscriptionid, $trxid, 'My wallet', 'Renew', $totalprice, request( 'coupon_id' ) );
         }
 
         if ( $validatedData['payment_method'] == 'aamarpay' ) {
             $successurl = url( 'api/aaparpay/renew-success' );
-
-            // $setting = Settings::first(); //For Extra charge
-
-            //For Extra charge
-            // if ($setting->extra_charge_status == "on") {
-            //     $extra_charge = extraCharge($totalprice, $setting->extra_charge);
-
-            //     $totalprice = $totalprice + $extra_charge;
-            // }
-
             $validatedData['user_id'] = auth()->id();
-            $validatedData['coupon']  = request( 'coupon_id' );
-            // $validatedData['extra_charge'] = $extra_charge;
+            $validatedData['coupon'] = request( 'coupon_id' );
             PaymentStore::create( [
                 'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
@@ -131,26 +110,140 @@ class SubscriptionRenewService {
                 'payment_type'    => 'renew',
                 'info'            => $validatedData,
             ] );
-
-            $tenant_type = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
-            return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl, $tenant_type );
+            return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl, 'user' );
         }
     }
 
-    // $trxid, $amount, $payment_method, $transition_type, $balance_type, $coupon, $userid
-    static function subscriptionadd( $user, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = null, $couponName = '' ) {
-        $userCurrentSubscription = $user->usersubscription;
-        $getsubscription         = Subscription::find( $subscriptionid );
-        $usersubscriptionPlan    = Subscription::find( $userCurrentSubscription->subscription_id );
+    /**
+     * Renew subscription for tenant (store) context.
+     */
+    protected static function renewForTenant( $validatedData ) {
+        $tenant          = tenant();
+        $tenantUser      = User::on( 'tenant' )->find( auth()->id() );
+        $usersubscription = UserSubscription::on( 'mysql' )->where( 'tenant_id', $tenant->id )->first();
+
+        if ( ! $usersubscription && in_array( $tenantUser->role_as ?? 0, [ 2, 3 ] ) ) {
+            return responsejson( 'You have not subscription.', 'fail' );
+        }
+
+        $subscriptionid  = $validatedData['package_id'];
+        $trxid           = uniqid();
+        $getsubscription = Subscription::on( 'mysql' )->find( $subscriptionid );
+        $entityId        = $tenant->id;
+        $subscriptiondue = ( SubscriptionDueService::subscriptiondue( $entityId ) - SubscriptionDueService::membership_credit( $entityId, $subscriptionid ) );
+        $getusertype     = userrole( $tenantUser->role_as ?? 0 );
+        $servicecreated  = VendorService::on( 'tenant' )->where( 'user_id', auth()->id() )->count();
+
+        if ( $getusertype == 'vendor' ) {
+            $productcreated   = Product::on( 'tenant' )->where( 'user_id', auth()->id() )->count();
+            $affiliaterequest = ProductDetails::on( 'tenant' )->where( ['vendor_id' => auth()->id(), 'status' => 1] )->count();
+
+            if ( $getsubscription->service_qty < $servicecreated ) {
+                $qty = $servicecreated - $getsubscription->service_qty;
+                return responsejson( 'You can not renew now. You should delete ' . $qty . ' service', 'fail' );
+            }
+            if ( $getsubscription->product_qty < $productcreated ) {
+                $qty = $productcreated - $getsubscription->product_qty;
+                return responsejson( 'You can not renew now. You should delete ' . $qty . ' product ', 'fail' );
+            }
+            if ( $getsubscription->affiliate_request < $affiliaterequest ) {
+                $qty = $affiliaterequest - $getsubscription->affiliate_request;
+                return responsejson( 'You can not renew now. You should delete ' . $qty . ' product request ', 'fail' );
+            }
+        }
+
+        if ( $getusertype == 'affiliate' ) {
+            if ( $getsubscription->service_create < $servicecreated ) {
+                $qty = $servicecreated - $getsubscription->service_create;
+                return responsejson( 'You can not renew now. You should delete ' . $qty . ' service', 'fail' );
+            }
+            $product_request = ProductDetails::on( 'tenant' )->where( 'user_id', auth()->id() )->count();
+            $product_approve = ProductDetails::on( 'tenant' )->where( ['user_id' => auth()->id(), 'status' => 1] )->count();
+
+            if ( $getsubscription->product_request < $product_request ) {
+                return responsejson( 'You can not renew now. You should contact to admin', 'fail' );
+            }
+            if ( $getsubscription->product_approve < $product_approve ) {
+                return responsejson( 'You can not renew now. You should contact to admin', 'fail' );
+            }
+        }
+
+        $totalprice = $getsubscription->subscription_amount + $subscriptiondue;
+        $couponResult = self::applyCoupon( $totalprice );
+        if ( $couponResult instanceof \Illuminate\Http\JsonResponse ) {
+            return $couponResult;
+        }
+        $totalprice = $couponResult;
+
+        if ( request( 'payment_method' ) == 'my-wallet' ) {
+            $tenantBalance = convertfloat( $tenant->balance ?? 0 );
+            if ( request( 'package_id' ) && $tenantBalance < $totalprice ) {
+                return responsejson( 'You have not enough balance. You should recharge', 'fail' );
+            }
+        }
+
+        if ( $validatedData['payment_method'] == 'my-wallet' ) {
+            $tenant->balance = convertfloat( $tenant->balance ?? 0 ) - $totalprice;
+            $tenant->save();
+            return self::subscriptionadd( $tenant, $subscriptionid, $trxid, 'My wallet', 'Renew', $totalprice, request( 'coupon_id' ) );
+        }
+
+        if ( $validatedData['payment_method'] == 'aamarpay' ) {
+            $successurl = url( 'api/aaparpay/renew-success' );
+            $validatedData['user_id']    = auth()->id();
+            $validatedData['tenant_id']  = $tenant->id;
+            $validatedData['coupon']     = request( 'coupon_id' );
+            PaymentStore::on( 'mysql' )->create( [
+                'payment_gateway' => 'aamarpay',
+                'trxid'           => $trxid,
+                'status'          => 'pending',
+                'payment_type'    => 'renew',
+                'info'            => $validatedData,
+            ] );
+            return AamarPayService::gateway( $totalprice, $trxid, 'renew', $successurl, 'tenant' );
+        }
+    }
+
+    /**
+     * Apply coupon discount. Returns totalprice or JsonResponse on validation failure.
+     */
+    protected static function applyCoupon( $totalprice ) {
+        if ( request( 'coupon_id' ) == '' ) {
+            return $totalprice;
+        }
+        $coupondata = couponget( request( 'coupon_id' ) );
+        if ( ! $coupondata ) {
+            return responsejson( 'Invaild coupon', 'fail' );
+        }
+        if ( $coupondata->type == 'flat' ) {
+            $totalprice = ( $totalprice - $coupondata->amount );
+        } else {
+            $totalprice = ( $totalprice - ( ( $totalprice / 100 ) * $coupondata->amount ) );
+        }
+        if ( $totalprice < 1 ) {
+            return responsejson( 'You can not use this coupon!', 'fail' );
+        }
+        return $totalprice;
+    }
+
+    /**
+     * Add/renew subscription. $entity can be User (central) or Tenant.
+     */
+    static function subscriptionadd( $entity, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = null, $couponName = '' ) {
+        $isTenant = $entity instanceof \App\Models\Tenant;
+        $userCurrentSubscription = $entity->usersubscription;
+        $getsubscription         = Subscription::on( 'mysql' )->find( $subscriptionid );
+        $usersubscriptionPlan    = Subscription::on( 'mysql' )->find( $userCurrentSubscription->subscription_id );
         $addMonth                = getmonth( $getsubscription->subscription_package_type );
+        $entityId                = $entity->id;
+        $roleAs                  = $isTenant ? ( auth()->user()->role_as ?? 0 ) : $entity->role_as;
 
-        PaymentHistoryService::store( $trxid, ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ), $payment_method, $transition_type, '-', ( $couponName ), $user->id );
+        PaymentHistoryService::store( $trxid, ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ), $payment_method, $transition_type, '-', ( $couponName ), $entityId );
 
-        // PaymentHistoryService::store($trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $user->id);
-        $getcoupon = Coupon::find( $couponName ?? 0 );
+        $getcoupon = Coupon::on( 'mysql' )->find( $couponName ?? 0 );
 
         if ( $getcoupon ) {
-            $couponUser = User::find( $getcoupon->user_id );
+            $couponUser = User::on( 'mysql' )->find( $getcoupon->user_id );
 
             if ( $getcoupon->commission_type == "flat" ) {
                 $commission = $getcoupon->commission;
@@ -194,7 +287,7 @@ class SubscriptionRenewService {
             $userCurrentSubscription->expire_date     = $expiredate;
             $userCurrentSubscription->subscription_id = $getsubscription->id;
 
-            if ( userrole( $user->role_as ) == 'vendor' ) {
+            if ( userrole( $roleAs ) == 'vendor' ) {
                 $userCurrentSubscription->service_qty       = $getsubscription->service_qty;
                 $userCurrentSubscription->product_qty       = $getsubscription->product_qty;
                 $userCurrentSubscription->affiliate_request = $getsubscription->affiliate_request;
@@ -203,7 +296,7 @@ class SubscriptionRenewService {
                 $userCurrentSubscription->chat_access       = $getsubscription->chat_access;
             }
 
-            if ( userrole( $user->role_as ) == 'affiliate' ) {
+            if ( userrole( $roleAs ) == 'affiliate' ) {
                 $userCurrentSubscription->product_request = $getsubscription->product_request;
                 $userCurrentSubscription->product_approve = $getsubscription->product_approve;
                 $userCurrentSubscription->service_create  = $getsubscription->service_create;

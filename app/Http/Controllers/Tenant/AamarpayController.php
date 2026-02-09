@@ -63,18 +63,37 @@ class AamarpayController extends Controller
     function renewsuccess()
     {
         $response = request()->all();
-        $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        $user =  User::find($data['info']['user_id']);
-        $subscriptionid =  $data['info']['package_id'];
-        $trxid = $data->trxid;
-        $payment_method = 'Aamarpay';
+        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending' ] )->first();
+
+        if ( ! $data ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'tenant/dashboard?message=Payment not found' );
+        }
+
+        $subscriptionid   = $data['info']['package_id'];
+        $trxid           = $data->trxid;
+        $payment_method  = 'Aamarpay';
         $transition_type = 'renew';
-        SubscriptionRenewService::subscriptionadd($user, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = $response['amount_original'], $couponName = $data['info']['coupon']);
+        $amount          = $response['amount_original'] ?? 0;
+        $couponName      = $data['info']['coupon'] ?? '';
 
+        if ( ! empty( $data['info']['tenant_id'] ) ) {
+            $entity = Tenant::on( 'mysql' )->find( $data['info']['tenant_id'] );
+            if ( $entity ) {
+                SubscriptionRenewService::subscriptionadd( $entity, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
+            }
+            $path = 'tenant/dashboard';
+        } else {
+            $user = User::on( 'mysql' )->find( $data['info']['user_id'] ?? 0 );
+            if ( $user ) {
+                SubscriptionRenewService::subscriptionadd( $user, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
+                $path = paymentredirect( $user->role_as );
+            } else {
+                $path = 'tenant/dashboard';
+            }
+        }
 
-        $path = paymentredirect($user->role_as);
         $url = RedirectHelper::getRedirectUrl() . $path . '?message=Renew successfull';
-        return redirect($url);
+        return redirect( $url );
     }
     function advertisesuccess()
     {

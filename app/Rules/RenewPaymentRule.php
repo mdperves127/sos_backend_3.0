@@ -28,19 +28,23 @@ class RenewPaymentRule implements Rule
      */
     public function passes($attribute, $value)
     {
-
         if ($value == 'my-wallet') {
-            $user = User::find(userid());
-            $userbalance = $user->balance;
-            if (request('package_id')) {
-                $subscriptionamount =  Subscription::find(request('package_id'))->subscription_amount;
-                $subscriptiondue = SubscriptionDueService::subscriptiondue(auth()->id());
+            $entityId = ( function_exists( 'tenant' ) && tenant() ) ? tenant()->id : auth()->id();
+            $subscriptiondue = SubscriptionDueService::subscriptiondue( $entityId );
 
-                if (convertfloat($userbalance) >= ($subscriptionamount + $subscriptiondue)) {
+            if ( function_exists( 'tenant' ) && tenant() ) {
+                $balance = convertfloat( tenant()->balance ?? 0 );
+            } else {
+                $user = User::on( 'mysql' )->find( userid() );
+                $balance = convertfloat( $user->balance ?? 0 );
+            }
+
+            if ( request( 'package_id' ) ) {
+                $subscription = Subscription::on( 'mysql' )->find( request( 'package_id' ) );
+                if ( $subscription && $balance >= ( $subscription->subscription_amount + $subscriptiondue ) ) {
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             }
         }
         return true;

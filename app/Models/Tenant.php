@@ -78,6 +78,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->hasMany( PaymentHistory::class, 'tenant_id' );
     }
 
+    function usersubscription() {
+        return $this->hasOne( UserSubscription::class, 'tenant_id' );
+    }
+
     /**
      * Convert the model instance to an array, ensuring type comes from the column, not data JSON
      */

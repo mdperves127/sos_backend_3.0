@@ -61,6 +61,12 @@ class NcategoryController extends Controller
     public function edit($id)
     {
         $category = NCategory::find($id);
+        if(!$category){
+            return response()->json([
+                'status' => 400,
+                'message' => 'Category not found',
+            ]);
+        }
         return response()->json([
             'status' => 200,
             'category' => $category,
@@ -70,7 +76,7 @@ class NcategoryController extends Controller
     {
         $category = NCategory::find($id);
 
-        if($category){
+        if(!$category){
             return response()->json([
                 'status' => 400,
                 'message' => 'Category not found',
@@ -102,7 +108,7 @@ class NcategoryController extends Controller
     public function destroy($id)
     {
         $category = NCategory::find($id);
-        if($category){
+        if(!$category){
             return response()->json([
                 'status' => 400,
                 'message' => 'Category not found',

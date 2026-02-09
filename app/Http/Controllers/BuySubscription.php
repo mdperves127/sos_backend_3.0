@@ -70,9 +70,9 @@ class BuySubscription extends Controller {
             $hasSubscription = UserSubscription::on('mysql')->where( 'tenant_id', $id )->first();
         }
 
-        if ( $hasSubscription ) {
-            return responsejson( 'You have a subscription. You can not buy again.', 'fail' );
-        }
+        // if ( $hasSubscription ) {
+        //     return responsejson( 'You have a subscription. You can not buy again.', 'fail' );
+        // }
 
         $subscription = Subscription::on('mysql')->find( $validateData['subscription_id'] );
         $amount       = $subscription->subscription_amount;
