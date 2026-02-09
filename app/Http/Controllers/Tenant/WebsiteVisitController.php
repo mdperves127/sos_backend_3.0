@@ -8,9 +8,9 @@ use App\Models\UserSubscription;
 
 class WebsiteVisitController extends Controller
 {
-    public function websiteVisit($tenant_id)
+    public function websiteVisit()
     {
-        $userSubscription = UserSubscription::on('mysql')->where('tenant_id', $tenant_id)->first();
+        $userSubscription = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
 
         if($userSubscription->has_website == 'yes'){
             $userSubscription->already_visits++;

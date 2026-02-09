@@ -76,6 +76,7 @@ use App\Http\Controllers\Tenant\NewsController;
 use App\Http\Controllers\Tenant\ForgotPasswordController as TenantForgotPasswordController;
 use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordController;
 use App\Http\Controllers\RenewController;
+use App\Http\Controllers\Tenant\WebsiteVisitController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -89,7 +90,7 @@ Route::middleware( [
     Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
 
-    Route::post( 'website-visit/{tenant_id}', [WebsiteVisitController::class, 'websiteVisit'] );
+    Route::post( 'website-visit', [WebsiteVisitController::class, 'websiteVisit'] );
 
 
     // Aamarpay callback routes (public - no auth required)
