@@ -90,7 +90,7 @@ Route::middleware( [
     Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
 
-    Route::post( 'website-visit', [WebsiteVisitController::class, 'websiteVisit'] );
+    Route::get( 'website-visit', [WebsiteVisitController::class, 'websiteVisit'] );
 
 
     // Aamarpay callback routes (public - no auth required)

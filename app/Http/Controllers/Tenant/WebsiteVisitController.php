@@ -16,5 +16,9 @@ class WebsiteVisitController extends Controller
             $userSubscription->already_visits++;
         }
         $userSubscription->save();
+        return response()->json([
+            'status' => 200,
+            'message' => 'Website visit added successfully',
+        ]);
     }
 }
