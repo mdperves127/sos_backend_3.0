@@ -89,6 +89,9 @@ Route::middleware( [
     Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
 
+    Route::post( 'website-visit/{tenant_id}', [WebsiteVisitController::class, 'websiteVisit'] );
+
+
     // Aamarpay callback routes (public - no auth required)
     Route::prefix( 'aaparpay' )->group( function () {
         Route::post( 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
