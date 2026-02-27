@@ -109,8 +109,22 @@ class CmsController extends Controller
             $file->move('uploads/footer-payment-methods/', $filename);
             $data->footer_payment_methods = 'uploads/footer-payment-methods/' . $filename;
         }
+        if ($request->hasFile('fav_icon')) {
+            $file = $request->file('fav_icon');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/fav-icon/', $filename);
+            $data->fav_icon = 'uploads/fav-icon/' . $filename;
+        }
+        if ($request->hasFile('auth_page_image')) {
+            $file = $request->file('auth_page_image');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/auth-page-image/', $filename);
+            $data->auth_page_image = 'uploads/auth-page-image/' . $filename;
+        }
 
-        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2', 'footer_payment_methods']));
+        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2', 'footer_payment_methods', 'fav_icon', 'auth_page_image']));
         $data->save();
 
         return response()->json([

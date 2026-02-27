@@ -112,6 +112,8 @@ class CmsSettingSeeder extends Seeder
             'populer_section_subcategory_id_4' => '',
         ]);
 
+
+
         $this->command->info('CMS Settings seeded successfully!');
     }
 }

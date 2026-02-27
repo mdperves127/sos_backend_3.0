@@ -25,8 +25,8 @@ class AamarPayService {
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => 'POST',
             CURLOPT_POSTFIELDS     => [
-                'store_id'      => env( 'APP_ENV' ) === 'production' ? 'startownstartup' : 'aamarpaytest',
-                'signature_key' => env( 'APP_ENV' ) === 'production' ? '8967d60ebdd9fe3f1e6a419fb65ee2e7' : 'dbb74894e82415a2f7ff0ec3a97e4183',
+                'store_id'      => env( 'APP_ENV' ) === 'production' ? 'aamarpaytest' : 'aamarpaytest',
+                'signature_key' => env( 'APP_ENV' ) === 'production' ? 'dbb74894e82415a2f7ff0ec3a97e4183' : 'dbb74894e82415a2f7ff0ec3a97e4183',
                 'cus_name'      => Auth::user()->name,
                 'cus_email'     => 'example@gmail.com',
                 'cus_phone'     => '01870******',
