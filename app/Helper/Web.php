@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\WoocommerceCredential;
+use App\Helper\RedirectHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -207,12 +208,7 @@ function paymentredirect( $role ) {
  * @return string Base URL for redirects (with trailing slash)
  */
 function getRedirectUrl() {
-    if ( function_exists( 'tenant' ) && tenant() && request() ) {
-        $scheme = request()->secure() ? 'https' : 'http';
-        $host   = request()->getHost();
-        return $scheme . '://' . $host . '/';
-    }
-    return rtrim( config( 'app.redirecturl' ), '/' ) . '/';
+    return RedirectHelper::getRedirectUrl();
 }
 
 function couponget( $coupon_id ) {

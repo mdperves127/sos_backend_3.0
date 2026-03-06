@@ -200,6 +200,6 @@ return [
      */
     'seeder_parameters' => [
         '--class' => 'Database\\Seeders\\CmsSettingSeeder',
-        // '--force' => true,
+        '--force' => true,
     ],
 ];

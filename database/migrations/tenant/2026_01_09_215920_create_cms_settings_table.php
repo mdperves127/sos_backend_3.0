@@ -21,13 +21,13 @@ return new class extends Migration
 
             $table->string('logo');
 
-            $table->enum('theme',['one','two', 'three'])->default('one');
+            $table->enum('theme',['one','two', 'three', 'four'])->default('one');
 
             $table->string('seo_meta_title');
             $table->string('seo_meta_description');
             $table->string('seo_meta_keywords');
             $table->string('seo_meta_image');
-            
+
             $table->string('scripts_google_analytics');
             $table->string('scripts_google_adsense');
             $table->string('scripts_google_recaptcha');

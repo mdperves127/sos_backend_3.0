@@ -61,9 +61,9 @@ class SosService {
             'payment_type'            => 'subscription',
             'info'                    => $info,
             'customer_requirement_id' => $uniqueId,
-        ] );
+            ] );
 
-        return response()->json( $result );
+            return response()->json( $result );
     }
 
     static function generateTicketNumber() {

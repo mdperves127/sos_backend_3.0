@@ -110,6 +110,15 @@ class CmsSettingSeeder extends Seeder
             'populer_section_subcategory_id_3' => '',
             'populer_section_category_id_4' => '',
             'populer_section_subcategory_id_4' => '',
+
+            // Social URLs
+            'fb_url' => '',
+            'x_url' => '',
+            'instagram_url' => '',
+            'youtube_url' => '',
+            'tiktok_url' => '',
+            'telegram_url' => '',
+            'whatsapp_url' => '',
         ]);
 
 

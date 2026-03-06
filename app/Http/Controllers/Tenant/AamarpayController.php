@@ -66,7 +66,7 @@ class AamarpayController extends Controller
         $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending' ] )->first();
 
         if ( ! $data ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'tenant/dashboard?message=Payment not found' );
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
         }
 
         $subscriptionid   = $data['info']['package_id'];
@@ -81,14 +81,14 @@ class AamarpayController extends Controller
             if ( $entity ) {
                 SubscriptionRenewService::subscriptionadd( $entity, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
             }
-            $path = 'tenant/dashboard';
+            $path = 'dashboard';
         } else {
             $user = User::on( 'mysql' )->find( $data['info']['user_id'] ?? 0 );
             if ( $user ) {
                 SubscriptionRenewService::subscriptionadd( $user, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
                 $path = paymentredirect( $user->role_as );
             } else {
-                $path = 'tenant/dashboard';
+                $path = 'dashboard';
             }
         }
 
@@ -117,23 +117,43 @@ class AamarpayController extends Controller
         $response = request()->all();
 
         $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        $validatedData  =  $data['info'];
-        $subscription = Subscription::find($validatedData['subscription_id']);
-        $user = User::find($validatedData['user_id']);
-        $couponid = $validatedData['coupon_id'];
-
         if (!$data) {
             return false;
         }
 
-        if ($response['opt_a'] == 'subscription') {
-            $amount = $response['amount_original'];
-           $subscriptiondata =  SubscriptionService::store($subscription, $user, $amount, $couponid, 'Aamarpay');
+        $validatedData = $data['info'];
+        $subscription  = Subscription::on('mysql')->find($validatedData['subscription_id'] ?? null);
+        $couponid      = $validatedData['coupon_id'] ?? null;
+
+        $entity = null;
+        if (!empty($validatedData['tenant_id'])) {
+            $entity = Tenant::on('mysql')->find($validatedData['tenant_id']);
         }
 
-        if(!is_object($subscriptiondata)){
-            if($subscriptiondata == '2' || $subscriptiondata == 3){
-                $tokens = $user->tokens;
+        if (!$entity) {
+            $entity = User::on('mysql')->find($validatedData['user_id'] ?? null);
+        }
+
+        if (!$subscription || !$entity) {
+            return false;
+        }
+
+        $subscriptiondata = null;
+        if (($response['opt_a'] ?? null) == 'subscription') {
+            $amount = $response['amount_original'] ?? $subscription->subscription_amount;
+            $subscriptiondata = SubscriptionService::store(
+                $subscription,
+                $entity,
+                $amount,
+                $couponid,
+                'Aamarpay',
+                $validatedData['user_id'] ?? null
+            );
+        }
+
+        if ($entity instanceof User && !is_object($subscriptiondata)) {
+            if ($subscriptiondata == '2' || $subscriptiondata == 3) {
+                $tokens = $entity->tokens;
 
                 foreach ($tokens as $token) {
                     $token->delete();
@@ -142,19 +162,20 @@ class AamarpayController extends Controller
             }
         }
 
-
-        $path = paymentredirect($user->role_as);
+        $path = ($entity instanceof User) ? paymentredirect($entity->role_as) : 'dashboard';
         $url = RedirectHelper::getRedirectUrl() . $path . '?message=Subscription added successfull';
 
-        //For user
-        $subscriptionText = "Congratulations! Your package was successfully purchased!";
-        Notification::send($user, new SubscriptionNotification($user , $subscriptionText));
+        if ($entity instanceof User) {
+            //For user
+            $subscriptionText = "Congratulations! Your package was successfully purchased!";
+            Notification::send($entity, new SubscriptionNotification($entity, $subscriptionText));
 
-        //For admin
-        $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
-        $user = User::on('mysql')->where('role_as',1)->first(); //Admin
-        $subscriptionText = $normalUser->email ."Purchase a new package";
-        Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
+            //For admin
+            $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
+            $user = User::on('mysql')->where('role_as', 1)->first(); //Admin
+            $subscriptionText = $normalUser->email . "Purchase a new package";
+            Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
+        }
 
         return redirect($url);
     }
@@ -195,7 +216,7 @@ class AamarpayController extends Controller
             $tenant->increment('balance', $data['info']['amount']);
         }
 
-        $url = RedirectHelper::getRedirectUrl() . 'tenant/dashboard?message=Recharge successful';
+        $url = RedirectHelper::getRedirectUrl() . 'dashboard?message=Recharge successful';
         // if ($tenant) {
         //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         // }

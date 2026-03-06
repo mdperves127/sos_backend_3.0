@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Coupon;
 use App\Models\CouponUsed;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Notifications\SubscriptionNotification;
@@ -15,19 +16,20 @@ use Illuminate\Support\Facades\Notification;
  * Class SubscriptionService.
  */
 class SubscriptionService {
-    static function store( $subscription, $entity, $totalamount = null, $coupon = null, $paymentmethod = null ) {
+    static function store( $subscription, $entity, $totalamount = null, $coupon = null, $paymentmethod = null, $actingUserId = null ) {
         $trxid        = uniqid();
         $subscription = Subscription::on('mysql')->find( $subscription->id );
 
         $userSubscription                     = new UserSubscription();
-        // if ( $entity instanceof User ) {
-        //     $userSubscription->user_id = $entity->id;
-        // } else {
+        if ( $entity instanceof Tenant ) {
             $userSubscription->tenant_id = $entity->id;
-            // For tenant, we might still want to link to the owner user if possible
-            // But if it's strictly tenant-level, we leave user_id null or set a default
-            $userSubscription->user_id = Auth::check() ? Auth::id() : 0;
-        // }
+            $userSubscription->user_id   = $actingUserId ?? ( Auth::check() ? Auth::id() : 0 );
+        } elseif ( $entity instanceof User ) {
+            $userSubscription->user_id   = $entity->id;
+            $userSubscription->tenant_id = null;
+        } else {
+            throw new \InvalidArgumentException( 'Invalid subscription entity provided.' );
+        }
         $userSubscription->trxid              = $trxid;
         $userSubscription->subscription_id    = $subscription->id;
         $userSubscription->expire_date        = membershipexpiredate( $subscription->subscription_package_type );

@@ -67,9 +67,8 @@ class BuySubscription extends Controller {
         if ( $entity instanceof User ) {
             $hasSubscription = $entity->usersubscription;
         } else {
-            $hasSubscription = UserSubscription::on('mysql')->where( 'tenant_id', $id )->first();
+            $hasSubscription = UserSubscription::on('mysql')->where( 'tenant_id', tenant()->id )->first();
         }
-
         // if ( $hasSubscription ) {
         //     return responsejson( 'You have a subscription. You can not buy again.', 'fail' );
         // }

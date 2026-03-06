@@ -102,23 +102,43 @@ class AamarpayController extends Controller
         $response = request()->all();
 
         $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        $validatedData  =  $data['info'];
-        $subscription = Subscription::find($validatedData['subscription_id']);
-        $user = User::find($validatedData['user_id']);
-        $couponid = $validatedData['coupon_id'];
-
         if (!$data) {
             return false;
         }
 
-        if ($response['opt_a'] == 'subscription') {
-            $amount = $response['amount_original'];
-           $subscriptiondata =  SubscriptionService::store($subscription, $user, $amount, $couponid, 'Aamarpay');
+        $validatedData = $data['info'];
+        $subscription  = Subscription::on('mysql')->find($validatedData['subscription_id'] ?? null);
+        $couponid      = $validatedData['coupon_id'] ?? null;
+
+        $entity = null;
+        if (!empty($validatedData['tenant_id'])) {
+            $entity = Tenant::on('mysql')->find($validatedData['tenant_id']);
         }
 
-        if(!is_object($subscriptiondata)){
-            if($subscriptiondata == '2' || $subscriptiondata == 3){
-                $tokens = $user->tokens;
+        if (!$entity) {
+            $entity = User::on('mysql')->find($validatedData['user_id'] ?? null);
+        }
+
+        if (!$subscription || !$entity) {
+            return false;
+        }
+
+        $subscriptiondata = null;
+        if (($response['opt_a'] ?? null) == 'subscription') {
+            $amount = $response['amount_original'] ?? $subscription->subscription_amount;
+            $subscriptiondata = SubscriptionService::store(
+                $subscription,
+                $entity,
+                $amount,
+                $couponid,
+                'Aamarpay',
+                $validatedData['user_id'] ?? null
+            );
+        }
+
+        if ($entity instanceof User && !is_object($subscriptiondata)) {
+            if ($subscriptiondata == '2' || $subscriptiondata == 3) {
+                $tokens = $entity->tokens;
 
                 foreach ($tokens as $token) {
                     $token->delete();
@@ -127,19 +147,20 @@ class AamarpayController extends Controller
             }
         }
 
-
-        $path = paymentredirect($user->role_as);
+        $path = ($entity instanceof User) ? paymentredirect($entity->role_as) : 'dashboard';
         $url = config('app.redirecturl') . $path . '?message=Subscription added successfull';
 
-        //For user
-        $subscriptionText = "Congratulations! Your package was successfully purchased!";
-        Notification::send($user, new SubscriptionNotification($user , $subscriptionText));
+        if ($entity instanceof User) {
+            //For user
+            $subscriptionText = "Congratulations! Your package was successfully purchased!";
+            Notification::send($entity, new SubscriptionNotification($entity, $subscriptionText));
 
-        //For admin
-        $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
-        $user = User::where('role_as',1)->first(); //Admin
-        $subscriptionText = $normalUser->email ."Purchase a new package";
-        Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
+            //For admin
+            $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
+            $user = User::where('role_as', 1)->first(); //Admin
+            $subscriptionText = $normalUser->email . "Purchase a new package";
+            Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
+        }
 
         return redirect($url);
     }
@@ -178,7 +199,7 @@ class AamarpayController extends Controller
 
         // Redirect based on user type
         if($response['opt_b'] == 'tenant'){
-            $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
+            $url = config('app.redirecturl') . 'dashboard?message=Recharge successful';
         } else {
             $user = User::find($data['info']['user_id']);
             $path = paymentredirect($user->role_as);
