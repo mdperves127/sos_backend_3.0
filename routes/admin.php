@@ -55,6 +55,7 @@ use App\Http\Controllers\API\Vendor\ServiceCategoryController;
 use App\Http\Controllers\API\Vendor\ServiceSubCategoryController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\Admin\WebRatingController;
 
 
 //admin route with full middleware - USING WORKING MIDDLEWARE
@@ -232,10 +233,13 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::resource( 'companion', CompanionController::class );
         Route::resource( 'member', MembersController::class );
         Route::resource( 'footer-media', FooterMediaController::class );
+        Route::resource('web-rating', WebRatingController::class);
 
         // front end settings update
         Route::get( '/settings', [SettingsController::class, 'index'] );
         Route::post( '/settings-update/{id}', [SettingsController::class, 'update'] );
+
+
 
         // User Contact Submitted Infos
         Route::get( '/contact-messages', [ContactController::class, 'index'] );

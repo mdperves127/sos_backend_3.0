@@ -124,7 +124,87 @@ class CmsController extends Controller
             $data->auth_page_image = 'uploads/auth-page-image/' . $filename;
         }
 
-        $data->fill($request->except(['logo', 'footer_logo', 'populer_section_banner', 'banner_1', 'banner_2', 'banner_3', 'three_column_banner_1', 'three_column_banner_2', 'three_column_banner_3', 'two_column_banner_1', 'two_column_banner_2', 'footer_payment_methods', 'fav_icon', 'auth_page_image']));
+        if ($request->hasFile('f_banner_group_title_image')) {
+            $file = $request->file('f_banner_group_title_image ');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_banner_group_title_image /', $filename);
+            $data->f_banner_group_title_image  = 'uploads/f_banner_group_title_image/' . $filename;
+        }
+        if ($request->hasFile('f_banner_image_1')) {
+            $file = $request->file('f_banner_image_1');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_banner_image_1/', $filename);
+            $data->f_banner_image_1   = 'uploads/f_banner_image_1/' . $filename;
+        }
+        if ($request->hasFile('f_banner_image_2')) {
+            $file = $request->file('f_banner_image_2');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_banner_image_2/', $filename);
+            $data->f_banner_image_2   = 'uploads/f_banner_image_2/' . $filename;
+        }
+        if ($request->hasFile('f_banner_image_3')) {
+            $file = $request->file('f_banner_image_3');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_banner_image_3/', $filename);
+            $data->f_banner_image_3   = 'uploads/f_banner_image_3/' . $filename;
+        }
+        if ($request->hasFile('f_feature_image_4')) {
+            $file = $request->file('f_feature_image_4');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_feature_image_4/', $filename);
+            $data->f_feature_image_4   = 'uploads/f_feature_image_4/' . $filename;
+        }
+        if ($request->hasFile('f_feature_image_5')) {
+            $file = $request->file('f_feature_image_5');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_feature_image_5/', $filename);
+            $data->f_feature_image_5   = 'uploads/f_feature_image_5/' . $filename;
+        }
+        if ($request->hasFile('f_feature_image_6')) {
+            $file = $request->file('f_feature_image_6');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_feature_image_6/', $filename);
+            $data->f_feature_image_6   = 'uploads/f_feature_image_6/' . $filename;
+        }
+        if ($request->hasFile('f_feature_image_8')) {
+            $file = $request->file('f_feature_image_8');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move('uploads/f_feature_image_8/', $filename);
+            $data->f_feature_image_8   = 'uploads/f_feature_image_8/' . $filename;
+        }
+        $data->fill($request->except([
+            'logo',
+            'footer_logo',
+            'populer_section_banner',
+            'banner_1',
+            'banner_2',
+            'banner_3',
+            'three_column_banner_1',
+            'three_column_banner_2',
+            'three_column_banner_3',
+            'two_column_banner_1',
+            'two_column_banner_2',
+            'footer_payment_methods',
+            'fav_icon',
+            'auth_page_image',
+            'f_banner_group_title_image',
+            'f_banner_image_1',
+            'f_banner_image_2',
+            'f_banner_image_3',
+            'f_feature_image_4',
+            'f_feature_image_5',
+            'f_feature_image_6',
+            'f_feature_image_8'
+
+        ]));
         $data->save();
 
         return response()->json([
