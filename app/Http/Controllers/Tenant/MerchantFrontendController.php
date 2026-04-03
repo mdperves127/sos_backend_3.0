@@ -25,6 +25,8 @@ use App\Models\Color;
 use App\Models\Size;
 use App\Models\News;
 use App\Models\NCategory;
+use App\Models\UserSubscription;
+
 
 class MerchantFrontendController extends Controller
 {
@@ -616,7 +618,11 @@ class MerchantFrontendController extends Controller
         $banners = Banner::orderBy('order', 'asc')->get();
         $offers = Offer::latest()->get();
         $cms = CmsSetting::first();
+        $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
 
+        $website_visits = $package_info->website_visits;
+        $already_visits = $package_info->already_visits;
+        $has_website = $package_info->has_website;
         // Use null-safe operator to prevent errors when $cms is null
         $populer_section_category_id_1 = $cms ? Category::find($cms->populer_section_category_id_1) : null;
         $populer_section_category_id_2 = $cms ? Category::find($cms->populer_section_category_id_2) : null;
@@ -677,6 +683,9 @@ class MerchantFrontendController extends Controller
             'best_setting_sub_category_id_4' => $best_setting_sub_category_id_4,
             'best_category_id' => $best_category_id,
             'best_sub_category_id' => $best_sub_category_id,
+            'website_visits' => $website_visits,
+            'already_visits' => $already_visits,
+            'has_website' => $has_website,
         ]);
     }
 

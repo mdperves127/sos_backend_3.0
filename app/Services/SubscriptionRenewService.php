@@ -282,6 +282,10 @@ class SubscriptionRenewService {
             $userCurrentSubscription->product_request   = $getsubscription->product_request;
             $userCurrentSubscription->product_approve   = $getsubscription->product_approve;
             $userCurrentSubscription->service_create    = $getsubscription->service_create;
+            $userCurrentSubscription->has_website       = $getsubscription->has_website;
+            $userCurrentSubscription->website_visits    = $getsubscription->website_visits;
+            $userCurrentSubscription->already_visits    = 0;
+
             $userCurrentSubscription->save();
 
             return responsejson( 'Renew successfully' );

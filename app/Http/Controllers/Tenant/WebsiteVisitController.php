@@ -15,10 +15,14 @@ class WebsiteVisitController extends Controller
         if($userSubscription->has_website == 'yes'){
             $userSubscription->already_visits++;
         }
+        $website_visits = $userSubscription->website_visits;
+        $already_visits = $userSubscription->already_visits;
         $userSubscription->save();
         return response()->json([
             'status' => 200,
             'message' => 'Website visit added successfully',
+            'website_visits' => $website_visits,
+            'already_visits' => $already_visits
         ]);
     }
 }

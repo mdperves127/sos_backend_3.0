@@ -199,7 +199,7 @@ return [
      * Parameters used by the tenants:seed command.
      */
     'seeder_parameters' => [
-        '--class' => 'Database\\Seeders\\CmsSettingSeeder',
+        '--class' => 'Database\\Seeders\\TenantSetupSeeder',
         '--force' => true,
     ],
 ];
