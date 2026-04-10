@@ -27,12 +27,16 @@ class ProductRequest extends FormRequest {
         return [
             'payment_type'           => ['required', Rule::in( ['aamarpay', 'my-wallet', 'COD'] )],
             'cart_id'                => ['required', function ( $attribute, $value, $fail ) {
+                $cartQuery = Cart::where( 'id', $value );
 
-                $cart = Cart::where( ['tenant_id' => request('tenant_id'), 'id' => request( 'cart_id' )] )->first();
-                if ( !$cart ) {
-                    return $fail( 'Invalid cart' );
+                // Keep backward compatibility if client sends tenant_id.
+                if ( request()->filled( 'tenant_id' ) ) {
+                    $cartQuery->where( 'tenant_id', request( 'tenant_id' ) );
                 }
 
+                if ( !$cartQuery->exists() ) {
+                    return $fail( 'Invalid cart' );
+                }
             }],
             'datas'                  => ['required', 'array'],
             'datas.*.name'           => ['required'],

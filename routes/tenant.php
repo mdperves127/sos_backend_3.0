@@ -89,6 +89,7 @@ Route::middleware( [
 
     Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
+    Route::post( 'frontend-order-create/guest', [TenantOrderController::class, 'guestStore'] );
 
     Route::get( 'website-visit', [WebsiteVisitController::class, 'websiteVisit'] );
 

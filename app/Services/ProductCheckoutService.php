@@ -67,12 +67,12 @@ class ProductCheckoutService {
             // Get cart from current tenant's database (carts are stored in dropshipper tenant, not product tenant)
             $cart = Cart::find( $cartId );
 
-            if ( !$cart ) {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Cart not found',
-                ] );
-            }
+                if ( !$cart ) {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Cart not found',
+                    ] );
+                }
 
             // Get product from product's tenant database (request tenant - cart->tenant_id)
             $product = CrossTenantQueryService::getSingleFromTenant(

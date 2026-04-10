@@ -42,6 +42,8 @@ class SubscriptionService {
             $userSubscription->affiliate_request = $subscription->affiliate_request;
             $userSubscription->pos_sale_qty      = $subscription->pos_sale_qty;
             $userSubscription->employee_create   = $subscription->employee_create;
+            $userSubscription->has_website       = $subscription->has_website;
+            $userSubscription->website_visits    = $subscription->website_visits;
         }
 
         if ( $subscription->subscription_user_type == "affiliate" ) {

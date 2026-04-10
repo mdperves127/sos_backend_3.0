@@ -13,13 +13,58 @@ use App\Services\ProductCheckoutService;
 
 class OrderController extends Controller
 {
+    function guestStore( Request $request ) {
+        $cart = Cart::where( 'id', $request->cart_id )->first();
+        $tenantId = $cart?->tenant_id ?: $request->tenant_id ?: tenant('id');
+
+        // if ( !$cart || !$tenantId ) {
+        //     return responsejson( 'Cart not found or missing tenant information', 'fail' );
+        // }
+
+        // Get product from cart's tenant database
+        $product = CrossTenantQueryService::getSingleFromTenant(
+            $tenantId,
+            Product::class,
+            function ( $query ) use ( $cart ) {
+                $query->where( ['id' => $cart->product_id, 'status' => 'active'] );
+            }
+        );
+
+        if ( !$product ) {
+            return responsejson( 'Product currently not available!' );
+        }
+
+        if ( $cart->purchase_type == 'single' ) {
+            if ( $product->selling_type == 'bulk' ) {
+                return responsejson( 'Something is wrong delete the cart.', 'fail' );
+            }
+        }
+
+        $datas = collect( request( 'datas' ) );
+
+        if ( $cart->purchase_type == 'single' ) {
+            $varients = $datas->pluck( 'variants' );
+            $totalqty = collect( $varients )->collapse()->sum( 'qty' );
+
+            if ( $product->qty < $totalqty ) {
+                return responsejson( 'Product quantity not available!', 'fail' );
+            }
+        }
+
+        if ( $product->status == Status::Pending->value ) {
+            return responsejson( 'The product under construction!', 'fail' );
+        }
+
+        return ProductCheckoutService::store( $cart->id, $product->id, $totalqty, 0, request( 'datas' ), 'aamarpay', $tenantId );
+    }
+
     function store( ProductRequest $request ) {
 
         $cart = Cart::where('id', $request->cart_id)->first();
 
-        if ( !$cart || !$cart->tenant_id ) {
-            return responsejson( 'Cart not found or missing tenant information', 'fail' );
-        }
+            if ( !$cart || !$cart->tenant_id ) {
+                return responsejson( 'Cart not found or missing tenant information', 'fail' );
+            }
 
         // Get product from cart's tenant database
         $product = CrossTenantQueryService::getSingleFromTenant(

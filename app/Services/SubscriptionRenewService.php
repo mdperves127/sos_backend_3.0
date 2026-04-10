@@ -301,6 +301,8 @@ class SubscriptionRenewService {
                 $userCurrentSubscription->affiliate_request = $getsubscription->affiliate_request;
                 $userCurrentSubscription->pos_sale_qty      = $getsubscription->pos_sale_qty;
                 $userCurrentSubscription->employee_create   = $getsubscription->employee_create;
+                $userCurrentSubscription->has_website       = $getsubscription->has_website;
+                $userCurrentSubscription->website_visits    = $getsubscription->website_visits;
                 $userCurrentSubscription->chat_access       = $getsubscription->chat_access;
             }
 
