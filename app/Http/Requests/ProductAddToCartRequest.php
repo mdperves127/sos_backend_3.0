@@ -28,7 +28,7 @@ class ProductAddToCartRequest extends FormRequest {
     public function rules() {
         $getproduct = null;
         if ( request('product_id') && request('tenant_id') ) {
-            $getproduct = CrossTenantQueryService::getSingleFromTenant(
+            $getproduct = CrossTenantQueryService::getSingleRecordFromTenant(
                 request('tenant_id'),
                 Product::class,
                 function($query){

@@ -1,0 +1,46 @@
+[
+	{
+		"id": 1,
+		"name": "Women's Clothing",
+		"slug": "womens-clothing",
+		"description": "Modern dresses, tops, denim, and co-ord sets for daily and occasion wear.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 2,
+		"name": "Ethnic Wear",
+		"slug": "ethnic-wear",
+		"description": "Traditional and festive women's wear including kurtis, sarees, and suit sets.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 3,
+		"name": "Footwear",
+		"slug": "footwear",
+		"description": "Comfortable and dressy footwear for women's casual and occasion styling.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"name": "Accessories",
+		"slug": "accessories",
+		"description": "Handbags, jewelry, scarves, and belts to complete women's fashion looks.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	}
+]

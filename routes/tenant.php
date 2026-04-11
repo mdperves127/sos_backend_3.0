@@ -22,6 +22,7 @@ use App\Http\Controllers\API\Vendor\CustomerController;
 use App\Http\Controllers\API\Vendor\DamageController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
 use App\Http\Controllers\API\Vendor\DeliveryChargeController;
+use App\Http\Controllers\Tenant\DeliveryChargeController as TenantDeliveryChargeController;
 use App\Http\Controllers\API\Vendor\DeliveryCompanyController;
 use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
@@ -77,6 +78,7 @@ use App\Http\Controllers\Tenant\ForgotPasswordController as TenantForgotPassword
 use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordController;
 use App\Http\Controllers\RenewController;
 use App\Http\Controllers\Tenant\WebsiteVisitController;
+use App\Http\Controllers\Tenant\ThemeImportController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -91,7 +93,10 @@ Route::middleware( [
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
     Route::post( 'frontend-order-create/guest', [TenantOrderController::class, 'guestStore'] );
 
+    Route::get('tenant-frontend/delivery-charge', [TenantDeliveryChargeController::class, 'index']);
+
     Route::get( 'website-visit', [WebsiteVisitController::class, 'websiteVisit'] );
+    Route::get('import/{theme}', [ThemeImportController::class, 'importThemeContent']);
 
 
     // Aamarpay callback routes (public - no auth required)

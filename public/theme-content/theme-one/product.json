@@ -1,0 +1,1648 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "essential-crew-neck-t-shirt",
+		"name": "Essential Crew Neck T-Shirt",
+		"short_description": "Soft cotton jersey t-shirt for daily wear and easy layering.",
+		"long_description": "<p>An easy everyday t-shirt cut from breathable cotton jersey with a clean silhouette that pairs well with jeans, joggers, and overshirts.</p>",
+		"selling_price": "890.00",
+		"original_price": "1200.00",
+		"image": "uploads/product/essential-crew-neck-t-shirt-01.jpg",
+		"status": "active",
+		"meta_title": "Essential Crew Neck T-Shirt for Men",
+		"meta_keyword": "mens t-shirt, cotton t-shirt, crew neck tee",
+		"meta_description": "Shop the Essential Crew Neck T-Shirt in soft cotton jersey for everyday comfort.",
+		"tags": "t-shirt, crew neck, casual, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.83",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Black",
+					"White",
+					"Olive"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "100% Cotton Jersey"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Regular Fit"
+			},
+			{
+				"specification": "Neckline",
+				"specification_ans": "Ribbed Crew Neck"
+			}
+		],
+		"uniqid": "msh-prod-001",
+		"sku": "MSH-TS-001",
+		"distributor_price": "650.00",
+		"alert_qty": 10,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0001",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.83",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 1,
+			"name": "Men's Clothing"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 1,
+				"product_id": 1,
+				"image": "uploads/product/essential-crew-neck-t-shirt-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"subcategory_id": 2,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "slim-fit-linen-casual-shirt",
+		"name": "Slim Fit Linen Casual Shirt",
+		"short_description": "Lightweight linen blend shirt for polished casual dressing.",
+		"long_description": "<p>This slim fit casual shirt is built from a breathable linen blend that keeps the look sharp while staying comfortable through warm days and evening outings.</p>",
+		"selling_price": "1690.00",
+		"original_price": "2200.00",
+		"image": "uploads/product/slim-fit-linen-casual-shirt-01.jpg",
+		"status": "active",
+		"meta_title": "Slim Fit Linen Casual Shirt for Men",
+		"meta_keyword": "linen shirt, casual shirt men, slim fit shirt",
+		"meta_description": "Buy the Slim Fit Linen Casual Shirt for a breathable smart-casual look.",
+		"tags": "casual shirt, linen, slim fit, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.18",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Sky Blue",
+					"Sage",
+					"Beige"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Linen Cotton Blend"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Slim Fit"
+			},
+			{
+				"specification": "Sleeve",
+				"specification_ans": "Full Sleeve"
+			}
+		],
+		"uniqid": "msh-prod-002",
+		"sku": "MSH-CS-002",
+		"distributor_price": "1250.00",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0002",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "1690.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.18",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Northline",
+			"slug": "northline"
+		},
+		"category": {
+			"id": 1,
+			"name": "Men's Clothing"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Casual Shirts"
+		},
+		"product_image": [
+			{
+				"id": 2,
+				"product_id": 2,
+				"image": "uploads/product/slim-fit-linen-casual-shirt-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 3,
+		"category_id": 1,
+		"subcategory_id": 3,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "premium-oxford-formal-shirt",
+		"name": "Premium Oxford Formal Shirt",
+		"short_description": "Tailored formal shirt in crisp oxford cotton for office and events.",
+		"long_description": "<p>A refined oxford cotton shirt with a structured collar and tailored cut, designed to work under blazers or on its own for smart weekday dressing.</p>",
+		"selling_price": "1990.00",
+		"original_price": "2600.00",
+		"image": "uploads/product/premium-oxford-formal-shirt-01.jpg",
+		"status": "active",
+		"meta_title": "Premium Oxford Formal Shirt for Men",
+		"meta_keyword": "formal shirt, oxford shirt, office shirt men",
+		"meta_description": "Shop the Premium Oxford Formal Shirt for sharp office and formal looks.",
+		"tags": "formal shirt, oxford, office, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.46",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"White",
+					"Light Blue",
+					"Charcoal"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Oxford Cotton"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Tailored Fit"
+			},
+			{
+				"specification": "Collar",
+				"specification_ans": "Semi Cutaway Collar"
+			}
+		],
+		"uniqid": "msh-prod-003",
+		"sku": "MSH-FS-003",
+		"distributor_price": "1500.00",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "MSH0003",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "1990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.46",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Slate Studio",
+			"slug": "slate-studio"
+		},
+		"category": {
+			"id": 1,
+			"name": "Men's Clothing"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Formal Shirts"
+		},
+		"product_image": [
+			{
+				"id": 3,
+				"product_id": 3,
+				"image": "uploads/product/premium-oxford-formal-shirt-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Retail Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 4,
+		"category_id": 1,
+		"subcategory_id": 4,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "comfort-stretch-denim-jeans",
+		"name": "Comfort Stretch Denim Jeans",
+		"short_description": "Slim tapered denim with stretch for movement and all-day comfort.",
+		"long_description": "<p>Built from durable stretch denim, these jeans balance structure and flexibility for daily wear, commuting, and weekend styling.</p>",
+		"selling_price": "2490.00",
+		"original_price": "3200.00",
+		"image": "uploads/product/comfort-stretch-denim-jeans-01.jpg",
+		"status": "active",
+		"meta_title": "Comfort Stretch Denim Jeans for Men",
+		"meta_keyword": "mens jeans, stretch denim, slim tapered jeans",
+		"meta_description": "Explore the Comfort Stretch Denim Jeans made for a modern tapered fit.",
+		"tags": "jeans, denim, slim tapered, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.19",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Waist",
+				"options": [
+					"30",
+					"32",
+					"34",
+					"36"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Indigo",
+					"Washed Black"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "98% Cotton Denim, 2% Elastane"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Slim Tapered"
+			},
+			{
+				"specification": "Rise",
+				"specification_ans": "Mid Rise"
+			}
+		],
+		"uniqid": "msh-prod-004",
+		"sku": "MSH-DJ-004",
+		"distributor_price": "1950.00",
+		"alert_qty": 7,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0004",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.19",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Denim District",
+			"slug": "denim-district"
+		},
+		"category": {
+			"id": 1,
+			"name": "Men's Clothing"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 4,
+				"product_id": 4,
+				"image": "uploads/product/comfort-stretch-denim-jeans-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Bengal Textile House",
+			"business_name": "Bengal Textile House"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 5,
+		"category_id": 1,
+		"subcategory_id": 5,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "tailored-chino-trousers",
+		"name": "Tailored Chino Trousers",
+		"short_description": "Versatile cotton twill chinos with a clean slim-straight profile.",
+		"long_description": "<p>These tailored chinos are cut from durable cotton twill with light stretch, making them suitable for office wear, dinners, and smart casual outfits.</p>",
+		"selling_price": "2190.00",
+		"original_price": "2800.00",
+		"image": "uploads/product/tailored-chino-trousers-01.jpg",
+		"status": "active",
+		"meta_title": "Tailored Chino Trousers for Men",
+		"meta_keyword": "chino trousers, mens chinos, cotton twill pants",
+		"meta_description": "Shop Tailored Chino Trousers designed for everyday office and smart-casual wear.",
+		"tags": "chinos, trousers, smart casual, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.79",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Waist",
+				"options": [
+					"30",
+					"32",
+					"34",
+					"36"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Khaki",
+					"Navy",
+					"Stone"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Twill"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Slim Straight"
+			},
+			{
+				"specification": "Stretch",
+				"specification_ans": "Light Stretch"
+			}
+		],
+		"uniqid": "msh-prod-005",
+		"sku": "MSH-CT-005",
+		"distributor_price": "1720.00",
+		"alert_qty": 7,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "MSH0005",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "2190.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.79",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Northline",
+			"slug": "northline"
+		},
+		"category": {
+			"id": 1,
+			"name": "Men's Clothing"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Chinos & Trousers"
+		},
+		"product_image": [
+			{
+				"id": 5,
+				"product_id": 5,
+				"image": "uploads/product/tailored-chino-trousers-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Bengal Textile House",
+			"business_name": "Bengal Textile House"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Retail Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"subcategory_id": 6,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "embroidered-cotton-panjabi",
+		"name": "Embroidered Cotton Panjabi",
+		"short_description": "Festive panjabi with subtle front embroidery and premium cotton comfort.",
+		"long_description": "<p>A polished panjabi made for Eid, family gatherings, and cultural events, finished with tasteful front embroidery and a breathable premium cotton base.</p>",
+		"selling_price": "2790.00",
+		"original_price": "3500.00",
+		"image": "uploads/product/embroidered-cotton-panjabi-01.jpg",
+		"status": "active",
+		"meta_title": "Embroidered Cotton Panjabi for Men",
+		"meta_keyword": "panjabi men, embroidered panjabi, festive wear",
+		"meta_description": "Buy the Embroidered Cotton Panjabi for festive and cultural occasions.",
+		"tags": "panjabi, ethnic wear, festive, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.29",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Ivory",
+					"Maroon",
+					"Navy"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Premium Cotton"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Subtle Front Embroidery"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Regular Fit"
+			}
+		],
+		"uniqid": "msh-prod-006",
+		"sku": "MSH-PJ-006",
+		"distributor_price": "2250.00",
+		"alert_qty": 6,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0006",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2790.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.29",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Heritage Loom",
+			"slug": "heritage-loom"
+		},
+		"category": {
+			"id": 2,
+			"name": "Ethnic Wear"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Panjabi"
+		},
+		"product_image": [
+			{
+				"id": 6,
+				"product_id": 6,
+				"image": "uploads/product/embroidered-cotton-panjabi-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Bengal Textile House",
+			"business_name": "Bengal Textile House"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 7,
+		"category_id": 2,
+		"subcategory_id": 7,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "festive-kurta-pajama-set",
+		"name": "Festive Kurta Pajama Set",
+		"short_description": "Complete festive set with coordinated kurta and pajama bottoms.",
+		"long_description": "<p>This kurta pajama set is designed for weddings, celebrations, and family events, combining a smooth drape with easy coordinated styling.</p>",
+		"selling_price": "3390.00",
+		"original_price": "4200.00",
+		"image": "uploads/product/festive-kurta-pajama-set-01.jpg",
+		"status": "active",
+		"meta_title": "Festive Kurta Pajama Set for Men",
+		"meta_keyword": "kurta set men, pajama set, festive kurta",
+		"meta_description": "Shop the Festive Kurta Pajama Set for weddings and cultural celebrations.",
+		"tags": "kurta set, pajama, festive wear, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "19.29",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Cream",
+					"Bottle Green",
+					"Black"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Kurta and Pajama"
+			},
+			{
+				"specification": "Fabric",
+				"specification_ans": "Viscose Cotton Blend"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Festive and Wedding"
+			}
+		],
+		"uniqid": "msh-prod-007",
+		"sku": "MSH-KS-007",
+		"distributor_price": "2720.00",
+		"alert_qty": 6,
+		"supplier_id": 2,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "MSH0007",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "3390.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "19.29",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Heritage Loom",
+			"slug": "heritage-loom"
+		},
+		"category": {
+			"id": 2,
+			"name": "Ethnic Wear"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Kurta Sets"
+		},
+		"product_image": [
+			{
+				"id": 7,
+				"product_id": 7,
+				"image": "uploads/product/festive-kurta-pajama-set-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Bengal Textile House",
+			"business_name": "Bengal Textile House"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 8,
+		"category_id": 3,
+		"subcategory_id": 8,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "white-court-sneakers",
+		"name": "White Court Sneakers",
+		"short_description": "Minimal court sneakers with cushioned comfort for everyday wear.",
+		"long_description": "<p>These clean low-top sneakers feature a smooth upper, padded interior, and durable rubber sole that make them easy to style with denim, chinos, and relaxed tailoring.</p>",
+		"selling_price": "3890.00",
+		"original_price": "4800.00",
+		"image": "uploads/product/white-court-sneakers-01.jpg",
+		"status": "active",
+		"meta_title": "White Court Sneakers for Men",
+		"meta_keyword": "white sneakers, court sneakers men, casual shoes",
+		"meta_description": "Buy White Court Sneakers with cushioned support and a clean everyday look.",
+		"tags": "sneakers, white shoes, casual footwear, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "18.96",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "EU Size",
+				"options": [
+					"40",
+					"41",
+					"42",
+					"43",
+					"44"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"White",
+					"White-Green"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Upper",
+				"specification_ans": "Smooth Faux Leather"
+			},
+			{
+				"specification": "Sole",
+				"specification_ans": "Rubber Cup Sole"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Lace Up"
+			}
+		],
+		"uniqid": "msh-prod-008",
+		"sku": "MSH-SN-008",
+		"distributor_price": "3200.00",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0008",
+		"warranty": "15 Days Sole Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "3890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "18.96",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Monarch Step",
+			"slug": "monarch-step"
+		},
+		"category": {
+			"id": 3,
+			"name": "Footwear"
+		},
+		"subcategory": {
+			"id": 8,
+			"name": "Sneakers"
+		},
+		"product_image": [
+			{
+				"id": 8,
+				"product_id": 8,
+				"image": "uploads/product/white-court-sneakers-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Leather Craft Supply",
+			"business_name": "Leather Craft Supply BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"subcategory_id": 9,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "leather-penny-loafers",
+		"name": "Leather Penny Loafers",
+		"short_description": "Genuine leather loafers for dressy office and occasion wear.",
+		"long_description": "<p>Classic penny loafers made from genuine leather with a structured profile and comfortable sole, ideal for suits, formal trousers, and smart casual outfits.</p>",
+		"selling_price": "4590.00",
+		"original_price": "5600.00",
+		"image": "uploads/product/leather-penny-loafers-01.jpg",
+		"status": "active",
+		"meta_title": "Leather Penny Loafers for Men",
+		"meta_keyword": "penny loafers, leather loafers men, formal shoes",
+		"meta_description": "Shop Leather Penny Loafers designed for formal and smart-casual dressing.",
+		"tags": "loafers, leather shoes, formal footwear, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "18.04",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "EU Size",
+				"options": [
+					"40",
+					"41",
+					"42",
+					"43",
+					"44"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Black",
+					"Brown"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Upper",
+				"specification_ans": "Genuine Leather"
+			},
+			{
+				"specification": "Sole",
+				"specification_ans": "TPR Sole"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Formal and Smart Casual"
+			}
+		],
+		"uniqid": "msh-prod-009",
+		"sku": "MSH-LF-009",
+		"distributor_price": "3780.00",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "MSH0009",
+		"warranty": "30 Days Sole Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "4590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "18.04",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Monarch Step",
+			"slug": "monarch-step"
+		},
+		"category": {
+			"id": 3,
+			"name": "Footwear"
+		},
+		"subcategory": {
+			"id": 9,
+			"name": "Loafers"
+		},
+		"product_image": [
+			{
+				"id": 9,
+				"product_id": 9,
+				"image": "uploads/product/leather-penny-loafers-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Leather Craft Supply",
+			"business_name": "Leather Craft Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Retail Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 10,
+		"category_id": 3,
+		"subcategory_id": 10,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "everyday-comfort-sandals",
+		"name": "Everyday Comfort Sandals",
+		"short_description": "Cushioned sandals with adjustable straps for daily movement.",
+		"long_description": "<p>Designed for warm weather and all-day use, these sandals combine a soft footbed with secure adjustable straps and lightweight construction.</p>",
+		"selling_price": "1990.00",
+		"original_price": "2600.00",
+		"image": "uploads/product/everyday-comfort-sandals-01.jpg",
+		"status": "active",
+		"meta_title": "Everyday Comfort Sandals for Men",
+		"meta_keyword": "mens sandals, comfort sandals, casual sandals",
+		"meta_description": "Buy Everyday Comfort Sandals with cushioned support and adjustable fit.",
+		"tags": "sandals, comfort footwear, casual, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.46",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "EU Size",
+				"options": [
+					"40",
+					"41",
+					"42",
+					"43",
+					"44"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Tan",
+					"Black"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Upper",
+				"specification_ans": "Synthetic Leather"
+			},
+			{
+				"specification": "Footbed",
+				"specification_ans": "Cushioned EVA"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Adjustable Strap"
+			}
+		],
+		"uniqid": "msh-prod-010",
+		"sku": "MSH-SD-010",
+		"distributor_price": "1560.00",
+		"alert_qty": 6,
+		"supplier_id": 3,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "MSH0010",
+		"warranty": "15 Days Sole Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.46",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.3",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Monarch Step",
+			"slug": "monarch-step"
+		},
+		"category": {
+			"id": 3,
+			"name": "Footwear"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Sandals"
+		},
+		"product_image": [
+			{
+				"id": 10,
+				"product_id": 10,
+				"image": "uploads/product/everyday-comfort-sandals-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Leather Craft Supply",
+			"business_name": "Leather Craft Supply BD"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"subcategory_id": 11,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "classic-leather-belt",
+		"name": "Classic Leather Belt",
+		"short_description": "Polished leather belt with durable buckle for work and occasion wear.",
+		"long_description": "<p>A dependable leather belt that finishes formal trousers and chinos cleanly, built with a solid buckle and structured body for long-term use.</p>",
+		"selling_price": "1190.00",
+		"original_price": "1600.00",
+		"image": "uploads/product/classic-leather-belt-01.jpg",
+		"status": "active",
+		"meta_title": "Classic Leather Belt for Men",
+		"meta_keyword": "leather belt, mens belt, formal belt",
+		"meta_description": "Shop the Classic Leather Belt built for formal and smart-casual looks.",
+		"tags": "belt, leather, accessories, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.63",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Length",
+				"options": [
+					"32",
+					"34",
+					"36",
+					"38"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Black",
+					"Brown"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Split Leather"
+			},
+			{
+				"specification": "Buckle",
+				"specification_ans": "Solid Metal Buckle"
+			},
+			{
+				"specification": "Width",
+				"specification_ans": "35 mm"
+			}
+		],
+		"uniqid": "msh-prod-011",
+		"sku": "MSH-BT-011",
+		"distributor_price": "920.00",
+		"alert_qty": 10,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "MSH0011",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1190.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.63",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Oak Leather",
+			"slug": "oak-leather"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 11,
+			"name": "Belts"
+		},
+		"product_image": [
+			{
+				"id": 11,
+				"product_id": 11,
+				"image": "uploads/product/classic-leather-belt-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Leather Craft Supply",
+			"business_name": "Leather Craft Supply BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"subcategory_id": 12,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "minimal-bifold-wallet",
+		"name": "Minimal Bifold Wallet",
+		"short_description": "Compact leather wallet with clean lines and practical storage.",
+		"long_description": "<p>This bifold wallet keeps cards and cash organized without excess bulk, making it an easy everyday carry option with a refined finish.</p>",
+		"selling_price": "1590.00",
+		"original_price": "2100.00",
+		"image": "uploads/product/minimal-bifold-wallet-01.jpg",
+		"status": "active",
+		"meta_title": "Minimal Bifold Wallet for Men",
+		"meta_keyword": "mens wallet, bifold wallet, leather wallet",
+		"meta_description": "Buy the Minimal Bifold Wallet with slim storage and premium leather finish.",
+		"tags": "wallet, bifold, leather, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.29",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Black",
+					"Tan",
+					"Coffee"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Finish",
+				"options": [
+					"Smooth",
+					"Pebble"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Genuine Leather"
+			},
+			{
+				"specification": "Compartments",
+				"specification_ans": "2 Cash Slots, 6 Card Slots"
+			},
+			{
+				"specification": "Lining",
+				"specification_ans": "Polyester Twill"
+			}
+		],
+		"uniqid": "msh-prod-012",
+		"sku": "MSH-WL-012",
+		"distributor_price": "1220.00",
+		"alert_qty": 8,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "MSH0012",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.29",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Oak Leather",
+			"slug": "oak-leather"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 12,
+			"name": "Wallets"
+		},
+		"product_image": [
+			{
+				"id": 12,
+				"product_id": 12,
+				"image": "uploads/product/minimal-bifold-wallet-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Leather Craft Supply",
+			"business_name": "Leather Craft Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Retail Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"subcategory_id": 13,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "polarized-aviator-sunglasses",
+		"name": "Polarized Aviator Sunglasses",
+		"short_description": "Lightweight aviator frame with polarized UV400 lens protection.",
+		"long_description": "<p>These aviator sunglasses offer a clean metal frame, glare-reducing polarized lenses, and comfortable daily wear for driving, travel, and outdoor use.</p>",
+		"selling_price": "1790.00",
+		"original_price": "2400.00",
+		"image": "uploads/product/polarized-aviator-sunglasses-01.jpg",
+		"status": "active",
+		"meta_title": "Polarized Aviator Sunglasses for Men",
+		"meta_keyword": "aviator sunglasses, polarized sunglasses men, UV400 eyewear",
+		"meta_description": "Shop Polarized Aviator Sunglasses with lightweight frames and UV400 protection.",
+		"tags": "sunglasses, aviator, polarized, men",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.42",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Frame Color",
+				"options": [
+					"Black",
+					"Gunmetal",
+					"Silver"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Lens Color",
+				"options": [
+					"Smoke",
+					"Brown",
+					"Green"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Lens",
+				"specification_ans": "UV400 Polarized Lens"
+			},
+			{
+				"specification": "Frame",
+				"specification_ans": "Lightweight Metal Frame"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Medium Face Coverage"
+			}
+		],
+		"uniqid": "msh-prod-013",
+		"sku": "MSH-SG-013",
+		"distributor_price": "1360.00",
+		"alert_qty": 8,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "MSH0013",
+		"warranty": "7 Days Frame Replacement",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1790.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.42",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Menswear Hub",
+			"email": "sales@menswearhub.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Sunward",
+			"slug": "sunward"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 13,
+			"name": "Sunglasses"
+		},
+		"product_image": [
+			{
+				"id": 13,
+				"product_id": 13,
+				"image": "uploads/product/polarized-aviator-sunglasses-01.jpg",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Urban Accessories BD",
+			"business_name": "Urban Accessories BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Retail Stock"
+		},
+		"product_variant": []
+	}
+]

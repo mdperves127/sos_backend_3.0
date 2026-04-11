@@ -1,0 +1,1536 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "samsung-galaxy-a55-5g",
+		"name": "Samsung Galaxy A55 5G",
+		"short_description": "Balanced mid-range smartphone with AMOLED display, 5G, and long battery life.",
+		"long_description": "<p>The Galaxy A55 5G delivers a smooth daily smartphone experience with a vivid display, capable camera system, and dependable all-day battery for work and entertainment.</p>",
+		"selling_price": "47999.00",
+		"original_price": "52999.00",
+		"image": "uploads/product/samsung-galaxy-a55-5g-01.jpg",
+		"status": "active",
+		"meta_title": "Samsung Galaxy A55 5G Smartphone",
+		"meta_keyword": "samsung smartphone, galaxy a55 5g, android phone",
+		"meta_description": "Buy Samsung Galaxy A55 5G with AMOLED display and 5000mAh battery.",
+		"tags": "smartphone, samsung, 5g, android",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "9.43",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Storage",
+				"options": ["128GB", "256GB"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Awesome Iceblue", "Awesome Navy", "Awesome Lilac"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Display",
+				"specification_ans": "6.6-inch Super AMOLED FHD+"
+			},
+			{
+				"specification": "Processor",
+				"specification_ans": "Exynos 1480"
+			},
+			{
+				"specification": "Battery",
+				"specification_ans": "5000mAh"
+			}
+		],
+		"uniqid": "elc-prod-001",
+		"sku": "ELC-SP-001",
+		"distributor_price": "44500.00",
+		"alert_qty": 4,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "ELC0001",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "47999.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "9.43",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Samsung",
+			"slug": "samsung"
+		},
+		"category": {
+			"id": 1,
+			"name": "Mobile & Tablets"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Smartphones"
+		},
+		"product_image": [
+			{
+				"id": 1,
+				"product_id": 1,
+				"image": "uploads/product/samsung-galaxy-a55-5g-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"subcategory_id": 2,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "apple-ipad-10th-gen-wifi-64gb",
+		"name": "Apple iPad 10th Gen Wi-Fi 64GB",
+		"short_description": "Modern iPad with large display, USB-C, and smooth everyday performance.",
+		"long_description": "<p>The 10th generation iPad offers strong tablet performance for study, entertainment, browsing, and light productivity with a bright display and dependable battery life.</p>",
+		"selling_price": "58990.00",
+		"original_price": "64990.00",
+		"image": "uploads/product/apple-ipad-10th-gen-wifi-64gb-01.jpg",
+		"status": "active",
+		"meta_title": "Apple iPad 10th Gen Wi-Fi 64GB",
+		"meta_keyword": "ipad 10th gen, apple tablet, wifi tablet",
+		"meta_description": "Shop Apple iPad 10th Gen Wi-Fi 64GB with A14 Bionic and 10.9-inch display.",
+		"tags": "tablet, ipad, apple, wifi",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "9.23",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Storage",
+				"options": ["64GB", "256GB"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Blue", "Silver", "Pink"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Display",
+				"specification_ans": "10.9-inch Liquid Retina"
+			},
+			{
+				"specification": "Chip",
+				"specification_ans": "Apple A14 Bionic"
+			},
+			{
+				"specification": "Connectivity",
+				"specification_ans": "Wi-Fi 6 and USB-C"
+			}
+		],
+		"uniqid": "elc-prod-002",
+		"sku": "ELC-TB-002",
+		"distributor_price": "55500.00",
+		"alert_qty": 3,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0002",
+		"warranty": "1 Year International Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "58990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "9.23",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 1,
+			"name": "Mobile & Tablets"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Tablets"
+		},
+		"product_image": [
+			{
+				"id": 2,
+				"product_id": 2,
+				"image": "uploads/product/apple-ipad-10th-gen-wifi-64gb-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 3,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "xiaomi-redmi-watch-4",
+		"name": "Xiaomi Redmi Watch 4",
+		"short_description": "Slim smartwatch with AMOLED display, health tracking, and long battery backup.",
+		"long_description": "<p>The Redmi Watch 4 is a lightweight wearable built for notifications, daily activity tracking, and sleep monitoring with a bright display and practical battery life.</p>",
+		"selling_price": "10990.00",
+		"original_price": "12990.00",
+		"image": "uploads/product/xiaomi-redmi-watch-4-01.jpg",
+		"status": "active",
+		"meta_title": "Xiaomi Redmi Watch 4 Smartwatch",
+		"meta_keyword": "xiaomi smartwatch, redmi watch 4, wearable device",
+		"meta_description": "Buy Xiaomi Redmi Watch 4 with AMOLED display and health monitoring features.",
+		"tags": "smartwatch, xiaomi, wearable, amoled",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.40",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Strap Color",
+				"options": ["Black", "Silver Gray", "Lavender Purple"]
+			},
+			{
+				"id": 2,
+				"name": "Case Finish",
+				"options": ["Midnight Black", "Silver"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Display",
+				"specification_ans": "1.97-inch AMOLED"
+			},
+			{
+				"specification": "Battery Life",
+				"specification_ans": "Up to 20 Days"
+			},
+			{
+				"specification": "Sensors",
+				"specification_ans": "Heart Rate, SpO2, Sleep Tracking"
+			}
+		],
+		"uniqid": "elc-prod-003",
+		"sku": "ELC-SW-003",
+		"distributor_price": "9200.00",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0003",
+		"warranty": "6 Months Service Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "10990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.40",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Xiaomi",
+			"slug": "xiaomi"
+		},
+		"category": {
+			"id": 3,
+			"name": "Audio & Wearables"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Smartwatches"
+		},
+		"product_image": [
+			{
+				"id": 3,
+				"product_id": 3,
+				"image": "uploads/product/xiaomi-redmi-watch-4-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 4,
+		"category_id": 2,
+		"subcategory_id": 4,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "lenovo-ideapad-slim-3-core-i5",
+		"name": "Lenovo IdeaPad Slim 3 Core i5 Laptop",
+		"short_description": "Thin-and-light laptop for office work, classes, and everyday multitasking.",
+		"long_description": "<p>The Lenovo IdeaPad Slim 3 combines practical performance, fast SSD storage, and a modern display for users who need a dependable laptop for productivity and study.</p>",
+		"selling_price": "84990.00",
+		"original_price": "89990.00",
+		"image": "uploads/product/lenovo-ideapad-slim-3-core-i5-01.jpg",
+		"status": "active",
+		"meta_title": "Lenovo IdeaPad Slim 3 Core i5 Laptop",
+		"meta_keyword": "lenovo laptop, ideapad slim 3, core i5 notebook",
+		"meta_description": "Shop Lenovo IdeaPad Slim 3 with Core i5 processor, SSD storage, and 15.6-inch display.",
+		"tags": "laptop, lenovo, core i5, notebook",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "5.56",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "RAM",
+				"options": ["8GB", "16GB"]
+			},
+			{
+				"id": 2,
+				"name": "Storage",
+				"options": ["512GB SSD"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Processor",
+				"specification_ans": "Intel Core i5 13th Gen"
+			},
+			{
+				"specification": "Display",
+				"specification_ans": "15.6-inch FHD"
+			},
+			{
+				"specification": "Storage",
+				"specification_ans": "512GB NVMe SSD"
+			}
+		],
+		"uniqid": "elc-prod-004",
+		"sku": "ELC-LT-004",
+		"distributor_price": "81200.00",
+		"alert_qty": 2,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "ELC0004",
+		"warranty": "2 Years Brand Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "84990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "5.56",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Lenovo",
+			"slug": "lenovo"
+		},
+		"category": {
+			"id": 2,
+			"name": "Computing"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Laptops"
+		},
+		"product_image": [
+			{
+				"id": 4,
+				"product_id": 4,
+				"image": "uploads/product/lenovo-ideapad-slim-3-core-i5-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "ComputeCore Solutions",
+			"business_name": "ComputeCore Solutions BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 5,
+		"category_id": 2,
+		"subcategory_id": 5,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "asus-proart-pa248qv-monitor",
+		"name": "ASUS ProArt PA248QV Monitor",
+		"short_description": "Color-accurate professional monitor for design, office, and creative work.",
+		"long_description": "<p>The ASUS ProArt PA248QV is built for creators and professionals who need reliable color reproduction, flexible connectivity, and ergonomic adjustments on a crisp panel.</p>",
+		"selling_price": "42990.00",
+		"original_price": "46990.00",
+		"image": "uploads/product/asus-proart-pa248qv-monitor-01.jpg",
+		"status": "active",
+		"meta_title": "ASUS ProArt PA248QV Monitor",
+		"meta_keyword": "asus monitor, proart display, professional monitor",
+		"meta_description": "Buy ASUS ProArt PA248QV professional monitor with ergonomic stand and factory calibration.",
+		"tags": "monitor, asus, proart, display",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "8.51",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["24.1-inch"]
+			},
+			{
+				"id": 2,
+				"name": "Refresh Rate",
+				"options": ["75Hz"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Panel",
+				"specification_ans": "24.1-inch IPS"
+			},
+			{
+				"specification": "Resolution",
+				"specification_ans": "1920 x 1200"
+			},
+			{
+				"specification": "Color Accuracy",
+				"specification_ans": "100% sRGB and Rec.709"
+			}
+		],
+		"uniqid": "elc-prod-005",
+		"sku": "ELC-MN-005",
+		"distributor_price": "39800.00",
+		"alert_qty": 2,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0005",
+		"warranty": "3 Years Brand Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "42990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "8.51",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "ASUS",
+			"slug": "asus"
+		},
+		"category": {
+			"id": 2,
+			"name": "Computing"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Monitors"
+		},
+		"product_image": [
+			{
+				"id": 5,
+				"product_id": 5,
+				"image": "uploads/product/asus-proart-pa248qv-monitor-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "ComputeCore Solutions",
+			"business_name": "ComputeCore Solutions BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"subcategory_id": 6,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "asus-marshmallow-kw100-keyboard",
+		"name": "ASUS Marshmallow KW100 Keyboard",
+		"short_description": "Compact wireless keyboard designed for quiet typing and multi-device pairing.",
+		"long_description": "<p>The ASUS Marshmallow KW100 is a slim wireless keyboard with low-profile keys, Bluetooth pairing, and a compact footprint for clean desk setups and portable use.</p>",
+		"selling_price": "4990.00",
+		"original_price": "5990.00",
+		"image": "uploads/product/asus-marshmallow-kw100-keyboard-01.jpg",
+		"status": "active",
+		"meta_title": "ASUS Marshmallow KW100 Wireless Keyboard",
+		"meta_keyword": "asus keyboard, wireless keyboard, bluetooth keyboard",
+		"meta_description": "Shop ASUS Marshmallow KW100 compact wireless keyboard with Bluetooth connectivity.",
+		"tags": "keyboard, asus, wireless, bluetooth",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.69",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Oat Milk", "Green Tea Latte"]
+			},
+			{
+				"id": 2,
+				"name": "Layout",
+				"options": ["78-Key Compact"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Connection",
+				"specification_ans": "Bluetooth 5.0"
+			},
+			{
+				"specification": "Layout",
+				"specification_ans": "Compact 78-Key"
+			},
+			{
+				"specification": "Battery",
+				"specification_ans": "Up to 2 Years"
+			}
+		],
+		"uniqid": "elc-prod-006",
+		"sku": "ELC-KB-006",
+		"distributor_price": "4300.00",
+		"alert_qty": 6,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0006",
+		"warranty": "1 Year Service Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "4990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.69",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "ASUS",
+			"slug": "asus"
+		},
+		"category": {
+			"id": 2,
+			"name": "Computing"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Keyboards"
+		},
+		"product_image": [
+			{
+				"id": 6,
+				"product_id": 6,
+				"image": "uploads/product/asus-marshmallow-kw100-keyboard-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "ComputeCore Solutions",
+			"business_name": "ComputeCore Solutions BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 7,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "sony-wf-c700n-earbuds",
+		"name": "Sony WF-C700N Earbuds",
+		"short_description": "Compact noise-canceling earbuds with comfortable fit and balanced sound.",
+		"long_description": "<p>The Sony WF-C700N delivers wireless freedom, active noise canceling, and all-day listening comfort for commuting, calls, and music playback.</p>",
+		"selling_price": "12990.00",
+		"original_price": "14990.00",
+		"image": "uploads/product/sony-wf-c700n-earbuds-01.jpg",
+		"status": "active",
+		"meta_title": "Sony WF-C700N Noise Canceling Earbuds",
+		"meta_keyword": "sony earbuds, wf-c700n, tws earbuds",
+		"meta_description": "Buy Sony WF-C700N noise canceling earbuds with Bluetooth and all-day battery.",
+		"tags": "earbuds, sony, tws, noise canceling",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.34",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Black", "White", "Lavender"]
+			},
+			{
+				"id": 2,
+				"name": "Case Finish",
+				"options": ["Matte"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Noise Control",
+				"specification_ans": "Active Noise Canceling"
+			},
+			{
+				"specification": "Battery",
+				"specification_ans": "Up to 15 Hours with Case"
+			},
+			{
+				"specification": "Connectivity",
+				"specification_ans": "Bluetooth 5.2"
+			}
+		],
+		"uniqid": "elc-prod-007",
+		"sku": "ELC-EB-007",
+		"distributor_price": "11600.00",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "ELC0007",
+		"warranty": "6 Months Brand Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "12990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.34",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Sony",
+			"slug": "sony"
+		},
+		"category": {
+			"id": 3,
+			"name": "Audio & Wearables"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "TWS Earbuds"
+		},
+		"product_image": [
+			{
+				"id": 7,
+				"product_id": 7,
+				"image": "uploads/product/sony-wf-c700n-earbuds-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 8,
+		"category_id": 3,
+		"subcategory_id": 8,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "sony-wh-ch720n-headphones",
+		"name": "Sony WH-CH720N Headphones",
+		"short_description": "Wireless over-ear headphones with noise canceling and clear call quality.",
+		"long_description": "<p>The Sony WH-CH720N offers long battery life, effective noise canceling, and a lightweight build for work, travel, and everyday listening.</p>",
+		"selling_price": "17990.00",
+		"original_price": "19990.00",
+		"image": "uploads/product/sony-wh-ch720n-headphones-01.jpg",
+		"status": "active",
+		"meta_title": "Sony WH-CH720N Wireless Headphones",
+		"meta_keyword": "sony headphones, wh-ch720n, wireless headphones",
+		"meta_description": "Shop Sony WH-CH720N wireless headphones with long battery and noise canceling.",
+		"tags": "headphones, sony, wireless, anc",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "10.01",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Black", "Blue", "White"]
+			},
+			{
+				"id": 2,
+				"name": "Connection",
+				"options": ["Bluetooth", "3.5mm Wired"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Noise Control",
+				"specification_ans": "Dual Noise Sensor ANC"
+			},
+			{
+				"specification": "Battery",
+				"specification_ans": "Up to 35 Hours"
+			},
+			{
+				"specification": "Weight",
+				"specification_ans": "192g"
+			}
+		],
+		"uniqid": "elc-prod-008",
+		"sku": "ELC-HP-008",
+		"distributor_price": "16500.00",
+		"alert_qty": 4,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0008",
+		"warranty": "6 Months Brand Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "17990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "10.01",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Sony",
+			"slug": "sony"
+		},
+		"category": {
+			"id": 3,
+			"name": "Audio & Wearables"
+		},
+		"subcategory": {
+			"id": 8,
+			"name": "Headphones"
+		},
+		"product_image": [
+			{
+				"id": 8,
+				"product_id": 8,
+				"image": "uploads/product/sony-wh-ch720n-headphones-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"subcategory_id": 9,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "jbl-flip-6-speaker",
+		"name": "JBL Flip 6 Speaker",
+		"short_description": "Portable Bluetooth speaker with strong bass, waterproof body, and outdoor-ready design.",
+		"long_description": "<p>The JBL Flip 6 brings punchy sound, rugged portability, and IP67 protection for trips, parties, and everyday wireless playback.</p>",
+		"selling_price": "13990.00",
+		"original_price": "15990.00",
+		"image": "uploads/product/jbl-flip-6-speaker-01.jpg",
+		"status": "active",
+		"meta_title": "JBL Flip 6 Bluetooth Speaker",
+		"meta_keyword": "jbl speaker, flip 6, portable bluetooth speaker",
+		"meta_description": "Buy JBL Flip 6 Bluetooth speaker with IP67 protection and bold portable sound.",
+		"tags": "speaker, jbl, bluetooth, portable",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.51",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Black", "Blue", "Red"]
+			},
+			{
+				"id": 2,
+				"name": "Finish",
+				"options": ["Fabric Mesh"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Output",
+				"specification_ans": "30W RMS"
+			},
+			{
+				"specification": "Protection",
+				"specification_ans": "IP67 Water and Dust Resistant"
+			},
+			{
+				"specification": "Battery",
+				"specification_ans": "Up to 12 Hours"
+			}
+		],
+		"uniqid": "elc-prod-009",
+		"sku": "ELC-SPK-009",
+		"distributor_price": "12600.00",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "ELC0009",
+		"warranty": "6 Months Brand Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "13990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.51",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "JBL",
+			"slug": "jbl"
+		},
+		"category": {
+			"id": 3,
+			"name": "Audio & Wearables"
+		},
+		"subcategory": {
+			"id": 9,
+			"name": "Bluetooth Speakers"
+		},
+		"product_image": [
+			{
+				"id": 9,
+				"product_id": 9,
+				"image": "uploads/product/jbl-flip-6-speaker-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 10,
+		"category_id": 4,
+		"subcategory_id": 10,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "anker-powercore-20000-power-bank",
+		"name": "Anker PowerCore 20000 Power Bank",
+		"short_description": "High-capacity portable charger with fast output for phones and tablets.",
+		"long_description": "<p>The Anker PowerCore 20000 is designed for users who need reliable backup power on travel days, long commutes, or heavy phone usage with safe fast charging support.</p>",
+		"selling_price": "3990.00",
+		"original_price": "4990.00",
+		"image": "uploads/product/anker-powercore-20000-power-bank-01.jpg",
+		"status": "active",
+		"meta_title": "Anker PowerCore 20000 Power Bank",
+		"meta_keyword": "anker power bank, 20000mah power bank, portable charger",
+		"meta_description": "Buy Anker PowerCore 20000 power bank with fast charging and dependable battery backup.",
+		"tags": "power bank, anker, portable charger, battery",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.04",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Capacity",
+				"options": ["20000mAh"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Black", "White"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Capacity",
+				"specification_ans": "20000mAh"
+			},
+			{
+				"specification": "Output",
+				"specification_ans": "22.5W Fast Charge"
+			},
+			{
+				"specification": "Ports",
+				"specification_ans": "USB-C and Dual USB-A"
+			}
+		],
+		"uniqid": "elc-prod-010",
+		"sku": "ELC-PB-010",
+		"distributor_price": "3380.00",
+		"alert_qty": 8,
+		"supplier_id": 4,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "ELC0010",
+		"warranty": "6 Months Service Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "3990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.04",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Anker",
+			"slug": "anker"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories & Networking"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Power Banks"
+		},
+		"product_image": [
+			{
+				"id": 10,
+				"product_id": 10,
+				"image": "uploads/product/anker-powercore-20000-power-bank-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"subcategory_id": 11,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "anker-67w-gan-fast-charger",
+		"name": "Anker 67W GaN Fast Charger",
+		"short_description": "Compact multi-device wall charger with high-speed USB-C power delivery.",
+		"long_description": "<p>The Anker 67W GaN charger offers efficient, travel-friendly charging for phones, tablets, and lightweight laptops through a compact body and modern GaN design.</p>",
+		"selling_price": "3490.00",
+		"original_price": "4290.00",
+		"image": "uploads/product/anker-67w-gan-fast-charger-01.jpg",
+		"status": "active",
+		"meta_title": "Anker 67W GaN Fast Charger",
+		"meta_keyword": "anker charger, gan charger, usb c fast charger",
+		"meta_description": "Shop Anker 67W GaN fast charger for phones, tablets, and laptops.",
+		"tags": "charger, anker, gan, usb-c",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "18.65",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Plug Type",
+				"options": ["UK", "EU"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["White", "Black"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Output",
+				"specification_ans": "67W USB-C PD"
+			},
+			{
+				"specification": "Technology",
+				"specification_ans": "GaN"
+			},
+			{
+				"specification": "Ports",
+				"specification_ans": "2 x USB-C, 1 x USB-A"
+			}
+		],
+		"uniqid": "elc-prod-011",
+		"sku": "ELC-CH-011",
+		"distributor_price": "3010.00",
+		"alert_qty": 8,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0011",
+		"warranty": "6 Months Service Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "3490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "18.65",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Anker",
+			"slug": "anker"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories & Networking"
+		},
+		"subcategory": {
+			"id": 11,
+			"name": "Chargers & Cables"
+		},
+		"product_image": [
+			{
+				"id": 11,
+				"product_id": 11,
+				"image": "uploads/product/anker-67w-gan-fast-charger-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"subcategory_id": 12,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "xiaomi-ax3000-wifi-6-router",
+		"name": "Xiaomi AX3000 Wi-Fi 6 Router",
+		"short_description": "Dual-band Wi-Fi 6 router built for stable high-speed home connectivity.",
+		"long_description": "<p>The Xiaomi AX3000 is a modern router designed for busy households with multiple connected devices, offering strong coverage, gigabit ports, and efficient Wi-Fi 6 performance.</p>",
+		"selling_price": "6990.00",
+		"original_price": "7990.00",
+		"image": "uploads/product/xiaomi-ax3000-wifi-6-router-01.jpg",
+		"status": "active",
+		"meta_title": "Xiaomi AX3000 Wi-Fi 6 Router",
+		"meta_keyword": "xiaomi router, ax3000, wifi 6 router",
+		"meta_description": "Buy Xiaomi AX3000 Wi-Fi 6 router with dual-band connectivity and gigabit ports.",
+		"tags": "router, xiaomi, wifi 6, networking",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.52",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Plug Type",
+				"options": ["UK", "EU"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["White"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Wireless Standard",
+				"specification_ans": "Wi-Fi 6"
+			},
+			{
+				"specification": "Bands",
+				"specification_ans": "Dual Band 2.4GHz and 5GHz"
+			},
+			{
+				"specification": "Ports",
+				"specification_ans": "Gigabit Ethernet Ports"
+			}
+		],
+		"uniqid": "elc-prod-012",
+		"sku": "ELC-RT-012",
+		"distributor_price": "6300.00",
+		"alert_qty": 5,
+		"supplier_id": 4,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "ELC0012",
+		"warranty": "1 Year Service Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "6990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.52",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Xiaomi",
+			"slug": "xiaomi"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories & Networking"
+		},
+		"subcategory": {
+			"id": 12,
+			"name": "Routers"
+		},
+		"product_image": [
+			{
+				"id": 12,
+				"product_id": 12,
+				"image": "uploads/product/xiaomi-ax3000-wifi-6-router-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Tech Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"subcategory_id": 13,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "samsung-t7-shield-1tb-ssd",
+		"name": "Samsung T7 Shield 1TB SSD",
+		"short_description": "Rugged portable SSD with fast transfer speed and compact build.",
+		"long_description": "<p>The Samsung T7 Shield 1TB is a durable portable SSD made for fast file transfers, mobile workflows, and secure backup on the move with a shock-resistant body.</p>",
+		"selling_price": "15990.00",
+		"original_price": "17990.00",
+		"image": "uploads/product/samsung-t7-shield-1tb-ssd-01.jpg",
+		"status": "active",
+		"meta_title": "Samsung T7 Shield 1TB Portable SSD",
+		"meta_keyword": "samsung ssd, t7 shield, portable ssd 1tb",
+		"meta_description": "Shop Samsung T7 Shield 1TB portable SSD with fast USB 3.2 transfer speeds.",
+		"tags": "ssd, samsung, portable storage, usb-c",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "11.12",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Capacity",
+				"options": ["1TB", "2TB"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Black", "Blue", "Beige"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Speed",
+				"specification_ans": "Up to 1050MB/s Read"
+			},
+			{
+				"specification": "Interface",
+				"specification_ans": "USB 3.2 Gen 2 Type-C"
+			},
+			{
+				"specification": "Protection",
+				"specification_ans": "IP65 and Shock Resistant"
+			}
+		],
+		"uniqid": "elc-prod-013",
+		"sku": "ELC-SSD-013",
+		"distributor_price": "14600.00",
+		"alert_qty": 4,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "ELC0013",
+		"warranty": "3 Years Limited Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "15990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "11.12",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "ElectroMart BD",
+			"email": "sales@electromartbd.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Samsung",
+			"slug": "samsung"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories & Networking"
+		},
+		"subcategory": {
+			"id": 13,
+			"name": "Storage Devices"
+		},
+		"product_image": [
+			{
+				"id": 13,
+				"product_id": 13,
+				"image": "uploads/product/samsung-t7-shield-1tb-ssd-01.jpg",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	}
+]

@@ -1,0 +1,38 @@
+[
+	{
+		"id": 1,
+		"user_id": 1,
+		"name": "Central Saree Warehouse",
+		"slug": "central-saree-warehouse",
+		"description": "Primary storage and fulfillment center for sarees and ethnic apparel.",
+		"status": "active",
+		"deleted_at": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"vendor_id": 1
+	},
+	{
+		"id": 2,
+		"user_id": 1,
+		"name": "Banani Saree Boutique Stock",
+		"slug": "banani-saree-boutique-stock",
+		"description": "Boutique-ready stock for saree showroom orders and styling consultations.",
+		"status": "active",
+		"deleted_at": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"vendor_id": 1
+	},
+	{
+		"id": 3,
+		"user_id": 1,
+		"name": "Chattogram Ethnic Hub",
+		"slug": "chattogram-ethnic-hub",
+		"description": "Regional dispatch point for saree and occasion-wear deliveries outside Dhaka.",
+		"status": "active",
+		"deleted_at": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"vendor_id": 1
+	}
+]

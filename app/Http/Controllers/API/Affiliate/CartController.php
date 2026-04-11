@@ -29,7 +29,7 @@ class CartController extends Controller {
         $validatedData = $request->validated();
 
 
-        $getproduct = CrossTenantQueryService::getSingleFromTenant(
+        $getproduct = CrossTenantQueryService::getSingleRecordFromTenant(
             request('tenant_id'),
             Product::class,
             function($query) {

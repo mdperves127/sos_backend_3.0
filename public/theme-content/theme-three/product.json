@@ -1,0 +1,1536 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "pure-katan-silk-saree",
+		"name": "Pure Katan Silk Saree",
+		"short_description": "Elegant silk saree with zari border for wedding and festive styling.",
+		"long_description": "<p>This pure katan silk saree offers a rich drape, lustrous finish, and refined zari detailing that makes it suitable for formal gatherings, receptions, and festive events.</p>",
+		"selling_price": "7490.00",
+		"original_price": "8990.00",
+		"image": "uploads/product/pure-katan-silk-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Pure Katan Silk Saree for Women",
+		"meta_keyword": "silk saree, katan saree, zari saree, women saree",
+		"meta_description": "Shop Pure Katan Silk Saree with rich zari border and graceful festive drape.",
+		"tags": "silk saree, katan, zari, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.69",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Ruby Red", "Royal Blue", "Emerald Green"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Pure Katan Silk"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Zari Woven Border"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with 0.8 Meter Blouse Piece"
+			}
+		],
+		"uniqid": "sar-prod-001",
+		"sku": "SAR-SK-001",
+		"distributor_price": "6900.00",
+		"alert_qty": 3,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SAR0001",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "7490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.69",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Rupkatha Weaves",
+			"slug": "rupkatha-weaves"
+		},
+		"category": {
+			"id": 1,
+			"name": "Sarees"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Silk Sarees"
+		},
+		"product_image": [
+			{
+				"id": 1,
+				"product_id": 1,
+				"image": "uploads/product/pure-katan-silk-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Saree House",
+			"business_name": "Dhaka Saree House Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Saree Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"subcategory_id": 2,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "soft-handloom-cotton-saree",
+		"name": "Soft Handloom Cotton Saree",
+		"short_description": "Breathable cotton saree for office, daily wear, and summer comfort.",
+		"long_description": "<p>This soft handloom cotton saree is lightweight, easy to drape, and comfortable for long wear, making it ideal for daily styling, workdays, and casual events.</p>",
+		"selling_price": "2890.00",
+		"original_price": "3490.00",
+		"image": "uploads/product/soft-handloom-cotton-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Soft Handloom Cotton Saree",
+		"meta_keyword": "cotton saree, handloom saree, daily wear saree",
+		"meta_description": "Buy Soft Handloom Cotton Saree for breathable all-day comfort and easy draping.",
+		"tags": "cotton saree, handloom, daily wear, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.19",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Mustard", "Teal", "Off White"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Handloom Cotton"
+			},
+			{
+				"specification": "Texture",
+				"specification_ans": "Soft and Breathable"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with Blouse Piece"
+			}
+		],
+		"uniqid": "sar-prod-002",
+		"sku": "SAR-CT-002",
+		"distributor_price": "2450.00",
+		"alert_qty": 6,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SAR0002",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "2890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.19",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Nandini Loom",
+			"slug": "nandini-loom"
+		},
+		"category": {
+			"id": 1,
+			"name": "Sarees"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Cotton Sarees"
+		},
+		"product_image": [
+			{
+				"id": 2,
+				"product_id": 2,
+				"image": "uploads/product/soft-handloom-cotton-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Tant Heritage Supply",
+			"business_name": "Tant Heritage Supply BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Saree Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 3,
+		"category_id": 1,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "soft-jamdani-weave-saree",
+		"name": "Soft Jamdani Weave Saree",
+		"short_description": "Light jamdani saree with woven motifs and graceful traditional appeal.",
+		"long_description": "<p>This soft jamdani saree blends traditional woven artistry with a lighter drape that works beautifully for cultural programs, daytime events, and elegant everyday wear.</p>",
+		"selling_price": "5590.00",
+		"original_price": "6490.00",
+		"image": "uploads/product/soft-jamdani-weave-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Soft Jamdani Weave Saree",
+		"meta_keyword": "jamdani saree, woven saree, traditional saree",
+		"meta_description": "Shop Soft Jamdani Weave Saree with delicate woven motifs and a refined drape.",
+		"tags": "jamdani, woven saree, traditional, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.87",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Sky Blue", "Peach", "Ivory"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Blend Jamdani"
+			},
+			{
+				"specification": "Design",
+				"specification_ans": "Woven Buti Motifs"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with Blouse Piece"
+			}
+		],
+		"uniqid": "sar-prod-003",
+		"sku": "SAR-JM-003",
+		"distributor_price": "5050.00",
+		"alert_qty": 4,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0003",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "5590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.87",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Nandini Loom",
+			"slug": "nandini-loom"
+		},
+		"category": {
+			"id": 1,
+			"name": "Sarees"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Jamdani Sarees"
+		},
+		"product_image": [
+			{
+				"id": 3,
+				"product_id": 3,
+				"image": "uploads/product/soft-jamdani-weave-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Tant Heritage Supply",
+			"business_name": "Tant Heritage Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 4,
+		"category_id": 1,
+		"subcategory_id": 4,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "sequin-georgette-drape-saree",
+		"name": "Sequin Georgette Drape Saree",
+		"short_description": "Flowy georgette saree with subtle sequin work for evening occasions.",
+		"long_description": "<p>This georgette drape saree is light, fluid, and easy to carry, finished with delicate sequin detailing for dinner parties, receptions, and elegant night events.</p>",
+		"selling_price": "4690.00",
+		"original_price": "5490.00",
+		"image": "uploads/product/sequin-georgette-drape-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Sequin Georgette Drape Saree",
+		"meta_keyword": "georgette saree, sequin saree, party saree women",
+		"meta_description": "Buy Sequin Georgette Drape Saree with soft fall and elegant shimmer finish.",
+		"tags": "georgette saree, sequin, drape, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "14.57",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Wine", "Black", "Dusty Rose"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Soft Georgette"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Sequin Embellishment"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with Matching Blouse Piece"
+			}
+		],
+		"uniqid": "sar-prod-004",
+		"sku": "SAR-GE-004",
+		"distributor_price": "4200.00",
+		"alert_qty": 4,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0004",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "4690.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "14.57",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Monsoon Muse",
+			"slug": "monsoon-muse"
+		},
+		"category": {
+			"id": 1,
+			"name": "Sarees"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Georgette Sarees"
+		},
+		"product_image": [
+			{
+				"id": 4,
+				"product_id": 4,
+				"image": "uploads/product/sequin-georgette-drape-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Bridal Couture Sourcing",
+			"business_name": "Bridal Couture Sourcing"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 5,
+		"category_id": 1,
+		"subcategory_id": 5,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "floral-print-chiffon-saree",
+		"name": "Floral Print Chiffon Saree",
+		"short_description": "Light chiffon saree with soft floral print for easy graceful styling.",
+		"long_description": "<p>This chiffon saree features an airy drape and delicate floral print, making it an effortless choice for brunches, daytime invitations, and summer events.</p>",
+		"selling_price": "3290.00",
+		"original_price": "3890.00",
+		"image": "uploads/product/floral-print-chiffon-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Floral Print Chiffon Saree",
+		"meta_keyword": "chiffon saree, floral saree, lightweight saree",
+		"meta_description": "Shop Floral Print Chiffon Saree with breezy texture and soft everyday elegance.",
+		"tags": "chiffon saree, floral, light drape, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.42",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Lilac Bloom", "Mint Floral", "Peach Rose"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Soft Chiffon"
+			},
+			{
+				"specification": "Pattern",
+				"specification_ans": "Floral Print"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with Blouse Piece"
+			}
+		],
+		"uniqid": "sar-prod-005",
+		"sku": "SAR-CH-005",
+		"distributor_price": "2920.00",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SAR0005",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "3290.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.42",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Monsoon Muse",
+			"slug": "monsoon-muse"
+		},
+		"category": {
+			"id": 1,
+			"name": "Sarees"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Chiffon Sarees"
+		},
+		"product_image": [
+			{
+				"id": 5,
+				"product_id": 5,
+				"image": "uploads/product/floral-print-chiffon-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Saree House",
+			"business_name": "Dhaka Saree House Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Saree Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"subcategory_id": 6,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "bridal-banarasi-zari-saree",
+		"name": "Bridal Banarasi Zari Saree",
+		"short_description": "Rich bridal saree with ornate zari work and ceremonial presence.",
+		"long_description": "<p>This bridal Banarasi saree is crafted for weddings and grand ceremonies, featuring dense zari artistry, a rich pallu, and a structured bridal drape.</p>",
+		"selling_price": "14990.00",
+		"original_price": "16990.00",
+		"image": "uploads/product/bridal-banarasi-zari-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Bridal Banarasi Zari Saree",
+		"meta_keyword": "bridal saree, banarasi saree, zari bridal saree",
+		"meta_description": "Buy Bridal Banarasi Zari Saree for weddings, receptions, and traditional ceremonies.",
+		"tags": "bridal saree, banarasi, zari, wedding",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "11.77",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Bridal Red", "Deep Maroon", "Rani Pink"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Banarasi Silk Blend"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Heavy Zari Weaving"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Wedding and Reception"
+			}
+		],
+		"uniqid": "sar-prod-006",
+		"sku": "SAR-BR-006",
+		"distributor_price": "13850.00",
+		"alert_qty": 2,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0006",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "14990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "11.77",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Kanchi Heritage",
+			"slug": "kanchi-heritage"
+		},
+		"category": {
+			"id": 2,
+			"name": "Occasion Sarees"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Bridal Sarees"
+		},
+		"product_image": [
+			{
+				"id": 6,
+				"product_id": 6,
+				"image": "uploads/product/bridal-banarasi-zari-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Bridal Couture Sourcing",
+			"business_name": "Bridal Couture Sourcing"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 7,
+		"category_id": 2,
+		"subcategory_id": 7,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "stone-work-party-saree",
+		"name": "Stone Work Party Saree",
+		"short_description": "Dressy party saree with shimmer accents and embellished detailing.",
+		"long_description": "<p>This party wear saree is designed for evening celebrations with subtle shimmer, stone embellishment, and a fluid drape that photographs beautifully.</p>",
+		"selling_price": "6890.00",
+		"original_price": "7890.00",
+		"image": "uploads/product/stone-work-party-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Stone Work Party Saree",
+		"meta_keyword": "party wear saree, stone work saree, evening saree",
+		"meta_description": "Shop Stone Work Party Saree with shimmer accents for receptions and evening events.",
+		"tags": "party saree, stone work, shimmer, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.67",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Champagne Gold", "Midnight Navy", "Mauve"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Net and Satin Blend"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Stone and Sequin Embellishment"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Reception and Party"
+			}
+		],
+		"uniqid": "sar-prod-007",
+		"sku": "SAR-PW-007",
+		"distributor_price": "6200.00",
+		"alert_qty": 3,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0007",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "6890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.67",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Noor Boutique",
+			"slug": "noor-boutique"
+		},
+		"category": {
+			"id": 2,
+			"name": "Occasion Sarees"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Party Wear Sarees"
+		},
+		"product_image": [
+			{
+				"id": 7,
+				"product_id": 7,
+				"image": "uploads/product/stone-work-party-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Bridal Couture Sourcing",
+			"business_name": "Bridal Couture Sourcing"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 8,
+		"category_id": 2,
+		"subcategory_id": 8,
+		"brand_id": 1,
+		"user_id": 1,
+		"slug": "temple-border-festive-saree",
+		"name": "Temple Border Festive Saree",
+		"short_description": "Festive saree with woven temple border and rich traditional palette.",
+		"long_description": "<p>This festive saree blends structured drape, woven border detailing, and celebratory color tones that work well for puja, family functions, and cultural occasions.</p>",
+		"selling_price": "6290.00",
+		"original_price": "7290.00",
+		"image": "uploads/product/temple-border-festive-saree-01.jpg",
+		"status": "active",
+		"meta_title": "Temple Border Festive Saree",
+		"meta_keyword": "festive saree, temple border saree, puja saree",
+		"meta_description": "Buy Temple Border Festive Saree for puja, family functions, and traditional celebrations.",
+		"tags": "festive saree, temple border, traditional, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.72",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Marigold", "Bottle Green", "Vermilion"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Silk Blend"
+			},
+			{
+				"specification": "Border",
+				"specification_ans": "Temple Woven Border"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Festive and Cultural Events"
+			}
+		],
+		"uniqid": "sar-prod-008",
+		"sku": "SAR-FS-008",
+		"distributor_price": "5710.00",
+		"alert_qty": 4,
+		"supplier_id": 1,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SAR0008",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "6290.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.72",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 1,
+			"user_id": 1,
+			"name": "Rupkatha Weaves",
+			"slug": "rupkatha-weaves"
+		},
+		"category": {
+			"id": 2,
+			"name": "Occasion Sarees"
+		},
+		"subcategory": {
+			"id": 8,
+			"name": "Festive Sarees"
+		},
+		"product_image": [
+			{
+				"id": 8,
+				"product_id": 8,
+				"image": "uploads/product/temple-border-festive-saree-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Saree House",
+			"business_name": "Dhaka Saree House Ltd."
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Ethnic Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"subcategory_id": 9,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "embroidered-ready-blouse",
+		"name": "Embroidered Ready Blouse",
+		"short_description": "Tailored ready blouse with festive embroidery for quick saree styling.",
+		"long_description": "<p>This ready blouse is designed to pair with silk, jamdani, and festive sarees, offering a structured fit, lined finish, and embroidered detailing for easy styling.</p>",
+		"selling_price": "1890.00",
+		"original_price": "2290.00",
+		"image": "uploads/product/embroidered-ready-blouse-01.jpg",
+		"status": "active",
+		"meta_title": "Embroidered Ready Blouse for Saree",
+		"meta_keyword": "ready blouse, embroidered blouse, saree blouse women",
+		"meta_description": "Shop Embroidered Ready Blouse with structured fit and festive detailing.",
+		"tags": "ready blouse, embroidered, saree blouse, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.47",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["34", "36", "38", "40"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Gold", "Maroon", "Black"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Silk Blend with Lining"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Back Hook"
+			},
+			{
+				"specification": "Sleeve",
+				"specification_ans": "Half Sleeve"
+			}
+		],
+		"uniqid": "sar-prod-009",
+		"sku": "SAR-BL-009",
+		"distributor_price": "1600.00",
+		"alert_qty": 7,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0009",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.47",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Anika Ethnic",
+			"slug": "anika-ethnic"
+		},
+		"category": {
+			"id": 3,
+			"name": "Blouses & Innerwear"
+		},
+		"subcategory": {
+			"id": 9,
+			"name": "Ready Blouses"
+		},
+		"product_image": [
+			{
+				"id": 9,
+				"product_id": 9,
+				"image": "uploads/product/embroidered-ready-blouse-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Bridal Couture Sourcing",
+			"business_name": "Bridal Couture Sourcing"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 10,
+		"category_id": 3,
+		"subcategory_id": 10,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "smooth-fit-saree-shapewear",
+		"name": "Smooth Fit Saree Shapewear",
+		"short_description": "Comfortable saree shapewear with stretch fit and easy flare movement.",
+		"long_description": "<p>This saree shapewear is designed to create a smooth base under sarees while staying breathable and easy to walk in, making it ideal for long functions and daily wear.</p>",
+		"selling_price": "1490.00",
+		"original_price": "1790.00",
+		"image": "uploads/product/smooth-fit-saree-shapewear-01.jpg",
+		"status": "active",
+		"meta_title": "Smooth Fit Saree Shapewear",
+		"meta_keyword": "saree shapewear, saree petticoat, innerwear women",
+		"meta_description": "Buy Smooth Fit Saree Shapewear for a flattering silhouette and easy movement.",
+		"tags": "shapewear, petticoat, saree innerwear, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.76",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["M", "L", "XL", "XXL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Skin", "Black", "Maroon"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Stretchable Lycra Blend"
+			},
+			{
+				"specification": "Waist",
+				"specification_ans": "Elastic Waistband"
+			},
+			{
+				"specification": "Style",
+				"specification_ans": "Mermaid Cut Shapewear"
+			}
+		],
+		"uniqid": "sar-prod-010",
+		"sku": "SAR-SH-010",
+		"distributor_price": "1260.00",
+		"alert_qty": 10,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SAR0010",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.76",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Anika Ethnic",
+			"slug": "anika-ethnic"
+		},
+		"category": {
+			"id": 3,
+			"name": "Blouses & Innerwear"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Petticoats & Shapewear"
+		},
+		"product_image": [
+			{
+				"id": 10,
+				"product_id": 10,
+				"image": "uploads/product/smooth-fit-saree-shapewear-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Bridal Couture Sourcing",
+			"business_name": "Bridal Couture Sourcing"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Saree Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"subcategory_id": 11,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "antique-gold-jewelry-set",
+		"name": "Antique Gold Jewelry Set",
+		"short_description": "Statement necklace and earring set designed to pair with saree looks.",
+		"long_description": "<p>This antique gold jewelry set adds a polished finishing touch to bridal, festive, and party sarees with its detailed motif work and coordinated matching pieces.</p>",
+		"selling_price": "2690.00",
+		"original_price": "3190.00",
+		"image": "uploads/product/antique-gold-jewelry-set-01.jpg",
+		"status": "active",
+		"meta_title": "Antique Gold Jewelry Set for Saree",
+		"meta_keyword": "jewelry set, saree jewelry, antique gold set",
+		"meta_description": "Shop Antique Gold Jewelry Set to complete bridal and festive saree styling.",
+		"tags": "jewelry set, antique gold, saree accessory, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.67",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Finish",
+				"options": ["Antique Gold", "Matte Gold"]
+			},
+			{
+				"id": 2,
+				"name": "Set Includes",
+				"options": ["Necklace and Earrings"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Alloy with Stone Detailing"
+			},
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Necklace and Earrings"
+			},
+			{
+				"specification": "Style",
+				"specification_ans": "Traditional Statement Set"
+			}
+		],
+		"uniqid": "sar-prod-011",
+		"sku": "SAR-JW-011",
+		"distributor_price": "2250.00",
+		"alert_qty": 6,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0011",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "2690.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.67",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Noor Boutique",
+			"slug": "noor-boutique"
+		},
+		"category": {
+			"id": 4,
+			"name": "Saree Accessories"
+		},
+		"subcategory": {
+			"id": 11,
+			"name": "Jewelry Sets"
+		},
+		"product_image": [
+			{
+				"id": 11,
+				"product_id": 11,
+				"image": "uploads/product/antique-gold-jewelry-set-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Ethnic Accessories Hub",
+			"business_name": "Ethnic Accessories Hub"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"subcategory_id": 12,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "embellished-potli-clutch",
+		"name": "Embellished Potli Clutch",
+		"short_description": "Compact festive potli bag for weddings, receptions, and saree styling.",
+		"long_description": "<p>This embellished potli clutch is designed to complement saree looks with beadwork, easy handheld styling, and enough space for event essentials.</p>",
+		"selling_price": "1590.00",
+		"original_price": "1890.00",
+		"image": "uploads/product/embellished-potli-clutch-01.jpg",
+		"status": "active",
+		"meta_title": "Embellished Potli Clutch for Saree",
+		"meta_keyword": "potli bag, saree clutch, bridal clutch",
+		"meta_description": "Buy Embellished Potli Clutch to complete festive and bridal saree outfits.",
+		"tags": "potli bag, clutch, saree accessory, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.87",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Gold", "Rose Pink", "Maroon"]
+			},
+			{
+				"id": 2,
+				"name": "Style",
+				"options": ["Potli", "Mini Clutch"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Silk Base with Bead Embellishment"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Drawstring Closure"
+			},
+			{
+				"specification": "Use",
+				"specification_ans": "Festive and Wedding Styling"
+			}
+		],
+		"uniqid": "sar-prod-012",
+		"sku": "SAR-CL-012",
+		"distributor_price": "1320.00",
+		"alert_qty": 7,
+		"supplier_id": 4,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SAR0012",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.87",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Tasar Tale",
+			"slug": "tasar-tale"
+		},
+		"category": {
+			"id": 4,
+			"name": "Saree Accessories"
+		},
+		"subcategory": {
+			"id": 12,
+			"name": "Clutches & Potli Bags"
+		},
+		"product_image": [
+			{
+				"id": 12,
+				"product_id": 12,
+				"image": "uploads/product/embellished-potli-clutch-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Ethnic Accessories Hub",
+			"business_name": "Ethnic Accessories Hub"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Ethnic Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"subcategory_id": 13,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "pearl-saree-belt-pin-set",
+		"name": "Pearl Saree Belt & Pin Set",
+		"short_description": "Decorative saree belt and pin set for polished pleats and waist styling.",
+		"long_description": "<p>This saree belt and pin set adds structure and elegance to saree draping, helping keep pleats in place while giving the outfit a styled waistline finish.</p>",
+		"selling_price": "1190.00",
+		"original_price": "1490.00",
+		"image": "uploads/product/pearl-saree-belt-pin-set-01.jpg",
+		"status": "active",
+		"meta_title": "Pearl Saree Belt and Pin Set",
+		"meta_keyword": "saree belt, saree pin, pearl waist belt",
+		"meta_description": "Shop Pearl Saree Belt and Pin Set for refined saree draping and styling.",
+		"tags": "saree belt, saree pin, accessory, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.13",
+		"rejected_details": null,
+		"created_at": "2026-04-10T17:00:00.000000Z",
+		"updated_at": "2026-04-10T17:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Finish",
+				"options": ["Pearl Gold", "Pearl Silver"]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": ["Adjustable"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Alloy with Faux Pearl"
+			},
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Waist Belt and Saree Pins"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Adjustable Hook Closure"
+			}
+		],
+		"uniqid": "sar-prod-013",
+		"sku": "SAR-BT-013",
+		"distributor_price": "980.00",
+		"alert_qty": 8,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SAR0013",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1190.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.13",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Saree Gallery BD",
+			"email": "sales@sareegallerybd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Tasar Tale",
+			"slug": "tasar-tale"
+		},
+		"category": {
+			"id": 4,
+			"name": "Saree Accessories"
+		},
+		"subcategory": {
+			"id": 13,
+			"name": "Saree Belts & Pins"
+		},
+		"product_image": [
+			{
+				"id": 13,
+				"product_id": 13,
+				"image": "uploads/product/pearl-saree-belt-pin-set-01.jpg",
+				"created_at": "2026-04-10T17:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Ethnic Accessories Hub",
+			"business_name": "Ethnic Accessories Hub"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Saree Boutique Stock"
+		},
+		"product_variant": []
+	}
+]

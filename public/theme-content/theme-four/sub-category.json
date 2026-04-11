@@ -1,0 +1,132 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"name": "Dresses",
+		"slug": "dresses",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"name": "Tops & Tunics",
+		"slug": "tops-tunics",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 3,
+		"category_id": 1,
+		"name": "Jeans & Trousers",
+		"slug": "jeans-trousers",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"category_id": 1,
+		"name": "Co-ord Sets",
+		"slug": "co-ord-sets",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 5,
+		"category_id": 2,
+		"name": "Kurtis",
+		"slug": "kurtis",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"name": "Sarees",
+		"slug": "sarees",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 7,
+		"category_id": 2,
+		"name": "Salwar Kameez",
+		"slug": "salwar-kameez",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 8,
+		"category_id": 3,
+		"name": "Heels",
+		"slug": "heels",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"name": "Flats & Sandals",
+		"slug": "flats-sandals",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 10,
+		"category_id": 4,
+		"name": "Handbags",
+		"slug": "handbags",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"name": "Jewelry",
+		"slug": "jewelry",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"name": "Scarves & Hijabs",
+		"slug": "scarves-hijabs",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"name": "Belts",
+		"slug": "belts",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	}
+]

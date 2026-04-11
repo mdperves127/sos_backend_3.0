@@ -1,0 +1,132 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"name": "Silk Sarees",
+		"slug": "silk-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"name": "Cotton Sarees",
+		"slug": "cotton-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 3,
+		"category_id": 1,
+		"name": "Jamdani Sarees",
+		"slug": "jamdani-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"category_id": 1,
+		"name": "Georgette Sarees",
+		"slug": "georgette-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 5,
+		"category_id": 1,
+		"name": "Chiffon Sarees",
+		"slug": "chiffon-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"name": "Bridal Sarees",
+		"slug": "bridal-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 7,
+		"category_id": 2,
+		"name": "Party Wear Sarees",
+		"slug": "party-wear-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 8,
+		"category_id": 2,
+		"name": "Festive Sarees",
+		"slug": "festive-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"name": "Ready Blouses",
+		"slug": "ready-blouses",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 10,
+		"category_id": 3,
+		"name": "Petticoats & Shapewear",
+		"slug": "petticoats-shapewear",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"name": "Jewelry Sets",
+		"slug": "jewelry-sets",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"name": "Clutches & Potli Bags",
+		"slug": "clutches-potli-bags",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"name": "Saree Belts & Pins",
+		"slug": "saree-belts-pins",
+		"status": "active",
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	}
+]

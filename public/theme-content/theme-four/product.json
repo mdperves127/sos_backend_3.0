@@ -1,0 +1,1536 @@
+[
+	{
+		"id": 1,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "floral-midi-wrap-dress",
+		"name": "Floral Midi Wrap Dress",
+		"short_description": "Soft printed midi dress with a flattering wrap silhouette for brunch and day outings.",
+		"long_description": "<p>This floral midi wrap dress blends light fabric, easy movement, and a feminine fit that works well for casual events, day dates, and polished weekend wear.</p>",
+		"selling_price": "2890.00",
+		"original_price": "3490.00",
+		"image": "uploads/product/floral-midi-wrap-dress-01.jpg",
+		"status": "active",
+		"meta_title": "Floral Midi Wrap Dress for Women",
+		"meta_keyword": "women dress, floral midi dress, wrap dress",
+		"meta_description": "Shop Floral Midi Wrap Dress with soft drape and elegant everyday styling.",
+		"tags": "dress, midi, floral, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.19",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L", "XL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Rose Bloom", "Sky Floral", "Black Floral"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Soft Viscose Blend"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "Midi Length"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Wrap Fit"
+			}
+		],
+		"uniqid": "wmn-prod-001",
+		"sku": "WMN-DR-001",
+		"distributor_price": "2450.00",
+		"alert_qty": 6,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "WMN0001",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.19",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Velvet Bloom",
+			"slug": "velvet-bloom"
+		},
+		"category": {
+			"id": 1,
+			"name": "Women's Clothing"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Dresses"
+		},
+		"product_image": [
+			{
+				"id": 1,
+				"product_id": 1,
+				"image": "uploads/product/floral-midi-wrap-dress-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "City Fashion Source",
+			"business_name": "City Fashion Source Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Women Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 2,
+		"category_id": 1,
+		"subcategory_id": 2,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "ribbed-knit-longline-top",
+		"name": "Ribbed Knit Longline Top",
+		"short_description": "Minimal ribbed top with stretch comfort for casual and smart-casual styling.",
+		"long_description": "<p>This ribbed knit longline top offers a clean silhouette and soft stretch finish that works with jeans, trousers, and layered outerwear for everyday dressing.</p>",
+		"selling_price": "1590.00",
+		"original_price": "1990.00",
+		"image": "uploads/product/ribbed-knit-longline-top-01.jpg",
+		"status": "active",
+		"meta_title": "Ribbed Knit Longline Top for Women",
+		"meta_keyword": "women top, ribbed knit top, casual top",
+		"meta_description": "Buy Ribbed Knit Longline Top with soft stretch and a polished daily look.",
+		"tags": "top, knit, ribbed, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.10",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L", "XL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Beige", "Black", "Sage"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Rib Knit"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Slim Fit"
+			},
+			{
+				"specification": "Sleeve",
+				"specification_ans": "Full Sleeve"
+			}
+		],
+		"uniqid": "wmn-prod-002",
+		"sku": "WMN-TP-002",
+		"distributor_price": "1320.00",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "WMN0002",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.10",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Noor Atelier",
+			"slug": "noor-atelier"
+		},
+		"category": {
+			"id": 1,
+			"name": "Women's Clothing"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Tops & Tunics"
+		},
+		"product_image": [
+			{
+				"id": 2,
+				"product_id": 2,
+				"image": "uploads/product/ribbed-knit-longline-top-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "City Fashion Source",
+			"business_name": "City Fashion Source Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Women Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 3,
+		"category_id": 1,
+		"subcategory_id": 3,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "high-rise-wide-leg-jeans",
+		"name": "High-Rise Wide Leg Jeans",
+		"short_description": "Structured denim jeans with a flattering high waist and relaxed wide-leg finish.",
+		"long_description": "<p>These high-rise wide leg jeans are built for everyday wear with a modern silhouette that pairs easily with tops, shirts, and cropped outer layers.</p>",
+		"selling_price": "2490.00",
+		"original_price": "2990.00",
+		"image": "uploads/product/high-rise-wide-leg-jeans-01.jpg",
+		"status": "active",
+		"meta_title": "High-Rise Wide Leg Jeans for Women",
+		"meta_keyword": "women jeans, wide leg jeans, high rise denim",
+		"meta_description": "Shop High-Rise Wide Leg Jeans with a clean fit and easy everyday styling.",
+		"tags": "jeans, denim, high rise, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.72",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Waist",
+				"options": ["28", "30", "32", "34"]
+			},
+			{
+				"id": 2,
+				"name": "Wash",
+				"options": ["Classic Blue", "Light Wash"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Denim with Light Stretch"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Wide Leg"
+			},
+			{
+				"specification": "Rise",
+				"specification_ans": "High Rise"
+			}
+		],
+		"uniqid": "wmn-prod-003",
+		"sku": "WMN-JN-003",
+		"distributor_price": "2140.00",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0003",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.72",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Urban Petal",
+			"slug": "urban-petal"
+		},
+		"category": {
+			"id": 1,
+			"name": "Women's Clothing"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Jeans & Trousers"
+		},
+		"product_image": [
+			{
+				"id": 3,
+				"product_id": 3,
+				"image": "uploads/product/high-rise-wide-leg-jeans-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "City Fashion Source",
+			"business_name": "City Fashion Source Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 4,
+		"category_id": 1,
+		"subcategory_id": 4,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "linen-blend-co-ord-set",
+		"name": "Linen Blend Co-ord Set",
+		"short_description": "Matching top and trouser set with relaxed tailoring for smart everyday wear.",
+		"long_description": "<p>This linen blend co-ord set brings together comfort and polish with a clean shirt-style top and easy straight trousers suited to workdays and social plans.</p>",
+		"selling_price": "3690.00",
+		"original_price": "4290.00",
+		"image": "uploads/product/linen-blend-co-ord-set-01.jpg",
+		"status": "active",
+		"meta_title": "Linen Blend Co-ord Set for Women",
+		"meta_keyword": "women co-ord set, linen set, matching outfit",
+		"meta_description": "Buy Linen Blend Co-ord Set with relaxed tailoring and clean everyday styling.",
+		"tags": "co-ord, matching set, linen blend, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.99",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L", "XL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Stone", "Olive", "Mauve"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Linen Rayon Blend"
+			},
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Top and Trousers"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "Relaxed Fit"
+			}
+		],
+		"uniqid": "wmn-prod-004",
+		"sku": "WMN-CD-004",
+		"distributor_price": "3250.00",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0004",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "3690.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.99",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Urban Petal",
+			"slug": "urban-petal"
+		},
+		"category": {
+			"id": 1,
+			"name": "Women's Clothing"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Co-ord Sets"
+		},
+		"product_image": [
+			{
+				"id": 4,
+				"product_id": 4,
+				"image": "uploads/product/linen-blend-co-ord-set-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "City Fashion Source",
+			"business_name": "City Fashion Source Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 5,
+		"category_id": 2,
+		"subcategory_id": 5,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "embroidered-a-line-kurti",
+		"name": "Embroidered A-Line Kurti",
+		"short_description": "Comfortable A-line kurti with subtle embroidery for daily and festive wear.",
+		"long_description": "<p>This embroidered A-line kurti is designed for flexible styling with leggings, palazzos, and trousers, offering breathable comfort and a neat ethnic finish.</p>",
+		"selling_price": "2190.00",
+		"original_price": "2690.00",
+		"image": "uploads/product/embroidered-a-line-kurti-01.jpg",
+		"status": "active",
+		"meta_title": "Embroidered A-Line Kurti for Women",
+		"meta_keyword": "kurti women, embroidered kurti, a-line kurti",
+		"meta_description": "Shop Embroidered A-Line Kurti for daily wear and elegant ethnic styling.",
+		"tags": "kurti, embroidered, ethnic, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "18.59",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L", "XL", "XXL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Mustard", "Teal", "Wine"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Slub"
+			},
+			{
+				"specification": "Fit",
+				"specification_ans": "A-Line Fit"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Thread Embroidery"
+			}
+		],
+		"uniqid": "wmn-prod-005",
+		"sku": "WMN-KT-005",
+		"distributor_price": "1860.00",
+		"alert_qty": 6,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "WMN0005",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2190.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "18.59",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Aarohi Ethnic",
+			"slug": "aarohi-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Ethnic Wear"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Kurtis"
+		},
+		"product_image": [
+			{
+				"id": 5,
+				"product_id": 5,
+				"image": "uploads/product/embroidered-a-line-kurti-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Women Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 6,
+		"category_id": 2,
+		"subcategory_id": 6,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "soft-banarasi-saree-set",
+		"name": "Soft Banarasi Saree Set",
+		"short_description": "Elegant saree with woven border and matching blouse piece for festive styling.",
+		"long_description": "<p>This soft Banarasi saree set brings together a graceful drape, festive shine, and a coordinated blouse piece for celebrations, family functions, and traditional occasions.</p>",
+		"selling_price": "5290.00",
+		"original_price": "6190.00",
+		"image": "uploads/product/soft-banarasi-saree-set-01.jpg",
+		"status": "active",
+		"meta_title": "Soft Banarasi Saree Set for Women",
+		"meta_keyword": "banarasi saree, festive saree, ethnic saree women",
+		"meta_description": "Buy Soft Banarasi Saree Set with woven border and matching blouse piece.",
+		"tags": "saree, banarasi, festive, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "14.54",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Rani Pink", "Bottle Green", "Royal Blue"]
+			},
+			{
+				"id": 2,
+				"name": "Blouse Piece",
+				"options": ["Included"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Soft Silk Blend"
+			},
+			{
+				"specification": "Border",
+				"specification_ans": "Woven Banarasi Border"
+			},
+			{
+				"specification": "Length",
+				"specification_ans": "5.5 Meter Saree with Blouse Piece"
+			}
+		],
+		"uniqid": "wmn-prod-006",
+		"sku": "WMN-SR-006",
+		"distributor_price": "4750.00",
+		"alert_qty": 4,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0006",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "5290.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "14.54",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Aarohi Ethnic",
+			"slug": "aarohi-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Ethnic Wear"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Sarees"
+		},
+		"product_image": [
+			{
+				"id": 6,
+				"product_id": 6,
+				"image": "uploads/product/soft-banarasi-saree-set-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 7,
+		"category_id": 2,
+		"subcategory_id": 7,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "festive-salwar-kameez-set",
+		"name": "Festive Salwar Kameez Set",
+		"short_description": "Three-piece ethnic set with embroidered kameez, dupatta, and trouser.",
+		"long_description": "<p>This festive salwar kameez set offers a complete ethnic look with coordinated pieces, lightweight comfort, and refined detailing suitable for celebrations and family events.</p>",
+		"selling_price": "4590.00",
+		"original_price": "5290.00",
+		"image": "uploads/product/festive-salwar-kameez-set-01.jpg",
+		"status": "active",
+		"meta_title": "Festive Salwar Kameez Set for Women",
+		"meta_keyword": "salwar kameez, women ethnic set, festive suit set",
+		"meta_description": "Shop Festive Salwar Kameez Set with matching dupatta and elegant embroidery.",
+		"tags": "salwar kameez, suit set, ethnic, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.23",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L", "XL", "XXL"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Lavender", "Maroon", "Teal"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Kameez, Trouser, Dupatta"
+			},
+			{
+				"specification": "Fabric",
+				"specification_ans": "Cotton Silk Blend"
+			},
+			{
+				"specification": "Work",
+				"specification_ans": "Embroidery and Printed Dupatta"
+			}
+		],
+		"uniqid": "wmn-prod-007",
+		"sku": "WMN-SK-007",
+		"distributor_price": "4110.00",
+		"alert_qty": 4,
+		"supplier_id": 2,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "WMN0007",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "4590.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.23",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Aarohi Ethnic",
+			"slug": "aarohi-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Ethnic Wear"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Salwar Kameez"
+		},
+		"product_image": [
+			{
+				"id": 7,
+				"product_id": 7,
+				"image": "uploads/product/festive-salwar-kameez-set-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Fashion Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 8,
+		"category_id": 3,
+		"subcategory_id": 8,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "block-heel-ankle-sandals",
+		"name": "Block Heel Ankle Sandals",
+		"short_description": "Dressy block heel sandals with secure ankle strap and cushioned sole.",
+		"long_description": "<p>These block heel ankle sandals are made for long event wear, balancing height, stability, and a clean silhouette that pairs with dresses, sarees, and tailored looks.</p>",
+		"selling_price": "2790.00",
+		"original_price": "3290.00",
+		"image": "uploads/product/block-heel-ankle-sandals-01.jpg",
+		"status": "active",
+		"meta_title": "Block Heel Ankle Sandals for Women",
+		"meta_keyword": "women heels, block heel sandals, ankle strap heels",
+		"meta_description": "Buy Block Heel Ankle Sandals with stable heel and elegant event-ready finish.",
+		"tags": "heels, sandals, block heel, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.20",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["36", "37", "38", "39", "40"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Nude", "Black", "Gold"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Upper",
+				"specification_ans": "Synthetic Leather"
+			},
+			{
+				"specification": "Heel",
+				"specification_ans": "2.5 Inch Block Heel"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Ankle Buckle Strap"
+			}
+		],
+		"uniqid": "wmn-prod-008",
+		"sku": "WMN-HL-008",
+		"distributor_price": "2360.00",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0008",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2790.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.20",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Solea Steps",
+			"slug": "solea-steps"
+		},
+		"category": {
+			"id": 3,
+			"name": "Footwear"
+		},
+		"subcategory": {
+			"id": 8,
+			"name": "Heels"
+		},
+		"product_image": [
+			{
+				"id": 8,
+				"product_id": 8,
+				"image": "uploads/product/block-heel-ankle-sandals-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Stepline Footwear Hub",
+			"business_name": "Stepline Footwear Hub"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 9,
+		"category_id": 3,
+		"subcategory_id": 9,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "comfort-strap-flat-sandals",
+		"name": "Comfort Strap Flat Sandals",
+		"short_description": "Easy flat sandals with padded sole for all-day walking comfort.",
+		"long_description": "<p>These comfort strap flat sandals are designed for daily wear with flexible movement, a cushioned footbed, and simple styling that works across dresses, kurtis, and casual sets.</p>",
+		"selling_price": "1890.00",
+		"original_price": "2290.00",
+		"image": "uploads/product/comfort-strap-flat-sandals-01.jpg",
+		"status": "active",
+		"meta_title": "Comfort Strap Flat Sandals for Women",
+		"meta_keyword": "women sandals, flat sandals, daily footwear",
+		"meta_description": "Shop Comfort Strap Flat Sandals with cushioned sole and daily-ready design.",
+		"tags": "flat sandals, comfort footwear, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.47",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["36", "37", "38", "39", "40"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Tan", "Black", "White"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Upper",
+				"specification_ans": "Soft Synthetic Strap"
+			},
+			{
+				"specification": "Footbed",
+				"specification_ans": "Padded Footbed"
+			},
+			{
+				"specification": "Style",
+				"specification_ans": "Slip-On Flat Sandal"
+			}
+		],
+		"uniqid": "wmn-prod-009",
+		"sku": "WMN-FS-009",
+		"distributor_price": "1620.00",
+		"alert_qty": 7,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "WMN0009",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1890.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.47",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Solea Steps",
+			"slug": "solea-steps"
+		},
+		"category": {
+			"id": 3,
+			"name": "Footwear"
+		},
+		"subcategory": {
+			"id": 9,
+			"name": "Flats & Sandals"
+		},
+		"product_image": [
+			{
+				"id": 9,
+				"product_id": 9,
+				"image": "uploads/product/comfort-strap-flat-sandals-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "Stepline Footwear Hub",
+			"business_name": "Stepline Footwear Hub"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Women Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 10,
+		"category_id": 4,
+		"subcategory_id": 10,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "quilted-chain-shoulder-handbag",
+		"name": "Quilted Chain Shoulder Handbag",
+		"short_description": "Structured handbag with chain strap and compact storage for elevated day-to-night use.",
+		"long_description": "<p>This quilted shoulder handbag is designed to add polish to outfits with a refined silhouette, easy carry strap, and organized interior for daily essentials.</p>",
+		"selling_price": "2390.00",
+		"original_price": "2890.00",
+		"image": "uploads/product/quilted-chain-shoulder-handbag-01.jpg",
+		"status": "active",
+		"meta_title": "Quilted Chain Shoulder Handbag",
+		"meta_keyword": "women handbag, quilted bag, shoulder handbag",
+		"meta_description": "Buy Quilted Chain Shoulder Handbag for polished daily and occasion styling.",
+		"tags": "handbag, quilted bag, shoulder bag, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.30",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Black", "Cream", "Burgundy"]
+			},
+			{
+				"id": 2,
+				"name": "Hardware",
+				"options": ["Gold Tone"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "PU Leather"
+			},
+			{
+				"specification": "Strap",
+				"specification_ans": "Chain Shoulder Strap"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Magnetic Flap Closure"
+			}
+		],
+		"uniqid": "wmn-prod-010",
+		"sku": "WMN-HB-010",
+		"distributor_price": "2050.00",
+		"alert_qty": 6,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0010",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "2390.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.30",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Aura Accessories",
+			"slug": "aura-accessories"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Handbags"
+		},
+		"product_image": [
+			{
+				"id": 10,
+				"product_id": 10,
+				"image": "uploads/product/quilted-chain-shoulder-handbag-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Women's Accessories House",
+			"business_name": "Women's Accessories House"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 11,
+		"category_id": 4,
+		"subcategory_id": 11,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "statement-pearl-jewelry-set",
+		"name": "Statement Pearl Jewelry Set",
+		"short_description": "Elegant pearl jewelry set that complements dresses and ethnic outfits alike.",
+		"long_description": "<p>This statement pearl jewelry set adds a refined finishing touch to occasionwear with coordinated necklace and earrings suited to both western and ethnic styling.</p>",
+		"selling_price": "1690.00",
+		"original_price": "2090.00",
+		"image": "uploads/product/statement-pearl-jewelry-set-01.jpg",
+		"status": "active",
+		"meta_title": "Statement Pearl Jewelry Set for Women",
+		"meta_keyword": "pearl jewelry set, women jewelry, statement accessories",
+		"meta_description": "Shop Statement Pearl Jewelry Set for elegant occasion and festive styling.",
+		"tags": "jewelry, pearls, accessories, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "19.14",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Finish",
+				"options": ["Pearl Gold", "Pearl Silver"]
+			},
+			{
+				"id": 2,
+				"name": "Set Includes",
+				"options": ["Necklace and Earrings"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "Alloy with Faux Pearl"
+			},
+			{
+				"specification": "Set Includes",
+				"specification_ans": "Necklace and Earrings"
+			},
+			{
+				"specification": "Style",
+				"specification_ans": "Statement Occasion Set"
+			}
+		],
+		"uniqid": "wmn-prod-011",
+		"sku": "WMN-JW-011",
+		"distributor_price": "1420.00",
+		"alert_qty": 6,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0011",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1690.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "19.14",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Aura Accessories",
+			"slug": "aura-accessories"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 11,
+			"name": "Jewelry"
+		},
+		"product_image": [
+			{
+				"id": 11,
+				"product_id": 11,
+				"image": "uploads/product/statement-pearl-jewelry-set-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Women's Accessories House",
+			"business_name": "Women's Accessories House"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 12,
+		"category_id": 4,
+		"subcategory_id": 12,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "printed-chiffon-hijab-scarf",
+		"name": "Printed Chiffon Hijab Scarf",
+		"short_description": "Lightweight printed scarf for modest and fashion-forward styling.",
+		"long_description": "<p>This printed chiffon hijab scarf offers soft drape, breathable wear, and versatile styling for casual, formal, and modest fashion outfits.</p>",
+		"selling_price": "990.00",
+		"original_price": "1290.00",
+		"image": "uploads/product/printed-chiffon-hijab-scarf-01.jpg",
+		"status": "active",
+		"meta_title": "Printed Chiffon Hijab Scarf for Women",
+		"meta_keyword": "hijab scarf, chiffon scarf, women scarves",
+		"meta_description": "Buy Printed Chiffon Hijab Scarf with light drape and versatile styling.",
+		"tags": "scarf, hijab, chiffon, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.26",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": ["Dusty Pink", "Olive Print", "Navy Floral"]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": ["Standard"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Fabric",
+				"specification_ans": "Soft Chiffon"
+			},
+			{
+				"specification": "Pattern",
+				"specification_ans": "Printed"
+			},
+			{
+				"specification": "Size",
+				"specification_ans": "Approx. 180cm x 70cm"
+			}
+		],
+		"uniqid": "wmn-prod-012",
+		"sku": "WMN-SC-012",
+		"distributor_price": "780.00",
+		"alert_qty": 10,
+		"supplier_id": 4,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "WMN0012",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.26",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Zaria Studio",
+			"slug": "zaria-studio"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 12,
+			"name": "Scarves & Hijabs"
+		},
+		"product_image": [
+			{
+				"id": 12,
+				"product_id": 12,
+				"image": "uploads/product/printed-chiffon-hijab-scarf-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Women's Accessories House",
+			"business_name": "Women's Accessories House"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Fashion Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 13,
+		"category_id": 4,
+		"subcategory_id": 13,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "classic-slim-leather-belt",
+		"name": "Classic Slim Leather Belt",
+		"short_description": "Minimal slim belt that sharpens dresses, trousers, and co-ord looks.",
+		"long_description": "<p>This classic slim leather belt is designed to define the waist and complete outfits with a clean finish, pairing well with dresses, blazers, and trousers.</p>",
+		"selling_price": "1190.00",
+		"original_price": "1490.00",
+		"image": "uploads/product/classic-slim-leather-belt-01.jpg",
+		"status": "active",
+		"meta_title": "Classic Slim Leather Belt for Women",
+		"meta_keyword": "women belt, slim belt, leather belt",
+		"meta_description": "Shop Classic Slim Leather Belt to complete dresses, trousers, and layered looks.",
+		"tags": "belt, slim belt, accessories, women",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.13",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": ["S", "M", "L"]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": ["Black", "Tan", "Coffee"]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Material",
+				"specification_ans": "PU Leather"
+			},
+			{
+				"specification": "Width",
+				"specification_ans": "2.2 cm"
+			},
+			{
+				"specification": "Closure",
+				"specification_ans": "Metal Buckle"
+			}
+		],
+		"uniqid": "wmn-prod-013",
+		"sku": "WMN-BL-013",
+		"distributor_price": "960.00",
+		"alert_qty": 9,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WMN0013",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "1190.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.13",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.3",
+		"vendor": {
+			"id": 1,
+			"name": "Women's Wardrobe BD",
+			"email": "sales@womenswardrobebd.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Zaria Studio",
+			"slug": "zaria-studio"
+		},
+		"category": {
+			"id": 4,
+			"name": "Accessories"
+		},
+		"subcategory": {
+			"id": 13,
+			"name": "Belts"
+		},
+		"product_image": [
+			{
+				"id": 13,
+				"product_id": 13,
+				"image": "uploads/product/classic-slim-leather-belt-01.jpg",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Women's Accessories House",
+			"business_name": "Women's Accessories House"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Gulshan Boutique Stock"
+		},
+		"product_variant": []
+	}
+]

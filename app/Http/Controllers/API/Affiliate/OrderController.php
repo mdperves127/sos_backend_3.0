@@ -29,7 +29,7 @@ class OrderController extends Controller {
         }
 
         // Get product from cart's tenant database
-        $product = CrossTenantQueryService::getSingleFromTenant(
+        $product = CrossTenantQueryService::getSingleRecordFromTenant(
             $cart->tenant_id,
             Product::class,
             function ( $query ) use ( $cart ) {

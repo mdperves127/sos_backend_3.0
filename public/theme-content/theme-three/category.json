@@ -1,0 +1,46 @@
+[
+	{
+		"id": 1,
+		"name": "Sarees",
+		"slug": "sarees",
+		"description": "Core saree collection covering classic handloom, soft drape, and everyday styles.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 2,
+		"name": "Occasion Sarees",
+		"slug": "occasion-sarees",
+		"description": "Bridal, festive, and party sarees for weddings and special events.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 3,
+		"name": "Blouses & Innerwear",
+		"slug": "blouses-innerwear",
+		"description": "Ready blouses and saree foundation essentials for polished styling.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"name": "Saree Accessories",
+		"slug": "saree-accessories",
+		"description": "Jewelry, clutches, belts, and finishing accessories for complete saree looks.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T16:00:00.000000Z",
+		"updated_at": "2026-04-10T16:00:00.000000Z",
+		"deleted_at": null
+	}
+]

@@ -123,7 +123,7 @@ class CrossTenantQueryService
     public static function getSingleFromTenant(string|int $tenantId, string $modelClass, callable $queryCallback = null)
     {
         // Find tenant by ID (accepts both string and int)
-        $tenant = Tenant::find($tenantId);
+        $tenant = Tenant::on('mysql')->find($tenantId);
 
         if (!$tenant) {
             return null;
@@ -176,7 +176,7 @@ class CrossTenantQueryService
     public static function saveToTenant(string|int $tenantId, string $modelClass, callable $dataCallback)
     {
         // Find tenant by ID (accepts both string and int)
-        $tenant = Tenant::find($tenantId);
+        $tenant = Tenant::on('mysql')->find($tenantId);
 
         if (!$tenant) {
             \Log::error("Tenant not found for saving data", ['tenant_id' => $tenantId]);
@@ -304,7 +304,77 @@ class CrossTenantQueryService
      */
     protected static function getDatabaseName($tenant): string
     {
-        return 'storebz_tenant_' . $tenant->id;
+        return $tenant->data['tenancy_db_name'] ?? ('storebz_tenant_' . $tenant->id);
+    }
+
+    /**
+     * Get a single row from a tenant database without hydrating an Eloquent model.
+     * This avoids implicit relationship loading during checkout/cart flows.
+     *
+     * @param string|int $tenantId
+     * @param string $modelClass
+     * @param callable|null $queryCallback
+     * @return object|null
+     */
+    public static function getSingleRecordFromTenant(string|int $tenantId, string $modelClass, callable $queryCallback = null): ?object
+    {
+        $tenant = Tenant::on('mysql')->find($tenantId);
+
+        if (!$tenant) {
+            return null;
+        }
+
+        $originalConnection = DB::getDefaultConnection();
+
+        try {
+            $connectionName = self::getTenantConnectionName($tenant);
+            self::configureTenantConnection($tenant, $connectionName);
+
+            $model = new $modelClass;
+            $query = DB::connection($connectionName)->table($model->getTable());
+
+            if ($queryCallback) {
+                $result = $queryCallback($query);
+                if ($result !== null) {
+                    $query = $result;
+                }
+            }
+
+            $record = $query->first();
+
+            if (!$record) {
+                return null;
+            }
+
+            foreach ($model->getCasts() as $attribute => $cast) {
+                if (!property_exists($record, $attribute)) {
+                    continue;
+                }
+
+                if (!is_string($record->{$attribute})) {
+                    continue;
+                }
+
+                if (in_array($cast, ['array', 'json', 'object', 'collection'], true)) {
+                    $decoded = json_decode($record->{$attribute}, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $record->{$attribute} = $decoded;
+                    }
+                }
+            }
+
+            $domain = $tenant->domains()->first();
+            $record->tenant_id = $tenant->id;
+            $record->tenant_domain = $domain?->domain;
+            $record->tenant_name = $tenant->company_name;
+
+            return $record;
+        } catch (\Exception $e) {
+            \Log::error("Failed to query single record from tenant {$tenantId}: " . $e->getMessage());
+            return null;
+        } finally {
+            DB::setDefaultConnection($originalConnection);
+            config(['database.default' => $originalConnection]);
+        }
     }
 }
-

@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductCheckoutService {
 
-    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $tenantId ) {
+    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $tenantId = null ) {
 
         try {
             // Get tenant_id from parameter or from cart
@@ -36,7 +36,7 @@ class ProductCheckoutService {
                 $tenantId = $cartTemp->tenant_id;
             }
 
-            $tenant = Tenant::find( $tenantId );
+            $tenant = Tenant::on('mysql')->find( $tenantId );
             if ( !$tenant ) {
                 return response()->json( [
                     'status'  => 400,
@@ -46,7 +46,7 @@ class ProductCheckoutService {
 
             // Get connection name using CrossTenantQueryService approach
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName = 'storebz_tenant_' . $tenant->id;
+            $databaseName = $tenant->data['tenancy_db_name'] ?? ('storebz_tenant_' . $tenant->id);
 
             // Configure tenant connection using CrossTenantQueryService pattern
             config([
@@ -75,7 +75,7 @@ class ProductCheckoutService {
                 }
 
             // Get product from product's tenant database (request tenant - cart->tenant_id)
-            $product = CrossTenantQueryService::getSingleFromTenant(
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
                 $tenantId,
                 Product::class,
                 function ( $query ) use ( $productid ) {

@@ -1,0 +1,46 @@
+[
+	{
+		"id": 1,
+		"name": "Men's Clothing",
+		"slug": "mens-clothing",
+		"description": "Everyday tops and bottoms for casual, smart casual, and office wear.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T12:00:00.000000Z",
+		"updated_at": "2026-04-10T12:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 2,
+		"name": "Ethnic Wear",
+		"slug": "ethnic-wear",
+		"description": "Festive panjabis and kurta sets for cultural occasions.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T12:00:00.000000Z",
+		"updated_at": "2026-04-10T12:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 3,
+		"name": "Footwear",
+		"slug": "footwear",
+		"description": "Sneakers, loafers, and sandals for daily and dress wear.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T12:00:00.000000Z",
+		"updated_at": "2026-04-10T12:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"name": "Accessories",
+		"slug": "accessories",
+		"description": "Belts, wallets, and sunglasses to complete the outfit.",
+		"status": "active",
+		"image": null,
+		"created_at": "2026-04-10T12:00:00.000000Z",
+		"updated_at": "2026-04-10T12:00:00.000000Z",
+		"deleted_at": null
+	}
+]
