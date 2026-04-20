@@ -11,7 +11,7 @@
 		"long_description": "<p>This floral midi wrap dress blends light fabric, easy movement, and a feminine fit that works well for casual events, day dates, and polished weekend wear.</p>",
 		"selling_price": "2890.00",
 		"original_price": "3490.00",
-		"image": "uploads/product/floral-midi-wrap-dress-01.jpg",
+		"image": "uploads/theme-four/product/1.png",
 		"status": "active",
 		"meta_title": "Floral Midi Wrap Dress for Women",
 		"meta_keyword": "women dress, floral midi dress, wrap dress",
@@ -101,7 +101,7 @@
 			{
 				"id": 1,
 				"product_id": 1,
-				"image": "uploads/product/floral-midi-wrap-dress-01.jpg",
+				"image": "uploads/theme-four/product/1.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -129,7 +129,7 @@
 		"long_description": "<p>This ribbed knit longline top offers a clean silhouette and soft stretch finish that works with jeans, trousers, and layered outerwear for everyday dressing.</p>",
 		"selling_price": "1590.00",
 		"original_price": "1990.00",
-		"image": "uploads/product/ribbed-knit-longline-top-01.jpg",
+		"image": "uploads/theme-four/product/2.png",
 		"status": "active",
 		"meta_title": "Ribbed Knit Longline Top for Women",
 		"meta_keyword": "women top, ribbed knit top, casual top",
@@ -219,7 +219,7 @@
 			{
 				"id": 2,
 				"product_id": 2,
-				"image": "uploads/product/ribbed-knit-longline-top-01.jpg",
+				"image": "uploads/theme-four/product/2.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -247,7 +247,7 @@
 		"long_description": "<p>These high-rise wide leg jeans are built for everyday wear with a modern silhouette that pairs easily with tops, shirts, and cropped outer layers.</p>",
 		"selling_price": "2490.00",
 		"original_price": "2990.00",
-		"image": "uploads/product/high-rise-wide-leg-jeans-01.jpg",
+		"image": "uploads/theme-four/product/3.png",
 		"status": "active",
 		"meta_title": "High-Rise Wide Leg Jeans for Women",
 		"meta_keyword": "women jeans, wide leg jeans, high rise denim",
@@ -337,7 +337,7 @@
 			{
 				"id": 3,
 				"product_id": 3,
-				"image": "uploads/product/high-rise-wide-leg-jeans-01.jpg",
+				"image": "uploads/theme-four/product/3.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -365,7 +365,7 @@
 		"long_description": "<p>This linen blend co-ord set brings together comfort and polish with a clean shirt-style top and easy straight trousers suited to workdays and social plans.</p>",
 		"selling_price": "3690.00",
 		"original_price": "4290.00",
-		"image": "uploads/product/linen-blend-co-ord-set-01.jpg",
+		"image": "uploads/theme-four/product/4.png",
 		"status": "active",
 		"meta_title": "Linen Blend Co-ord Set for Women",
 		"meta_keyword": "women co-ord set, linen set, matching outfit",
@@ -455,7 +455,7 @@
 			{
 				"id": 4,
 				"product_id": 4,
-				"image": "uploads/product/linen-blend-co-ord-set-01.jpg",
+				"image": "uploads/theme-four/product/4.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -483,7 +483,7 @@
 		"long_description": "<p>This embroidered A-line kurti is designed for flexible styling with leggings, palazzos, and trousers, offering breathable comfort and a neat ethnic finish.</p>",
 		"selling_price": "2190.00",
 		"original_price": "2690.00",
-		"image": "uploads/product/embroidered-a-line-kurti-01.jpg",
+		"image": "uploads/theme-four/product/5.png",
 		"status": "active",
 		"meta_title": "Embroidered A-Line Kurti for Women",
 		"meta_keyword": "kurti women, embroidered kurti, a-line kurti",
@@ -573,7 +573,7 @@
 			{
 				"id": 5,
 				"product_id": 5,
-				"image": "uploads/product/embroidered-a-line-kurti-01.jpg",
+				"image": "uploads/theme-four/product/5.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -601,7 +601,7 @@
 		"long_description": "<p>This soft Banarasi saree set brings together a graceful drape, festive shine, and a coordinated blouse piece for celebrations, family functions, and traditional occasions.</p>",
 		"selling_price": "5290.00",
 		"original_price": "6190.00",
-		"image": "uploads/product/soft-banarasi-saree-set-01.jpg",
+		"image": "uploads/theme-four/product/6.png",
 		"status": "active",
 		"meta_title": "Soft Banarasi Saree Set for Women",
 		"meta_keyword": "banarasi saree, festive saree, ethnic saree women",
@@ -691,7 +691,7 @@
 			{
 				"id": 6,
 				"product_id": 6,
-				"image": "uploads/product/soft-banarasi-saree-set-01.jpg",
+				"image": "uploads/theme-four/product/6.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -719,7 +719,7 @@
 		"long_description": "<p>This festive salwar kameez set offers a complete ethnic look with coordinated pieces, lightweight comfort, and refined detailing suitable for celebrations and family events.</p>",
 		"selling_price": "4590.00",
 		"original_price": "5290.00",
-		"image": "uploads/product/festive-salwar-kameez-set-01.jpg",
+		"image": "uploads/theme-four/product/7.png",
 		"status": "active",
 		"meta_title": "Festive Salwar Kameez Set for Women",
 		"meta_keyword": "salwar kameez, women ethnic set, festive suit set",
@@ -809,7 +809,7 @@
 			{
 				"id": 7,
 				"product_id": 7,
-				"image": "uploads/product/festive-salwar-kameez-set-01.jpg",
+				"image": "uploads/theme-four/product/7.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -927,7 +927,7 @@
 			{
 				"id": 8,
 				"product_id": 8,
-				"image": "uploads/product/block-heel-ankle-sandals-01.jpg",
+				"image": "uploads/theme-four/product/8.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -955,7 +955,7 @@
 		"long_description": "<p>These comfort strap flat sandals are designed for daily wear with flexible movement, a cushioned footbed, and simple styling that works across dresses, kurtis, and casual sets.</p>",
 		"selling_price": "1890.00",
 		"original_price": "2290.00",
-		"image": "uploads/product/comfort-strap-flat-sandals-01.jpg",
+		"image": "uploads/theme-four/product/9.png",
 		"status": "active",
 		"meta_title": "Comfort Strap Flat Sandals for Women",
 		"meta_keyword": "women sandals, flat sandals, daily footwear",
@@ -1045,7 +1045,7 @@
 			{
 				"id": 9,
 				"product_id": 9,
-				"image": "uploads/product/comfort-strap-flat-sandals-01.jpg",
+				"image": "uploads/theme-four/product/9.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -1073,7 +1073,7 @@
 		"long_description": "<p>This quilted shoulder handbag is designed to add polish to outfits with a refined silhouette, easy carry strap, and organized interior for daily essentials.</p>",
 		"selling_price": "2390.00",
 		"original_price": "2890.00",
-		"image": "uploads/product/quilted-chain-shoulder-handbag-01.jpg",
+		"image": "uploads/theme-four/product/10.png",
 		"status": "active",
 		"meta_title": "Quilted Chain Shoulder Handbag",
 		"meta_keyword": "women handbag, quilted bag, shoulder handbag",
@@ -1163,7 +1163,7 @@
 			{
 				"id": 10,
 				"product_id": 10,
-				"image": "uploads/product/quilted-chain-shoulder-handbag-01.jpg",
+				"image": "uploads/theme-four/product/10.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -1191,7 +1191,7 @@
 		"long_description": "<p>This statement pearl jewelry set adds a refined finishing touch to occasionwear with coordinated necklace and earrings suited to both western and ethnic styling.</p>",
 		"selling_price": "1690.00",
 		"original_price": "2090.00",
-		"image": "uploads/product/statement-pearl-jewelry-set-01.jpg",
+		"image": "uploads/theme-four/product/11.png",
 		"status": "active",
 		"meta_title": "Statement Pearl Jewelry Set for Women",
 		"meta_keyword": "pearl jewelry set, women jewelry, statement accessories",
@@ -1281,7 +1281,7 @@
 			{
 				"id": 11,
 				"product_id": 11,
-				"image": "uploads/product/statement-pearl-jewelry-set-01.jpg",
+				"image": "uploads/theme-four/product/11.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -1309,7 +1309,7 @@
 		"long_description": "<p>This printed chiffon hijab scarf offers soft drape, breathable wear, and versatile styling for casual, formal, and modest fashion outfits.</p>",
 		"selling_price": "990.00",
 		"original_price": "1290.00",
-		"image": "uploads/product/printed-chiffon-hijab-scarf-01.jpg",
+		"image": "uploads/theme-four/product/12.png",
 		"status": "active",
 		"meta_title": "Printed Chiffon Hijab Scarf for Women",
 		"meta_keyword": "hijab scarf, chiffon scarf, women scarves",
@@ -1399,7 +1399,7 @@
 			{
 				"id": 12,
 				"product_id": 12,
-				"image": "uploads/product/printed-chiffon-hijab-scarf-01.jpg",
+				"image": "uploads/theme-four/product/12.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],
@@ -1427,7 +1427,7 @@
 		"long_description": "<p>This classic slim leather belt is designed to define the waist and complete outfits with a clean finish, pairing well with dresses, blazers, and trousers.</p>",
 		"selling_price": "1190.00",
 		"original_price": "1490.00",
-		"image": "uploads/product/classic-slim-leather-belt-01.jpg",
+		"image": "uploads/theme-four/product/13.png",
 		"status": "active",
 		"meta_title": "Classic Slim Leather Belt for Women",
 		"meta_keyword": "women belt, slim belt, leather belt",
@@ -1517,7 +1517,7 @@
 			{
 				"id": 13,
 				"product_id": 13,
-				"image": "uploads/product/classic-slim-leather-belt-01.jpg",
+				"image": "uploads/theme-four/product/13.png",
 				"created_at": "2026-04-10T19:00:00.000000Z"
 			}
 		],

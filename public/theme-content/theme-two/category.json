@@ -5,7 +5,7 @@
 		"slug": "mobile-tablets",
 		"description": "Smartphones and tablets for everyday communication, work, and entertainment.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-two/category/1.png",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
 		"deleted_at": null
@@ -16,7 +16,7 @@
 		"slug": "computing",
 		"description": "Laptops, displays, and peripherals for productivity and performance.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-two/category/2.png",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
 		"deleted_at": null
@@ -27,7 +27,7 @@
 		"slug": "audio-wearables",
 		"description": "Wireless audio gear and smart wearable devices for connected lifestyles.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-two/category/3.png",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
 		"deleted_at": null
@@ -38,7 +38,7 @@
 		"slug": "accessories-networking",
 		"description": "Charging, storage, and connectivity essentials for digital devices.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-two/category/4.png",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
 		"deleted_at": null

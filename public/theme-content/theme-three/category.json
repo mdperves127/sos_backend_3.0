@@ -5,7 +5,7 @@
 		"slug": "sarees",
 		"description": "Core saree collection covering classic handloom, soft drape, and everyday styles.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-three/category/1.png",
 		"created_at": "2026-04-10T16:00:00.000000Z",
 		"updated_at": "2026-04-10T16:00:00.000000Z",
 		"deleted_at": null
@@ -16,7 +16,7 @@
 		"slug": "occasion-sarees",
 		"description": "Bridal, festive, and party sarees for weddings and special events.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-three/category/2.png",
 		"created_at": "2026-04-10T16:00:00.000000Z",
 		"updated_at": "2026-04-10T16:00:00.000000Z",
 		"deleted_at": null
@@ -27,7 +27,7 @@
 		"slug": "blouses-innerwear",
 		"description": "Ready blouses and saree foundation essentials for polished styling.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-three/category/3.png",
 		"created_at": "2026-04-10T16:00:00.000000Z",
 		"updated_at": "2026-04-10T16:00:00.000000Z",
 		"deleted_at": null
@@ -38,7 +38,7 @@
 		"slug": "saree-accessories",
 		"description": "Jewelry, clutches, belts, and finishing accessories for complete saree looks.",
 		"status": "active",
-		"image": null,
+		"image": "uploads/theme-three/category/4.png",
 		"created_at": "2026-04-10T16:00:00.000000Z",
 		"updated_at": "2026-04-10T16:00:00.000000Z",
 		"deleted_at": null

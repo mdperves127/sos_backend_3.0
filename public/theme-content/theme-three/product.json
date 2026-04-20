@@ -11,7 +11,7 @@
 		"long_description": "<p>This pure katan silk saree offers a rich drape, lustrous finish, and refined zari detailing that makes it suitable for formal gatherings, receptions, and festive events.</p>",
 		"selling_price": "7490.00",
 		"original_price": "8990.00",
-		"image": "uploads/product/pure-katan-silk-saree-01.jpg",
+		"image": "uploads/theme-three/product/1.png",
 		"status": "active",
 		"meta_title": "Pure Katan Silk Saree for Women",
 		"meta_keyword": "silk saree, katan saree, zari saree, women saree",
@@ -101,7 +101,7 @@
 			{
 				"id": 1,
 				"product_id": 1,
-				"image": "uploads/product/pure-katan-silk-saree-01.jpg",
+				"image": "uploads/theme-three/product/1.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -129,7 +129,7 @@
 		"long_description": "<p>This soft handloom cotton saree is lightweight, easy to drape, and comfortable for long wear, making it ideal for daily styling, workdays, and casual events.</p>",
 		"selling_price": "2890.00",
 		"original_price": "3490.00",
-		"image": "uploads/product/soft-handloom-cotton-saree-01.jpg",
+		"image": "uploads/theme-three/product/2.png",
 		"status": "active",
 		"meta_title": "Soft Handloom Cotton Saree",
 		"meta_keyword": "cotton saree, handloom saree, daily wear saree",
@@ -219,7 +219,7 @@
 			{
 				"id": 2,
 				"product_id": 2,
-				"image": "uploads/product/soft-handloom-cotton-saree-01.jpg",
+				"image": "uploads/theme-three/product/2.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -247,7 +247,7 @@
 		"long_description": "<p>This soft jamdani saree blends traditional woven artistry with a lighter drape that works beautifully for cultural programs, daytime events, and elegant everyday wear.</p>",
 		"selling_price": "5590.00",
 		"original_price": "6490.00",
-		"image": "uploads/product/soft-jamdani-weave-saree-01.jpg",
+		"image": "uploads/theme-three/product/3.png",
 		"status": "active",
 		"meta_title": "Soft Jamdani Weave Saree",
 		"meta_keyword": "jamdani saree, woven saree, traditional saree",
@@ -337,7 +337,7 @@
 			{
 				"id": 3,
 				"product_id": 3,
-				"image": "uploads/product/soft-jamdani-weave-saree-01.jpg",
+				"image": "uploads/theme-three/product/3.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -365,7 +365,7 @@
 		"long_description": "<p>This georgette drape saree is light, fluid, and easy to carry, finished with delicate sequin detailing for dinner parties, receptions, and elegant night events.</p>",
 		"selling_price": "4690.00",
 		"original_price": "5490.00",
-		"image": "uploads/product/sequin-georgette-drape-saree-01.jpg",
+		"image": "uploads/theme-three/product/4.png",
 		"status": "active",
 		"meta_title": "Sequin Georgette Drape Saree",
 		"meta_keyword": "georgette saree, sequin saree, party saree women",
@@ -455,7 +455,7 @@
 			{
 				"id": 4,
 				"product_id": 4,
-				"image": "uploads/product/sequin-georgette-drape-saree-01.jpg",
+				"image": "uploads/theme-three/product/4.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -483,7 +483,7 @@
 		"long_description": "<p>This chiffon saree features an airy drape and delicate floral print, making it an effortless choice for brunches, daytime invitations, and summer events.</p>",
 		"selling_price": "3290.00",
 		"original_price": "3890.00",
-		"image": "uploads/product/floral-print-chiffon-saree-01.jpg",
+		"image": "uploads/theme-three/product/5.png",
 		"status": "active",
 		"meta_title": "Floral Print Chiffon Saree",
 		"meta_keyword": "chiffon saree, floral saree, lightweight saree",
@@ -573,7 +573,7 @@
 			{
 				"id": 5,
 				"product_id": 5,
-				"image": "uploads/product/floral-print-chiffon-saree-01.jpg",
+				"image": "uploads/theme-three/product/5.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -601,7 +601,7 @@
 		"long_description": "<p>This bridal Banarasi saree is crafted for weddings and grand ceremonies, featuring dense zari artistry, a rich pallu, and a structured bridal drape.</p>",
 		"selling_price": "14990.00",
 		"original_price": "16990.00",
-		"image": "uploads/product/bridal-banarasi-zari-saree-01.jpg",
+		"image": "uploads/theme-three/product/6.png",
 		"status": "active",
 		"meta_title": "Bridal Banarasi Zari Saree",
 		"meta_keyword": "bridal saree, banarasi saree, zari bridal saree",
@@ -691,7 +691,7 @@
 			{
 				"id": 6,
 				"product_id": 6,
-				"image": "uploads/product/bridal-banarasi-zari-saree-01.jpg",
+				"image": "uploads/theme-three/product/6.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -719,7 +719,7 @@
 		"long_description": "<p>This party wear saree is designed for evening celebrations with subtle shimmer, stone embellishment, and a fluid drape that photographs beautifully.</p>",
 		"selling_price": "6890.00",
 		"original_price": "7890.00",
-		"image": "uploads/product/stone-work-party-saree-01.jpg",
+		"image": "uploads/theme-three/product/7.png",
 		"status": "active",
 		"meta_title": "Stone Work Party Saree",
 		"meta_keyword": "party wear saree, stone work saree, evening saree",
@@ -809,7 +809,7 @@
 			{
 				"id": 7,
 				"product_id": 7,
-				"image": "uploads/product/stone-work-party-saree-01.jpg",
+				"image": "uploads/theme-three/product/7.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -837,7 +837,7 @@
 		"long_description": "<p>This festive saree blends structured drape, woven border detailing, and celebratory color tones that work well for puja, family functions, and cultural occasions.</p>",
 		"selling_price": "6290.00",
 		"original_price": "7290.00",
-		"image": "uploads/product/temple-border-festive-saree-01.jpg",
+		"image": "uploads/theme-three/product/8.png",
 		"status": "active",
 		"meta_title": "Temple Border Festive Saree",
 		"meta_keyword": "festive saree, temple border saree, puja saree",
@@ -927,7 +927,7 @@
 			{
 				"id": 8,
 				"product_id": 8,
-				"image": "uploads/product/temple-border-festive-saree-01.jpg",
+				"image": "uploads/theme-three/product/8.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -955,7 +955,7 @@
 		"long_description": "<p>This ready blouse is designed to pair with silk, jamdani, and festive sarees, offering a structured fit, lined finish, and embroidered detailing for easy styling.</p>",
 		"selling_price": "1890.00",
 		"original_price": "2290.00",
-		"image": "uploads/product/embroidered-ready-blouse-01.jpg",
+		"image": "uploads/theme-three/product/9.png",
 		"status": "active",
 		"meta_title": "Embroidered Ready Blouse for Saree",
 		"meta_keyword": "ready blouse, embroidered blouse, saree blouse women",
@@ -1045,7 +1045,7 @@
 			{
 				"id": 9,
 				"product_id": 9,
-				"image": "uploads/product/embroidered-ready-blouse-01.jpg",
+				"image": "uploads/theme-three/product/9.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -1073,7 +1073,7 @@
 		"long_description": "<p>This saree shapewear is designed to create a smooth base under sarees while staying breathable and easy to walk in, making it ideal for long functions and daily wear.</p>",
 		"selling_price": "1490.00",
 		"original_price": "1790.00",
-		"image": "uploads/product/smooth-fit-saree-shapewear-01.jpg",
+		"image": "uploads/theme-three/product/10.png",
 		"status": "active",
 		"meta_title": "Smooth Fit Saree Shapewear",
 		"meta_keyword": "saree shapewear, saree petticoat, innerwear women",
@@ -1163,7 +1163,7 @@
 			{
 				"id": 10,
 				"product_id": 10,
-				"image": "uploads/product/smooth-fit-saree-shapewear-01.jpg",
+				"image": "uploads/theme-three/product/10.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -1191,7 +1191,7 @@
 		"long_description": "<p>This antique gold jewelry set adds a polished finishing touch to bridal, festive, and party sarees with its detailed motif work and coordinated matching pieces.</p>",
 		"selling_price": "2690.00",
 		"original_price": "3190.00",
-		"image": "uploads/product/antique-gold-jewelry-set-01.jpg",
+		"image": "uploads/theme-three/product/11.png",
 		"status": "active",
 		"meta_title": "Antique Gold Jewelry Set for Saree",
 		"meta_keyword": "jewelry set, saree jewelry, antique gold set",
@@ -1281,7 +1281,7 @@
 			{
 				"id": 11,
 				"product_id": 11,
-				"image": "uploads/product/antique-gold-jewelry-set-01.jpg",
+				"image": "uploads/theme-three/product/11.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -1309,7 +1309,7 @@
 		"long_description": "<p>This embellished potli clutch is designed to complement saree looks with beadwork, easy handheld styling, and enough space for event essentials.</p>",
 		"selling_price": "1590.00",
 		"original_price": "1890.00",
-		"image": "uploads/product/embellished-potli-clutch-01.jpg",
+		"image": "uploads/theme-three/product/12.png",
 		"status": "active",
 		"meta_title": "Embellished Potli Clutch for Saree",
 		"meta_keyword": "potli bag, saree clutch, bridal clutch",
@@ -1399,7 +1399,7 @@
 			{
 				"id": 12,
 				"product_id": 12,
-				"image": "uploads/product/embellished-potli-clutch-01.jpg",
+				"image": "uploads/theme-three/product/12.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],
@@ -1427,7 +1427,7 @@
 		"long_description": "<p>This saree belt and pin set adds structure and elegance to saree draping, helping keep pleats in place while giving the outfit a styled waistline finish.</p>",
 		"selling_price": "1190.00",
 		"original_price": "1490.00",
-		"image": "uploads/product/pearl-saree-belt-pin-set-01.jpg",
+		"image": "uploads/theme-three/product/13.png",
 		"status": "active",
 		"meta_title": "Pearl Saree Belt and Pin Set",
 		"meta_keyword": "saree belt, saree pin, pearl waist belt",
@@ -1517,7 +1517,7 @@
 			{
 				"id": 13,
 				"product_id": 13,
-				"image": "uploads/product/pearl-saree-belt-pin-set-01.jpg",
+				"image": "uploads/theme-three/product/13.png",
 				"created_at": "2026-04-10T17:00:00.000000Z"
 			}
 		],

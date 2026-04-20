@@ -13,6 +13,10 @@ use App\Models\Warehouse;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use App\Models\Banner;
+use App\Models\Offer;
+use App\Models\ServiceContent;
+
 
 class ThemeImportController extends Controller
 {
@@ -25,6 +29,9 @@ class ThemeImportController extends Controller
         }
 
         $filesToModels = [
+            'banner.json' => Banner::class,
+            'offer.json' => Offer::class,
+            'services.json' => ServiceContent::class,
             'brand.json' => Brand::class,
             'category.json' => Category::class,
             'sub-category.json' => Subcategory::class,
@@ -92,6 +99,10 @@ class ThemeImportController extends Controller
                                 $existingQuery->where('slug', $item['slug']);
                             } elseif (isset($item['name'])) {
                                 $existingQuery->where('name', $item['name']);
+                            } elseif (isset($item['image'])) {
+                                $existingQuery->where('image', $item['image']);
+                            } elseif (isset($item['title']) && $item['title'] !== '') {
+                                $existingQuery->where('title', $item['title']);
                             }
                             
                             $model = $existingQuery->first();

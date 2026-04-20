@@ -11,7 +11,7 @@
 		"long_description": "<p>An easy everyday t-shirt cut from breathable cotton jersey with a clean silhouette that pairs well with jeans, joggers, and overshirts.</p>",
 		"selling_price": "890.00",
 		"original_price": "1200.00",
-		"image": "uploads/product/essential-crew-neck-t-shirt-01.jpg",
+		"image": "uploads/theme-one/product/1.png",
 		"status": "active",
 		"meta_title": "Essential Crew Neck T-Shirt for Men",
 		"meta_keyword": "mens t-shirt, cotton t-shirt, crew neck tee",
@@ -110,7 +110,7 @@
 			{
 				"id": 1,
 				"product_id": 1,
-				"image": "uploads/product/essential-crew-neck-t-shirt-01.jpg",
+				"image": "uploads/theme-one/product/1.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -128,7 +128,7 @@
 	},
 	{
 		"id": 2,
-		"category_id": 1,
+		"category_id": 2,
 		"subcategory_id": 2,
 		"brand_id": 1,
 		"user_id": 1,
@@ -138,7 +138,7 @@
 		"long_description": "<p>This slim fit casual shirt is built from a breathable linen blend that keeps the look sharp while staying comfortable through warm days and evening outings.</p>",
 		"selling_price": "1690.00",
 		"original_price": "2200.00",
-		"image": "uploads/product/slim-fit-linen-casual-shirt-01.jpg",
+		"image": "uploads/theme-one/product/2.png",
 		"status": "active",
 		"meta_title": "Slim Fit Linen Casual Shirt for Men",
 		"meta_keyword": "linen shirt, casual shirt men, slim fit shirt",
@@ -237,7 +237,7 @@
 			{
 				"id": 2,
 				"product_id": 2,
-				"image": "uploads/product/slim-fit-linen-casual-shirt-01.jpg",
+				"image": "uploads/theme-one/product/2.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -256,7 +256,7 @@
 	{
 		"id": 3,
 		"category_id": 1,
-		"subcategory_id": 3,
+		"subcategory_id": 1,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-oxford-formal-shirt",
@@ -265,7 +265,7 @@
 		"long_description": "<p>A refined oxford cotton shirt with a structured collar and tailored cut, designed to work under blazers or on its own for smart weekday dressing.</p>",
 		"selling_price": "1990.00",
 		"original_price": "2600.00",
-		"image": "uploads/product/premium-oxford-formal-shirt-01.jpg",
+		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
 		"meta_title": "Premium Oxford Formal Shirt for Men",
 		"meta_keyword": "formal shirt, oxford shirt, office shirt men",
@@ -364,7 +364,7 @@
 			{
 				"id": 3,
 				"product_id": 3,
-				"image": "uploads/product/premium-oxford-formal-shirt-01.jpg",
+				"image": "uploads/theme-one/product/3.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -383,7 +383,7 @@
 	{
 		"id": 4,
 		"category_id": 1,
-		"subcategory_id": 4,
+		"subcategory_id": 1,
 		"brand_id": 5,
 		"user_id": 1,
 		"slug": "comfort-stretch-denim-jeans",
@@ -392,7 +392,7 @@
 		"long_description": "<p>Built from durable stretch denim, these jeans balance structure and flexibility for daily wear, commuting, and weekend styling.</p>",
 		"selling_price": "2490.00",
 		"original_price": "3200.00",
-		"image": "uploads/product/comfort-stretch-denim-jeans-01.jpg",
+		"image": "uploads/theme-one/product/4.png",
 		"status": "active",
 		"meta_title": "Comfort Stretch Denim Jeans for Men",
 		"meta_keyword": "mens jeans, stretch denim, slim tapered jeans",
@@ -490,7 +490,7 @@
 			{
 				"id": 4,
 				"product_id": 4,
-				"image": "uploads/product/comfort-stretch-denim-jeans-01.jpg",
+				"image": "uploads/theme-one/product/4.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -509,7 +509,7 @@
 	{
 		"id": 5,
 		"category_id": 1,
-		"subcategory_id": 5,
+		"subcategory_id": 1,
 		"brand_id": 1,
 		"user_id": 1,
 		"slug": "tailored-chino-trousers",
@@ -518,7 +518,7 @@
 		"long_description": "<p>These tailored chinos are cut from durable cotton twill with light stretch, making them suitable for office wear, dinners, and smart casual outfits.</p>",
 		"selling_price": "2190.00",
 		"original_price": "2800.00",
-		"image": "uploads/product/tailored-chino-trousers-01.jpg",
+		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
 		"meta_title": "Tailored Chino Trousers for Men",
 		"meta_keyword": "chino trousers, mens chinos, cotton twill pants",
@@ -617,7 +617,7 @@
 			{
 				"id": 5,
 				"product_id": 5,
-				"image": "uploads/product/tailored-chino-trousers-01.jpg",
+				"image": "uploads/theme-one/product/5.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -636,7 +636,7 @@
 	{
 		"id": 6,
 		"category_id": 2,
-		"subcategory_id": 6,
+		"subcategory_id": 2,
 		"brand_id": 3,
 		"user_id": 1,
 		"slug": "embroidered-cotton-panjabi",
@@ -645,7 +645,7 @@
 		"long_description": "<p>A polished panjabi made for Eid, family gatherings, and cultural events, finished with tasteful front embroidery and a breathable premium cotton base.</p>",
 		"selling_price": "2790.00",
 		"original_price": "3500.00",
-		"image": "uploads/product/embroidered-cotton-panjabi-01.jpg",
+		"image": "uploads/theme-one/product/6.png",
 		"status": "active",
 		"meta_title": "Embroidered Cotton Panjabi for Men",
 		"meta_keyword": "panjabi men, embroidered panjabi, festive wear",
@@ -744,7 +744,7 @@
 			{
 				"id": 6,
 				"product_id": 6,
-				"image": "uploads/product/embroidered-cotton-panjabi-01.jpg",
+				"image": "uploads/theme-one/product/6.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -763,7 +763,7 @@
 	{
 		"id": 7,
 		"category_id": 2,
-		"subcategory_id": 7,
+		"subcategory_id": 2,
 		"brand_id": 3,
 		"user_id": 1,
 		"slug": "festive-kurta-pajama-set",
@@ -772,7 +772,7 @@
 		"long_description": "<p>This kurta pajama set is designed for weddings, celebrations, and family events, combining a smooth drape with easy coordinated styling.</p>",
 		"selling_price": "3390.00",
 		"original_price": "4200.00",
-		"image": "uploads/product/festive-kurta-pajama-set-01.jpg",
+		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
 		"meta_title": "Festive Kurta Pajama Set for Men",
 		"meta_keyword": "kurta set men, pajama set, festive kurta",
@@ -871,7 +871,7 @@
 			{
 				"id": 7,
 				"product_id": 7,
-				"image": "uploads/product/festive-kurta-pajama-set-01.jpg",
+				"image": "uploads/theme-one/product/7.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -890,7 +890,7 @@
 	{
 		"id": 8,
 		"category_id": 3,
-		"subcategory_id": 8,
+		"subcategory_id": 3,
 		"brand_id": 6,
 		"user_id": 1,
 		"slug": "white-court-sneakers",
@@ -899,7 +899,7 @@
 		"long_description": "<p>These clean low-top sneakers feature a smooth upper, padded interior, and durable rubber sole that make them easy to style with denim, chinos, and relaxed tailoring.</p>",
 		"selling_price": "3890.00",
 		"original_price": "4800.00",
-		"image": "uploads/product/white-court-sneakers-01.jpg",
+		"image": "uploads/theme-one/product/8.png",
 		"status": "active",
 		"meta_title": "White Court Sneakers for Men",
 		"meta_keyword": "white sneakers, court sneakers men, casual shoes",
@@ -998,7 +998,7 @@
 			{
 				"id": 8,
 				"product_id": 8,
-				"image": "uploads/product/white-court-sneakers-01.jpg",
+				"image": "uploads/theme-one/product/8.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1017,7 +1017,7 @@
 	{
 		"id": 9,
 		"category_id": 3,
-		"subcategory_id": 9,
+		"subcategory_id": 3,
 		"brand_id": 6,
 		"user_id": 1,
 		"slug": "leather-penny-loafers",
@@ -1026,7 +1026,7 @@
 		"long_description": "<p>Classic penny loafers made from genuine leather with a structured profile and comfortable sole, ideal for suits, formal trousers, and smart casual outfits.</p>",
 		"selling_price": "4590.00",
 		"original_price": "5600.00",
-		"image": "uploads/product/leather-penny-loafers-01.jpg",
+		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
 		"meta_title": "Leather Penny Loafers for Men",
 		"meta_keyword": "penny loafers, leather loafers men, formal shoes",
@@ -1125,7 +1125,7 @@
 			{
 				"id": 9,
 				"product_id": 9,
-				"image": "uploads/product/leather-penny-loafers-01.jpg",
+				"image": "uploads/theme-one/product/9.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1144,7 +1144,7 @@
 	{
 		"id": 10,
 		"category_id": 3,
-		"subcategory_id": 10,
+		"subcategory_id": 3,
 		"brand_id": 6,
 		"user_id": 1,
 		"slug": "everyday-comfort-sandals",
@@ -1153,7 +1153,7 @@
 		"long_description": "<p>Designed for warm weather and all-day use, these sandals combine a soft footbed with secure adjustable straps and lightweight construction.</p>",
 		"selling_price": "1990.00",
 		"original_price": "2600.00",
-		"image": "uploads/product/everyday-comfort-sandals-01.jpg",
+		"image": "uploads/theme-one/product/10.png",
 		"status": "active",
 		"meta_title": "Everyday Comfort Sandals for Men",
 		"meta_keyword": "mens sandals, comfort sandals, casual sandals",
@@ -1252,7 +1252,7 @@
 			{
 				"id": 10,
 				"product_id": 10,
-				"image": "uploads/product/everyday-comfort-sandals-01.jpg",
+				"image": "uploads/theme-one/product/10.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1271,7 +1271,7 @@
 	{
 		"id": 11,
 		"category_id": 4,
-		"subcategory_id": 11,
+		"subcategory_id": 4,
 		"brand_id": 7,
 		"user_id": 1,
 		"slug": "classic-leather-belt",
@@ -1280,7 +1280,7 @@
 		"long_description": "<p>A dependable leather belt that finishes formal trousers and chinos cleanly, built with a solid buckle and structured body for long-term use.</p>",
 		"selling_price": "1190.00",
 		"original_price": "1600.00",
-		"image": "uploads/product/classic-leather-belt-01.jpg",
+		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
 		"meta_title": "Classic Leather Belt for Men",
 		"meta_keyword": "leather belt, mens belt, formal belt",
@@ -1378,7 +1378,7 @@
 			{
 				"id": 11,
 				"product_id": 11,
-				"image": "uploads/product/classic-leather-belt-01.jpg",
+				"image": "uploads/theme-one/product/11.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1397,7 +1397,7 @@
 	{
 		"id": 12,
 		"category_id": 4,
-		"subcategory_id": 12,
+		"subcategory_id": 4,
 		"brand_id": 7,
 		"user_id": 1,
 		"slug": "minimal-bifold-wallet",
@@ -1406,7 +1406,7 @@
 		"long_description": "<p>This bifold wallet keeps cards and cash organized without excess bulk, making it an easy everyday carry option with a refined finish.</p>",
 		"selling_price": "1590.00",
 		"original_price": "2100.00",
-		"image": "uploads/product/minimal-bifold-wallet-01.jpg",
+		"image": "uploads/theme-one/product/12.png",
 		"status": "active",
 		"meta_title": "Minimal Bifold Wallet for Men",
 		"meta_keyword": "mens wallet, bifold wallet, leather wallet",
@@ -1503,7 +1503,7 @@
 			{
 				"id": 12,
 				"product_id": 12,
-				"image": "uploads/product/minimal-bifold-wallet-01.jpg",
+				"image": "uploads/theme-one/product/12.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1522,7 +1522,7 @@
 	{
 		"id": 13,
 		"category_id": 4,
-		"subcategory_id": 13,
+		"subcategory_id": 4,
 		"brand_id": 8,
 		"user_id": 1,
 		"slug": "polarized-aviator-sunglasses",
@@ -1531,7 +1531,7 @@
 		"long_description": "<p>These aviator sunglasses offer a clean metal frame, glare-reducing polarized lenses, and comfortable daily wear for driving, travel, and outdoor use.</p>",
 		"selling_price": "1790.00",
 		"original_price": "2400.00",
-		"image": "uploads/product/polarized-aviator-sunglasses-01.jpg",
+		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
 		"meta_title": "Polarized Aviator Sunglasses for Men",
 		"meta_keyword": "aviator sunglasses, polarized sunglasses men, UV400 eyewear",
@@ -1629,7 +1629,7 @@
 			{
 				"id": 13,
 				"product_id": 13,
-				"image": "uploads/product/polarized-aviator-sunglasses-01.jpg",
+				"image": "uploads/theme-one/product/13.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
