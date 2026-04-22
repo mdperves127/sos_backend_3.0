@@ -32,6 +32,7 @@ class TenantSetupSeeder extends Seeder
         $category->name = 'Sample Products';
         $category->slug = 'sample-products';
         $category->description = 'Starter category for newly created merchant tenants.';
+        $category->image = 'uploads/theme-one/category/1.png';
         $category->status = 'active';
         $category->save();
 
@@ -44,6 +45,7 @@ class TenantSetupSeeder extends Seeder
                 'meta_title' => 'Starter Brand',
                 'meta_keyword' => 'starter,default,brand',
                 'meta_description' => 'Default brand for tenant sample products.',
+                'image' => 'uploads/theme-one/brand/1.png',
                 'status' => 'active',
             ]
         );
@@ -83,6 +85,7 @@ class TenantSetupSeeder extends Seeder
                 'name' => 'Sample Cotton T-Shirt',
                 'short_description' => 'Soft cotton t-shirt for everyday wear.',
                 'long_description' => 'A lightweight sample product seeded automatically for new merchant tenants. Suitable for testing storefront, listing, and order flows.',
+                'image' => 'uploads/theme-one/products/1.png',
                 'selling_price' => 499,
                 'original_price' => 650,
                 'qty' => 30,
@@ -101,6 +104,7 @@ class TenantSetupSeeder extends Seeder
                 'name' => 'Sample Everyday Backpack',
                 'short_description' => 'Compact backpack for daily essentials.',
                 'long_description' => 'A sample backpack product intended to populate a fresh tenant storefront with realistic-looking starter inventory.',
+                'image' => 'uploads/theme-one/products/2.png',
                 'selling_price' => 1290,
                 'original_price' => 1550,
                 'qty' => 18,
@@ -119,6 +123,7 @@ class TenantSetupSeeder extends Seeder
                 'name' => 'Sample Stainless Water Bottle',
                 'short_description' => 'Reusable insulated bottle with secure cap.',
                 'long_description' => 'This seeded bottle product gives new merchant tenants another category of inventory for product detail and filtering tests.',
+                'image' => 'uploads/theme-one/products/3.png',
                 'selling_price' => 790,
                 'original_price' => 950,
                 'qty' => 24,
@@ -137,6 +142,7 @@ class TenantSetupSeeder extends Seeder
                 'name' => 'Sample Wireless Mouse',
                 'short_description' => 'Reliable wireless mouse for office use.',
                 'long_description' => 'A seeded electronics-style product that helps verify pricing, stock, and storefront rendering in a new tenant database.',
+                'image' => 'uploads/theme-one/products/4.png',
                 'selling_price' => 1150,
                 'original_price' => 1380,
                 'qty' => 20,
@@ -155,6 +161,7 @@ class TenantSetupSeeder extends Seeder
                 'name' => 'Sample Ceramic Mug',
                 'short_description' => 'Ceramic mug for coffee or tea.',
                 'long_description' => 'A simple seeded home item that rounds out the initial default catalog for merchant tenants.',
+                'image' => 'uploads/theme-one/products/5.png',
                 'selling_price' => 350,
                 'original_price' => 450,
                 'qty' => 40,
@@ -187,7 +194,7 @@ class TenantSetupSeeder extends Seeder
                     'original_price' => $productData['original_price'],
                     'distributor_price' => $productData['original_price'],
                     'qty' => $productData['qty'],
-                    'image' => null,
+                    'image' => $productData['image'],
                     'status' => 'active',
                     'meta_title' => $productData['name'],
                     'meta_keyword' => $productData['meta_keyword'],

@@ -25,14 +25,14 @@ class CmsSettingSeeder extends Seeder
             'app_name' => 'My Store',
             'home_page_title' => 'Welcome to Our Store',
             'color_primary' => '#007bff',
-            'logo' => 'uploads/theme-1/logo/logo.png',
+            'logo' => 'uploads/theme-one/logo/logo.png',
             'theme' => 'one',
 
             // SEO Settings
             'seo_meta_title' => 'My Store - Best Online Shopping',
             'seo_meta_description' => 'Shop the best products online at My Store. Quality products at affordable prices.',
             'seo_meta_keywords' => 'online shopping, ecommerce, store, products',
-            'seo_meta_image' => 'uploads/theme-1/seo/seo-image.png',
+            'seo_meta_image' => 'uploads/theme-one/seo/seo-image.png',
 
             // Scripts
             'scripts_google_analytics' => '',
@@ -44,35 +44,35 @@ class CmsSettingSeeder extends Seeder
             'scripts_google_tag_manager' => '',
 
             // Footer Settings
-            'footer_logo' => 'uploads/theme-1/footer-logo/footer-logo.png',
+            'footer_logo' => 'uploads/theme-one/others/footer-logo.png',
             'footer_description' => 'Your trusted online shopping destination. We offer quality products with excellent customer service.',
             'footer_contact_number_one' => '+1 234 567 8900',
             'footer_contact_address_one' => '123 Main Street, City, State 12345',
             'footer_contact_number_two' => '+1 234 567 8901',
             'footer_contact_address_two' => '456 Second Street, City, State 12345',
             'footer_copyright_text' => '© ' . date('Y') . ' My Store. All rights reserved.',
-            'footer_payment_methods' => 'uploads/theme-1/payment-methods/payment-methods.png',
+            'footer_payment_methods' => 'uploads/theme-one/others/payment-methods.png',
 
             // Banner Settings
-            'banner_1' => 'uploads/theme-1/banner/1.png',
+            'banner_1' => 'uploads/theme-one/banner/1.png',
             'banner_1_url' => '#',
-            'banner_2' => 'uploads/theme-1/banner/2.png',
+            'banner_2' => 'uploads/theme-one/banner/2.png',
             'banner_2_url' => '#',
-            'banner_3' => 'uploads/theme-1/banner/3.png',
+            'banner_3' => 'uploads/theme-one/banner/3.png',
             'banner_3_url' => '#',
 
             // Three Column Banners
-            'three_column_banner_1' => 'uploads/theme-1/three-column-banner-1/three-column-banner-1.png',
+            'three_column_banner_1' => 'uploads/theme-one/three-column-banner-1/three-column-banner-1.png',
             'three_column_banner_1_url' => '#',
-            'three_column_banner_2' => 'uploads/theme-1/three-column-banner-2/three-column-banner-2.png',
+            'three_column_banner_2' => 'uploads/theme-one/three-column-banner-2/three-column-banner-2.png',
             'three_column_banner_2_url' => '#',
-            'three_column_banner_3' => 'uploads/theme-1/three-column-banner-3/three-column-banner-3.png',
+            'three_column_banner_3' => 'uploads/theme-one/three-column-banner-3/three-column-banner-3.png',
             'three_column_banner_3_url' => '#',
 
             // Two Column Banners
-            'two_column_banner_1' => 'uploads/theme-1/two-column-banner-1/two-column-banner-1.png',
+            'two_column_banner_1' => 'uploads/theme-one/two-column-banner-1/two-column-banner-1.png',
             'two_column_banner_1_url' => '#',
-            'two_column_banner_2' => 'uploads/theme-1/two-column-banner-2/two-column-banner-2.png',
+            'two_column_banner_2' => 'uploads/theme-one/two-column-banner-2/two-column-banner-2.png',
             'two_column_banner_2_url' => '#',
 
             // Recommended Categories
@@ -101,7 +101,7 @@ class CmsSettingSeeder extends Seeder
 
             // Popular Section
             'populer_section_title' => 'Popular Products',
-            'populer_section_banner' => 'uploads/theme-1/populer-section-banner/populer-section-banner.png',
+            'populer_section_banner' => 'uploads/theme-one/populer-section-banner/populer-section-banner.png',
             'populer_section_category_id_1' => 1,
             'populer_section_subcategory_id_1' => 1,
             'populer_section_category_id_2' => 2,

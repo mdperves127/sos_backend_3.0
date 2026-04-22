@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Banner;
 use App\Models\Offer;
 use App\Models\ServiceContent;
+use App\Models\CmsSetting;
 
 
 class ThemeImportController extends Controller
@@ -28,9 +29,45 @@ class ThemeImportController extends Controller
             return response()->json(['success' => false, 'message' => 'Theme directory not found.'], 404);
         }
 
+        // Handle cms.json specifically to update the first row of cms_settings
+        $cmsFilePath = $basePath . '/cms.json';
+        if (file_exists($cmsFilePath)) {
+            try {
+                $cmsData = file_get_contents($cmsFilePath);
+                $cmsItems = json_decode($cmsData, true);
+
+                if (is_array($cmsItems) && count($cmsItems) > 0) {
+                    $cmsItem = $cmsItems[0];
+                    $cmsSetting = CmsSetting::first();
+                    
+                    if ($cmsSetting) {
+                        $columns = Schema::getColumnListing($cmsSetting->getTable());
+                        foreach ($cmsItem as $key => $value) {
+                            if (in_array($key, $columns)) {
+                                if (is_array($value)) {
+                                    $cmsSetting->{$key} = $cmsSetting->hasCast($key) ? $value : json_encode($value);
+                                } else {
+                                    $cmsSetting->{$key} = $value;
+                                }
+                            }
+                        }
+                        $cmsSetting->save();
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('CMS Settings import failed: ' . $e->getMessage());
+            }
+        }
+
         $filesToModels = [
             'banner.json' => Banner::class,
-            'offer.json' => Offer::class,
+        ];
+
+        if ($theme === 'theme-two') {
+            $filesToModels['offer.json'] = Offer::class;
+        }
+
+        $filesToModels += [
             'services.json' => ServiceContent::class,
             'brand.json' => Brand::class,
             'category.json' => Category::class,
