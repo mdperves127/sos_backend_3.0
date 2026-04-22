@@ -1,7 +1,12 @@
 [
     {
-        "two_column_banner_1": "uploads/theme-three/banner/2.png",
-        "two_column_banner_2": "uploads/theme-three/banner/3.png",
-        "three_column_banner_1": "uploads/theme-three/banner/4.png"
+        "banner_1": "uploads/theme-three/banner/1.png",
+        "banner_title": "Designs that express your stories",
+        "banner_description": "We provide the largest clothing collection for any season. You can choose trendy or classy design according to your preferences. Our services are super fast and we update within 24 hours.",
+        "banner_2": "uploads/theme-three/gallery/1.png",
+        "banner_3": "uploads/theme-three/gallery/2.png",
+        "two_column_banner_1": "uploads/theme-three/gallery/3.png",
+        "two_column_banner_2": "uploads/theme-three/gallery/4.png",
+        "three_column_banner_3": "uploads/theme-three/banner/2.png"
     }
 ]
