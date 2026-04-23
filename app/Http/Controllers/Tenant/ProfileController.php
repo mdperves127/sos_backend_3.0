@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Models\CmsSetting;
 
 class ProfileController extends Controller
 {
@@ -18,11 +19,17 @@ class ProfileController extends Controller
     {
         $user = User::where('id', Auth::user()->id)->first();
 
-        $usersubscription = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->with('subscription:id,card_heading')->first();
+        $usersubscription = UserSubscription::on('mysql')
+        ->where('tenant_id', tenant()->id)
+        ->with('subscription:id,card_heading')->first();
+
+        $cmsSetting = CmsSetting::on('tenant')->first(['theme']);
+
         return response()->json([
             'status' => 200,
             'user' => $user,
-            'usersubscription' => $usersubscription
+            'usersubscription' => $usersubscription,
+            'cms_setting' => $cmsSetting,
         ]);
     }
 
