@@ -54,7 +54,7 @@ class CartController extends Controller
             }
         }
 
-        $user_id       = 1;
+        $user_id       = auth()->id();
         $product_id    = $getproduct->id;
         $productAmount = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
         $vendor_id     = $getproduct->user_id;
@@ -186,7 +186,7 @@ class CartController extends Controller
     }
     public function cart(Request $request)
     {
-        $cart = Cart::where('user_id', auth()->user()->id)->with('cartDetails', 'product')->get();
+        $cart = Cart::where('user_id', auth()->id())->with('cartDetails', 'product')->get();
 
         $deliveryCharge = DeliveryCharge::where('status', 'active')->select('id', 'area', 'charge')->get();
         return response()->json(

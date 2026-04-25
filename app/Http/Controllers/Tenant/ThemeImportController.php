@@ -63,7 +63,7 @@ class ThemeImportController extends Controller
             'banner.json' => Banner::class,
         ];
 
-        if ($theme === 'theme-two') {
+        if ($theme === 'theme-two' || $theme === 'theme-four') {
             $filesToModels['offer.json'] = Offer::class;
         }
 

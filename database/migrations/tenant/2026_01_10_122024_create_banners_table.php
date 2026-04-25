@@ -15,10 +15,10 @@ return new class extends Migration
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('subtitle');
+            $table->string('title')->nullable();
+            $table->string('subtitle')->nullable();
             $table->string('image');
-            $table->string('link');
+            $table->string('link')->nullable();
             $table->integer('order')->default(1);
             $table->enum('status',['active','inactive'])->default('active');
             $table->softDeletes();

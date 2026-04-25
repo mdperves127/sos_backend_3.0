@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->string('logo');
 
-            $table->enum('theme',['one','two', 'three', 'four'])->default('one');
+            $table->enum('theme',['one','two', 'three', 'four'])->nullable();
 
             $table->string('seo_meta_title');
             $table->string('seo_meta_description');

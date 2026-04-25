@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "title": "",
+        "subtitle": "",
+        "image": "uploads/theme-four/banner/1.png",
+        "link": "#",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "",
+        "subtitle": "",
+        "image": "uploads/theme-four/banner/1.png",
+        "link": "#",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "",
+        "subtitle": "",
+        "image": "uploads/theme-four/banner/1.png",
+        "link": "#",
+        "order": 3,
+        "status": "active"
+    }
+]

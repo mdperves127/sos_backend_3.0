@@ -26,7 +26,7 @@ class CmsSettingSeeder extends Seeder
             'home_page_title' => 'Welcome to Our Store',
             'color_primary' => '#007bff',
             'logo' => 'uploads/theme-one/logo/logo.png',
-            'theme' => 'one',
+            'theme' => null,
 
             // SEO Settings
             'seo_meta_title' => 'My Store - Best Online Shopping',
