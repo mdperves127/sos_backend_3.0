@@ -13,6 +13,7 @@ class RechargeController extends Controller
     function recharge( RechargeRequest $request ) {
         $validateData            = $request->validated();
         $validateData['tenant_id'] = tenant()->id;
+        $validateData['user_id'] = auth()->id();
         $total_amount = $validateData['amount'];
 
         $trxid      = uniqid();

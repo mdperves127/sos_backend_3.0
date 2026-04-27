@@ -8,6 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -65,6 +66,16 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($request->is('api/*') && $exception instanceof HttpExceptionInterface) {
+            $statusCode = $exception->getStatusCode();
+            $message = $exception->getMessage() ?: 'HTTP error';
+
+            return response()->json([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $statusCode);
+        }
+
         // Handle validation exceptions with proper error messages
         if ($exception instanceof ValidationException) {
             return $this->handleValidationException($request, $exception);

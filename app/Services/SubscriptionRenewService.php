@@ -242,7 +242,27 @@ class SubscriptionRenewService {
         // For tenant: map type to role_as (merchant=2=vendor, dropshipper=3=affiliate)
         $roleAs                  = $isTenant ? ( ( $entity->type ?? 'merchant' ) === 'dropshipper' ? 3 : 2 ) : $entity->role_as;
 
-        PaymentHistoryService::store( $trxid, ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ), $payment_method, $transition_type, '-', ( $couponName ), $entityId );
+        $paymentHistoryContext = $isTenant
+            ? [
+                'entity_type' => 'tenant',
+                'tenant_id'   => $entityId,
+                'user_id'     => auth()->check() ? auth()->id() : ( $userCurrentSubscription->user_id ?? null ),
+            ]
+            : [
+                'entity_type' => 'user',
+                'user_id'     => $entityId,
+            ];
+
+        PaymentHistoryService::store(
+            $trxid,
+            ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ),
+            $payment_method,
+            $transition_type,
+            '-',
+            ( $couponName ),
+            $entityId,
+            $paymentHistoryContext
+        );
 
         $getcoupon = Coupon::on( 'mysql' )->find( $couponName ?? 0 );
 
@@ -263,7 +283,19 @@ class SubscriptionRenewService {
                 'total_commission' => $commission,
             ] );
 
-            PaymentHistoryService::store( $trxid, $commission, 'My wallet', 'Referral bonus', '+', $couponName, $couponUser->id );
+            PaymentHistoryService::store(
+                $trxid,
+                $commission,
+                'My wallet',
+                'Referral bonus',
+                '+',
+                $couponName,
+                $couponUser->id,
+                [
+                    'entity_type' => 'user',
+                    'user_id'     => $couponUser->id,
+                ]
+            );
         }
 
         $userCurrentSubscription->subscription_price = $getsubscription->subscription_amount;

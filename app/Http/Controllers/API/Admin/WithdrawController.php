@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Admin;
 
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Withdraw;
 use App\Services\PaymentHistoryService;
@@ -43,7 +44,7 @@ class WithdrawController extends Controller {
                 $toDate   = Carbon::parse( request( 'to' ) )->addDay( 1 );
                 $query->whereBetween( 'created_at', [$fromDate, $toDate] );
             } )
-            ->with( 'user:id,name' )
+            ->with( 'user:id,name', 'tenant:id,company_name' )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
@@ -68,7 +69,7 @@ class WithdrawController extends Controller {
             ] );
         }
 
-        $withdraw                      = Withdraw::find( $id );
+        $withdraw                      = Withdraw::on( 'mysql' )->find( $id );
         $withdraw->admin_transition_id = $request->admin_transition_id;
 
         if ( $request->file( 'admin_screenshot' ) ) {
@@ -88,7 +89,7 @@ class WithdrawController extends Controller {
     }
 
     function withdrawcancel( int $id ) {
-        $withdraw = Withdraw::query()
+        $withdraw = Withdraw::on( 'mysql' )->query()
             ->where( 'id', $id )
             ->where( 'status', '!=', 'success' )
             ->first();
@@ -100,8 +101,40 @@ class WithdrawController extends Controller {
             $withdraw->reason = request( 'reason' );
         }
 
-        PaymentHistoryService::store( uniqid(), $withdraw->amount, 'My wallet', 'Withdraw refund', '+', '', $withdraw->user_id );
-        User::find( $withdraw->user_id )->increment( 'balance', $withdraw->amount );
+        if ( $withdraw->tenant_id ) {
+            PaymentHistoryService::store(
+                uniqid(),
+                $withdraw->amount,
+                'My wallet',
+                'Withdraw refund',
+                '+',
+                '',
+                $withdraw->tenant_id,
+                [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $withdraw->tenant_id,
+                    'user_id'     => $withdraw->user_id,
+                ]
+            );
+
+            Tenant::on( 'mysql' )->find( $withdraw->tenant_id )?->increment( 'balance', $withdraw->amount );
+        } else {
+            PaymentHistoryService::store(
+                uniqid(),
+                $withdraw->amount,
+                'My wallet',
+                'Withdraw refund',
+                '+',
+                '',
+                $withdraw->user_id,
+                [
+                    'entity_type' => 'user',
+                    'user_id'     => $withdraw->user_id,
+                ]
+            );
+
+            User::on( 'mysql' )->find( $withdraw->user_id )?->increment( 'balance', $withdraw->amount );
+        }
 
         $withdraw->status = 'reject';
         $withdraw->save();

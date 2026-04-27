@@ -29,7 +29,7 @@ class ProductOrderRequest extends FormRequest {
         $order       = Order::find( $this->route( 'id' ) );
         $statusRules = [
             'hold'       => ['cancel', 'pending'],
-            'pending'    => ['cancel', 'received'],
+            'pending'    => ['cancel', 'received', 'progress'],
             'received'   => ['cancel', 'processing', 'progress'],
             'processing' => ['cancel', 'ready'],
             'ready'      => ['cancel', 'progress'],
@@ -61,7 +61,7 @@ class ProductOrderRequest extends FormRequest {
                 $vendorbalance,
             ],
             'reason'      => 'required_if:status,cancel,return',
-            'delivery_id' => 'required_if:status,progress',
+            // 'delivery_id' => 'required_if:status,progress',
         ];
     }
 

@@ -197,6 +197,8 @@ class ProductCheckoutService {
 
                 $totalDue = ( $totalAmount + $deliveryCharge ) - $totaladvancepayment;
 
+                $customerUserId = $userid > 0 ? $userid : null;
+
                 // Generate unique order_id using the tenant connection
                 $orderId = self::generateUniqueOrderId($connectionName);
 
@@ -204,6 +206,7 @@ class ProductCheckoutService {
                 $order = new Order();
                 $order->setConnection($connectionName);
                 $order->order_id            = $orderId;
+                $order->user_id             = $customerUserId;
                 $order->vendor_id           = $product->user_id;
                 $order->affiliator_id       = $userid;
                 $order->product_id          = $product->id;
@@ -328,7 +331,26 @@ class ProductCheckoutService {
                 }
             }
 
-            PaymentHistoryService::store( uniqid(), ( $cart->advancepayment * $totalquantity ), $paymentprocess, 'Advance payment', '-', '', $userid );
+            $paymentHistoryContext = [];
+
+            if ( function_exists( 'tenant' ) && tenant() ) {
+                $paymentHistoryContext = [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $tenantId,
+                    'user_id'     => $userid > 0 ? $userid : null,
+                ];
+            }
+
+            PaymentHistoryService::store(
+                uniqid(),
+                ( $cart->advancepayment * $totalquantity ),
+                $paymentprocess,
+                'Advance payment',
+                '-',
+                '',
+                $userid,
+                $paymentHistoryContext
+            );
 
             // Delete cart from current tenant's database (carts are stored in dropshipper tenant, not product tenant)
             $cartToDelete = Cart::find( $cartId );

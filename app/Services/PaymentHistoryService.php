@@ -11,65 +11,44 @@ use App\Models\Tenant;
  */
 class PaymentHistoryService
 {
-    static function store($trxid, $amount, $payment_method, $transition_type, $balance_type, $coupon, $tenant_id) {
-        $tenant = Tenant::on('mysql')->find($tenant_id);
+    static function store($trxid, $amount, $payment_method, $transition_type, $balance_type, $coupon, $entityId = null, array $context = []) {
+        $entityType = $context['entity_type'] ?? null;
+        $tenantId = array_key_exists( 'tenant_id', $context ) ? $context['tenant_id'] : null;
+        $userId = array_key_exists( 'user_id', $context ) ? $context['user_id'] : null;
 
-        if ($tenant) {
-            // If we're in tenant context, create directly in tenant database without using relationship
-            // The relationship tries to use tenant_id which doesn't exist in tenant DB tables
-            if (tenant()) {
-                // We're in tenant context - create payment history in tenant database
-                // Use authenticated user's ID if available, otherwise use 1 as default
-                $user_id = auth()->check() ? auth()->user()->id : 1;
-
-                PaymentHistory::create([
-                    'trxid' => $trxid,
-                    'amount' => $amount,
-                    'payment_method' => $payment_method,
-                    'transition_type' => $transition_type,
-                    'balance_type' => $balance_type,
-                    'coupon' => $coupon,
-                    'user_id' => $user_id,
-                ]);
-            } else {
-                // We're in main context - use relationship which stores in main DB with tenant_id
-                $tenant->paymenthistories()->create([
-                    'trxid' => $trxid,
-                    'amount' => $amount,
-                    'payment_method' => $payment_method,
-                    'transition_type' => $transition_type,
-                    'balance_type' => $balance_type,
-                    'coupon' => $coupon,
-                ]);
-            }
+        if ( $entityType === 'tenant' ) {
+            $tenantId = $tenantId ?? $entityId;
+            $userId = $userId ?? ( auth()->check() ? auth()->id() : null );
+        } elseif ( $entityType === 'user' ) {
+            $userId = $userId ?? $entityId;
+        } elseif ( function_exists( 'tenant' ) && tenant() ) {
+            // In tenant context, payment histories belong to the central tenant record by default.
+            $tenantId = $tenantId ?? tenant()->id;
+            $userId = $userId ?? ( auth()->check() ? auth()->id() : ( $entityId ?: null ) );
         } else {
-            // It's a user, not a tenant
-            $user = User::find($tenant_id);
-            if ($user) {
-                // If in tenant context, create in tenant DB directly
-                if (tenant()) {
-                    PaymentHistory::create([
-                        'trxid' => $trxid,
-                        'amount' => $amount,
-                        'payment_method' => $payment_method,
-                        'transition_type' => $transition_type,
-                        'balance_type' => $balance_type,
-                        'coupon' => $coupon,
-                        'user_id' => $tenant_id,
-                    ]);
-                } else {
-                    // In main context, use relationship
-                    $user->paymenthistories()->create([
-                        'trxid' => $trxid,
-                        'amount' => $amount,
-                        'payment_method' => $payment_method,
-                        'transition_type' => $transition_type,
-                        'balance_type' => $balance_type,
-                        'coupon' => $coupon,
-                        'user_id' => $tenant_id,
-                    ]);
-                }
+            $tenant = $entityId ? Tenant::on( 'mysql' )->find( $entityId ) : null;
+            $user = $entityId ? User::on( 'mysql' )->find( $entityId ) : null;
+
+            if ( $tenant && !$user ) {
+                $tenantId = $tenantId ?? $tenant->id;
+            } else {
+                $userId = $userId ?? $entityId;
             }
         }
+
+        if ( $userId === 0 || $userId === '0' ) {
+            $userId = null;
+        }
+
+        return PaymentHistory::on( 'mysql' )->create( [
+            'trxid'           => $trxid,
+            'amount'          => $amount,
+            'payment_method'  => $payment_method,
+            'transition_type' => $transition_type,
+            'balance_type'    => $balance_type,
+            'coupon'          => $coupon,
+            'user_id'         => $userId,
+            'tenant_id'       => $tenantId,
+        ] );
     }
 }

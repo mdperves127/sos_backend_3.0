@@ -29,7 +29,20 @@ class AamarpayController extends Controller
         $vendorservice->update([
             'is_paid' => 1
         ]);
-        PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'Ammarpay', 'Service', '-', '', $vendorservice->user_id);
+        PaymentHistoryService::store(
+            $vendorservice->trxid,
+            $vendorservice->amount,
+            'Ammarpay',
+            'Service',
+            '-',
+            '',
+            $vendorservice->tenant_id ?: $vendorservice->user_id,
+            [
+                'entity_type' => 'tenant',
+                'tenant_id'   => $vendorservice->tenant_id,
+                'user_id'     => $vendorservice->user_id,
+            ]
+        );
 
         $user = User::find($vendorservice->user_id);
         $path = paymentredirect($user->role_as);
@@ -105,7 +118,25 @@ class AamarpayController extends Controller
         ]);
         $dollerRate  =  DollerRate::first()?->amount;
 
-        PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
+        PaymentHistoryService::store(
+            $adminAdvertise->trxid,
+            ( $adminAdvertise->budget_amount * $dollerRate ),
+            'Ammarpay',
+            'Advertise',
+            '-',
+            '',
+            $adminAdvertise->tenant_id ?: $adminAdvertise->user_id,
+            $adminAdvertise->tenant_id
+                ? [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $adminAdvertise->tenant_id,
+                    'user_id'     => $adminAdvertise->user_id,
+                ]
+                : [
+                    'entity_type' => 'user',
+                    'user_id'     => $adminAdvertise->user_id,
+                ]
+        );
         $user = User::find($adminAdvertise->user_id);
         $path = paymentredirect($user->role_as);
         $url = RedirectHelper::getRedirectUrl() . $path . '?message=Advertise payment successfull';
@@ -207,7 +238,20 @@ class AamarpayController extends Controller
 
 
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
-        PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['tenant_id']);
+        PaymentHistoryService::store(
+            $data->trxid,
+            $data['info']['amount'],
+            'Ammarpay',
+            'Recharge',
+            '+',
+            '',
+            $data['info']['tenant_id'],
+            [
+                'entity_type' => 'tenant',
+                'tenant_id'   => $data['info']['tenant_id'],
+                'user_id'     => $data['info']['user_id'] ?? null,
+            ]
+        );
 
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
 

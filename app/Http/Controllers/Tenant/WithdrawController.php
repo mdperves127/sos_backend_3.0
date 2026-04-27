@@ -6,15 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Settings;
 use App\Models\Withdraw;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class WithdrawController extends Controller {
 
     public function index() {
         $search   = request( 'search' );
-        $withdraw = Withdraw::on( 'mysql' )
-            ->where( 'user_id', tenant()->id )
-            ->latest()
+        $withdrawQuery = Withdraw::on( 'mysql' )->latest();
+
+        if ( Schema::connection( 'mysql' )->hasColumn( 'withdraws', 'tenant_id' ) ) {
+            $withdrawQuery->where( function ( $query ) {
+                $query->where( 'tenant_id', tenant()->id )
+                    ->orWhere( function ( $legacyQuery ) {
+                        $legacyQuery->whereNull( 'tenant_id' )->where( 'user_id', tenant()->id );
+                    } );
+            } );
+        } else {
+            $withdrawQuery->where( 'user_id', tenant()->id );
+        }
+
+        $withdraw = $withdrawQuery
             ->when( request( 'status' ) == 'success', function ( $q ) {
                 return $q->where( 'status', 'success' );
             } )
@@ -63,8 +75,7 @@ class WithdrawController extends Controller {
         }
 
         if ( tenant()->balance >= $request->amount + $charge ) {
-
-            Withdraw::on( 'mysql' )->create( [
+            $withdrawData = [
                 'user_id'      => auth()->id(),
                 'amount'       => $request->amount,
                 'bank_name'    => $request->bank_name,
@@ -74,7 +85,13 @@ class WithdrawController extends Controller {
                 'role'         => auth()->user()->role_as,
                 'uniqid'       => uniqid(),
                 'charge'       => $charge,
-            ] );
+            ];
+
+            if ( Schema::connection( 'mysql' )->hasColumn( 'withdraws', 'tenant_id' ) ) {
+                $withdrawData['tenant_id'] = tenant()->id;
+            }
+
+            Withdraw::on( 'mysql' )->create( $withdrawData );
 
 
             $tenant          = tenant();

@@ -165,6 +165,8 @@ Route::middleware( [
         Route::get( 'shop-info', [ProfileController::class, 'shopInfo'] );
         Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
 
+        Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
+
         // Marketplace routes for category, subcategory & brand
 
         Route::prefix( 'tenant-marketplace' )->group( function () {
@@ -212,7 +214,7 @@ Route::middleware( [
             Route::get( 'hold-orders', [VendorOrderController::class, 'HoldOrders'] );
             Route::get( 'order-count', [VendorOrderController::class, 'orderCount'] );
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
-            Route::post( 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
+            Route::match( ['POST', 'PUT', 'PATCH'], 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
         } );
         Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
 

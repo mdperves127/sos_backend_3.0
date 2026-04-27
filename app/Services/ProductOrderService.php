@@ -112,7 +112,7 @@ class ProductOrderService {
         $pendingBalance = self::orderPendingBalance( $order );
 
         CancelOrderBalance::create( [
-            'user_id' => $order->vendor_id,
+            // 'user_id' => $order->vendor_id,
             'balance' => $pendingBalance->amount,
         ] );
     }
@@ -148,7 +148,7 @@ class ProductOrderService {
             $vendor->decrement( 'balance', $order->afi_amount );
         }
 
-        PaymentHistoryService::store( uniqid(), $order->afi_amount, 'My wallet', 'Affiliate commission', '-', '', $order->vendor_id );
+        PaymentHistoryService::store( uniqid(), $order->afi_amount, 'My wallet', 'Affiliate commission', '-', '', auth()->id() );
 
         // $vendor_balance->balance = ( $vendor_balance->balance - $afi_amount );
         // $vendor_balance->save();
@@ -175,7 +175,7 @@ class ProductOrderService {
     static function progressOrder( $order ) {
 
         $checkCourier = CourierCredential::where( [
-            'vendor_id' => $order->vendor_id,
+            // 'vendor_id' => $order->vendor_id,
             'status'    => "active",
             'default'   => "yes",
         ] )->exists();
@@ -187,7 +187,7 @@ class ProductOrderService {
             // return $courierOrder;
             if ( $courierOrder ) {
 
-                $credential = CourierCredential::where( 'vendor_id', $order->vendor_id )->where( 'status', 'active' )->where( 'default', 'yes' )->first();
+                $credential = CourierCredential::where( 'status', 'active' )->where( 'default', 'yes' )->first();
 
                 if ( $credential->courier_name == 'pathao' ) {
                     $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
@@ -254,7 +254,7 @@ class ProductOrderService {
 
                 } elseif ( $credential->courier_name == 'redx' ) {
 
-                    $access_token = CourierCredential::where( 'vendor_id', vendorId() )->where( 'courier_name', 'redx' )->first();
+                    $access_token = CourierCredential::where( 'courier_name', 'redx' )->first();
 
                     if ( $access_token ) {
 

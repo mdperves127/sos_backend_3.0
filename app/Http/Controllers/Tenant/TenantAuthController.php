@@ -345,4 +345,36 @@ class TenantAuthController extends Controller {
             'data'        => $tenant_data,
         ] );
     }
+
+    public function customers( Request $request): JsonResponse {
+        try {
+            // Ensure we're in a tenant context
+            if ( !tenant() ) {
+                return response()->json( [
+                    'success' => false,
+                    'message' => 'Tenant context not found',
+                ], 400 );
+            }
+
+            $user = $request->user();
+
+            $customers = User::on( 'tenant' )
+                ->where( 'role_type', 'tenant_user' )
+                ->paginate( 10 )
+                ->withQueryString();
+
+            return response()->json( [
+                'success' => true,
+                'message' => 'Customers fetched successfully',
+                'data'    => $customers,
+            ] );
+
+        } catch ( \Exception $e ) {
+            return response()->json( [
+                'success' => false,
+                'message' => 'Failed to fetch customers',
+                'error'   => $e->getMessage(),
+            ], 500 );
+        }
+    }
 }

@@ -103,11 +103,21 @@ class AdminAdvertiseService {
         if ( request( 'paymethod' ) == 'my-wallet' ) {
 
             $user = null;
-            // if (request('user_type') == 'user') {
-            if (auth()->check()) {
-                $user = User::on('mysql')->where('id', auth()->user()->id )->first();
+            $paymentHistoryContext = [];
+
+            if ( function_exists( 'tenant' ) && tenant() ) {
+                $user = Tenant::on( 'mysql' )->where( 'id', tenant()->id )->first();
+                $paymentHistoryContext = [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $user?->id,
+                    'user_id'     => auth()->check() ? auth()->id() : null,
+                ];
             } else {
-                $user = Tenant::on('mysql')->where('id', tenant()->id ?? '' )->first();
+                $user = User::on( 'mysql' )->where( 'id', auth()->id() )->first();
+                $paymentHistoryContext = [
+                    'entity_type' => 'user',
+                    'user_id'     => $user?->id,
+                ];
             }
 
             // Check if user exists
@@ -123,7 +133,7 @@ class AdminAdvertiseService {
             $user->decrement( 'balance', $totalprice );
             $adminadvaertise->is_paid = 1;
             $adminadvaertise->save();
-            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', $user->id );
+            PaymentHistoryService::store( $trxid, $totalprice, 'My wallet', 'Advertise', '-', '', $user->id, $paymentHistoryContext );
             return responsejson( 'Successfull!' );
         } else {
 

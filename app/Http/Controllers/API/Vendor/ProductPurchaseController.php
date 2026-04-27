@@ -181,22 +181,21 @@ class ProductPurchaseController extends Controller {
         $productDetails = ProductPurchaseDetails::where( 'product_purchase_id', $purchase->id )->get();
 
         foreach ( $productDetails as $productDetail ) {
-            ProductVariant::updateOrCreate(
-                [
-                    'product_id' => $productDetail->product_id,
-                    'unit_id'    => $productDetail->unit_id,
-                    'size_id'    => $productDetail->size_id,
-                    'color_id'   => $productDetail->color_id,
-                ],
-                [
-                    'qty' => DB::raw( 'qty + ' . $productDetail->qty ),
-                ]
-            );
+            $receivedQty = (int) $productDetail->qty;
+
+            $productVariant = ProductVariant::firstOrNew( [
+                'product_id' => $productDetail->product_id,
+                'unit_id'    => $productDetail->unit_id,
+                'size_id'    => $productDetail->size_id,
+                'color_id'   => $productDetail->color_id,
+            ] );
+            $productVariant->qty = (int) ( $productVariant->qty ?? 0 ) + $receivedQty;
+            $productVariant->save();
 
             // Update qty for the product
             $product = Product::find( $productDetail->product_id );
             if ( $product ) {
-                $product->qty += $productDetail->qty; // Increase stock
+                $product->qty = (int) ( $product->qty ?? 0 ) + $receivedQty; // Increase stock safely even when qty is stored as string
                 $product->save();
             }
         }

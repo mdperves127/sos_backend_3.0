@@ -58,7 +58,18 @@ class SubscriptionService {
             false;
         }
 
-        PaymentHistoryService::store( $trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $entity->id );
+        $paymentHistoryContext = $entity instanceof Tenant
+            ? [
+                'entity_type' => 'tenant',
+                'tenant_id'   => $entity->id,
+                'user_id'     => $actingUserId ?? ( Auth::check() ? Auth::id() : null ),
+            ]
+            : [
+                'entity_type' => 'user',
+                'user_id'     => $entity->id,
+            ];
+
+        PaymentHistoryService::store( $trxid, $totalamount, $paymentmethod, 'Subscription', '-', $coupon, $entity->id, $paymentHistoryContext );
         $getcoupon = Coupon::on('mysql')->find( $coupon );
 
         if ( $getcoupon ) {
@@ -72,7 +83,19 @@ class SubscriptionService {
                 'total_commission' => $totalreffralBonus,
             ] );
 
-            PaymentHistoryService::store( $trxid, $totalreffralBonus, 'My wallet', 'Referral bonus', '+', $coupon, $couponUser->id );
+            PaymentHistoryService::store(
+                $trxid,
+                $totalreffralBonus,
+                'My wallet',
+                'Referral bonus',
+                '+',
+                $coupon,
+                $couponUser->id,
+                [
+                    'entity_type' => 'user',
+                    'user_id'     => $couponUser->id,
+                ]
+            );
         }
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {

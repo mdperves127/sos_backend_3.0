@@ -50,7 +50,26 @@ class ServiceService
             $user->balance = convertfloat($user->balance)- $package->price;
             $user->save();
 
-            PaymentHistoryService::store($serviceOrder->trxid, $serviceOrder->amount, 'My wallet', 'Service', '-', '', $serviceOrder->user_id);
+            $paymentHistoryContext = [];
+
+            if ( function_exists( 'tenant' ) && tenant() ) {
+                $paymentHistoryContext = [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $tenantId,
+                    'user_id'     => $serviceOrder->user_id,
+                ];
+            }
+
+            PaymentHistoryService::store(
+                $serviceOrder->trxid,
+                $serviceOrder->amount,
+                'My wallet',
+                'Service',
+                '-',
+                '',
+                $serviceOrder->user_id,
+                $paymentHistoryContext
+            );
 
         }else{
 

@@ -712,7 +712,7 @@ class MerchantFrontendController extends Controller
     }
 
     public function orders() {
-        $orders = Order::where('vendor_id', auth()->user()->id)->where('tenant_id', tenant()->id)->get();
+        $orders = Order::where('user_id', auth()->id())->where('tenant_id', tenant()->id)->get();
         $all_order = $orders->count();
         $pending_order = $orders->where('status', 'pending')->count();
         $processing_order = $orders->where('status', 'processing')->count();
