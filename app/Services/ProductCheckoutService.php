@@ -240,6 +240,7 @@ class ProductCheckoutService {
                 );
 
                 $checkCourier = $courierCredentials->isNotEmpty();
+                $defaultCourier = $courierCredentials->first();
                 $isPathao = false;
                 $isRedx = false;
 
@@ -271,7 +272,7 @@ class ProductCheckoutService {
                         CrossTenantQueryService::saveToTenant(
                             $tenantId,
                             OrderDeliveryToCourier::class,
-                            function ( $model ) use ( $order, $product, $userid, $data, $isPathao, $isRedx ) {
+                            function ( $model ) use ( $order, $product, $userid, $data, $isPathao, $isRedx, $defaultCourier ) {
                                 $model->order_id            = $order->id;
                                 $model->vendor_id           = $product->user_id;
                                 $model->affiliator_id       = $userid;
@@ -279,7 +280,7 @@ class ProductCheckoutService {
                                 $model->recipient_name      = $data['name'];
                                 $model->recipient_phone     = $data['phone'];
                                 $model->recipient_address   = $data['address'];
-                                $model->courier_id          = $data['courier_id'];
+                                $model->courier_id          = $data['courier_id'] ?? $defaultCourier?->id;
                                 $model->item_weight         = $data['item_weight'];
                                 $model->recipient_city      = $isPathao ? $data['city_id'] : null;
                                 $model->recipient_zone      = $isPathao ? $data['zone_id'] : null;

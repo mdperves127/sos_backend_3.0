@@ -14,12 +14,13 @@ class PathaoService {
      * @return string
      */
     public static function baseurl() {
+        $mode = env( 'PATHAO_MODE', 'live' );
 
-        if ( env( 'PATHAO_MODE' ) == 'sandbox' ) {
+        if ( $mode == 'sandbox' ) {
             return 'https://courier-api-sandbox.pathao.com';
-        } elseif ( env( 'PATHAO_MODE' ) == 'live' || env( 'PATHAO_MODE' ) == 'production' ) {
-            return 'https://api-hermes.pathao.com';
         }
+
+        return 'https://api-hermes.pathao.com';
     }
 
     /**
@@ -30,15 +31,16 @@ class PathaoService {
      *
      * @return mixed
      */
-    public static function getToken( $clientId, $clientSecret, $clientEmail, $clientPassword ) {
-
-        // dd( $clientId, $clientSecret, $clientEmail, $clientPassword );
-
+    public static function getToken( $clientId, $clientSecret, $clientEmail, $clientPassword, $forceRefresh = false ) {
         try {
+            $sessionKey = 'pathao_access_token_' . md5( $clientId . '|' . $clientEmail . '|' . $clientSecret );
 
-            if ( Session::has( 'pathao_access_token' ) ) {
-                // dd( Session::get( 'pathao_access_token' ) );
-                return Session::get( 'pathao_access_token' );
+            if ( $forceRefresh ) {
+                Session::forget( $sessionKey );
+            }
+
+            if ( Session::has( $sessionKey ) ) {
+                return Session::get( $sessionKey );
             } else {
                 $response = Http::withHeaders( [
                     'Accept'       => 'application/json',
@@ -51,21 +53,24 @@ class PathaoService {
                     'grant_type'    => 'password',
                 ] );
 
-                if ( $response->successful() ) {
-                    $accesstoken = json_decode( $response->body() )->access_token;
-                    Session::put( 'pathao_access_token', $accesstoken );
+                if ( $response->successful() && isset( $response->json()['access_token'] ) ) {
+                    $accesstoken = $response->json()['access_token'];
+                    Session::put( $sessionKey, $accesstoken );
                     return $accesstoken;
                 }
 
-                return response()->json( [
-                    'error'    => 'Unable to retrieve token',
-                    'status'   => $response->status(),
-                    'response' => $response->body(),
-                ], $response->status() );
+                return [
+                    'message' => 'Unable to retrieve token',
+                    'status'  => $response->status(),
+                    'details' => $response->json() ?: $response->body(),
+                ];
             }
 
         } catch ( \Exception $e ) {
-            return response()->json( ['error' => $e->getMessage()], 500 );
+            return [
+                'message' => $e->getMessage(),
+                'status'  => 500,
+            ];
         }
 
     }
@@ -103,41 +108,52 @@ class PathaoService {
     public static function newOrder( $access_token, $store_id, $newOrder ) {
 
         try {
+            $payload = [
+                'store_id'            => (int) $store_id,
+                'merchant_order_id'   => (string) ( $newOrder['merchant_order_id'] ?? '' ),
+                'recipient_name'      => (string) ( $newOrder['recipient_name'] ?? '' ),
+                'recipient_phone'     => (string) ( $newOrder['recipient_phone'] ?? '' ),
+                'recipient_address'   => (string) ( $newOrder['recipient_address'] ?? '' ),
+                'delivery_type'       => (int) ( $newOrder['delivery_type'] ?? 48 ),
+                'item_type'           => (int) ( $newOrder['item_type'] ?? 2 ),
+                'special_instruction' => (string) ( $newOrder['special_instruction'] ?? '' ),
+                'item_quantity'       => (int) ( $newOrder['item_quantity'] ?? 1 ),
+                'item_weight'         => (string) ( $newOrder['item_weight'] ?? '1' ),
+                'amount_to_collect'   => (int) ( $newOrder['amount_to_collect'] ?? 0 ),
+                'item_description'    => (string) ( $newOrder['item_description'] ?? '' ),
+            ];
+
+            // Optional fields: include only when present (matching successful manual payload style)
+            if ( isset( $newOrder['recipient_city'] ) && $newOrder['recipient_city'] !== null && $newOrder['recipient_city'] !== '' ) {
+                $payload['recipient_city'] = (int) $newOrder['recipient_city'];
+            }
+            if ( isset( $newOrder['recipient_zone'] ) && $newOrder['recipient_zone'] !== null && $newOrder['recipient_zone'] !== '' ) {
+                $payload['recipient_zone'] = (int) $newOrder['recipient_zone'];
+            }
+            if ( isset( $newOrder['recipient_area'] ) && $newOrder['recipient_area'] !== null && $newOrder['recipient_area'] !== '' ) {
+                $payload['recipient_area'] = (int) $newOrder['recipient_area'];
+            }
+
+
             $response = Http::withHeaders( [
                 'Authorization' => 'Bearer ' . $access_token,
                 'Content-Type'  => 'application/json',
                 'Accept'        => 'application/json',
-            ] )->post( self::baseurl() . "/aladdin/api/v1/orders", [
-
-                "store_id"            => $store_id,
-                "merchant_order_id"   => $newOrder['merchant_order_id'],
-                "recipient_name"      => $newOrder['recipient_name'],
-                "recipient_phone"     => $newOrder['recipient_phone'],
-                "recipient_address"   => $newOrder['recipient_address'],
-                "recipient_city"      => $newOrder['recipient_city'],
-                "recipient_zone"      => $newOrder['recipient_zone'],
-                "recipient_area"      => $newOrder['recipient_area'],
-                "delivery_type"       => $newOrder['delivery_type'],
-                "item_type"           => $newOrder['item_type'],
-                "special_instruction" => $newOrder['special_instruction'],
-                "item_quantity"       => $newOrder['item_quantity'],
-                "item_weight"         => $newOrder['item_weight'],
-                "amount_to_collect"   => $newOrder['amount_to_collect'],
-                "item_description"    => $newOrder['item_description'],
-            ] );
-
-            // Check for errors
+                ] )->post( self::baseurl() . "/aladdin/api/v1/orders", $payload );
             if ( $response->failed() ) {
-                return response()->json( [
-                    'error'    => 'API request failed',
-                    'response' => $response->body(),
-                    'status'   => $response->status(),
-                ], $response->status() );
+                return [
+                    'message' => 'Pathao API request failed',
+                    'status'  => $response->status(),
+                    'details' => $response->json() ?: $response->body(),
+                ];
             }
 
             return $response->json();
         } catch ( \Exception $e ) {
-            return response()->json( $e );
+            return [
+                'message' => $e->getMessage(),
+                'status'  => 500,
+            ];
         }
     }
 

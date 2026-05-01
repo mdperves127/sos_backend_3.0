@@ -32,9 +32,9 @@ class CourierCredentialController extends Controller {
             'courier_name'    => 'required|in:pathao,steadfast,redx',
             'api_key'         => 'required|unique:courier_credentials,api_key,NULL,id,vendor_id,' . vendorId(),
             'secret_key'      => 'required|unique:courier_credentials,secret_key,NULL,id,vendor_id,' . vendorId(),
-            'client_email'    => 'nullable|email',
-            'client_password' => 'nullable',
-            'store_id'        => 'nullable',
+            'client_email'    => 'nullable|email|required_if:courier_name,pathao',
+            'client_password' => 'nullable|required_if:courier_name,pathao',
+            'store_id'        => 'nullable|required_if:courier_name,pathao',
             'status'          => 'required',
         ] );
 
@@ -94,9 +94,9 @@ class CourierCredentialController extends Controller {
             'courier_name'    => 'required|in:pathao,steadfast,redx',
             'api_key'         => 'required|unique:courier_credentials,api_key,' . $id . ',id,vendor_id,' . vendorId(),
             'secret_key'      => 'required|unique:courier_credentials,secret_key,' . $id . ',id,vendor_id,' . vendorId(),
-            'client_email'    => 'required_if:courier_name,pathao|email',
-            'client_password' => 'required_if:courier_name,pathao',
-            'store_id'        => 'nullable',
+            'client_email'    => 'nullable|email|required_if:courier_name,pathao',
+            'client_password' => 'nullable|required_if:courier_name,pathao',
+            'store_id'        => 'nullable|required_if:courier_name,pathao',
             'status'          => 'required',
         ] );
 

@@ -316,12 +316,13 @@ class WoocommerceOrderController extends Controller {
         try {
             $order = Order::where( 'id', $orderId )->first();
 
-            $checkCourier = CourierCredential::where( [
+            $defaultCourier = CourierCredential::where( [
                 'vendor_id' => $order->vendor_id,
-                'status'    => "active",
-            ] )->exists();
+                'status'    => 'active',
+                'default'   => 'yes',
+            ] )->first();
 
-            if ( $checkCourier ) {
+            if ( $defaultCourier ) {
 
                 $validator = Validator::make( $request->all(), [
                     'phone'       => 'required',
@@ -348,7 +349,7 @@ class WoocommerceOrderController extends Controller {
                     'recipient_name'      => $order->name ?? "unknow",
                     'recipient_phone'     => $request->phone,
                     'recipient_address'   => $request->address,
-                    'courier_id'          => $request->courier_id,
+                    'courier_id'          => $request->courier_id ?? $defaultCourier->id,
                     'item_weight'         => $request->item_weight,
                     'recipient_city'      => $request->city_id,
                     'recipient_zone'      => $request->zone_id,
@@ -367,7 +368,7 @@ class WoocommerceOrderController extends Controller {
                 // return $courierOrder;
                 if ( $courierOrder ) {
 
-                    $credential = CourierCredential::where( 'vendor_id', $order->vendor_id )->first();
+                    $credential = CourierCredential::where( 'vendor_id', $order->vendor_id )->where( 'status', 'active' )->where( 'default', 'yes' )->first();
 
                     $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
 

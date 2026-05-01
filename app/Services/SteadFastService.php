@@ -41,18 +41,20 @@ class SteadFastService {
                 "note"   => $newOrder['special_instruction'],
             ] );
 
-            // Check for errors
             if ( $response->failed() ) {
-                return response()->json( [
-                    'error'    => 'API request failed',
-                    'response' => $response->body(),
-                    'status'   => $response->status(),
-                ], $response->status() );
+                return [
+                    'message' => 'Steadfast API request failed',
+                    'status'  => $response->status(),
+                    'details' => $response->json() ?: $response->body(),
+                ];
             }
 
             return $response->json();
         } catch ( \Exception $e ) {
-            return response()->json( $e );
+            return [
+                'message' => $e->getMessage(),
+                'status'  => 500,
+            ];
         }
     }
 

@@ -42,5 +42,27 @@
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
+	},
+	{
+		"id": 5,
+		"name": "Shoes",
+		"slug": "accessories",
+		"description": "Handbags, jewelry, scarves, and belts to complete women's fashion looks.",
+		"status": "active",
+		"image": "uploads/theme-four/category/5.png",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 6,
+		"name": "Bags",
+		"slug": "accessories",
+		"description": "Handbags, jewelry, scarves, and belts to complete women's fashion looks.",
+		"status": "active",
+		"image": "uploads/theme-four/category/6.png",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
 	}
 ]

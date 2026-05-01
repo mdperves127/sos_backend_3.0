@@ -584,11 +584,10 @@ class OrderController extends Controller {
                 }
             }
 
-            $checkCourier = CourierCredential::where( ['vendor_id' => vendorId(), 'status' => 'active', 'default' => 'yes'] )->exists();
-            if ( $checkCourier ) {
-                $isPathao = CourierCredential::where( ['vendor_id' => vendorId(), 'status' => 'active', 'default' => 'yes', 'courier_name' => 'pathao'] )->exists();
-                $isRedx   = CourierCredential::where( ['vendor_id' => vendorId(), 'status' => 'active', 'default' => 'yes', 'courier_name' => 'redx',
-                ] )->exists();
+            $defaultCourier = CourierCredential::where( ['vendor_id' => vendorId(), 'status' => 'active', 'default' => 'yes'] )->first();
+            if ( $defaultCourier ) {
+                $isPathao = $defaultCourier->courier_name === 'pathao';
+                $isRedx   = $defaultCourier->courier_name === 'redx';
                 OrderDeliveryToCourier::create( [
                     'order_id'            => $order->id,
                     'vendor_id'           => vendorId(),
@@ -597,7 +596,7 @@ class OrderController extends Controller {
                     'recipient_name'      => $request->customer_name,
                     'recipient_phone'     => $request->phone,
                     'recipient_address'   => $request->address,
-                    'courier_id'          => $request->courier_id,
+                    'courier_id'          => $request->courier_id ?? $defaultCourier->id,
                     'item_weight'         => $request->item_weight,
                     'recipient_city'      => $isPathao ? $request->city_id : null,
                     'recipient_zone'      => $isPathao ? $request->zone_id : null,

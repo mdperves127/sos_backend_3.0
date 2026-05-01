@@ -13,12 +13,13 @@ class RedxService {
      * @return string
      */
     public static function baseurl() {
+        $mode = env( 'REDX_MODE', 'live' );
 
-        if ( env( 'REDX_MODE' ) == 'sandbox' ) {
+        if ( $mode == 'sandbox' ) {
             return 'https://sandbox.redx.com.bd/v1.0.0-beta';
-        } elseif ( env( 'REDX_MODE' ) == 'live' || env( 'REDX_MODE' ) == 'production' ) {
-            return 'https://openapi.redx.com.bd/v1.0.0-beta';
         }
+
+        return 'https://openapi.redx.com.bd/v1.0.0-beta';
     }
 
     /**
@@ -102,18 +103,20 @@ class RedxService {
                 "value"                  => $newOrder['amount_to_collect'],
             ] );
 
-            // Check for errors
             if ( $response->failed() ) {
-                return response()->json( [
-                    'error'    => 'API request failed',
-                    'response' => $response->body(),
-                    'status'   => $response->status(),
-                ], $response->status() );
+                return [
+                    'message' => 'Redx API request failed',
+                    'status'  => $response->status(),
+                    'details' => $response->json() ?: $response->body(),
+                ];
             }
 
             return $response->json();
         } catch ( \Exception $e ) {
-            return response()->json( $e );
+            return [
+                'message' => $e->getMessage(),
+                'status'  => 500,
+            ];
         }
     }
 
