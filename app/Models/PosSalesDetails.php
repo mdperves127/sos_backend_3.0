@@ -27,6 +27,6 @@ class PosSalesDetails extends Model {
     }
 
     public function posSale() {
-        return $this->belongsTo( PosSales::class );
+        return $this->belongsTo( PosSales::class, 'id' );
     }
 }
