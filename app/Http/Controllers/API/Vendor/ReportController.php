@@ -217,7 +217,15 @@ class ReportController extends Controller {
         $sourceId  = request( 'source_id' );
         $status    = request( 'status' );
 
-        $variantSalesReport = PosSalesDetails::with( 'product', 'size', 'color', 'unit' )
+        $variantSalesReport = PosSalesDetails::with( [
+            'product',
+            'size',
+            'color',
+            'unit',
+            'posSale' => function ( $query ) {
+                $query->select( 'id', 'due_amount', 'paid_amount', 'total_price', 'payment_status', 'barcode' );
+            },
+        ] )
             ->when( $productId, function ( $query ) use ( $productId ) {
                 $query->where( 'product_id', $productId );
             } )
