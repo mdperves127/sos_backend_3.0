@@ -102,7 +102,7 @@ class ProductService {
                     'color_id'   => $variantData['color_id'],
                 ],
                 [
-                    'qty' => DB::raw( 'qty + ' . $variantData['qty'] ), // Increment the qty column
+                    'qty' => DB::raw( 'qty + ' . (int) $variantData['qty'] ), // Increment the qty column
                     // 'rate' => $variantData['rate'], // Update rate if needed
                 ]
             );
@@ -110,7 +110,7 @@ class ProductService {
             // Update qty for the product
             $product = Product::find( $variantData['product_id'] );
             if ( $product && $purchaseStatus == "received" ) {
-                $product->qty += $variantData['qty']; // Increase stock
+                $product->qty = (string) ((int) $product->qty + (int) $variantData['qty']);
                 $product->save();
             }
         }

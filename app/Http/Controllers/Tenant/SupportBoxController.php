@@ -50,7 +50,7 @@ class SupportBoxController extends Controller {
      */
     public function show( $id ) {
 
-        $supportBox = SupportBox::on( 'mysql' )->where( ['id' => $id, 'user_id' => userid()])->first();
+        $supportBox = SupportBox::on( 'mysql' )->where( ['id' => $id, 'tenant_id' => tenant()->id])->first();
 
         if ( !$supportBox ) {
             return responsejson( 'Not found', 'fail' );
