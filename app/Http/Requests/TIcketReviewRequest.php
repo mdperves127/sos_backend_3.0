@@ -26,10 +26,17 @@ class TIcketReviewRequest extends FormRequest
      */
     public function rules()
     {
+        $existsRule = Rule::exists( 'mysql.support_boxes', 'id' )
+            ->where( 'is_close', 1 )
+            ->where( 'user_id', auth()->id() );
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            $existsRule->where( 'tenant_id', tenant()->id );
+        }
+
         return [
-            'support_box_id'=>['required',Rule::exists('mysql.support_boxes','id')->where('user_id',userid())->where('is_close',1)],
-            'rating' => 'required|numeric|min:1|max:5',
-            'rating_comment'=>'nullable'
+            'support_box_id' => ['required', $existsRule],
+            'rating'         => 'required|numeric|min:1|max:5',
+            'rating_comment' => 'nullable',
         ];
     }
 

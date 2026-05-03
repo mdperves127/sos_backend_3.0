@@ -29,12 +29,17 @@ class VendorTicketReplayRequest extends FormRequest {
         //     'file'=>['nullable','file']
         // ];
 
+        $existsRule = Rule::exists( 'mysql.support_boxes', 'id' )
+            ->where( 'is_close', 0 )
+            ->where( 'user_id', auth()->id() );
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            $existsRule->where( 'tenant_id', tenant()->id );
+        }
+
         return [
             'support_box_id' => [
                 'required',
-                Rule::exists( 'mysql.support_boxes', 'id' )
-                    ->where( 'tenant_id', tenant()->id )
-                    ->where( 'is_close', 0 ),
+                $existsRule,
             ],
             'description'    => 'required_without:file',
             'file'           => 'required_without:description|nullable|file',
