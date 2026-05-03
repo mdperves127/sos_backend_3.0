@@ -11,6 +11,7 @@ use App\Models\TicketReply;
 use App\Models\User;
 use App\Services\SosService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class SupportBoxController extends Controller {
@@ -213,18 +214,25 @@ class SupportBoxController extends Controller {
     }
 
     /**
-     * Resolve `user_id` the same for support boxes and ticket replies: tenant users table first, then central users.
+     * If this id exists in the current tenant's `users` table, use that row; otherwise use central `users`.
+     * Uses a plain DB read for the tenant branch so Spatie/global scopes on {@see User} cannot force a fallback to mysql.
      */
     private function resolveSupportRelatedUser( ?int $userId ): ?User {
         if ( $userId === null || $userId === 0 ) {
             return null;
         }
-        $tenantUser = User::on( 'tenant' )->find( $userId );
-        if ( $tenantUser ) {
-            return $tenantUser;
+
+        $tenantRow = DB::connection( 'tenant' )->table( 'users' )->where( 'id', $userId )->first();
+        if ( $tenantRow !== null ) {
+            return ( new User() )->newFromBuilder( (array) $tenantRow, 'tenant' );
         }
 
-        return User::on( 'mysql' )->find( $userId );
+        $centralRow = DB::connection( 'mysql' )->table( 'users' )->where( 'id', $userId )->first();
+        if ( $centralRow !== null ) {
+            return ( new User() )->newFromBuilder( (array) $centralRow, 'mysql' );
+        }
+
+        return null;
     }
 
     private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
