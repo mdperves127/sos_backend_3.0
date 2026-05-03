@@ -10,6 +10,9 @@ class SupportBox extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /** Central SOS data; not stored on tenant databases. */
+    protected $connection = 'mysql';
+
     protected $guarded = [];
 
     function user()

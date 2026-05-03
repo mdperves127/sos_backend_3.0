@@ -66,7 +66,9 @@ class SupportBoxController extends Controller {
         }
 
         $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
-            $query->with( 'file' );
+            $query->with( ['file' => function ( $fileQuery ) {
+                $fileQuery->on( 'mysql' );
+            }] );
         }] );
         $this->hydrateSupportBoxUsers( $data );
 
@@ -211,9 +213,9 @@ class SupportBoxController extends Controller {
     }
 
     /**
-     * Support box `user_id` is stored from tenant auth; prefer the tenant users table, then central.
+     * Resolve `user_id` the same for support boxes and ticket replies: tenant users table first, then central users.
      */
-    private function resolveSupportBoxOwnerUser( ?int $userId ): ?User {
+    private function resolveSupportRelatedUser( ?int $userId ): ?User {
         if ( $userId === null || $userId === 0 ) {
             return null;
         }
@@ -225,32 +227,17 @@ class SupportBoxController extends Controller {
         return User::on( 'mysql' )->find( $userId );
     }
 
-    /**
-     * Reply `user_id` is either central staff (mysql) or a tenant user; prefer central when present so admin replies stay correct when ids overlap with tenant users.
-     */
-    private function resolveTicketReplyAuthorUser( ?int $userId ): ?User {
-        if ( $userId === null || $userId === 0 ) {
-            return null;
-        }
-        $centralUser = User::on( 'mysql' )->find( $userId );
-        if ( $centralUser ) {
-            return $centralUser;
-        }
-
-        return User::on( 'tenant' )->find( $userId );
-    }
-
     private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
-        $supportBox->setRelation( 'user', $this->resolveSupportBoxOwnerUser( $supportBox->user_id ) );
+        $supportBox->setRelation( 'user', $this->resolveSupportRelatedUser( $supportBox->user_id ) );
 
         if ( $supportBox->relationLoaded( 'latestTicketreplay' ) && $supportBox->latestTicketreplay ) {
             $latest = $supportBox->latestTicketreplay;
-            $latest->setRelation( 'user', $this->resolveTicketReplyAuthorUser( $latest->user_id ) );
+            $latest->setRelation( 'user', $this->resolveSupportRelatedUser( $latest->user_id ) );
         }
 
         if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
             foreach ( $supportBox->ticketreplay as $reply ) {
-                $reply->setRelation( 'user', $this->resolveTicketReplyAuthorUser( $reply->user_id ) );
+                $reply->setRelation( 'user', $this->resolveSupportRelatedUser( $reply->user_id ) );
             }
         }
     }
