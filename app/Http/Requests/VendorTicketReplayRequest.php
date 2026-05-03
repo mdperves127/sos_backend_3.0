@@ -24,7 +24,7 @@ class VendorTicketReplayRequest extends FormRequest {
      */
     public function rules() {
         // return [
-        //     'support_box_id'=>['required',Rule::exists('support_boxes','id')->where('user_id',userid())->where('is_close',0)],
+        //     'support_box_id'=>['required',Rule::exists('mysql.support_boxes','id')->where('user_id',userid())->where('is_close',0)],
         //     'description'=>'required',
         //     'file'=>['nullable','file']
         // ];
@@ -32,7 +32,7 @@ class VendorTicketReplayRequest extends FormRequest {
         return [
             'support_box_id' => [
                 'required',
-                Rule::exists( 'support_boxes', 'id' )
+                Rule::exists( 'mysql.support_boxes', 'id' )
                     ->where( 'user_id', userid() )
                     ->where( 'is_close', 0 ),
             ],

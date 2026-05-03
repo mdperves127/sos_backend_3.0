@@ -29,7 +29,7 @@ class StoreTicketReplyRequest extends FormRequest
     {
         return [
             'support_box_id'=>['required', function($attribute,$value,$fail){
-                $supportBox = SupportBox::query()
+                $supportBox = SupportBox::on( 'mysql' )
                 ->when(checkpermission('support') != 1,function($query){
                     $query->whereHas('supportassigned',function($query){
                         $query->where('user_id',auth()->id());

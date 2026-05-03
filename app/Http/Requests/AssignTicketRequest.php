@@ -27,7 +27,7 @@ class AssignTicketRequest extends FormRequest
     {
         return [
             'user_id'=> ['required','exists:users,id'],
-            'support_box_id'=>['required','exists:support_boxes,id']
+            'support_box_id'=>['required','exists:mysql.support_boxes,id']
         ];
     }
 
