@@ -33,7 +33,7 @@ class VendorTicketReplayRequest extends FormRequest {
             'support_box_id' => [
                 'required',
                 Rule::exists( 'mysql.support_boxes', 'id' )
-                    ->where( 'user_id', userid() )
+                    ->where( 'user_id', auth()->id() )
                     ->where( 'is_close', 0 ),
             ],
             'description'    => 'required_without:file',
