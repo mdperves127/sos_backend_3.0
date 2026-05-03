@@ -8,6 +8,7 @@ use App\Http\Requests\TIcketReviewRequest;
 use App\Http\Requests\VendorTicketReplayRequest;
 use App\Models\SupportBox;
 use App\Models\TicketReply;
+use App\Models\User;
 use App\Services\SosService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -26,6 +27,10 @@ class SupportBoxController extends Controller {
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
             ->paginate( 10 );
+
+        foreach ( $datas as $supportBox ) {
+            $this->hydrateSupportBoxUsers( $supportBox );
+        }
 
         return $this->response( $datas );
     }
@@ -61,8 +66,9 @@ class SupportBoxController extends Controller {
         }
 
         $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
-            $query->with( ['file', 'user'] );
+            $query->with( 'file' );
         }] );
+        $this->hydrateSupportBoxUsers( $data );
 
         TicketReply::on( 'mysql' )->where( 'support_box_id', $id )
             ->whereHas( 'supportBox', function ( $q ) {
@@ -189,6 +195,9 @@ class SupportBoxController extends Controller {
             ->withCount( 'ticketreplay as total_admin_replay' )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
+        foreach ( $all_support as $supportBox ) {
+            $this->hydrateSupportBoxUsers( $supportBox );
+        }
         $closed = SupportBox::on( 'mysql' )
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
@@ -199,5 +208,50 @@ class SupportBoxController extends Controller {
             'closed'      => $closed,
             'all_support' => $all_support,
         ] );
+    }
+
+    /**
+     * Support box `user_id` is stored from tenant auth; prefer the tenant users table, then central.
+     */
+    private function resolveSupportBoxOwnerUser( ?int $userId ): ?User {
+        if ( $userId === null || $userId === 0 ) {
+            return null;
+        }
+        $tenantUser = User::on( 'tenant' )->find( $userId );
+        if ( $tenantUser ) {
+            return $tenantUser;
+        }
+
+        return User::on( 'mysql' )->find( $userId );
+    }
+
+    /**
+     * Reply `user_id` is either central staff (mysql) or a tenant user; prefer central when present so admin replies stay correct when ids overlap with tenant users.
+     */
+    private function resolveTicketReplyAuthorUser( ?int $userId ): ?User {
+        if ( $userId === null || $userId === 0 ) {
+            return null;
+        }
+        $centralUser = User::on( 'mysql' )->find( $userId );
+        if ( $centralUser ) {
+            return $centralUser;
+        }
+
+        return User::on( 'tenant' )->find( $userId );
+    }
+
+    private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
+        $supportBox->setRelation( 'user', $this->resolveSupportBoxOwnerUser( $supportBox->user_id ) );
+
+        if ( $supportBox->relationLoaded( 'latestTicketreplay' ) && $supportBox->latestTicketreplay ) {
+            $latest = $supportBox->latestTicketreplay;
+            $latest->setRelation( 'user', $this->resolveTicketReplyAuthorUser( $latest->user_id ) );
+        }
+
+        if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
+            foreach ( $supportBox->ticketreplay as $reply ) {
+                $reply->setRelation( 'user', $this->resolveTicketReplyAuthorUser( $reply->user_id ) );
+            }
+        }
     }
 }
