@@ -66,8 +66,8 @@ class SupportBoxController extends Controller {
         }
 
         $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
-            $query->with( ['file' => function ( $fileQuery ) {
-                $fileQuery->on( 'mysql' );
+            $query->with( ['file' => function ( $fileRelation ) {
+                $fileRelation->getQuery()->on( 'mysql' );
             }] );
         }] );
         $this->hydrateSupportBoxUsers( $data );
