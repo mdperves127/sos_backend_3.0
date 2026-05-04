@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -118,6 +119,8 @@ class MessageController extends Controller {
      * @return array<string, array<int, string>>|null Validation-style errors, or null when ok / leave to Validator::required
      */
     private function resolveSendMessageReceiverId( Request $request ): ?array {
+        $hasUniqid = Schema::connection( 'tenant' )->hasColumn( 'users', 'uniqid' );
+
         $uniqField = $request->input( 'receiver_uniqid' );
         if ( is_string( $uniqField ) ) {
             $uniqField = trim( $uniqField );
@@ -129,6 +132,9 @@ class MessageController extends Controller {
         }
 
         if ( $uniqField !== null && $uniqField !== '' ) {
+            if ( !$hasUniqid ) {
+                return ['receiver_uniqid' => ['Tenant users have no uniqid column yet. Run tenant migrations, or send numeric receiver_id.']];
+            }
             $uid = User::on( 'tenant' )->where( 'uniqid', $uniqField )->value( 'id' );
             if ( !$uid ) {
                 return ['receiver_uniqid' => ['No user found for this receiver_uniqid.']];
@@ -157,6 +163,9 @@ class MessageController extends Controller {
         }
 
         if ( is_string( $raw ) ) {
+            if ( !$hasUniqid ) {
+                return ['receiver_id' => ['Non-numeric receiver_id requires a uniqid column on tenant users. Run tenant migrations or send a numeric user id.']];
+            }
             $uid = User::on( 'tenant' )->where( 'uniqid', $raw )->value( 'id' );
             if ( !$uid ) {
                 return ['receiver_id' => ['No user found for this receiver id (tried as uniqid). Use numeric id or receiver_uniqid.']];
