@@ -51,7 +51,7 @@ class MessageController extends Controller {
 
         $validator = Validator::make( $request->all(), [
             'message'     => 'required',
-            'receiver_id' => ['required', 'integer', Rule::exists( 'users', 'id' )->using( 'tenant' )],
+            'receiver_id' => ['required', 'integer', Rule::exists( 'tenant.users', 'id' )],
         ], [
             'receiver_id.exists' => 'Oops! This user not eligible to access this feature.',
         ] );

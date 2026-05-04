@@ -21,7 +21,7 @@ class ForgotPasswordController extends Controller
     public function sendResetLinkEmail( Request $request ): JsonResponse
     {
         $validator = Validator::make( $request->all(), [
-            'email' => ['required', 'email', Rule::exists('users', 'email')->using('tenant')],
+            'email' => ['required', 'email', Rule::exists('tenant.users', 'email')],
         ], [
             'email.exists' => 'No account found with this email address.',
         ] );
