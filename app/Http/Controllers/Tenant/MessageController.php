@@ -38,19 +38,21 @@ class MessageController extends Controller {
     }
 
     public function sendMessage( Request $request ) {
-        $receiverRaw = $request->input( 'receiver_id' );
-        if ( is_string( $receiverRaw ) ) {
-            $receiverRaw = trim( $receiverRaw );
-        }
-        if ( $receiverRaw !== null && $receiverRaw !== '' && !is_bool( $receiverRaw ) && is_numeric( $receiverRaw ) ) {
-            $asFloat = (float) $receiverRaw;
-            if ( $asFloat == (int) $asFloat ) {
-                $request->merge( ['receiver_id' => (int) $asFloat] );
-            }
+        $resolveError = $this->resolveSendMessageReceiverId( $request );
+        if ( $resolveError !== null ) {
+            return response()->json( [
+                'status' => 400,
+                'error'  => $resolveError,
+            ] );
         }
 
         $validator = Validator::make( $request->all(), [
             'message'     => 'required',
+            'tenant_id'   => ['sometimes', function ( $attribute, $value, $fail ) {
+                if ( (string) $value !== (string) tenant()->id ) {
+                    $fail( 'The tenant id does not match the current tenant.' );
+                }
+            }],
             'receiver_id' => ['required', 'integer', Rule::exists( 'tenant.users', 'id' )],
         ], [
             'receiver_id.exists' => 'Oops! This user not eligible to access this feature.',
@@ -107,6 +109,64 @@ class MessageController extends Controller {
         ) );
 
         return response()->json( ['status' => 200] );
+    }
+
+    /**
+     * Normalize {@see $request} `receiver_id` to tenant `users.id` (integer).
+     * Accepts: numeric id, or string {@see User::$uniqid} via `receiver_id` or `receiver_uniqid`.
+     *
+     * @return array<string, array<int, string>>|null Validation-style errors, or null when ok / leave to Validator::required
+     */
+    private function resolveSendMessageReceiverId( Request $request ): ?array {
+        $uniqField = $request->input( 'receiver_uniqid' );
+        if ( is_string( $uniqField ) ) {
+            $uniqField = trim( $uniqField );
+        }
+
+        $raw = $request->input( 'receiver_id' );
+        if ( is_string( $raw ) ) {
+            $raw = trim( $raw );
+        }
+
+        if ( $uniqField !== null && $uniqField !== '' ) {
+            $uid = User::on( 'tenant' )->where( 'uniqid', $uniqField )->value( 'id' );
+            if ( !$uid ) {
+                return ['receiver_uniqid' => ['No user found for this receiver_uniqid.']];
+            }
+            $request->merge( ['receiver_id' => (int) $uid] );
+
+            return null;
+        }
+
+        if ( $raw === null || $raw === '' ) {
+            return null;
+        }
+
+        if ( is_bool( $raw ) ) {
+            return ['receiver_id' => ['The receiver id must be a numeric user id or a user uniqid string.']];
+        }
+
+        if ( is_numeric( $raw ) ) {
+            $asFloat = (float) $raw;
+            if ( $asFloat != (int) $asFloat ) {
+                return ['receiver_id' => ['The receiver id must be a whole number or a user uniqid string.']];
+            }
+            $request->merge( ['receiver_id' => (int) $asFloat] );
+
+            return null;
+        }
+
+        if ( is_string( $raw ) ) {
+            $uid = User::on( 'tenant' )->where( 'uniqid', $raw )->value( 'id' );
+            if ( !$uid ) {
+                return ['receiver_id' => ['No user found for this receiver id (tried as uniqid). Use numeric id or receiver_uniqid.']];
+            }
+            $request->merge( ['receiver_id' => (int) $uid] );
+
+            return null;
+        }
+
+        return ['receiver_id' => ['The receiver id must be a numeric user id or a user uniqid string.']];
     }
 
     public function chatReport( int|string $id ) {
