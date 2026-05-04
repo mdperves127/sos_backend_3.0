@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class MessageController extends Controller {
     use ResolvesTenantChatAccess;
@@ -37,9 +38,20 @@ class MessageController extends Controller {
     }
 
     public function sendMessage( Request $request ) {
+        $receiverRaw = $request->input( 'receiver_id' );
+        if ( is_string( $receiverRaw ) ) {
+            $receiverRaw = trim( $receiverRaw );
+        }
+        if ( $receiverRaw !== null && $receiverRaw !== '' && !is_bool( $receiverRaw ) && is_numeric( $receiverRaw ) ) {
+            $asFloat = (float) $receiverRaw;
+            if ( $asFloat == (int) $asFloat ) {
+                $request->merge( ['receiver_id' => (int) $asFloat] );
+            }
+        }
+
         $validator = Validator::make( $request->all(), [
             'message'     => 'required',
-            'receiver_id' => 'required|integer|exists:users,id',
+            'receiver_id' => ['required', 'integer', Rule::exists( 'users', 'id' )->using( 'tenant' )],
         ], [
             'receiver_id.exists' => 'Oops! This user not eligible to access this feature.',
         ] );
