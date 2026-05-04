@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Admin;
 
+use App\Enums\SupportBoxTicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketReplyRequest;
 use App\Http\Requests\UpdateTicketReplyRequest;
@@ -27,11 +28,11 @@ class TicketReplyController extends Controller {
     public function store( StoreTicketReplyRequest $request ) {
         $validateData            = $request->validated();
         $validateData['user_id'] = userid();
-        $validateData['status']  = "Answered";
+        $validateData['status']  = 'answered';
 
         $ticketreplay = TicketReply::create( $validateData );
 
-        SupportBox::where( 'id', $ticketreplay->support_box_id )->update( ['status' => 'answered'] );
+        SupportBox::where( 'id', $ticketreplay->support_box_id )->update( ['status' => SupportBoxTicketStatus::Answered->value] );
 
         if ( request()->hasFile( 'file' ) ) {
             $filename = uploadany_file( request( 'file' ) );
@@ -77,14 +78,26 @@ class TicketReplyController extends Controller {
     function closesupportbox( $id ) {
         $supportbox           = SupportBox::find( $id );
         $supportbox->is_close = 1;
+        $supportbox->status   = SupportBoxTicketStatus::Closed->value;
         $supportbox->save();
 
         return $this->response( 'Ticket colse successfull!' );
     }
 
     function status( $id ) {
-        $supportbox         = SupportBox::find( $id );
-        $supportbox->status = request( 'status' );
+        $supportbox = SupportBox::find( $id );
+        if ( !$supportbox ) {
+            return response()->json( ['message' => 'Not found'], 404 );
+        }
+        $raw     = request( 'status' );
+        $allowed = array_map( static fn ( SupportBoxTicketStatus $c ) => $c->value, SupportBoxTicketStatus::cases() );
+        if ( !in_array( $raw, $allowed, true ) ) {
+            return response()->json( ['message' => 'Invalid status'], 422 );
+        }
+        $supportbox->status = $raw;
+        if ( $raw === SupportBoxTicketStatus::Closed->value ) {
+            $supportbox->is_close = 1;
+        }
         $supportbox->save();
 
         return "Status updated successfull!";

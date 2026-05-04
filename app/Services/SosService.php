@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\SupportBoxTicketStatus;
 use App\Models\PaymentStore;
 use App\Models\SupportBox;
 
@@ -23,7 +24,7 @@ class SosService {
         }
         $supportBox->description = $data['description'];
         $supportBox->subject     = $data['subject'];
-        $supportBox->status      = "new ticket";
+        $supportBox->status      = SupportBoxTicketStatus::NewTicket->value;
         $supportBox->ticket_no   = self::generateTicketNumber();
         $supportBox->save();
         return true;

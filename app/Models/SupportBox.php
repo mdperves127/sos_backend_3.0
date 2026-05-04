@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SupportBoxTicketStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,6 +15,10 @@ class SupportBox extends Model
     protected $connection = 'mysql';
 
     protected $guarded = [];
+
+    protected $casts = [
+        'status' => SupportBoxTicketStatus::class,
+    ];
 
     function user()
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Enums\SupportBoxTicketStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportBoxRequest;
 use App\Http\Requests\TIcketReviewRequest;
@@ -109,14 +110,12 @@ class SupportBoxController extends Controller {
         $validateData                = $request->validated();
         $validateData['user_id']     = userid();
         $validateData['read_status'] = "unread";
-        $validateData['status']      = "replied";
+        $validateData['status']      = SupportBoxTicketStatus::Replied->value;
 
         $ticketreplay = TicketReply::create( $validateData );
 
-        $newTicket = SupportBox::on('mysql')->where( 'id', $validateData['support_box_id'] )->first();
-        SupportBox::on('mysql')->where( 'id', $validateData['support_box_id'] )->update( [
-            'status' => $newTicket->status == "new ticket" ? $newTicket->status : "replied",
-
+        SupportBox::on( 'mysql' )->where( 'id', $validateData['support_box_id'] )->update( [
+            'status' => SupportBoxTicketStatus::Replied->value,
         ] );
 
         if ( request()->hasFile( 'file' ) ) {
@@ -131,9 +130,9 @@ class SupportBoxController extends Controller {
 
     function supportReplyCount() {
         $msgCount            = TicketReply::on('mysql')->where( 'user_id', Auth::id() )->where( 'read_status', 'unread' )->count();
-        $answer_ticket_count = SupportBox::on('mysql')->where( 'status', 'answered' )->count();
-        $reply_ticket_count  = SupportBox::on('mysql')->where( 'status', 'replied' )->count();
-        $new_ticket_count    = SupportBox::on('mysql')->where( 'status', 'new ticket' )->count();
+        $answer_ticket_count = SupportBox::on( 'mysql' )->where( 'status', SupportBoxTicketStatus::Answered->value )->count();
+        $reply_ticket_count  = SupportBox::on( 'mysql' )->where( 'status', SupportBoxTicketStatus::Replied->value )->count();
+        $new_ticket_count    = SupportBox::on( 'mysql' )->where( 'status', SupportBoxTicketStatus::NewTicket->value )->count();
 
         return response()->json( [
             'status'              => 200,
@@ -151,7 +150,9 @@ class SupportBoxController extends Controller {
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
-        $closed = SupportBox::on('mysql')->where( 'user_id', auth()->user()->id )->where( 'is_close', 1 )->count();
+        $closed = SupportBox::on( 'mysql' )->where( 'user_id', auth()->user()->id )->where( function ( $q ) {
+            $q->where( 'status', SupportBoxTicketStatus::Closed->value )->orWhere( 'is_close', 1 );
+        } )->count();
 
         return response()->json( [
             'closed'      => $closed,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Enums\SupportBoxTicketStatus;
 use App\Http\Controllers\Controller;
 use App\Models\SupportBox;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class SupportBoxCloseController extends Controller
         }
 
         $supportbox->is_close = 1;
+        $supportbox->status  = SupportBoxTicketStatus::Closed->value;
         $supportbox->save();
 
         return $this->response('Ticket colse successfull!');
