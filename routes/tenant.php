@@ -62,6 +62,7 @@ use App\Http\Controllers\Tenant\CartController as TenantCartController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
+use App\Http\Controllers\Tenant\MessageController as TenantMessageController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
@@ -69,6 +70,7 @@ use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 use App\Http\Controllers\Tenant\CmsController;
 use App\Http\Controllers\Tenant\BannerController;
+use App\Http\Controllers\Tenant\ConversationController as TenantConversationController;
 use App\Http\Controllers\Tenant\ContentServiceController;
 use App\Http\Controllers\Tenant\OfferController;
 use App\Http\Controllers\BuySubscription;
@@ -79,6 +81,7 @@ use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordCo
 use App\Http\Controllers\RenewController;
 use App\Http\Controllers\Tenant\WebsiteVisitController;
 use App\Http\Controllers\Tenant\ThemeImportController;
+use Illuminate\Broadcasting\BroadcastController;
 
 Route::middleware( [
     InitializeTenancyByDomain::class,
@@ -148,6 +151,8 @@ Route::middleware( [
     });
     // Protected tenant routes
     Route::middleware( 'tenantAuth' )->group( function () {
+
+        Route::match( ['get', 'post'], 'broadcasting/auth', [BroadcastController::class, 'authenticate'] );
 
         Route::prefix( 'tenant-auth' )->group( function () {
             Route::post( '/logout', [TenantAuthController::class, 'logout'] );
@@ -586,6 +591,14 @@ Route::middleware( [
 
             Route::get( 'category', [SupportBoxCategoryController::class, 'index'] );
             Route::get( 'sub-category/{id}', [SupportBoxCategoryController::class, 'ticketcategorytoproblem'] );
+        } );
+
+        // Merchant ↔ affiliate chat (tenant DB messages; same flow as central API, for tenant-auth users)
+        Route::prefix( 'tenant-chat' )->group( function () {
+            Route::get( 'conversation', [TenantConversationController::class, 'index'] );
+            Route::post( 'messages/send', [TenantMessageController::class, 'sendMessage'] );
+            Route::get( 'messages/{peerId}', [TenantMessageController::class, 'getMessages'] );
+            Route::post( 'chat-report/{id}', [TenantMessageController::class, 'chatReport'] );
         } );
 
         Route::post( 'tenant/create-advertise', [AdvertiseController::class, 'store'] );
