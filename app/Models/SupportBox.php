@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SupportBoxTicketStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,9 +17,32 @@ class SupportBox extends Model
 
     protected $guarded = [];
 
-    protected $casts = [
-        'status' => SupportBoxTicketStatus::class,
-    ];
+    /**
+     * Avoid ValueError on empty/legacy DB values; normalize to {@see SupportBoxTicketStatus::NewTicket}.
+     */
+    protected function status(): Attribute {
+        return Attribute::make(
+            get: static function ( ?string $value ): SupportBoxTicketStatus {
+                $v = $value === null ? '' : trim( $value );
+                if ( $v === '' ) {
+                    return SupportBoxTicketStatus::NewTicket;
+                }
+
+                return SupportBoxTicketStatus::tryFrom( $v ) ?? SupportBoxTicketStatus::NewTicket;
+            },
+            set: static function ( SupportBoxTicketStatus|string|null $value ): string {
+                if ( $value instanceof SupportBoxTicketStatus ) {
+                    return $value->value;
+                }
+                $v = $value === null ? '' : trim( (string) $value );
+                if ( $v === '' ) {
+                    return SupportBoxTicketStatus::NewTicket->value;
+                }
+
+                return ( SupportBoxTicketStatus::tryFrom( $v ) ?? SupportBoxTicketStatus::NewTicket )->value;
+            },
+        );
+    }
 
     function user()
     {
