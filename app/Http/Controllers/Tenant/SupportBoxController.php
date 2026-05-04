@@ -69,7 +69,8 @@ class SupportBoxController extends Controller {
 
         $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
             $query->with( ['file' => function ( $fileRelation ) {
-                $fileRelation->getQuery()->on( 'mysql' );
+                $fileRelation->getQuery()->getQuery()->connection = DB::connection( 'mysql' );
+                $fileRelation->getRelated()->setConnection( 'mysql' );
             }] );
         }] );
         $this->hydrateSupportBoxUsers( $data );
@@ -161,8 +162,10 @@ class SupportBoxController extends Controller {
 
         if ( request()->hasFile( 'file' ) ) {
             $filename = uploadany_file( request( 'file' ) );
-            $ticketreplay->file()->on( 'mysql' )->create( [
-                'name' => $filename,
+            \App\Models\File::on( 'mysql' )->create( [
+                'filetable_id'   => $ticketreplay->getKey(),
+                'filetable_type' => $ticketreplay->getMorphClass(),
+                'name'           => $filename,
             ] );
         }
 
