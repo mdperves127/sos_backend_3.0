@@ -6,6 +6,7 @@ use App\Models\ServiceOrder;
 use App\Models\ServicePackage;
 use App\Models\User;
 use App\Models\VendorService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class ServiceService.
@@ -46,9 +47,20 @@ class ServiceService
             $serviceOrder->update([
                 'is_paid'=>1
             ]);
-            $user = User::on('mysql')->find(userid());
-            $user->balance = convertfloat($user->balance)- $package->price;
-            $user->save();
+            $userConnection = ( function_exists( 'tenant' ) && tenant() ) ? 'tenant' : 'mysql';
+            $userId = userid();
+
+            DB::connection( $userConnection )->transaction( function () use ( $userConnection, $userId, $package ) {
+                $user = User::on( $userConnection )->lockForUpdate()->find( $userId );
+                if ( !$user ) {
+                    return;
+                }
+                $current = (float) convertfloat( (string) ( $user->balance ?? 0 ) );
+                $price   = (float) ( $package->price ?? 0 );
+
+                $user->balance = $current - $price;
+                $user->save();
+            } );
 
             $paymentHistoryContext = [];
 
