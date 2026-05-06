@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\Concerns\ResolvesTenantChatAccess;
-use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,7 +12,7 @@ class ConversationController extends Controller {
     use ResolvesTenantChatAccess;
 
     /**
-     * List users who appear on active {@see ProductDetails} for this {@see tenant()->id} (tenant_id only).
+     * List conversation partners for the authenticated user, based on messages in this tenant DB.
      */
     public function index() {
         $sub = $this->tenantChatSubscription();
@@ -24,18 +24,22 @@ class ConversationController extends Controller {
         }
 
         $me = (int) Auth::id();
+        $tid = (string) tenant()->id;
 
-        $partnerIds = $this->tenantCatalogParticipantUserIds()
-            ->filter( static fn ( int $id ) => $id !== $me )
+        $partnerIds = Message::on( 'tenant' )
+            ->where( 'tenant_id', $tid )
+            ->where( function ( $q ) use ( $me ) {
+                $q->where( 'sender_id', $me )->orWhere( 'receiver_id', $me );
+            } )
+            ->get( ['sender_id', 'receiver_id'] )
+            ->flatMap( static fn ( $m ) => [(int) $m->sender_id, (int) $m->receiver_id] )
+            ->filter( static fn ( int $id ) => $id > 0 && $id !== $me )
+            ->unique()
             ->values();
 
-        $conversationUsers = User::on( 'tenant' )
-            ->whereIn( 'id', $partnerIds )
-            ->get();
-
-        Conversation::on( 'tenant' )->where( 'sender_id', Auth::id() )
-            ->orWhere( 'receiver_id', Auth::id() )
-            ->get();
+        $conversationUsers = $partnerIds->isEmpty()
+            ? collect()
+            : User::on( 'tenant' )->whereIn( 'id', $partnerIds )->get();
 
         return response()->json( [
             'status'        => 200,
