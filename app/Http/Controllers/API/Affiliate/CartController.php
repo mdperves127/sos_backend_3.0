@@ -195,6 +195,11 @@ class CartController extends Controller {
 
     }
 
+    // Backward-compatible alias for routes that call `cart`.
+    public function cart() {
+        return $this->viewcart();
+    }
+
     public function viewcart() {
         // Step 1: Get all carts from current tenant's OWN database (cart table in current tenant DB)
         $currentTenant = tenant();
