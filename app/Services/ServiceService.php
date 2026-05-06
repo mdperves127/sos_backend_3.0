@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ServiceOrder;
 use App\Models\ServicePackage;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VendorService;
 use Illuminate\Support\Facades\DB;
@@ -47,20 +48,34 @@ class ServiceService
             $serviceOrder->update([
                 'is_paid'=>1
             ]);
-            $userConnection = ( function_exists( 'tenant' ) && tenant() ) ? 'tenant' : 'mysql';
-            $userId = userid();
+            $isTenantContext = ( function_exists( 'tenant' ) && tenant() );
+            $price  = (float) ( $package->price ?? 0 );
 
-            DB::connection( $userConnection )->transaction( function () use ( $userConnection, $userId, $package ) {
-                $user = User::on( $userConnection )->lockForUpdate()->find( $userId );
-                if ( !$user ) {
-                    return;
-                }
-                $current = (float) convertfloat( (string) ( $user->balance ?? 0 ) );
-                $price   = (float) ( $package->price ?? 0 );
-
-                $user->balance = $current - $price;
-                $user->save();
-            } );
+            // Wallet source:
+            // - tenant context: deduct from central mysql.tenants.balance (tenant wallet)
+            // - non-tenant context: deduct from central mysql.users.balance (user wallet)
+            if ( $isTenantContext ) {
+                DB::connection( 'mysql' )->transaction( function () use ( $price ) {
+                    $t = Tenant::on( 'mysql' )->lockForUpdate()->find( tenant()->id );
+                    if ( !$t ) {
+                        return;
+                    }
+                    $current = (float) convertfloat( (string) ( $t->balance ?? 0 ) );
+                    $t->balance = $current - $price;
+                    $t->save();
+                } );
+            } else {
+                $userId = userid();
+                DB::connection( 'mysql' )->transaction( function () use ( $userId, $price ) {
+                    $user = User::on( 'mysql' )->lockForUpdate()->find( $userId );
+                    if ( !$user ) {
+                        return;
+                    }
+                    $current = (float) convertfloat( (string) ( $user->balance ?? 0 ) );
+                    $user->balance = $current - $price;
+                    $user->save();
+                } );
+            }
 
             $paymentHistoryContext = [];
 
