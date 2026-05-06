@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\Concerns\ResolvesTenantChatAccess;
 use App\Models\ChatReport;
 use App\Models\Message;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -166,6 +167,12 @@ class MessageController extends Controller {
             if ( !$hasUniqid ) {
                 return ['receiver_id' => ['Non-numeric receiver_id requires a uniqid column on tenant users. Run tenant migrations or send a numeric user id.']];
             }
+
+            // Common client mistake: sending tenant id instead of a user id / uniqid.
+            if ( Tenant::on( 'mysql' )->where( 'id', $raw )->exists() ) {
+                return ['receiver_id' => ['You sent a tenant id. Chat requires the receiver user id (tenant users.id). Send numeric receiver_id, or use receiver_uniqid after syncing uniqid into tenant users.']];
+            }
+
             $uid = User::on( 'tenant' )->where( 'uniqid', $raw )->value( 'id' );
             if ( !$uid ) {
                 return ['receiver_id' => ['No user found for this receiver id (tried as uniqid). Use numeric id or receiver_uniqid.']];
