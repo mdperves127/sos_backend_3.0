@@ -168,9 +168,13 @@ class MessageController extends Controller {
                 return ['receiver_id' => ['Non-numeric receiver_id requires a uniqid column on tenant users. Run tenant migrations or send a numeric user id.']];
             }
 
-            // Common client mistake: sending tenant id instead of a user id / uniqid.
-            if ( Tenant::on( 'mysql' )->where( 'id', $raw )->exists() ) {
-                return ['receiver_id' => ['You sent a tenant id. Chat requires the receiver user id (tenant users.id). Send numeric receiver_id, or use receiver_uniqid after syncing uniqid into tenant users.']];
+            // Frontend often sends `mysql.tenants.id` (tenant/store id). In that case, we create/find
+            // a local "chat user" row in the current tenant DB keyed by users.uniqid = tenant id.
+            $tenant = Tenant::on( 'mysql' )->where( 'id', $raw )->first();
+            if ( $tenant ) {
+                $uid = $this->ensureTenantChatUserForExternalTenant( (string) $tenant->id );
+                $request->merge( ['receiver_id' => (int) $uid] );
+                return null;
             }
 
             $uid = User::on( 'tenant' )->where( 'uniqid', $raw )->value( 'id' );
@@ -183,6 +187,45 @@ class MessageController extends Controller {
         }
 
         return ['receiver_id' => ['The receiver id must be a numeric user id or a user uniqid string.']];
+    }
+
+    /**
+     * Ensure there is a local tenant-db `users` row representing an external tenant (vendor/affiliate).
+     * We store the external tenant id into tenant.users.uniqid, and use a synthetic unique email
+     * to avoid collisions with the current tenant's real users.
+     */
+    private function ensureTenantChatUserForExternalTenant( string $externalTenantId ): int {
+        $existingId = User::on( 'tenant' )
+            ->where( 'uniqid', $externalTenantId )
+            ->value( 'id' );
+        if ( $existingId ) {
+            return (int) $existingId;
+        }
+
+        $t = Tenant::on( 'mysql' )->find( $externalTenantId );
+        $name = $t?->company_name ?: ( 'Tenant ' . $externalTenantId );
+
+        // tenant.users.email is unique; use a synthetic value guaranteed unique per tenant id.
+        $email = 'tenant-' . $externalTenantId . '@chat.local';
+
+        $u = new User();
+        $u->setConnection( 'tenant' );
+        $u->name = $name;
+        $u->email = $email;
+        $u->password = bcrypt( str()->random( 24 ) );
+        $u->last_seen = now();
+
+        // Optional columns on tenant users
+        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'role_type' ) ) {
+            $u->role_type = 'tenant_user';
+        }
+        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'uniqid' ) ) {
+            $u->uniqid = $externalTenantId;
+        }
+
+        $u->save();
+
+        return (int) $u->id;
     }
 
     public function chatReport( int|string $id ) {
