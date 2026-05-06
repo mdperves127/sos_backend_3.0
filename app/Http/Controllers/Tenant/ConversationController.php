@@ -63,14 +63,25 @@ class ConversationController extends Controller {
             ->get()
             ->keyBy( 'id' );
 
+        $meUser = User::on( 'tenant' )->find( $me );
+
         $conversations = $byPartner
             ->values()
-            ->map( function ( array $row ) use ( $usersById ) {
+            ->map( function ( array $row ) use ( $usersById, $meUser, $me ) {
                 /** @var Message $last */
                 $last = $row['last_message'];
                 $partnerId = (int) $row['partner_id'];
+
+                // Attach sender/receiver user objects to the message so the client
+                // doesn't need to do extra lookups.
+                $senderId = (int) $last->sender_id;
+                $receiverId = (int) $last->receiver_id;
+                $last->setRelation( 'sender', $senderId === $me ? $meUser : $usersById->get( $senderId ) );
+                $last->setRelation( 'receiver', $receiverId === $me ? $meUser : $usersById->get( $receiverId ) );
+
                 return [
                     'partner_id'   => $partnerId,
+                    'me'           => $meUser,
                     'user'         => $usersById->get( $partnerId ),
                     'last_message' => $last,
                 ];
