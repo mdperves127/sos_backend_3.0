@@ -29,11 +29,24 @@ class ServicePaymentType implements Rule
     public function passes($attribute, $value)
     {
         if($value == 'my-wallet'){
-            $tenant = Tenant::on('mysql')->find(tenant()->id);
-            if (!$tenant) {
-                return false;
+            $isTenantContext = ( function_exists( 'tenant' ) && tenant() );
+
+            if ( $isTenantContext ) {
+                $tenant = Tenant::on( 'mysql' )->find( tenant()->id );
+                if ( !$tenant ) {
+                    return false;
+                }
+                $balance = (float) ( $tenant->balance ?? 0 );
+            } else {
+                if ( !function_exists( 'userid' ) || !auth()->check() ) {
+                    return false;
+                }
+                $user = User::on( 'mysql' )->find( userid() );
+                if ( !$user ) {
+                    return false;
+                }
+                $balance = (float) ( $user->balance ?? 0 );
             }
-            $balance = (float) ($tenant->balance ?? 0);
 
             $servicePackage = ServicePackage::on('mysql')->find(request('service_package_id'));
             if (!$servicePackage) {
