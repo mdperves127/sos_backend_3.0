@@ -42,7 +42,7 @@ class ConversationController extends Controller {
             ] );
         }
 
-        /** @var Collection<int, array{partner_id:int,last_message:Message}> $byPartner */
+        /** @var Collection<int, array{partner_id:int,last_message:Message,messages:Collection<int,Message>}> $byPartner */
         $byPartner = $messages->reduce( function ( Collection $carry, Message $m ) use ( $me ) {
             $partnerId = (int) ( (int) $m->sender_id === $me ? $m->receiver_id : $m->sender_id );
             if ( $partnerId <= 0 || $partnerId === $me ) {
@@ -51,9 +51,13 @@ class ConversationController extends Controller {
             if ( !$carry->has( $partnerId ) ) {
                 $carry->put( $partnerId, [
                     'partner_id'   => $partnerId,
-                    'last_message' => $m,
+                    'last_message' => $m, // first seen is latest because messages are desc
+                    'messages'     => collect(),
                 ] );
             }
+            $row = $carry->get( $partnerId );
+            $row['messages']->push( $m );
+            $carry->put( $partnerId, $row );
             return $carry;
         }, collect() );
 
@@ -72,18 +76,27 @@ class ConversationController extends Controller {
                 $last = $row['last_message'];
                 $partnerId = (int) $row['partner_id'];
 
-                // Attach sender/receiver user objects to the message so the client
+                /** @var Collection<int, Message> $thread */
+                $thread = $row['messages'] ?? collect();
+
+                // messages were collected in desc order; return in asc for chat UI.
+                $thread = $thread->reverse()->values();
+
+                // Attach sender/receiver user objects to every message so the client
                 // doesn't need to do extra lookups.
-                $senderId = (int) $last->sender_id;
-                $receiverId = (int) $last->receiver_id;
-                $last->setRelation( 'sender', $senderId === $me ? $meUser : $usersById->get( $senderId ) );
-                $last->setRelation( 'receiver', $receiverId === $me ? $meUser : $usersById->get( $receiverId ) );
+                $thread->each( function ( Message $m ) use ( $usersById, $meUser, $me ) {
+                    $senderId = (int) $m->sender_id;
+                    $receiverId = (int) $m->receiver_id;
+                    $m->setRelation( 'sender', $senderId === $me ? $meUser : $usersById->get( $senderId ) );
+                    $m->setRelation( 'receiver', $receiverId === $me ? $meUser : $usersById->get( $receiverId ) );
+                } );
 
                 return [
                     'partner_id'   => $partnerId,
                     'me'           => $meUser,
                     'user'         => $usersById->get( $partnerId ),
                     'last_message' => $last,
+                    'messages'     => $thread,
                 ];
             } )
             ->sortByDesc( static fn ( array $row ) => $row['last_message']?->created_at )
