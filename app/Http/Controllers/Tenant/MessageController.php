@@ -78,15 +78,24 @@ class MessageController extends Controller {
         $receiverId = (int) $request->receiver_id;
         $senderId   = (int) Auth::id();
 
-        if ( !$this->tenantUsersAreChatPartners( $senderId, $receiverId ) ) {
+        $receiver = User::on( 'tenant' )->find( $receiverId );
+        if ( !$receiver ) {
             return response()->json( [
                 'status'  => 401,
                 'message' => 'Oops! This user not eligible to access this feature.',
             ], 401 );
         }
 
-        $receiver = User::on( 'tenant' )->find( $receiverId );
-        if ( !$receiver ) {
+        // If the receiver is a synthetic "external tenant" chat user (users.uniqid = mysql.tenants.id),
+        // the product_details based partner check does not apply (those rows store business user ids,
+        // not the synthetic local user id). Subscription checks above still enforce chat eligibility.
+        $receiverUniqid = $receiver->uniqid ?? null;
+        $receiverIsExternalTenant =
+            is_string( $receiverUniqid ) &&
+            $receiverUniqid !== '' &&
+            Tenant::on( 'mysql' )->where( 'id', $receiverUniqid )->exists();
+
+        if ( !$receiverIsExternalTenant && !$this->tenantUsersAreChatPartners( $senderId, $receiverId ) ) {
             return response()->json( [
                 'status'  => 401,
                 'message' => 'Oops! This user not eligible to access this feature.',
