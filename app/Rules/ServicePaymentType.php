@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use App\Models\ServicePackage;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Contracts\Validation\Rule;
 
@@ -28,11 +29,17 @@ class ServicePaymentType implements Rule
     public function passes($attribute, $value)
     {
         if($value == 'my-wallet'){
-            $user = User::find(userid());
-            $balance = $user->balance;
+            $tenant = Tenant::on('mysql')->find(tenant()->id);
+            if (!$tenant) {
+                return false;
+            }
+            $balance = (float) ($tenant->balance ?? 0);
 
-            $servicePackage = ServicePackage::find(request('service_package_id'));
-            $price = $servicePackage->price;
+            $servicePackage = ServicePackage::on('mysql')->find(request('service_package_id'));
+            if (!$servicePackage) {
+                return false;
+            }
+            $price = (float) ($servicePackage->price ?? 0);
 
             if($balance >= $price){
                 return true;
