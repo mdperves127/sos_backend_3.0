@@ -36,6 +36,21 @@ class MessageController extends Controller {
             ->orderBy( 'created_at' )
             ->get();
 
+        $userIds = $messages->pluck( 'sender_id' )
+            ->merge( $messages->pluck( 'receiver_id' ) )
+            ->unique()
+            ->filter( static fn ( $id ) => (int) $id > 0 )
+            ->values();
+
+        $usersById = $userIds->isEmpty()
+            ? collect()
+            : User::on( 'tenant' )->whereIn( 'id', $userIds )->get()->keyBy( 'id' );
+
+        $messages->each( function ( Message $m ) use ( $usersById ) {
+            $m->setRelation( 'sender', $usersById->get( (int) $m->sender_id ) );
+            $m->setRelation( 'receiver', $usersById->get( (int) $m->receiver_id ) );
+        } );
+
         return response()->json( ['success' => true, 'messages' => $messages] );
     }
 
