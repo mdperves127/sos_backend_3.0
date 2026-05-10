@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Affiliate;
+namespace App\Http\Controllers\API\Affiliate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;

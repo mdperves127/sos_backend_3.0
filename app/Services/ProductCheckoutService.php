@@ -46,7 +46,7 @@ class ProductCheckoutService {
 
             // Get connection name using CrossTenantQueryService approach
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName = $tenant->data['tenancy_db_name'] ?? ('storebz_tenant_' . $tenant->id);
+            $databaseName = $tenant->data['tenancy_db_name'] ?? ('affsellc_' . $tenant->id);
 
             // Configure tenant connection using CrossTenantQueryService pattern
             config([

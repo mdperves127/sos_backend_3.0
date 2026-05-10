@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Affiliate;
+namespace App\Http\Controllers\API\Affiliate;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
@@ -123,7 +123,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'storebz_tenant_' . $tenant->id;
+            $databaseName   = 'affsellc_' . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [
@@ -257,7 +257,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'storebz_tenant_' . $tenant->id;
+            $databaseName   = 'affsellc_' . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [
@@ -432,7 +432,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'storebz_tenant_' . $tenant->id;
+            $databaseName   = 'affsellc_' . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [

@@ -63,7 +63,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'storebz_tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -275,7 +275,7 @@ class MerchantFrontendController extends Controller
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'storebz_tenant_' . $tenant->id;
+            $databaseName   = 'affsellc_' . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [
@@ -380,7 +380,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'storebz_tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -473,7 +473,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'storebz_tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -554,7 +554,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'storebz_tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [

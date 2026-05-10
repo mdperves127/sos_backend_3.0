@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin;
+namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductDetails;
@@ -30,7 +30,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'storebz_tenant_' . $dropshipperTenant->id;
+                $databaseName = 'affsellc_' . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -111,7 +111,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'storebz_tenant_' . $merchantTenant->id;
+            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([
@@ -190,7 +190,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'storebz_tenant_' . $dropshipperTenant->id;
+                $databaseName = 'affsellc_' . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -271,7 +271,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'storebz_tenant_' . $merchantTenant->id;
+            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([
@@ -405,7 +405,7 @@ class ProductStatusController extends Controller
                 $tenant = Tenant::find( $productDetail->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'storebz_tenant_' . $tenant->id;
+                    $databaseName = 'affsellc_' . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -504,7 +504,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'storebz_tenant_' . $dropshipperTenant->id;
+                $databaseName = 'affsellc_' . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -585,7 +585,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'storebz_tenant_' . $merchantTenant->id;
+            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([

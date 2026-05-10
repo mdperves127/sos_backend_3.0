@@ -258,7 +258,7 @@ class CartController extends Controller {
                 if ( $productTenant ) {
                     // Configure tenant connection for this product tenant
                     $connectionName = 'tenant_' . $productTenant->id;
-                    $databaseName = 'storebz_tenant_' . $productTenant->id;
+                    $databaseName = 'affsellc_' . $productTenant->id;
                     $originalTenantConfig = config('database.connections.tenant');
 
                     config([
@@ -475,7 +475,7 @@ class CartController extends Controller {
 
             // Step 3: Configure tenant connection for eager loading relationships
             $connectionName = 'tenant_' . $productTenant->id;
-            $databaseName = 'storebz_tenant_' . $productTenant->id;
+            $databaseName = 'affsellc_' . $productTenant->id;
 
             // Store original tenant connection config if it exists
             $originalTenantConfig = config('database.connections.tenant');
