@@ -113,21 +113,24 @@ class VendorProductController extends Controller
             'active' => false
         ];
 
-        return response()->json([
-            'product' => $paginatedProducts->values(),
-            'current_page' => (int) $page,
-            'per_page' => $perPage,
-            'total' => $products->count(),
-            'last_page' => $lastPage,
-            'from' => $offset + 1,
-            'to' => min($offset + $perPage, $products->count()),
-            'path' => $path,
-            'first_page_url' => $buildUrl( 1 ),
-            'last_page_url' => $buildUrl( $lastPage ),
-            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-            'links' => $links,
-        ]);
+        return response()->json( [
+            'status'  => 200,
+            'product' => [
+                'data'            => $paginatedProducts->values(),
+                'current_page'    => (int) $page,
+                'per_page'        => $perPage,
+                'total'           => $products->count(),
+                'last_page'       => $lastPage,
+                'from'            => $products->count() > 0 ? $offset + 1 : null,
+                'to'              => $products->count() > 0 ? min( $offset + $perPage, $products->count() ) : null,
+                'path'            => $path,
+                'first_page_url'  => $buildUrl( 1 ),
+                'last_page_url'   => $buildUrl( max( 1, $lastPage ) ),
+                'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
+                'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+                'links'           => $links,
+            ],
+        ] );
     }
 
 
