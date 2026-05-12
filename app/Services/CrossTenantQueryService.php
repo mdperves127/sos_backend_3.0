@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
@@ -375,6 +376,34 @@ class CrossTenantQueryService
         } finally {
             DB::setDefaultConnection($originalConnection);
             config(['database.default' => $originalConnection]);
+        }
+    }
+
+    /**
+     * Load a {@see User} from a tenant database by primary key (admin / cross-tenant reads).
+     * Does not fall back to central users.
+     */
+    public static function getTenantUserById( string|int $tenantId, int $userId ): ?User {
+        $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+
+        if ( ! $tenant ) {
+            return null;
+        }
+
+        $originalConnection = DB::getDefaultConnection();
+
+        try {
+            $connectionName = self::getTenantConnectionName( $tenant );
+            self::configureTenantConnection( $tenant, $connectionName );
+
+            return User::on( $connectionName )->withoutGlobalScopes()->whereKey( $userId )->first();
+        } catch ( \Exception $e ) {
+            \Log::error( "getTenantUserById failed for tenant {$tenantId}: " . $e->getMessage() );
+
+            return null;
+        } finally {
+            DB::setDefaultConnection( $originalConnection );
+            config( ['database.default' => $originalConnection] );
         }
     }
 }

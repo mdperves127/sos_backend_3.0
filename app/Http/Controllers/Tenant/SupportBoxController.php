@@ -220,25 +220,15 @@ class SupportBoxController extends Controller {
     }
 
     /**
-     * If this id exists in the current tenant's `users` table, use that row; otherwise use central `users`.
-     * Uses a plain DB read for the tenant branch so Spatie/global scopes on {@see User} cannot force a fallback to mysql.
+     * Resolve support ticket users only from the current tenant database.
+     * Central {@see mysql} users must never be mixed in here: the same numeric id can be a different person on central vs tenant.
      */
     private function resolveSupportRelatedUser( ?int $userId ): ?User {
         if ( $userId === null || $userId === 0 ) {
             return null;
         }
 
-        $tenantRow = DB::connection( 'tenant' )->table( 'users' )->where( 'id', $userId )->first();
-        if ( $tenantRow !== null ) {
-            return ( new User() )->newFromBuilder( (array) $tenantRow, 'tenant' );
-        }
-
-        $centralRow = DB::connection( 'mysql' )->table( 'users' )->where( 'id', $userId )->first();
-        if ( $centralRow !== null ) {
-            return ( new User() )->newFromBuilder( (array) $centralRow, 'mysql' );
-        }
-
-        return null;
+        return User::on( 'tenant' )->withoutGlobalScopes()->whereKey( $userId )->first();
     }
 
     private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
