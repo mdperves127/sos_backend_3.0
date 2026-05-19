@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller {
-    public function ProductIndex() {
+    public function ProductIndex( ?string $status = null ) {
 
         // if ( !in_array( request( 'status' ), ['pending', 'active', 'rejected'] ) ) {
         //     if ( checkpermission( 'all-products' ) != 1 ) {
@@ -53,7 +53,7 @@ class ProductController extends Controller {
         //     }
         // }
 
-        $status = request( 'status' );
+        $status = $status ?? request( 'status' );
         $search = request( 'search' );
 
         // Query Products from all merchant tenant databases
@@ -123,40 +123,59 @@ class ProductController extends Controller {
             return $product->created_at ?? '';
         } )->values();
 
-        // Re-paginate after processing
-        $page = request()->get( 'page', 1 );
-        $perPage = 10;
-        $offset = ( $page - 1 ) * $perPage;
+        $page    = (int) request()->get( 'page', 1 );
+        $perPage = (int) request()->get( 'per_page', 10 );
+        $total   = $products->count();
+        $lastPage = $total > 0 ? (int) ceil( $total / $perPage ) : 0;
+        $offset  = ( $page - 1 ) * $perPage;
         $paginatedProducts = $products->slice( $offset, $perPage );
-        $lastPage = ceil( $products->count() / $perPage );
 
-        // Build pagination URLs
-        $path = request()->url();
+        $path        = request()->url();
         $queryParams = request()->query();
-        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
             $queryParams['page'] = $pageNum;
+
             return $path . '?' . http_build_query( $queryParams );
         };
 
-        // Build pagination response
-        $response = [
-            'data' => $paginatedProducts->values(),
-            'current_page' => (int) $page,
-            'per_page' => $perPage,
-            'total' => $products->count(),
-            'last_page' => $lastPage,
-            'from' => $offset + 1,
-            'to' => min( $offset + $perPage, $products->count() ),
-            'path' => $path,
-            'first_page_url' => $buildUrl( 1 ),
-            'last_page_url' => $buildUrl( $lastPage ),
-            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+        $links   = [];
+        $links[] = [
+            'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label'  => '&laquo; Previous',
+            'active' => false,
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url'    => $buildUrl( $i ),
+                'label'  => (string) $i,
+                'active' => $i === $page,
+            ];
+        }
+
+        $links[] = [
+            'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label'  => 'Next &raquo;',
+            'active' => false,
         ];
 
         return response()->json( [
             'status'  => 200,
-            'product' => $response,
+            'product' => [
+                'current_page'    => $page,
+                'data'            => $paginatedProducts->values(),
+                'first_page_url'  => $buildUrl( 1 ),
+                'from'            => $total > 0 ? $offset + 1 : null,
+                'last_page'       => $lastPage,
+                'last_page_url'   => $buildUrl( max( 1, $lastPage ) ),
+                'links'           => $links,
+                'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+                'path'            => $path,
+                'per_page'        => $perPage,
+                'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
+                'to'              => $total > 0 ? min( $offset + $perPage, $total ) : null,
+                'total'           => $total,
+            ],
         ] );
     }
 

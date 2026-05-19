@@ -13,10 +13,10 @@ class CouponService
 
     static function create($validatedData)
     {
-        $coupon =  Coupon::on('mysql')->create($validatedData);
+        $coupon = Coupon::create( $validatedData );
         $tenantId = $validatedData['tenant_id'];
 
-        $couponrequest =  CouponRequest::on('mysql')->where(['tenant_id'=>$tenantId,'status'=>'pending'])->latest()->first();
+        $couponrequest = CouponRequest::on( 'mysql' )->where( ['tenant_id' => $tenantId, 'status' => 'pending'] )->latest()->first();
 
         if($couponrequest){
             $couponrequest->status = 'active';

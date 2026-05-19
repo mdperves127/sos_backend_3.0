@@ -34,12 +34,14 @@ class TenantService
             // Transform domain based on environment
             $domain = $data['domain'];
 
+            // if (env('APP_ENV') === 'local') {
+            //     // For local environment, add .localhost if no domain extension
+            //     if (!str_contains($domain, '.localhost') && !str_contains($domain, '.local') && !str_contains($domain, '.')) {
+            //         $domain = $domain . '.localhost';
+            //     }
+            // } else
+
             if (env('APP_ENV') === 'local') {
-                // For local environment, add .localhost if no domain extension
-                if (!str_contains($domain, '.localhost') && !str_contains($domain, '.local') && !str_contains($domain, '.')) {
-                    $domain = $domain . '.localhost';
-                }
-            } elseif (env('APP_ENV') === 'production') {
                 // For production environment, add main domain if no domain extension
                 $mainDomain = env('MAIN_DOMAIN');
                 if (!str_contains($domain, '.') && $mainDomain) {
@@ -90,7 +92,7 @@ class TenantService
 
             // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
             $subdomainPart = $data['domain'];
-            if (env('APP_ENV') === 'production') {
+            if (env('APP_ENV') === 'local') {
                 $mainDomain = env('MAIN_DOMAIN');
                 // If domain contains the main domain, extract just the subdomain part
                 if ($mainDomain && str_contains($domain, $mainDomain)) {

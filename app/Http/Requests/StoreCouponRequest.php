@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Coupon;
+use App\Models\Tenant;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -28,21 +29,20 @@ class StoreCouponRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'max:256', 'unique:coupons'],
+            'name' => [
+                'required',
+                'max:256',
+                Rule::unique( Coupon::class, 'name' )->whereNull( 'deleted_at' ),
+            ],
             'type' => ['required',Rule::in(['flat','percentage'])],
             'amount' => ['required'],
             'commission' => ['required'],
             'commission_type' => ['required',Rule::in(['flat','percentage'])],
             'expire_date' => ['required'],
             'limitation' => ['required'],
-            'tenant_id' => ['required', 'string',Rule::exists('tenants', 'id'),function($attribute,$value,$fail){
-                if(request('tenant_id') != ''){
-                   $data = Coupon::on('mysql')
-                    ->where('tenant_id',request('tenant_id'))
-                    ->exists();
-                    if($data){
-                        $fail('Already coupon exists for this tenant');
-                    }
+            'tenant_id' => ['required', 'string', Rule::exists( Tenant::class, 'id' ), function ( $attribute, $value, $fail ) {
+                if ( request( 'tenant_id' ) != '' && Coupon::where( 'tenant_id', request( 'tenant_id' ) )->exists() ) {
+                    $fail( 'Already coupon exists for this tenant' );
                 }
             }],
         ];

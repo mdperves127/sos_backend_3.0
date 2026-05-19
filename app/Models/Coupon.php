@@ -11,10 +11,16 @@ class Coupon extends Model
 {
     use HasFactory, SoftDeletes, FilterTrait;
 
+    protected $connection = 'mysql';
+
     protected $guarded = [];
 
     function user(){
         return $this->belongsTo(User::class);
+    }
+
+    function tenant(){
+        return $this->belongsTo(Tenant::class, 'tenant_id', 'id');
     }
 
     function couponused(){
@@ -23,7 +29,10 @@ class Coupon extends Model
 
     protected $searchables = [
         'name',
-        'user.email'
+        'user.email',
+        'tenant.email',
+        'tenant.owner_name',
+        'tenant.company_name',
     ];
 
 }

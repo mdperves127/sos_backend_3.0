@@ -23,7 +23,7 @@ class CrossTenantQueryService
         $model = new $modelClass;
 
         // Get all tenants (vendors/merchants)
-        $tenants = \App\Models\Tenant::where('type', 'merchant')->get();
+        $tenants = Tenant::on( 'mysql' )->where( 'type', 'merchant' )->get();
 
         \Log::info('CrossTenantQuery: Found tenants', ['count' => $tenants->count()]);
 
@@ -303,9 +303,89 @@ class CrossTenantQueryService
      * @param \App\Models\Tenant $tenant
      * @return string
      */
-    protected static function getDatabaseName($tenant): string
-    {
-        return $tenant->data['tenancy_db_name'] ?? ('affsellc_' . $tenant->id);
+    /**
+     * Resolve the physical database name for a tenant (matches cPanel / Stancl naming).
+     */
+    public static function getDatabaseName( $tenant ): string {
+        $data = is_array( $tenant->data ?? null )
+            ? $tenant->data
+            : ( json_decode( $tenant->data ?? '{}', true ) ?: [] );
+
+        if ( ! empty( $data['tenancy_db_name'] ) ) {
+            return $data['tenancy_db_name'];
+        }
+
+        $prefix = config( 'tenancy.database.prefix', 'affsellc_' );
+        $suffix = config( 'tenancy.database.suffix', '' );
+
+        return $prefix . $tenant->getTenantKey() . $suffix;
+    }
+
+    /**
+     * Configure and return the dynamic connection name for a tenant database.
+     */
+    public static function connectionForTenant( $tenant ): string {
+        $connectionName = self::getTenantConnectionName( $tenant );
+        self::configureTenantConnection( $tenant, $connectionName );
+
+        return $connectionName;
+    }
+
+    /**
+     * Build a Laravel-style paginator array (with links) from an in-memory collection.
+     */
+    public static function paginateCollection( Collection $items, ?int $perPage = null ): array {
+        $perPage  = $perPage ?? (int) request( 'per_page', 10 );
+        $page     = max( 1, (int) request( 'page', 1 ) );
+        $total    = $items->count();
+        $lastPage = $total > 0 ? (int) ceil( $total / $perPage ) : 0;
+        $offset   = ( $page - 1 ) * $perPage;
+        $pageItems = $items->slice( $offset, $perPage );
+
+        $path        = request()->url();
+        $queryParams = request()->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $links   = [];
+        $links[] = [
+            'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label'  => '&laquo; Previous',
+            'active' => false,
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url'    => $buildUrl( $i ),
+                'label'  => (string) $i,
+                'active' => $i === $page,
+            ];
+        }
+
+        $links[] = [
+            'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label'  => 'Next &raquo;',
+            'active' => false,
+        ];
+
+        return [
+            'current_page'    => $page,
+            'data'            => $pageItems->values(),
+            'first_page_url'  => $buildUrl( 1 ),
+            'from'            => $total > 0 ? $offset + 1 : null,
+            'last_page'       => $lastPage,
+            'last_page_url'   => $buildUrl( max( 1, $lastPage ) ),
+            'links'           => $links,
+            'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'path'            => $path,
+            'per_page'        => $perPage,
+            'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'to'              => $total > 0 ? min( $offset + $perPage, $total ) : null,
+            'total'           => $total,
+        ];
     }
 
     /**

@@ -15,15 +15,17 @@ class CpanelService
     public function createSubdomain($subdomain)
     {
         // Check environment
+        // if (env('APP_ENV') === 'local') {
+        //     // For local environment, just return success without actual cPanel operations
+        //     return [
+        //         'status' => 1,
+        //         'message' => 'Subdomain creation skipped for local environment',
+        //         'subdomain' => $subdomain,
+        //         'environment' => 'local'
+        //     ];
+        // } else
+
         if (env('APP_ENV') === 'local') {
-            // For local environment, just return success without actual cPanel operations
-            return [
-                'status' => 1,
-                'message' => 'Subdomain creation skipped for local environment',
-                'subdomain' => $subdomain,
-                'environment' => 'local'
-            ];
-        } elseif (env('APP_ENV') === 'production') {
             // For production environment, use cPanel API
             return $this->createSubdomainViaCpanel($subdomain);
         } else {
@@ -45,15 +47,17 @@ class CpanelService
     public function createDatabase($dbname)
     {
         // Check environment
+        // if (env('APP_ENV') === 'local') {
+        //     // For local environment, just return success without actual cPanel operations
+        //     return [
+        //         'status' => 1,
+        //         'message' => 'Database creation skipped for local environment',
+        //         'database' => $dbname,
+        //         'environment' => 'local'
+        //     ];
+        // } else
+
         if (env('APP_ENV') === 'local') {
-            // For local environment, just return success without actual cPanel operations
-            return [
-                'status' => 1,
-                'message' => 'Database creation skipped for local environment',
-                'database' => $dbname,
-                'environment' => 'local'
-            ];
-        } elseif (env('APP_ENV') === 'production') {
             // For production environment, use cPanel API
             return $this->createDatabaseViaCpanel($dbname);
         } else {

@@ -102,25 +102,19 @@ class StatisticsController extends Controller
     }
 
     function manageproductorder(){
+        $allOrders = CrossTenantQueryService::queryAllTenants( Order::class, function ( $query ) {
+            $query->orderBy( 'orders.created_at', 'desc' );
+        } );
 
-        $order = Order::query();
-        $totalorder = (clone $order)->count();
-        $totalholdorder = (clone $order)->where('status', 'hold')->count();
-        $totalpendingorder = (clone $order)->where('status', 'pending')->count();
-        $totalreceivedorder = (clone $order)->where('status', 'received')->count();
-        $totalprogressorder = (clone $order)->where('status', 'progress')->count();
-        $totaldeliveredorder = (clone $order)->where('status', 'delivered')->count();
-        $totalcancelorder = (clone $order)->where('status', 'cancel')->count();
-
-        return $this->response([
-            'totalorder' => $totalorder,
-            'totalholdorder' => $totalholdorder,
-            'totalpendingorder' => $totalpendingorder,
-            'totalreceivedorder' => $totalreceivedorder,
-            'totalprogressorder' => $totalprogressorder,
-            'totaldeliveredorder' => $totaldeliveredorder,
-            'totalcancelorder' => $totalcancelorder,
-        ]);
+        return $this->response( [
+            'totalorder'          => $allOrders->count(),
+            'totalholdorder'      => $allOrders->where( 'status', 'hold' )->count(),
+            'totalpendingorder'   => $allOrders->where( 'status', 'pending' )->count(),
+            'totalreceivedorder'  => $allOrders->where( 'status', 'received' )->count(),
+            'totalprogressorder'  => $allOrders->where( 'status', 'progress' )->count(),
+            'totaldeliveredorder' => $allOrders->where( 'status', 'delivered' )->count(),
+            'totalcancelorder'    => $allOrders->where( 'status', 'cancel' )->count(),
+        ] );
     }
 
     function manageservice(){

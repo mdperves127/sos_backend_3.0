@@ -73,7 +73,7 @@ class CpanelDatabaseTenancyBootstrapper extends DatabaseTenancyBootstrapper
         ]);
 
         // In production, use cPanel credentials for tenant databases
-        if (env('APP_ENV') === 'production') {
+        if (env('APP_ENV') === 'local') {
             config([
                 'database.connections.tenant.username' => env('CPANEL_USER'),
                 'database.connections.tenant.password' => env('CPANEL_PASSWORD'),

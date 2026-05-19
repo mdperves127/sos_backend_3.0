@@ -134,7 +134,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     Route::post( 'vendor/store', [UserController::class, 'VendorStore'] );
     Route::get( 'edit-vendor/{id}', [UserController::class, 'VendorEdit'] );
     Route::post( 'update-vendor/{id}', [UserController::class, 'UpdateVendor'] );
-    Route::delete( 'delete-vendor/{id}', [UserController::class, 'VendorDelete'] );
+    Route::delete( 'delete-vendor/{type}/{id}', [UserController::class, 'VendorDelete'] );
 
     //affiliator
     Route::post( 'affiliator/store', [UserController::class, 'AffiliatorStore'] );

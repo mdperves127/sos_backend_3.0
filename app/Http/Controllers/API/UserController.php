@@ -112,12 +112,23 @@ class UserController extends Controller {
         ] );
     }
 
-    function alluserlist( $status ) {
+    function alluserlist( $routeParam ) {
         // if ( !checkpermission( 'alluser' ) ) {
         //     return $this->permissionmessage();
         // }
 
-        $type = request( 'type' );
+        $userTypes = ['vendor', 'affiliate', 'user'];
+
+        // /api/all/user/{vendor|affiliate|user}?status=active|pending
+        // /api/all/view/{active|pending}?type=vendor (optional)
+        if ( in_array( $routeParam, $userTypes, true ) ) {
+            $type   = $routeParam;
+            $status = request( 'status' );
+        } else {
+            $type   = request( 'type' );
+            $status = $routeParam;
+        }
+
         $email = request( 'email' );
         $from = request( 'from' );
         $to = request( 'to' );
@@ -125,12 +136,12 @@ class UserController extends Controller {
         $allResults = collect();
 
         // Get vendors from tenants (type = 'merchant')
-        if ( !$type || $type == 'vendor' ) {
+        if ( ! $type || $type === 'vendor' ) {
             $vendors = Tenant::where( 'type', 'merchant' )
-                ->when( $status == 'active', function ( $q ) {
+                ->when( $status === 'active', function ( $q ) {
                     return $q->where( 'status', 'active' );
                 } )
-                ->when( $status == 'pending', function ( $q ) {
+                ->when( $status === 'pending', function ( $q ) {
                     return $q->where( 'status', 'pending' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
@@ -166,12 +177,12 @@ class UserController extends Controller {
         }
 
         // Get affiliates from tenants (type = 'dropshipper')
-        if ( !$type || $type == 'affiliate' ) {
+        if ( ! $type || $type === 'affiliate' ) {
             $affiliates = Tenant::where( 'type', 'dropshipper' )
-                ->when( $status == 'active', function ( $q ) {
+                ->when( $status === 'active', function ( $q ) {
                     return $q->where( 'status', 'active' );
                 } )
-                ->when( $status == 'pending', function ( $q ) {
+                ->when( $status === 'pending', function ( $q ) {
                     return $q->where( 'status', 'pending' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
@@ -207,12 +218,12 @@ class UserController extends Controller {
         }
 
         // Get users from users table (role_as = 4)
-        if ( !$type || $type == 'user' ) {
+        if ( ! $type || $type === 'user' ) {
             $users = User::where( 'role_as', '4' )
-                ->when( $status == 'active', function ( $q ) {
+                ->when( $status === 'active', function ( $q ) {
                     return $q->where( 'status', 'active' );
                 } )
-                ->when( $status == 'pending', function ( $q ) {
+                ->when( $status === 'pending', function ( $q ) {
                     return $q->where( 'status', 'pending' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
@@ -435,30 +446,26 @@ class UserController extends Controller {
         }
     }
 
-    public function VendorDelete( $id ) {
-        $vendor = User::find( $id );
-        // $image_path = app_path("uploads/vendor/{$vendor->image}");
-
-        // if (File::exists($image_path)) {
-        //     unlink($image_path);
-        // }
-
-        // if ($vendor->image) {
-        //   unlink('uploads/vendor'.$vendor->image);
-        // }
-
-        if ( $vendor ) {
-            $vendor->delete();
-            return response()->json( [
-                'status'  => 200,
-                'message' => 'vendor Deleted Successfully',
-            ] );
+    public function VendorDelete( $type, $id ) {
+        if ( $type == 'tenant' ) {
+            $vendor = Tenant::on( 'mysql' )->find( $id );
         } else {
+            $vendor = User::on( 'mysql' )->find( $id );
+        }
+
+        if ( ! $vendor ) {
             return response()->json( [
                 'status'  => 404,
-                'message' => 'No Vendor ID Found',
+                'message' => 'Vendor not found',
             ] );
         }
+
+        $vendor->delete();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Vendor Deleted Successfully',
+        ] );
     }
 
     public function AffiliatorView( Request $request ) {

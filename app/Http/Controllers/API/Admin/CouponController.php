@@ -33,7 +33,10 @@ class CouponController extends Controller {
         $search = request( 'search', '' );
         $data   = Coupon::on('mysql')
             ->latest()
-            // ->with( 'user:id,name,email' )
+            ->with( [
+                'user:id,name,email',
+                'tenant:id,owner_name,company_name,email',
+            ] )
         // ->when( ( request( 'form' ) != '' ) && request( 'to' ) != '', function ( $query ) {
         //     $fromDate = Carbon::parse( request( 'form' ) );
         //     $toDate   = Carbon::parse( request( 'to' ) )->addDay( 1 );
@@ -66,6 +69,18 @@ class CouponController extends Controller {
                 $query->search( $search );
             } )
             ->paginate( 10 );
+
+        $data->getCollection()->transform( function ( Coupon $coupon ) {
+            if ( $coupon->tenant ) {
+                $coupon->setRelation( 'user', (object) [
+                    'id'    => $coupon->tenant->id,
+                    'name'  => $coupon->tenant->owner_name ?: $coupon->tenant->company_name,
+                    'email' => $coupon->tenant->email,
+                ] );
+            }
+
+            return $coupon;
+        } );
 
         return $this->response( $data );
     }
