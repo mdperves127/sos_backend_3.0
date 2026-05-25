@@ -416,18 +416,35 @@ class UserController extends Controller {
     }
 
     public function VendorEdit( $id ) {
-        $vendor = User::find( $id )->load( 'usersubscription.subscription:id,card_heading' );
-        if ( $vendor ) {
-            return response()->json( [
-                'status' => 200,
-                'vendor' => $vendor,
-            ] );
-        } else {
+        $resolved = $this->resolveVendorEntity( $id );
+
+        if ( ! $resolved['entity'] ) {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'No Vendor Id Found',
             ] );
         }
+
+        if ( $resolved['type'] === 'tenant' ) {
+            $vendor = $resolved['entity']
+                ->load( 'usersubscription.subscription:id,card_heading' );
+            $this->mapTenantToVendorShape( $vendor );
+
+            return response()->json( [
+                'status'    => 200,
+                'vendor'    => $vendor,
+                'is_tenant' => true,
+            ] );
+        }
+
+        $vendor = $resolved['entity']
+            ->load( 'usersubscription.subscription:id,card_heading' );
+
+        return response()->json( [
+            'status'    => 200,
+            'vendor'    => $vendor,
+            'is_tenant' => false,
+        ] );
     }
 
     public function UpdateVendor( Request $request, $id ) {
@@ -442,49 +459,113 @@ class UserController extends Controller {
                 'status' => 422,
                 'errors' => $validator->messages(),
             ] );
-        } else {
-            $vendor = User::find( $id );
-            if ( $vendor ) {
-
-                if ( $request->balance ) {
-                    if ( $request->balance < 0 ) {
-                        return response()->json( ['Balance Not Valid'] );
-                    }
-                }
-
-                $vendor->name   = $request->input( 'name' );
-                $vendor->email  = $request->input( 'email' );
-                $vendor->status = $request->input( 'status' );
-                $vendor->number = $request->input( 'number' );
-
-                $vendor->balance = $request->input( 'balance' );
-                if ( request( 'password' ) ) {
-                    $vendor->password = bcrypt( request( 'password' ) );
-                }
-
-                if ( $request->hasFile( 'image' ) ) {
-                    $path = $vendor->image;
-                    if ( File::exists( $path ) ) {
-                        File::delete( $path );
-                    }
-
-                    $img           = fileUpload( $request->file( 'image' ), 'uploads/vendor', 125, 125 );
-                    $vendor->image = $img;
-                }
-
-                $vendor->update();
-
-                return response()->json( [
-                    'status'  => 200,
-                    'message' => 'Vendor Updated Successfully',
-                ] );
-            } else {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Vendor Not Found',
-                ] );
-            }
         }
+
+        $resolved = $this->resolveVendorEntity( $id );
+
+        if ( ! $resolved['entity'] ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Vendor Not Found',
+            ] );
+        }
+
+        if ( $request->balance && $request->balance < 0 ) {
+            return response()->json( ['Balance Not Valid'] );
+        }
+
+        if ( $resolved['type'] === 'tenant' ) {
+            $tenant = $resolved['entity'];
+            $tenant->company_name = $request->input( 'company_name', $request->name );
+            $tenant->owner_name   = $request->input( 'owner_name', $request->name );
+            $tenant->email        = $request->input( 'email', $tenant->email );
+            $tenant->phone        = $request->input( 'phone', $request->number );
+            $tenant->address      = $request->input( 'address', $tenant->address );
+            $tenant->status       = $request->status;
+
+            if ( $request->has( 'balance' ) ) {
+                $tenant->balance = $request->balance;
+            }
+
+            if ( $request->filled( 'password' ) ) {
+                session( ['tenant_password_' . $tenant->id => $request->password] );
+            }
+
+            $tenant->save();
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Vendor Updated Successfully',
+            ] );
+        }
+
+        $vendor = $resolved['entity'];
+        $vendor->name   = $request->input( 'name' );
+        $vendor->email  = $request->input( 'email' );
+        $vendor->status = $request->input( 'status' );
+        $vendor->number = $request->input( 'number' );
+
+        $vendor->balance = $request->input( 'balance' );
+        if ( request( 'password' ) ) {
+            $vendor->password = bcrypt( request( 'password' ) );
+        }
+
+        if ( $request->hasFile( 'image' ) ) {
+            $path = $vendor->image;
+            if ( File::exists( $path ) ) {
+                File::delete( $path );
+            }
+
+            $img           = fileUpload( $request->file( 'image' ), 'uploads/vendor', 125, 125 );
+            $vendor->image = $img;
+        }
+
+        $vendor->update();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Vendor Updated Successfully',
+        ] );
+    }
+
+    private function resolveVendorEntity( $id ): array {
+        if ( request( 'type' ) === 'tenant' ) {
+            $tenant = Tenant::on( 'mysql' )->find( $id );
+
+            return [
+                'type'   => $tenant ? 'tenant' : null,
+                'entity' => $tenant,
+            ];
+        }
+
+        $user = User::on( 'mysql' )->find( $id );
+        if ( $user ) {
+            return [
+                'type'   => 'user',
+                'entity' => $user,
+            ];
+        }
+
+        $tenant = Tenant::on( 'mysql' )->where( 'type', 'merchant' )->find( $id );
+        if ( $tenant ) {
+            return [
+                'type'   => 'tenant',
+                'entity' => $tenant,
+            ];
+        }
+
+        return [
+            'type'   => null,
+            'entity' => null,
+        ];
+    }
+
+    private function mapTenantToVendorShape( Tenant $tenant ): void {
+        $tenant->setAttribute( 'name', $tenant->company_name );
+        $tenant->setAttribute( 'number', $tenant->phone );
+        $tenant->setAttribute( 'role_as', 2 );
+        $tenant->setAttribute( 'is_tenant', true );
+        $tenant->setAttribute( 'tenant_type', 'merchant' );
     }
 
     public function VendorDelete( $type, $id ) {
