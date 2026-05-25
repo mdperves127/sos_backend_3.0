@@ -124,44 +124,77 @@ class UserController extends Controller {
         //     return $this->permissionmessage();
         // }
 
-        $userTypes = ['vendor', 'affiliate', 'user'];
+        $userTypes    = ['vendor', 'affiliate', 'user'];
+        $statusValues = ['active', 'pending', 'blocked'];
 
-        // /api/all/user/{vendor|affiliate|user}?status=active|pending
-        // /api/all/view/{active|pending}?type=vendor (optional)
+        // /api/all/user/{vendor|affiliate|user|all}?status=pending&email=...
+        // /api/all/user/pending?type=vendor
+        // /api/all/view/{active|pending|blocked}?type=vendor
         if ( in_array( $routeParam, $userTypes, true ) ) {
             $type   = $routeParam;
             $status = request( 'status' );
-        } else {
+        } elseif ( $routeParam === 'all' ) {
+            $type   = request( 'type' );
+            $status = request( 'status' );
+        } elseif ( in_array( $routeParam, $statusValues, true ) ) {
             $type   = request( 'type' );
             $status = $routeParam;
+        } else {
+            $type   = request( 'type' );
+            $status = request( 'status' ) ?: $routeParam;
         }
 
-        $email = request( 'email' );
-        $from = request( 'from' );
-        $to = request( 'to' );
+        $search = trim( (string) ( request( 'email' ) ?: request( 'id' ) ?: request( 'search' ) ) );
+        $from   = request( 'from' );
+        $to     = request( 'to' );
+
+        $applyStatusFilter = function ( $query ) use ( $status ) {
+            if ( in_array( $status, ['active', 'pending', 'blocked'], true ) ) {
+                $query->where( 'status', $status );
+            }
+        };
+
+        $applyTenantSearch = function ( $query ) use ( $search ) {
+            if ( $search === '' ) {
+                return;
+            }
+
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'id', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'email', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'phone', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'company_name', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'owner_name', 'LIKE', '%' . $search . '%' );
+            } );
+        };
+
+        $applyUserSearch = function ( $query ) use ( $search ) {
+            if ( $search === '' ) {
+                return;
+            }
+
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'email', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'number', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'uniqid', 'LIKE', '%' . $search . '%' )
+                    ->orWhere( 'name', 'LIKE', '%' . $search . '%' );
+
+                if ( is_numeric( $search ) ) {
+                    $q->orWhere( 'id', $search );
+                }
+            } );
+        };
 
         $allResults = collect();
 
         // Get vendors from tenants (type = 'merchant')
         if ( ! $type || $type === 'vendor' ) {
-            $vendors = Tenant::where( 'type', 'merchant' )
-                ->when( $status === 'active', function ( $q ) {
-                    return $q->where( 'status', 'active' );
-                } )
-                ->when( $status === 'pending', function ( $q ) {
-                    return $q->where( 'status', 'pending' );
-                } )
-                ->when( $status === 'blocked', function ( $q ) {
-                    return $q->where( 'status', 'blocked' );
-                } )
+            $vendors = Tenant::on( 'mysql' )->where( 'type', 'merchant' )
+                ->tap( $applyStatusFilter )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
                 } )
-                ->when( $email, function ( $q ) use ( $email ) {
-                    return $q->where( 'email', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'phone', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'company_name', 'LIKE', '%' . $email . "%" );
-                } )
+                ->tap( $applyTenantSearch )
                 ->latest()
                 ->get();
 
@@ -188,24 +221,12 @@ class UserController extends Controller {
 
         // Get affiliates from tenants (type = 'dropshipper')
         if ( ! $type || $type === 'affiliate' ) {
-            $affiliates = Tenant::where( 'type', 'dropshipper' )
-                ->when( $status === 'active', function ( $q ) {
-                    return $q->where( 'status', 'active' );
-                } )
-                ->when( $status === 'pending', function ( $q ) {
-                    return $q->where( 'status', 'pending' );
-                } )
-                ->when( $status === 'blocked', function ( $q ) {
-                    return $q->where( 'status', 'blocked' );
-                } )
+            $affiliates = Tenant::on( 'mysql' )->where( 'type', 'dropshipper' )
+                ->tap( $applyStatusFilter )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
                 } )
-                ->when( $email, function ( $q ) use ( $email ) {
-                    return $q->where( 'email', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'phone', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'company_name', 'LIKE', '%' . $email . "%" );
-                } )
+                ->tap( $applyTenantSearch )
                 ->latest()
                 ->get();
 
@@ -232,21 +253,12 @@ class UserController extends Controller {
 
         // Get users from users table (role_as = 4)
         if ( ! $type || $type === 'user' ) {
-            $users = User::where( 'role_as', '4' )
-                ->when( $status === 'active', function ( $q ) {
-                    return $q->where( 'status', 'active' );
-                } )
-                ->when( $status === 'pending', function ( $q ) {
-                    return $q->where( 'status', 'pending' );
-                } )
+            $users = User::on( 'mysql' )->where( 'role_as', '4' )
+                ->tap( $applyStatusFilter )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
                 } )
-                ->when( $email, function ( $query ) use ( $email ) {
-                    return $query->where( 'email', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'number', 'LIKE', '%' . $email . "%" )
-                        ->orWhere( 'uniqid', 'LIKE', '%' . $email . "%" );
-                } )
+                ->tap( $applyUserSearch )
                 ->latest()
                 ->get();
 
