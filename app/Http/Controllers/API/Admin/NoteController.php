@@ -90,6 +90,7 @@ public function vendorAdvertise( $id ) {
     public function vendorPaymentHistory( $id ) {
         $type = request( 'type' );
 
+        dd($id);
         $paymentHistory = PaymentHistory::on( 'mysql' )
             ->when(
                 $type == 'tenant',
