@@ -122,7 +122,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     Route::get( 'view-product/{status?}', [ProductController::class, 'ProductIndex'] );
     Route::get( 'edit-product/{tenant_id}/{id}', [ProductController::class, 'ProductEdit'] );
     Route::put( 'update-product/{id}', [ProductController::class, 'UpdateProduct'] );
-    Route::delete( 'delete-product/{id}', [ProductController::class, 'destroy'] );
+    Route::delete( 'delete-product/{tenant_id}/{id}', [ProductController::class, 'destroy'] );
     Route::post( 'admin-product-status-update/{tenant_id}/{id}', [ProductController::class, 'updateStatus'] );
     Route::get( 'product-edit-request', [ProductController::class, 'producteditrequest'] );
 

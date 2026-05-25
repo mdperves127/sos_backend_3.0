@@ -483,24 +483,24 @@ class ProductController extends Controller {
         return $response;
     }
 
-    public function destroy( $id ) {
-        $product = Product::find( $id );
+    public function destroy( $tenant_id, $id ) {
+        $product = CrossTenantQueryService::getSingleFromTenant(
+            $tenant_id,
+            Product::class,
+            function ( $query ) use ( $id ) {
+                $query->where( 'id', $id );
+            }
+        );
 
-        // $image_path = app_path("uploads/product/{$product->image}");
-
-        // if (File::exists($image_path)) {
-        //     unlink($image_path);
-        // }
         if ( $product ) {
-            $product->delete();
             return response()->json( [
                 'status'  => 200,
-                'message' => 'Product Deleted Successfully',
+                'product' => $product,
             ] );
         } else {
             return response()->json( [
                 'status'  => 404,
-                'message' => 'No Product ID Found',
+                'message' => 'No Product Id Found',
             ] );
         }
     }
