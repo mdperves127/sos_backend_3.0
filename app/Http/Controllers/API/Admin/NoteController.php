@@ -92,11 +92,11 @@ public function vendorAdvertise( $id ) {
 
         $query = PaymentHistory::on( 'mysql' );
 
-        // if ( $type === 'tenant' ) {
+        if ( tenant()) {
             $query->where( 'tenant_id', $id );
-        // } else {
-        //     $query->where( 'user_id', $id );
-        // }
+        } else {
+            $query->where( 'user_id', $id );
+        }
 
         $paymentHistory = $query->latest()->paginate( 10 );
 
