@@ -90,19 +90,15 @@ public function vendorAdvertise( $id ) {
     public function vendorPaymentHistory( $id ) {
         $type = request( 'type' );
 
-        dd($id);
-        $paymentHistory = PaymentHistory::on( 'mysql' )
-            ->when(
-                $type == 'tenant',
-                function ( $query ) use ( $id ) {
-                    $query->where( 'tenant_id', $id );
-                }
-                // ,
-                // function ( $query ) use ( $id ) {
-                //     $query->where( 'user_id', $id );
-                // }
-            )
-            ->paginate( 10 );
+        $query = PaymentHistory::on( 'mysql' );
+
+        if ( $type === 'tenant' ) {
+            $query->where( 'tenant_id', $id );
+        } else {
+            $query->where( 'user_id', $id );
+        }
+
+        $paymentHistory = $query->latest()->paginate( 10 );
 
         return response()->json( [
             'status'       => 200,
