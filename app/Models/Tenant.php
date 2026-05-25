@@ -36,6 +36,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'phone',
         'address',
         'type',
+        'status',
         'balance',
         'password'
     ];
@@ -54,6 +55,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'phone',
             'address',
             'type',
+            'status',
             'balance',
             'password',
             'data',
@@ -89,8 +91,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         $array = parent::toArray();
 
-        // Ensure type comes from the actual column, not from data JSON
-        $array['type'] = $this->attributes['type'] ?? null;
+        // Ensure type/status come from actual columns, not from data JSON
+        $array['type']   = $this->attributes['type'] ?? null;
+        $array['status'] = $this->attributes['status'] ?? null;
 
         return $array;
     }

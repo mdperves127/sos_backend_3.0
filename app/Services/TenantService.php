@@ -67,6 +67,7 @@ class TenantService
                 'address' => $data['address'] ?? null,
                 'owner_name' => $data['owner_name'],
                 'type' => $data['type'],
+                'status' => $data['status'] ?? 'pending',
                 'data' => null // Don't store password in database
             ]);
 

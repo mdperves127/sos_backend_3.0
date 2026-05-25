@@ -31,7 +31,9 @@ class TenantRegistrationController extends Controller
     public function register(TenantRegistrationRequest $request): JsonResponse
     {
         try {
-            $result = $this->tenantService->createTenant($request->validated());
+            $data = $request->validated();
+            $data['status'] = $data['status'] ?? 'pending';
+            $result = $this->tenantService->createTenant( $data );
             // dd($result);
 
             return response()->json([

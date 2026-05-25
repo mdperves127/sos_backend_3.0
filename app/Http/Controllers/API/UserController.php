@@ -22,8 +22,12 @@ class UserController extends Controller {
 
     function updateStatus( Request $request, $id ) {
         $type = request('type');
+        $statusRules = $type === 'tenant'
+            ? 'required|in:pending,active,blocked'
+            : 'required';
+
         $validator = Validator::make( $request->all(), [
-            'status' => 'required',
+            'status' => $statusRules,
         ] );
 
         if ( $validator->fails() ) {
@@ -147,6 +151,9 @@ class UserController extends Controller {
                 ->when( $status === 'pending', function ( $q ) {
                     return $q->where( 'status', 'pending' );
                 } )
+                ->when( $status === 'blocked', function ( $q ) {
+                    return $q->where( 'status', 'blocked' );
+                } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
                 } )
@@ -187,6 +194,9 @@ class UserController extends Controller {
                 } )
                 ->when( $status === 'pending', function ( $q ) {
                     return $q->where( 'status', 'pending' );
+                } )
+                ->when( $status === 'blocked', function ( $q ) {
+                    return $q->where( 'status', 'blocked' );
                 } )
                 ->when( $from != '' && $to != '', function ( $q ) use ( $from, $to ) {
                     return $q->whereBetween( 'created_at', [Carbon::parse( $from ), Carbon::parse( $to )] );
@@ -334,7 +344,7 @@ class UserController extends Controller {
             'email'        => 'required|email|unique:tenants,email|max:255',
             'name'         => 'required|string|max:255',
             'number'       => ['required'],
-            'status'       => 'required|in:active,pending',
+            'status'       => 'required|in:pending,active,blocked',
             'password'     => 'required|string|min:8',
             'balance'      => ['nullable', 'numeric', 'min:0'],
             'domain'       => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/'],
@@ -384,11 +394,11 @@ class UserController extends Controller {
                 'owner_name'   => $request->input( 'owner_name', $request->name ),
                 'password'     => $request->password,
                 'type'         => 'merchant',
+                'status'       => $request->status,
             ] );
 
             $tenant          = $result['tenant'];
             $tenant->balance = $request->balance ?? 0;
-            $tenant->status  = $request->status;
             $tenant->save();
 
             $subscription  = Subscription::find( 1 );
@@ -450,7 +460,7 @@ class UserController extends Controller {
     public function UpdateVendor( Request $request, $id ) {
         $validator = Validator::make( $request->all(), [
             'name'   => 'required|max:191',
-            'status' => 'required|max:191',
+            'status' => 'required|in:pending,active,blocked',
 
         ] );
 
@@ -736,7 +746,7 @@ class UserController extends Controller {
             'email'        => 'required|email|unique:tenants,email|max:255',
             'name'         => 'required|string|max:255',
             'number'       => ['required', 'numeric'],
-            'status'       => 'required|in:active,pending',
+            'status'       => 'required|in:pending,active,blocked',
             'password'     => 'required|string|min:6',
             'domain'       => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/'],
             'company_name' => ['nullable', 'string', 'max:255'],
@@ -785,11 +795,11 @@ class UserController extends Controller {
                 'owner_name'   => $request->input( 'owner_name', $request->name ),
                 'password'     => $request->password,
                 'type'         => 'dropshipper',
+                'status'       => $request->status,
             ] );
 
             $tenant          = $result['tenant'];
             $tenant->balance = 0;
-            $tenant->status  = $request->status;
             $tenant->save();
 
             $subscription  = Subscription::find( 13 );
