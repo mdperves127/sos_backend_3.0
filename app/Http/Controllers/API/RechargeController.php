@@ -74,7 +74,16 @@ class RechargeController extends Controller {
         $trxid = uniqid();
         $type  = "recharge";
 
-        PaymentHistoryService::store( uniqid(), request( 'amount' ), 'Manually by admin', 'Recharge', '+', '', $id );
+        PaymentHistoryService::store(
+            uniqid(),
+            request( 'amount' ),
+            'Manually by admin',
+            'Recharge',
+            '+',
+            '',
+            $id,
+            $this->paymentHistoryContext( $type, $id )
+        );
 
         return response()->json( [
             'status'  => 200,
@@ -99,7 +108,16 @@ class RechargeController extends Controller {
         // $user->balance = request( 'amount' );
         // $user->save();
 
-        PaymentHistoryService::store( uniqid(), request( 'amount' ), 'Edited by admin', 'Edit', '-+', '', $id );
+        PaymentHistoryService::store(
+            uniqid(),
+            request( 'amount' ),
+            'Edited by admin',
+            'Edit',
+            '-+',
+            '',
+            $id,
+            $this->paymentHistoryContext( $type, $id )
+        );
 
         return response()->json( [
             'status'  => 200,
@@ -123,11 +141,35 @@ class RechargeController extends Controller {
         $trxid = uniqid();
         $type  = "recharge";
 
-        PaymentHistoryService::store( uniqid(), request( 'amount' ), 'Manually by admin', 'Less', '-', '', $id );
+        PaymentHistoryService::store(
+            uniqid(),
+            request( 'amount' ),
+            'Manually by admin',
+            'Less',
+            '-',
+            '',
+            $id,
+            $this->paymentHistoryContext( $type, $id )
+        );
 
         return response()->json( [
             'status'  => 200,
             'message' => 'Successfully less amount ' . request( 'amount' ) . ' ! ',
         ] );
+    }
+
+    private function paymentHistoryContext( ?string $type, $id ): array {
+        if ( $type === 'tenant' ) {
+            return [
+                'entity_type' => 'tenant',
+                'tenant_id'   => $id,
+                'user_id'     => auth()->id(),
+            ];
+        }
+
+        return [
+            'entity_type' => 'user',
+            'user_id'     => $id,
+        ];
     }
 }

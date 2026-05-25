@@ -9,11 +9,14 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\Tenant;
 use App\Services\SubscriptionService;
+use App\Services\TenantService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Stancl\Tenancy\Database\Models\Domain;
 
 class UserController extends Controller {
 
@@ -328,12 +331,16 @@ class UserController extends Controller {
         }
 
         $validator = Validator::make( $request->all(), [
-            'email'    => 'required|unique:users|max:255',
-            'name'     => 'required',
-            'number'   => ['required'],
-            'status'   => 'required',
-            'password' => 'required:min:8',
-            'balance'  => ['numeric', 'min:0'],
+            'email'        => 'required|email|unique:tenants,email|max:255',
+            'name'         => 'required|string|max:255',
+            'number'       => ['required'],
+            'status'       => 'required|in:active,pending',
+            'password'     => 'required|string|min:8',
+            'balance'      => ['nullable', 'numeric', 'min:0'],
+            'domain'       => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'owner_name'   => ['nullable', 'string', 'max:255'],
+            'address'      => ['nullable', 'string', 'max:500'],
         ] );
 
         if ( $validator->fails() ) {
@@ -341,35 +348,69 @@ class UserController extends Controller {
                 'status' => 400,
                 'errors' => $validator->messages(),
             ] );
-        } else {
+        }
 
-            $vendor                    = new User();
-            $vendor->name              = $request->input( 'name' );
-            $vendor->email             = $request->input( 'email' );
-            $vendor->password          = Hash::make( $request['password'] );
-            $vendor->status            = $request->input( 'status' );
-            $vendor->number            = $request->input( 'number' );
-            $vendor->balance           = $request->balance ?? 0;
-            $vendor->role_as           = '2';
-            $vendor->uniqid            = uniqid();
-            $vendor->email_verified_at = $request->verified_at == 1 ? now() : NULL;
+        $domain = $request->input( 'domain' ) ?: Str::slug( $request->name, '-' );
+        $domain = preg_replace( '/[^a-zA-Z0-9-]/', '', $domain ) ?: 'vendor';
 
-            if ( $request->hasFile( 'image' ) ) {
-                $img           = fileUpload( $request->file( 'image' ), 'uploads/vendor', 125, 125 );
-                $vendor->image = $img;
+        $tenantId = preg_replace( '/[^a-zA-Z0-9]/', '', $domain );
+        while ( Tenant::where( 'id', $tenantId )->exists() ) {
+            $domain   = $domain . '-' . Str::lower( Str::random( 4 ) );
+            $tenantId = preg_replace( '/[^a-zA-Z0-9]/', '', $domain );
+        }
+
+        $fullDomain = $domain;
+        if ( env( 'APP_ENV' ) === 'local' && $mainDomain = env( 'MAIN_DOMAIN' ) ) {
+            if ( ! str_contains( $domain, '.' ) ) {
+                $fullDomain = $domain . '.' . $mainDomain;
             }
-            $vendor->save();
-            // $vendor->defa
+        }
+
+        if ( Domain::where( 'domain', $fullDomain )->exists() ) {
+            return response()->json( [
+                'status' => 400,
+                'errors' => ['domain' => ['This domain is already registered.']],
+            ] );
+        }
+
+        try {
+            $tenantService = app( TenantService::class );
+            $result        = $tenantService->createTenant( [
+                'company_name' => $request->input( 'company_name', $request->name ),
+                'domain'       => $domain,
+                'email'        => $request->email,
+                'phone'        => $request->number,
+                'address'      => $request->address,
+                'owner_name'   => $request->input( 'owner_name', $request->name ),
+                'password'     => $request->password,
+                'type'         => 'merchant',
+            ] );
+
+            $tenant          = $result['tenant'];
+            $tenant->balance = $request->balance ?? 0;
+            $tenant->status  = $request->status;
+            $tenant->save();
+
             $subscription  = Subscription::find( 1 );
-            $user          = $vendor;
             $amount        = 0;
             $coupon        = null;
-            $paymentmethod = "Manually";
-            SubscriptionService::store( $subscription, $user, $amount, $coupon?->id, $paymentmethod );
+            $paymentmethod = 'Manually';
+            SubscriptionService::store( $subscription, $tenant, $amount, $coupon?->id, $paymentmethod );
 
             return response()->json( [
                 'status'  => 200,
                 'message' => 'Vendor Added Sucessfully',
+                'data'    => [
+                    'tenant_id'   => $result['tenant_id'],
+                    'domain'      => $result['domain_url'],
+                    'tenant_type' => 'merchant',
+                ],
+            ] );
+        } catch ( \Exception $e ) {
+            return response()->json( [
+                'status'  => 500,
+                'message' => 'Failed to create vendor tenant',
+                'error'   => $e->getMessage(),
             ] );
         }
     }
@@ -611,12 +652,15 @@ class UserController extends Controller {
         }
 
         $validator = Validator::make( $request->all(), [
-            'email'    => 'required|unique:users|max:255',
-            'name'     => 'required',
-            'number'   => ['required', 'numeric'],
-            'status'   => 'required',
-            'password' => 'required:min:6',
-
+            'email'        => 'required|email|unique:tenants,email|max:255',
+            'name'         => 'required|string|max:255',
+            'number'       => ['required', 'numeric'],
+            'status'       => 'required|in:active,pending',
+            'password'     => 'required|string|min:6',
+            'domain'       => ['nullable', 'string', 'max:255', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'owner_name'   => ['nullable', 'string', 'max:255'],
+            'address'      => ['nullable', 'string', 'max:500'],
         ] );
 
         if ( $validator->fails() ) {
@@ -624,36 +668,69 @@ class UserController extends Controller {
                 'status' => 400,
                 'errors' => $validator->messages(),
             ] );
-        } else {
-            $affiliator                    = new User();
-            $affiliator->name              = $request->input( 'name' );
-            $affiliator->email             = $request->input( 'email' );
-            $affiliator->password          = Hash::make( $request['password'] );
-            $affiliator->status            = $request->input( 'status' );
-            $affiliator->number            = $request->input( 'number' );
-            $affiliator->balance           = 0;
-            $affiliator->role_as           = '3';
-            $affiliator->uniqid            = uniqid();
-            $affiliator->email_verified_at = $request->verified_at == 1 ? now() : NULL;
+        }
 
-            if ( $request->hasFile( 'image' ) ) {
+        $domain = $request->input( 'domain' ) ?: Str::slug( $request->name, '-' );
+        $domain = preg_replace( '/[^a-zA-Z0-9-]/', '', $domain ) ?: 'affiliate';
 
-                $img = fileUpload( $request->file( 'image' ), 'uploads/affiliator', 125, 125 );
+        $tenantId = preg_replace( '/[^a-zA-Z0-9]/', '', $domain );
+        while ( Tenant::where( 'id', $tenantId )->exists() ) {
+            $domain   = $domain . '-' . Str::lower( Str::random( 4 ) );
+            $tenantId = preg_replace( '/[^a-zA-Z0-9]/', '', $domain );
+        }
 
-                $affiliator->image = $img;
+        $fullDomain = $domain;
+        if ( env( 'APP_ENV' ) === 'local' && $mainDomain = env( 'MAIN_DOMAIN' ) ) {
+            if ( ! str_contains( $domain, '.' ) ) {
+                $fullDomain = $domain . '.' . $mainDomain;
             }
-            $affiliator->save();
+        }
+
+        if ( Domain::where( 'domain', $fullDomain )->exists() ) {
+            return response()->json( [
+                'status' => 400,
+                'errors' => ['domain' => ['This domain is already registered.']],
+            ] );
+        }
+
+        try {
+            $tenantService = app( TenantService::class );
+            $result        = $tenantService->createTenant( [
+                'company_name' => $request->input( 'company_name', $request->name ),
+                'domain'       => $domain,
+                'email'        => $request->email,
+                'phone'        => $request->number,
+                'address'      => $request->address,
+                'owner_name'   => $request->input( 'owner_name', $request->name ),
+                'password'     => $request->password,
+                'type'         => 'dropshipper',
+            ] );
+
+            $tenant          = $result['tenant'];
+            $tenant->balance = 0;
+            $tenant->status  = $request->status;
+            $tenant->save();
 
             $subscription  = Subscription::find( 13 );
-            $user          = $affiliator;
             $amount        = 0;
             $coupon        = null;
-            $paymentmethod = "Manually";
+            $paymentmethod = 'Manually';
+            SubscriptionService::store( $subscription, $tenant, $amount, $coupon?->id, $paymentmethod );
 
-            SubscriptionService::store( $subscription, $user, $amount, $coupon?->id, $paymentmethod );
             return response()->json( [
                 'status'  => 200,
                 'message' => 'Affiliator Added Sucessfully',
+                'data'    => [
+                    'tenant_id'   => $result['tenant_id'],
+                    'domain'      => $result['domain_url'],
+                    'tenant_type' => 'dropshipper',
+                ],
+            ] );
+        } catch ( \Exception $e ) {
+            return response()->json( [
+                'status'  => 500,
+                'message' => 'Failed to create affiliate tenant',
+                'error'   => $e->getMessage(),
             ] );
         }
     }

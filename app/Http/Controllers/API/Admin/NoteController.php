@@ -95,10 +95,11 @@ public function vendorAdvertise( $id ) {
                 $type == 'tenant',
                 function ( $query ) use ( $id ) {
                     $query->where( 'tenant_id', $id );
-                },
-                function ( $query ) use ( $id ) {
-                    $query->where( 'user_id', $id );
                 }
+                // ,
+                // function ( $query ) use ( $id ) {
+                //     $query->where( 'user_id', $id );
+                // }
             )
             ->paginate( 10 );
 

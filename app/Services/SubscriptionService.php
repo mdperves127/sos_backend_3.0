@@ -23,7 +23,7 @@ class SubscriptionService {
         $userSubscription                     = new UserSubscription();
         if ( $entity instanceof Tenant ) {
             $userSubscription->tenant_id = $entity->id;
-            $userSubscription->user_id   = $actingUserId ?? ( Auth::check() ? Auth::id() : 0 );
+            $userSubscription->user_id   = $actingUserId ?? ( Auth::check() ? Auth::id() : null );
         } elseif ( $entity instanceof User ) {
             $userSubscription->user_id   = $entity->id;
             $userSubscription->tenant_id = null;

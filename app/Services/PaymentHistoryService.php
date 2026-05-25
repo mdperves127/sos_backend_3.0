@@ -29,14 +29,19 @@ class PaymentHistoryService
             $tenant = $entityId ? Tenant::on( 'mysql' )->find( $entityId ) : null;
             $user = $entityId ? User::on( 'mysql' )->find( $entityId ) : null;
 
-            if ( $tenant && !$user ) {
+            if ( $tenant && ! $user ) {
                 $tenantId = $tenantId ?? $tenant->id;
+                $userId   = $userId ?? ( auth()->check() ? auth()->id() : null );
             } else {
                 $userId = $userId ?? $entityId;
             }
         }
 
-        if ( $userId === 0 || $userId === '0' ) {
+        if ( $tenantId && ( $userId === null || $userId === 0 || $userId === '0' ) ) {
+            $userId = auth()->check() ? auth()->id() : $userId;
+        }
+
+        if ( ! $tenantId && ( $userId === 0 || $userId === '0' ) ) {
             $userId = null;
         }
 
