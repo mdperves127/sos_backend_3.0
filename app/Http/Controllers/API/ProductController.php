@@ -493,9 +493,10 @@ class ProductController extends Controller {
         );
 
         if ( $product ) {
+            $product->delete();
             return response()->json( [
                 'status'  => 200,
-                'product' => $product,
+                'message' => 'Product Deleted Successfully',
             ] );
         } else {
             return response()->json( [
