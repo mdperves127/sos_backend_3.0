@@ -313,6 +313,17 @@ function isTenantAdmin(): bool {
 /**
  * Check a permission flag from the employee's vendor_role. Admins always allowed.
  */
+/**
+ * Base query for reviews that may appear on the tenant storefront.
+ */
+function visibleProductRatingsQuery( ?string $connection = null ) {
+    $query = $connection
+        ? \App\Models\ProductRating::on( $connection )
+        : \App\Models\ProductRating::query();
+
+    return $query->visibleOnFrontend();
+}
+
 function tenantPermission( string $permission ): bool {
     if ( !Auth::check() ) {
         return false;

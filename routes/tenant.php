@@ -74,6 +74,7 @@ use App\Http\Controllers\Tenant\ConversationController as TenantConversationCont
 use App\Http\Controllers\Tenant\ContentServiceController;
 use App\Http\Controllers\Tenant\OfferController;
 use App\Http\Controllers\Tenant\TenantEmployeeController;
+use App\Http\Controllers\Tenant\ProductReviewController;
 use App\Http\Controllers\BuySubscription;
 use App\Http\Controllers\Tenant\NcategoryController;
 use App\Http\Controllers\Tenant\NewsController;
@@ -122,6 +123,7 @@ Route::middleware( [
     Route::prefix('tenant-frontend')->group(function () {
         Route::get('products', [MerchantFrontendController::class, 'products']);
         Route::get('product/{slug}', [MerchantFrontendController::class, 'product']);
+        Route::get('product/{slug}/reviews', [ProductReviewController::class, 'forProduct']);
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
@@ -148,6 +150,9 @@ Route::middleware( [
             Route::get('cart', [TenantCartController::class, 'cart']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
             Route::get('dashboard/orders', [MerchantFrontendController::class, 'orders']);
+            Route::post('product-review', [ProductReviewController::class, 'store']);
+            Route::get('product-review/eligible-orders/{productId}', [ProductReviewController::class, 'eligibleOrders']);
+            Route::get('product-review/my-reviews', [ProductReviewController::class, 'myReviews']);
         });
     });
     // Protected tenant routes
@@ -535,6 +540,13 @@ Route::middleware( [
             Route::get( 'show/{id}', [TenantEmployeeController::class, 'showRole'] );
             Route::post( 'update/{id}', [TenantEmployeeController::class, 'updateRole'] );
             Route::delete( 'delete/{id}', [TenantEmployeeController::class, 'deleteRole'] );
+        } );
+
+        Route::prefix( 'tenant-product-review' )->group( function () {
+            Route::get( 'manage', [ProductReviewController::class, 'adminIndex'] );
+            Route::post( 'approve/{id}', [ProductReviewController::class, 'approve'] );
+            Route::post( 'hide/{id}', [ProductReviewController::class, 'hide'] );
+            Route::delete( 'delete/{id}', [ProductReviewController::class, 'destroy'] );
         } );
 
 

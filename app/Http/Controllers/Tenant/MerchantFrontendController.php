@@ -26,10 +26,25 @@ use App\Models\Size;
 use App\Models\News;
 use App\Models\NCategory;
 use App\Models\UserSubscription;
+use App\Models\ProductRating;
 
 
 class MerchantFrontendController extends Controller
 {
+    private function buildProductReviewPayload( int $productId, ?string $connection = null ): array {
+        $ratingQuery = visibleProductRatingsQuery( $connection )->where( 'product_id', $productId );
+
+        return [
+            'average_rating'  => round( (float) ( clone $ratingQuery )->avg( 'rating' ), 1 ),
+            'total_reviews'   => ( clone $ratingQuery )->count(),
+            'reviews_preview' => ( clone $ratingQuery )
+                ->with( 'user:id,name' )
+                ->latest()
+                ->limit( 5 )
+                ->get( ['id', 'user_id', 'product_id', 'rating', 'comment', 'created_at'] ),
+        ];
+    }
+
     public function products(Request $request)
     {
         // Get filter parameters
@@ -244,6 +259,8 @@ class MerchantFrontendController extends Controller
     }
     public function product($slug)
     {
+        $reviewConnection = null;
+
         if(tenant()->type == 'dropshipper') {
             // Step 1: Get ProductDetails from current tenant's database by ID
             $productDetail = ProductDetails::where('slug', $slug)->first();
@@ -292,6 +309,7 @@ class MerchantFrontendController extends Controller
                 ],
             ] );
             DB::purge( $connectionName );
+            $reviewConnection = $connectionName;
 
             // Load product from the tenant database using product_id
             $product = Product::on( $connectionName )
@@ -350,9 +368,12 @@ class MerchantFrontendController extends Controller
             $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
         }
 
+        $reviewPayload = $this->buildProductReviewPayload( $product->id, $reviewConnection );
+
         return response()->json([
             'product' => $product,
             'related_products' => $related_products,
+            'reviews' => $reviewPayload,
         ]);
     }
 
@@ -712,7 +733,25 @@ class MerchantFrontendController extends Controller
     }
 
     public function orders() {
-        $orders = Order::where('user_id', auth()->id())->where('tenant_id', tenant()->id)->get();
+        $orders = Order::where('user_id', auth()->id())->where('tenant_id', tenant()->id)
+            ->with( 'product:id,name,slug,image', 'productrating' )
+            ->get();
+
+        $reviewedProductIds = ProductRating::where( 'user_id', auth()->id() )->pluck( 'product_id' );
+        $eligibleStatuses   = \App\Http\Requests\TenantProductReviewRequest::PURCHASE_STATUSES;
+
+        $orders = $orders->map( function ( $order ) use ( $reviewedProductIds, $eligibleStatuses ) {
+            $order->can_review = in_array( $order->status, $eligibleStatuses, true )
+                && !$reviewedProductIds->contains( $order->product_id )
+                && !$order->productrating;
+
+            if ( $order->productrating ) {
+                $order->review_status = $order->productrating->is_visible ? 'approved' : 'pending';
+            }
+
+            return $order;
+        } );
+
         $all_order = $orders->count();
         $pending_order = $orders->where('status', 'pending')->count();
         $processing_order = $orders->where('status', 'processing')->count();

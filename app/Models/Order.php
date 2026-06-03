@@ -59,6 +59,10 @@ class Order extends Model {
     }
 
     function productrating() {
+        return $this->hasOne( ProductRating::class, 'order_id' );
+    }
+
+    function productratings() {
         return $this->hasMany( ProductRating::class, 'order_id' );
     }
 
