@@ -107,7 +107,7 @@ class TenantAuthController extends Controller {
 
             // Check if user exists and credentials are correct
             // Force using tenant connection
-            $user = User::on('tenant')->where( 'email', $request->email )->first();
+            $user = User::on('tenant')->where( 'email', $request->email )->with( 'vendorRole' )->first();
 
             if ( !$user || !Hash::check( $request->password, $user->password ) ) {
                 return response()->json( [
@@ -139,6 +139,8 @@ class TenantAuthController extends Controller {
                         'email'     => $user->email,
                         'last_seen' => $user->last_seen,
                         'role_type' => $user->role_type,
+                        'vendor_role_id' => $user->vendor_role_id,
+                        'role'        => $user->role_type === 'employee' ? $user->vendorRole : null,
                         'usersubscription' => $usersubscription ? [
                             'id' => $usersubscription->id,
                             'subscription' => $usersubscription->subscription,
@@ -216,7 +218,7 @@ class TenantAuthController extends Controller {
     }
 
     public function profileInfo( Request $request ): JsonResponse {
-        $user = User::on('tenant')->find( Auth::user()->id );
+        $user = User::on('tenant')->with( 'vendorRole' )->find( Auth::user()->id );
         return response()->json( [
             'success'     => true,
             'message'     => 'Profile info fetched successfully',

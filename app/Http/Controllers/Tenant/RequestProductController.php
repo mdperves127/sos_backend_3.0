@@ -18,9 +18,9 @@ class RequestProductController extends Controller {
 
     function RequestPending() {
         // Check if the user is an employee and has permission
-        // if ( Auth::user()->is_employee === 'yes' && employee( 'pending_request' ) === null ) {
-        //     return $this->employeeMessage();
-        // }
+        if ( Auth::user()->role_type === 'employee' && !tenantPermission( 'pending_request' ) ) {
+            return $this->employeeMessage();
+        }
 
         $search  = request( 'search' );
         $product = ProductDetails::query()
@@ -28,7 +28,7 @@ class RequestProductController extends Controller {
                 $query->select( 'id', 'name', 'selling_price', 'image' )
                     ->with( 'productImage' );
             }] )
-            ->where( 'vendor_id', auth()->user()->id )
+            ->where( 'vendor_id', tenantOwnerId() )
 
             ->where( 'status', '2' )
             ->whereHas( 'product' )
@@ -122,7 +122,7 @@ class RequestProductController extends Controller {
     function RequestActive() {
 
         // Check if the user is an employee and has permission
-        if ( Auth::user()->is_employee === 'yes' && employee( 'active_request' ) === null ) {
+        if ( Auth::user()->role_type === 'employee' && !tenantPermission( 'active_request' ) ) {
             return $this->employeeMessage();
         }
 
@@ -132,7 +132,7 @@ class RequestProductController extends Controller {
                 $query->select( 'id', 'name', 'selling_price', 'image' )
                     ->with( 'productImage' );
             }] )
-            ->where( 'vendor_id', auth()->user()->id )
+            ->where( 'vendor_id', tenantOwnerId() )
             ->where( 'status', 1 )
             ->whereHas( 'product' )
             ->when( $search != '', function ( $query ) use ( $search ) {
@@ -370,7 +370,7 @@ class RequestProductController extends Controller {
     function RequestRejected() {
 
         // Check if the user is an employee and has permission
-        if ( Auth::user()->is_employee === 'yes' && employee( 'reject_request' ) === null ) {
+        if ( Auth::user()->role_type === 'employee' && !tenantPermission( 'reject_request' ) ) {
             return $this->employeeMessage();
         }
 
@@ -489,7 +489,7 @@ class RequestProductController extends Controller {
 
     public function affiliateRequestCount() {
 
-        $count = ProductDetails::where( 'vendor_id', auth()->user()->id )
+        $count = ProductDetails::where( 'vendor_id', tenantOwnerId() )
             ->when( request( 'status' ) == 'pending', function ( $q ) {
                 return $q->where( 'status', '2' );
             } )

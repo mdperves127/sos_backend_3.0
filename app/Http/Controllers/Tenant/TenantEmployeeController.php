@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserSubscription;
-use App\Models\VendorEmployee;
 use App\Models\VendorRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +12,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class TenantEmployeeController extends Controller {
+
+    private function employeeQuery() {
+        return User::query()
+            ->where( 'role_type', 'employee' )
+            ->whereHas( 'vendorRole', function ( $query ) {
+                $query->where( 'vendor_id', tenantOwnerId() );
+            } );
+    }
 
     private function tenantSubscription(): ?UserSubscription {
         if ( !function_exists( 'tenant' ) || !tenant() ) {
@@ -44,19 +51,34 @@ class TenantEmployeeController extends Controller {
         return null;
     }
 
-    public function index() {
-        $query = VendorEmployee::query()
-            ->latest()
-            ->with( 'user:id,name,email,number,uniqid,is_employee,status', 'vendor_role:id,name' );
-
-        if ( Auth::user()->is_employee === null ) {
-            $query->where( 'vendor_id', Auth::id() );
-        } else {
-            $query->where( 'vendor_id', Auth::user()->vendor_id );
+    private function assertAdmin(): ?\Illuminate\Http\JsonResponse {
+        if ( !isTenantAdmin() ) {
+            return response()->json( [
+                'status'  => 403,
+                'message' => 'Only tenant admin can perform this action.',
+            ], 403 );
         }
 
-        $employees = $query->get();
-        $roles     = VendorRole::where( 'vendor_id', vendorId() )->get();
+        return null;
+    }
+
+    private function roleBelongsToOwner( int $roleId ): bool {
+        return VendorRole::where( 'id', $roleId )
+            ->where( 'vendor_id', tenantOwnerId() )
+            ->exists();
+    }
+
+    public function index() {
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $employees = $this->employeeQuery()
+            ->latest()
+            ->with( 'vendorRole:id,name,vendor_id' )
+            ->get( ['id', 'name', 'email', 'number', 'uniqid', 'status', 'role_type', 'vendor_role_id'] );
+
+        $roles = VendorRole::where( 'vendor_id', tenantOwnerId() )->get();
 
         return response()->json( [
             'status'      => 200,
@@ -67,7 +89,11 @@ class TenantEmployeeController extends Controller {
     }
 
     public function create() {
-        $roles = VendorRole::where( 'vendor_id', vendorId() )->get();
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $roles = VendorRole::where( 'vendor_id', tenantOwnerId() )->get();
 
         return response()->json( [
             'status'      => 200,
@@ -77,6 +103,9 @@ class TenantEmployeeController extends Controller {
     }
 
     public function store( Request $request ) {
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
         if ( $response = $this->assertEmployeeFeatureAllowed() ) {
             return $response;
         }
@@ -87,7 +116,7 @@ class TenantEmployeeController extends Controller {
             'number'         => 'required|numeric|unique:users',
             'status'         => 'required|string|max:20',
             'password'       => 'required|confirmed|min:8',
-            'vendor_role_id' => 'required',
+            'vendor_role_id' => 'required|integer',
         ] );
 
         if ( $validator->fails() ) {
@@ -97,24 +126,24 @@ class TenantEmployeeController extends Controller {
             ] );
         }
 
+        if ( !$this->roleBelongsToOwner( (int) $request->vendor_role_id ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Invalid role for this tenant.',
+            ] );
+        }
+
         $user                    = new User();
         $user->name              = $request->name;
         $user->email             = $request->email;
         $user->email_verified_at = now();
-        $user->role_type         = 'tenant_user';
+        $user->role_type         = 'employee';
+        $user->vendor_role_id    = $request->vendor_role_id;
         $user->number            = $request->number;
         $user->status            = $request->status;
         $user->password          = Hash::make( $request->password );
         $user->uniqid            = uniqid();
-        $user->is_employee       = 'yes';
-        $user->vendor_id         = vendorId();
         $user->save();
-
-        $employee                 = new VendorEmployee();
-        $employee->user_id        = $user->id;
-        $employee->vendor_id      = vendorId();
-        $employee->vendor_role_id = $request->vendor_role_id;
-        $employee->save();
 
         return response()->json( [
             'status'  => 200,
@@ -123,26 +152,39 @@ class TenantEmployeeController extends Controller {
     }
 
     public function show( $id ) {
-        $employees = VendorEmployee::query()
-            ->with( ['user:id,name,email,number,uniqid,status'] )
-            ->with( ['vendor_role:id,name'] )
-            ->where( 'vendor_id', vendorId() )
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $employee = $this->employeeQuery()
+            ->with( 'vendorRole' )
             ->where( 'id', $id )
             ->first();
 
+        if ( !$employee ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Employee not found.',
+            ] );
+        }
+
         return response()->json( [
-            'status'    => 200,
-            'employees' => $employees,
+            'status'   => 200,
+            'employee' => $employee,
         ] );
     }
 
     public function update( Request $request, $id ) {
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
         $validator = Validator::make( $request->all(), [
             'name'           => 'required|string|max:255',
-            'email'          => 'required|string|email|max:255|unique:users,email,' . $request->user_id,
-            'number'         => 'required|string|max:20|unique:users,number,' . $request->user_id,
+            'email'          => 'required|string|email|max:255|unique:users,email,' . $id,
+            'number'         => 'required|string|max:20|unique:users,number,' . $id,
             'status'         => 'required|string|max:20',
-            'vendor_role_id' => 'required',
+            'vendor_role_id' => 'required|integer',
         ] );
 
         if ( $validator->fails() ) {
@@ -152,17 +194,20 @@ class TenantEmployeeController extends Controller {
             ] );
         }
 
-        $employee = VendorEmployee::where( 'vendor_id', vendorId() )->findOrFail( $id );
-        $employee->update( $request->only( [
-            'vendor_role_id',
-        ] ) );
+        if ( !$this->roleBelongsToOwner( (int) $request->vendor_role_id ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Invalid role for this tenant.',
+            ] );
+        }
 
-        $user = User::findOrFail( $employee->user_id );
-        $user->update( [
-            'name'   => $request->name,
-            'email'  => $request->email,
-            'number' => $request->number,
-            'status' => $request->status,
+        $employee = $this->employeeQuery()->findOrFail( $id );
+        $employee->update( [
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'number'         => $request->number,
+            'status'         => $request->status,
+            'vendor_role_id' => $request->vendor_role_id,
         ] );
 
         return response()->json( [
@@ -172,7 +217,11 @@ class TenantEmployeeController extends Controller {
     }
 
     public function delete( $id ) {
-        $employee = VendorEmployee::where( 'vendor_id', vendorId() )->find( $id );
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $employee = $this->employeeQuery()->find( $id );
 
         if ( !$employee ) {
             return response()->json( [
@@ -181,17 +230,14 @@ class TenantEmployeeController extends Controller {
             ] );
         }
 
-        $user = User::find( $employee->user_id );
-
-        if ( $user->id == Auth::id() ) {
+        if ( $employee->id == Auth::id() ) {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'You can\'t delete your self !',
             ] );
         }
 
-        User::find( $employee->user_id )->delete();
-        VendorEmployee::where( 'id', $id )->delete();
+        $employee->delete();
 
         return response()->json( [
             'status'  => 200,
@@ -200,7 +246,11 @@ class TenantEmployeeController extends Controller {
     }
 
     public function status( $id ) {
-        $user = User::where( 'vendor_id', vendorId() )->findOrFail( $id );
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $user         = $this->employeeQuery()->findOrFail( $id );
         $user->status = $user->status == 'active' ? 'deactive' : 'active';
         $user->save();
 
@@ -211,21 +261,38 @@ class TenantEmployeeController extends Controller {
     }
 
     public function permissions() {
-        $permission = VendorEmployee::where( 'user_id', Auth::id() )
-            ->select( 'id', 'user_id', 'vendor_id', 'vendor_role_id' )
-            ->with( 'vendor_role' )
-            ->first();
-        $isEmployee = User::find( Auth::id() )->is_employee;
+        $user = User::with( 'vendorRole' )->find( Auth::id() );
+
+        if ( $user->role_type === 'admin' ) {
+            return response()->json( [
+                'role_type'   => 'admin',
+                'permissions' => 'all',
+                'tenant_type' => tenant( 'type' ),
+            ] );
+        }
+
+        if ( $user->role_type !== 'employee' || !$user->vendorRole ) {
+            return response()->json( [
+                'role_type'   => $user->role_type,
+                'permissions' => null,
+                'tenant_type' => tenant( 'type' ),
+            ] );
+        }
 
         return response()->json( [
-            'isEmployee'  => $isEmployee,
-            'permission'  => $permission,
+            'role_type'   => 'employee',
+            'role'        => $user->vendorRole,
+            'permissions' => $user->vendorRole,
             'tenant_type' => tenant( 'type' ),
         ] );
     }
 
     public function indexRole() {
-        $roles = VendorRole::where( 'vendor_id', vendorId() )->get();
+        if ( !isTenantAdmin() && Auth::user()->role_type !== 'employee' ) {
+            return response()->json( ['status' => 403, 'message' => 'Access denied.'], 403 );
+        }
+
+        $roles = VendorRole::where( 'vendor_id', tenantOwnerId() )->get();
 
         return response()->json( [
             'status'      => 200,
@@ -235,12 +302,15 @@ class TenantEmployeeController extends Controller {
     }
 
     public function storeRole( Request $request ) {
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
         if ( $response = $this->assertEmployeeFeatureAllowed() ) {
             return $response;
         }
 
         $validator = Validator::make( $request->all(), [
-            'name' => 'required|unique:vendor_roles,name,NULL,id,vendor_id,' . vendorId(),
+            'name' => 'required|unique:vendor_roles,name,NULL,id,vendor_id,' . tenantOwnerId(),
         ] );
 
         if ( $validator->fails() ) {
@@ -252,7 +322,7 @@ class TenantEmployeeController extends Controller {
 
         $data              = $request->all();
         $data['user_id']   = Auth::id();
-        $data['vendor_id'] = vendorId();
+        $data['vendor_id'] = tenantOwnerId();
         VendorRole::create( $data );
 
         return response()->json( [
@@ -262,7 +332,7 @@ class TenantEmployeeController extends Controller {
     }
 
     public function showRole( $id ) {
-        $role = VendorRole::where( 'vendor_id', vendorId() )->findOrFail( $id );
+        $role = VendorRole::where( 'vendor_id', tenantOwnerId() )->findOrFail( $id );
 
         return response()->json( [
             'status' => 200,
@@ -271,12 +341,15 @@ class TenantEmployeeController extends Controller {
     }
 
     public function updateRole( Request $request, $id ) {
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
         if ( $response = $this->assertEmployeeFeatureAllowed() ) {
             return $response;
         }
 
         $validator = Validator::make( $request->all(), [
-            'name' => 'required|unique:vendor_roles,name,' . $id . ',id,vendor_id,' . vendorId(),
+            'name' => 'required|unique:vendor_roles,name,' . $id . ',id,vendor_id,' . tenantOwnerId(),
         ] );
 
         if ( $validator->fails() ) {
@@ -286,10 +359,10 @@ class TenantEmployeeController extends Controller {
             ] );
         }
 
-        $role = VendorRole::where( 'vendor_id', vendorId() )->findOrFail( $id );
+        $role = VendorRole::where( 'vendor_id', tenantOwnerId() )->findOrFail( $id );
         $data = $request->all();
         $data['user_id']   = Auth::id();
-        $data['vendor_id'] = vendorId();
+        $data['vendor_id'] = tenantOwnerId();
         $role->update( $data );
 
         return response()->json( [
@@ -299,7 +372,22 @@ class TenantEmployeeController extends Controller {
     }
 
     public function deleteRole( $id ) {
-        VendorRole::where( 'vendor_id', vendorId() )->findOrFail( $id )->delete();
+        if ( $denied = $this->assertAdmin() ) {
+            return $denied;
+        }
+
+        $inUse = User::where( 'role_type', 'employee' )
+            ->where( 'vendor_role_id', $id )
+            ->exists();
+
+        if ( $inUse ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Role is assigned to employees. Reassign or remove employees first.',
+            ] );
+        }
+
+        VendorRole::where( 'vendor_id', tenantOwnerId() )->findOrFail( $id )->delete();
 
         return response()->json( [
             'status'  => 200,

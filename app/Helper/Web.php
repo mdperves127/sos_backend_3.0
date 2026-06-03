@@ -282,6 +282,54 @@ function vendorId() {
     return Auth::user()->is_employee == 'yes' ? Auth::user()->vendor_id : Auth::id();
 }
 
+/**
+ * Tenant owner user id (admin). Employees resolve owner via their assigned role.
+ */
+function tenantOwnerId() {
+    $user = Auth::user();
+    if ( !$user ) {
+        return null;
+    }
+    if ( ( $user->role_type ?? null ) === 'admin' ) {
+        return $user->id;
+    }
+    if ( ( $user->role_type ?? null ) === 'employee' && $user->vendor_role_id ) {
+        $role = $user->relationLoaded( 'vendorRole' )
+            ? $user->vendorRole
+            : \App\Models\VendorRole::find( $user->vendor_role_id );
+        return $role?->vendor_id ?? $user->id;
+    }
+
+    return $user->id;
+}
+
+/**
+ * Whether the current tenant user is the tenant owner (admin).
+ */
+function isTenantAdmin(): bool {
+    return Auth::check() && ( Auth::user()->role_type ?? null ) === 'admin';
+}
+
+/**
+ * Check a permission flag from the employee's vendor_role. Admins always allowed.
+ */
+function tenantPermission( string $permission ): bool {
+    if ( !Auth::check() ) {
+        return false;
+    }
+    if ( isTenantAdmin() ) {
+        return true;
+    }
+    if ( ( Auth::user()->role_type ?? null ) !== 'employee' || !Auth::user()->vendor_role_id ) {
+        return false;
+    }
+    $role = Auth::user()->relationLoaded( 'vendorRole' )
+        ? Auth::user()->vendorRole
+        : \App\Models\VendorRole::find( Auth::user()->vendor_role_id );
+
+    return $role && (int) ( $role->{$permission} ?? 0 ) === 1;
+}
+
 function employee( $value ) {
     $employee = User::join( 'vendor_employees', 'users.id', 'vendor_employees.user_id' )
         ->select( 'users.id as userId', 'name', 'email', 'number', 'users.vendor_id as vendorId', 'vendor_employees.*' )

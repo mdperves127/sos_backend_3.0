@@ -44,6 +44,7 @@ class User extends Authenticatable {
         'password',
         'role_as',
         'role_type',
+        'vendor_role_id',
         'number',
         'image',
         'status',
@@ -74,6 +75,10 @@ class User extends Authenticatable {
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    function vendorRole() {
+        return $this->belongsTo( VendorRole::class, 'vendor_role_id' );
+    }
+
     function brands() {
         return $this->hasMany( Brand::class, 'user_id', 'id' );
     }
