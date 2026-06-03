@@ -140,7 +140,7 @@ class TenantAuthController extends Controller {
                         'last_seen' => $user->last_seen,
                         'role_type' => $user->role_type,
                         'vendor_role_id' => $user->vendor_role_id,
-                        'role'        => $user->role_type === 'employee' ? $user->vendorRole : null,
+                        // 'role'        => $user->role_type === 'employee' ? $user->vendorRole : null,
                         'usersubscription' => $usersubscription ? [
                             'id' => $usersubscription->id,
                             'subscription' => $usersubscription->subscription,
