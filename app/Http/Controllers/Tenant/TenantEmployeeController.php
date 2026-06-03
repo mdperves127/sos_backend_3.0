@@ -96,7 +96,9 @@ class TenantEmployeeController extends Controller {
     private function vendorRolePermissionKeys(): array {
         return [
             'products', 'add_product', 'all_product', 'active_product', 'pending_product',
-            'edit_product', 'reject_product', 'warehouse', 'unit', 'color', 'variation',
+            'edit_product', 'reject_product',
+            'category', 'sub_category', 'brand',
+            'warehouse', 'unit', 'color', 'variation',
             'order', 'add_order', 'all_order', 'hold_order', 'pending_order', 'receive_order',
             'delivery_processing', 'delivery_order', 'cancel_order', 'customer',
             'pos_sale', 'add_pos_sale', 'all_pos_sale', 'payment_history_pos_sale',
@@ -111,6 +113,7 @@ class TenantEmployeeController extends Controller {
             'balance', 'recharge', 'withdraw', 'recharge_history', 'create_support', 'all_support',
             'chat', 'employee', 'delivery_company', 'delivery_area', 'pickup_area',
             'stock_shortage_report', 'top_repeat_customer', 'sales_report_daily',
+            'cms_system', 'cms_home_page', 'cms_blog', 'cms_blog_category',
         ];
     }
 
@@ -140,13 +143,38 @@ class TenantEmployeeController extends Controller {
             $request->except( ['name', 'permissions', '_token', '_method'] ),
         ] );
 
+        $aliases = [
+            'subcategory' => 'sub_category',
+        ];
+
         foreach ( $this->vendorRolePermissionKeys() as $key ) {
             foreach ( $permissionSources as $source ) {
-                if ( !is_array( $source ) || !array_key_exists( $key, $source ) ) {
+                if ( !is_array( $source ) ) {
                     continue;
                 }
-                $data[$key] = $this->normalizeRolePermissionValue( $source[$key] );
-                break;
+
+                $value = null;
+                if ( array_key_exists( $key, $source ) ) {
+                    $value = $source[$key];
+                } else {
+                    $aliasKey = array_search( $key, $aliases, true );
+                    if ( $aliasKey !== false && array_key_exists( $aliasKey, $source ) ) {
+                        $value = $source[$aliasKey];
+                    }
+                }
+
+                if ( $value === null && !array_key_exists( $key, $data ) ) {
+                    continue;
+                }
+
+                if ( $value !== null ) {
+                    $data[$key] = $this->normalizeRolePermissionValue( $value );
+                    break;
+                }
+            }
+
+            if ( !array_key_exists( $key, $data ) && $request->has( $key ) ) {
+                $data[$key] = $this->normalizeRolePermissionValue( $request->input( $key ) );
             }
         }
 
