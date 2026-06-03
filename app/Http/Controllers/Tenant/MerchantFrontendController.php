@@ -31,6 +31,96 @@ use App\Models\ProductRating;
 
 class MerchantFrontendController extends Controller
 {
+    /**
+     * Optional ?limit= on product list endpoints. Returns null when omitted (keep current query size).
+     */
+    private function requestListLimit( Request $request ): ?int {
+        if ( !$request->has( 'limit' ) || $request->get( 'limit' ) === '' || $request->get( 'limit' ) === null ) {
+            return null;
+        }
+        $limit = (int) $request->get( 'limit' );
+
+        return $limit > 0 ? $limit : null;
+    }
+
+    /**
+     * Pagination page size: ?limit= overrides ?per_page=; default matches previous behavior.
+     */
+    private function requestPerPage( Request $request, int $default = 10 ): int {
+        $limit = $this->requestListLimit( $request );
+        if ( $limit !== null ) {
+            return $limit;
+        }
+        $perPage = (int) $request->get( 'per_page', $default );
+
+        return $perPage > 0 ? $perPage : $default;
+    }
+
+    private function applyListLimitToQuery( $query, Request $request ) {
+        $limit = $this->requestListLimit( $request );
+        if ( $limit !== null ) {
+            $query->limit( $limit );
+        }
+
+        return $query;
+    }
+
+    private function paginateProductCollection( Request $request, $products, int $defaultPerPage = 10 ): array {
+        $page    = max( 1, (int) $request->get( 'page', 1 ) );
+        $perPage = $this->requestPerPage( $request, $defaultPerPage );
+        $offset  = ( $page - 1 ) * $perPage;
+
+        $total             = $products->count();
+        $paginatedProducts = $products->slice( $offset, $perPage );
+        $lastPage          = (int) max( 1, ceil( $total / $perPage ) );
+
+        $path        = $request->url();
+        $queryParams = $request->query();
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
+            $queryParams['page'] = $pageNum;
+
+            return $path . '?' . http_build_query( $queryParams );
+        };
+
+        $links   = [];
+        $links[] = [
+            'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'label'  => '&laquo; Previous',
+            'active' => false,
+        ];
+
+        for ( $i = 1; $i <= $lastPage; $i++ ) {
+            $links[] = [
+                'url'    => $buildUrl( $i ),
+                'label'  => (string) $i,
+                'active' => $i == $page,
+            ];
+        }
+
+        $links[] = [
+            'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'label'  => 'Next &raquo;',
+            'active' => false,
+        ];
+
+        return [
+            'data'             => $paginatedProducts->values(),
+            'current_page'     => $page,
+            'per_page'         => $perPage,
+            'limit'            => $this->requestListLimit( $request ),
+            'total'            => $total,
+            'last_page'        => $lastPage,
+            'from'             => $total > 0 ? $offset + 1 : null,
+            'to'               => $total > 0 ? min( $offset + $perPage, $total ) : null,
+            'path'             => $path,
+            'first_page_url'   => $buildUrl( 1 ),
+            'last_page_url'    => $buildUrl( $lastPage ),
+            'prev_page_url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'links'            => $links,
+        ];
+    }
+
     private function buildProductReviewPayload( int $productId, ?string $connection = null ): array {
         $ratingQuery = visibleProductRatingsQuery( $connection )->where( 'product_id', $productId );
 
@@ -199,65 +289,10 @@ class MerchantFrontendController extends Controller
             $products = $productQuery->get();
         }
 
-        // Manual pagination
-        $page = (int) $request->get('page', 1);
-        $perPage = (int) $request->get('per_page', 10);
-        $offset = ($page - 1) * $perPage;
-
-        $total = $products->count();
-        $paginatedProducts = $products->slice($offset, $perPage);
-        $lastPage = (int) max(1, ceil($total / $perPage));
-
-        // Build pagination URLs
-        $path = $request->url();
-        $queryParams = $request->query();
-        $buildUrl = function ($pageNum) use ($path, $queryParams) {
-            $queryParams['page'] = $pageNum;
-            return $path . '?' . http_build_query($queryParams);
-        };
-
-        // Build links array
-        $links = [];
-        $links[] = [
-            'url' => $page > 1 ? $buildUrl($page - 1) : null,
-            'label' => '&laquo; Previous',
-            'active' => false
-        ];
-
-        for ($i = 1; $i <= $lastPage; $i++) {
-            $links[] = [
-                'url' => $buildUrl($i),
-                'label' => (string) $i,
-                'active' => $i == $page
-            ];
-        }
-
-        $links[] = [
-            'url' => $page < $lastPage ? $buildUrl($page + 1) : null,
-            'label' => 'Next &raquo;',
-            'active' => false
-        ];
-
-        // Build pagination response
-        $response = [
-            'data' => $paginatedProducts->values(),
-            'current_page' => $page,
-            'per_page' => $perPage,
-            'total' => $total,
-            'last_page' => $lastPage,
-            'from' => $total > 0 ? $offset + 1 : null,
-            'to' => $total > 0 ? min($offset + $perPage, $total) : null,
-            'path' => $path,
-            'first_page_url' => $buildUrl(1),
-            'last_page_url' => $buildUrl($lastPage),
-            'prev_page_url' => $page > 1 ? $buildUrl($page - 1) : null,
-            'next_page_url' => $page < $lastPage ? $buildUrl($page + 1) : null,
-            'links' => $links,
-        ];
-
-        return response()->json($response);
+        return response()->json( $this->paginateProductCollection( $request, $products ) );
     }
-    public function product($slug)
+
+    public function product( Request $request, $slug )
     {
         $reviewConnection = null;
 
@@ -334,9 +369,11 @@ class MerchantFrontendController extends Controller
                 ] );
             }
 
-            $related_products = Product::on( $connectionName )
+            $relatedQuery = Product::on( $connectionName )
                 ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                ->where('market_place_category_id', $product->market_place_category_id)->where('id', '!=', $product->id)->get();
+                ->where( 'market_place_category_id', $product->market_place_category_id )
+                ->where( 'id', '!=', $product->id );
+            $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
 
             if ( !$product ) {
                 return response()->json( [
@@ -365,7 +402,10 @@ class MerchantFrontendController extends Controller
                 ] );
             }
 
-            $related_products = Product::with('category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor')->where('category_id', $product->category_id)->where('id', '!=', $product->id)->get();
+            $relatedQuery = Product::with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                ->where( 'category_id', $product->category_id )
+                ->where( 'id', '!=', $product->id );
+            $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
         }
 
         $reviewPayload = $this->buildProductReviewPayload( $product->id, $reviewConnection );
@@ -710,26 +750,51 @@ class MerchantFrontendController extends Controller
         ]);
     }
 
-    public function productsFilter($sub_category_id) {
-        if ($sub_category_id != null) {
-            $products = Product::where('subcategory_id', $sub_category_id)->get();
+    public function productsFilter( Request $request, $sub_category_id ) {
+        $products = collect();
+
+        if ( $sub_category_id != null ) {
+            $query = Product::where( 'status', 'active' )
+                ->where( 'subcategory_id', $sub_category_id )
+                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
+
+            $listLimit = $this->requestListLimit( $request );
+            if ( $listLimit !== null ) {
+                $products = $this->applyListLimitToQuery( $query, $request )->get();
+            } else {
+                $products = $query->get();
+                if ( $request->filled( 'page' ) || $request->filled( 'per_page' ) ) {
+                    return response()->json( $this->paginateProductCollection( $request, $products ) );
+                }
+            }
         }
 
-        return response()->json($products);
+        return response()->json( $products );
     }
 
-    public function searchItem(Request $request, $search, $category_id = null) {
+    public function searchItem( Request $request, $search, $category_id = null ) {
         // category_id from route (search/item/term/2) or query string (?category_id=2)
-        $category_id = $category_id ?? $request->query('category_id');
+        $category_id = $category_id ?? $request->query( 'category_id' );
 
-        $query = Product::where('name', 'like', '%' . $search . '%');
+        $query = Product::where( 'status', 'active' )
+            ->where( 'name', 'like', '%' . $search . '%' )
+            ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
 
-        if ($category_id !== null && $category_id !== '' && (int) $category_id > 0) {
-            $query->where('category_id', (int) $category_id);
+        if ( $category_id !== null && $category_id !== '' && (int) $category_id > 0 ) {
+            $query->where( 'category_id', (int) $category_id );
+        }
+
+        $listLimit = $this->requestListLimit( $request );
+        if ( $listLimit !== null ) {
+            return response()->json( $this->applyListLimitToQuery( $query, $request )->get() );
         }
 
         $products = $query->get();
-        return response()->json($products);
+        if ( $request->filled( 'page' ) || $request->filled( 'per_page' ) ) {
+            return response()->json( $this->paginateProductCollection( $request, $products ) );
+        }
+
+        return response()->json( $products );
     }
 
     public function orders() {
