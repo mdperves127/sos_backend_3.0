@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void {
         Schema::table( 'users', function ( Blueprint $table ) {
+            if ( !Schema::hasColumn( 'users', 'role_type' ) ) {
+                $table->string( 'role_type', 32 )->nullable();
+            }
             if ( !Schema::hasColumn( 'users', 'number' ) ) {
                 $table->string( 'number' )->nullable();
             }
@@ -22,20 +25,11 @@ return new class extends Migration {
             }
         } );
 
-        // role_type: admin (owner), employee (staff with vendor_role permissions), tenant_user (customers)
         if ( Schema::hasColumn( 'users', 'role_type' ) ) {
-            DB::statement( "ALTER TABLE users MODIFY role_type VARCHAR(32) NULL" );
-        } else {
-            Schema::table( 'users', function ( Blueprint $table ) {
-                $table->string( 'role_type', 32 )->nullable()->after( 'password' );
-            } );
-        }
-
-        foreach ( ['is_employee', 'vendor_id', 'role_as'] as $column ) {
-            if ( Schema::hasColumn( 'users', $column ) ) {
-                Schema::table( 'users', function ( Blueprint $table ) use ( $column ) {
-                    $table->dropColumn( $column );
-                } );
+            try {
+                DB::statement( 'ALTER TABLE users MODIFY role_type VARCHAR(32) NULL' );
+            } catch ( \Throwable $e ) {
+                // Column may already be VARCHAR on some tenants.
             }
         }
     }
@@ -44,11 +38,6 @@ return new class extends Migration {
         Schema::table( 'users', function ( Blueprint $table ) {
             if ( Schema::hasColumn( 'users', 'vendor_role_id' ) ) {
                 $table->dropColumn( 'vendor_role_id' );
-            }
-            foreach ( ['number', 'status', 'email_verified_at'] as $column ) {
-                if ( Schema::hasColumn( 'users', $column ) ) {
-                    $table->dropColumn( $column );
-                }
             }
         } );
     }

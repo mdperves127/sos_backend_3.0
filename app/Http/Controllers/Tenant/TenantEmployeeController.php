@@ -9,9 +9,33 @@ use App\Models\VendorRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class TenantEmployeeController extends Controller {
+
+    private function assertEmployeeSchema(): ?\Illuminate\Http\JsonResponse {
+        if ( !Schema::hasColumn( 'users', 'vendor_role_id' ) ) {
+            return response()->json( [
+                'status'  => 500,
+                'message' => 'Employee module requires a database update. Please run: php artisan tenants:migrate',
+            ], 500 );
+        }
+
+        return null;
+    }
+
+    private function employeeSelectColumns(): array {
+        $columns = ['id', 'name', 'email', 'uniqid', 'status', 'role_type'];
+        if ( Schema::hasColumn( 'users', 'number' ) ) {
+            $columns[] = 'number';
+        }
+        if ( Schema::hasColumn( 'users', 'vendor_role_id' ) ) {
+            $columns[] = 'vendor_role_id';
+        }
+
+        return $columns;
+    }
 
     private function employeeQuery() {
         return User::query()
@@ -68,15 +92,86 @@ class TenantEmployeeController extends Controller {
             ->exists();
     }
 
+    /** @return list<string> */
+    private function vendorRolePermissionKeys(): array {
+        return [
+            'products', 'add_product', 'all_product', 'active_product', 'pending_product',
+            'edit_product', 'reject_product', 'warehouse', 'unit', 'color', 'variation',
+            'order', 'add_order', 'all_order', 'hold_order', 'pending_order', 'receive_order',
+            'delivery_processing', 'delivery_order', 'cancel_order', 'customer',
+            'pos_sale', 'add_pos_sale', 'all_pos_sale', 'payment_history_pos_sale',
+            'supplier', 'purchase', 'add_purchase', 'all_purchase', 'payment_history_purchase',
+            'barcode', 'barcode_generate', 'barcode_manage', 'setting', 'source', 'payment_method',
+            'affiliate_request', 'all_request', 'active_request', 'pending_request', 'reject_request',
+            'expired_request', 'return_list', 'purchase_return', 'sale_return', 'add_wastage', 'all_wastage',
+            'report', 'stock_report', 'sales_report', 'due_sales_report', 'purchase_report', 'warehouse_report',
+            'service_and_order', 'create_service', 'all_service', 'service_order',
+            'coupon', 'membership', 'advertiser', 'purchase_service', 'all_service_order',
+            'pending_service_order', 'progress_service_order', 'hold_service_order', 'cancel_service_order',
+            'balance', 'recharge', 'withdraw', 'recharge_history', 'create_support', 'all_support',
+            'chat', 'employee', 'delivery_company', 'delivery_area', 'pickup_area',
+            'stock_shortage_report', 'top_repeat_customer', 'sales_report_daily',
+        ];
+    }
+
+    private function normalizeRolePermissionValue( mixed $value ): ?int {
+        if ( is_array( $value ) ) {
+            return !empty( $value ) ? 1 : 0;
+        }
+        if ( $value === null || $value === '' ) {
+            return null;
+        }
+
+        return (int) $value ? 1 : 0;
+    }
+
+    private function buildVendorRolePayload( Request $request ): array {
+        $name = $request->input( 'name' );
+        if ( is_array( $name ) ) {
+            $name = reset( $name );
+        }
+
+        $data = [
+            'name' => (string) $name,
+        ];
+
+        $permissionSources = array_filter( [
+            is_array( $request->input( 'permissions' ) ) ? $request->input( 'permissions' ) : null,
+            $request->except( ['name', 'permissions', '_token', '_method'] ),
+        ] );
+
+        foreach ( $this->vendorRolePermissionKeys() as $key ) {
+            foreach ( $permissionSources as $source ) {
+                if ( !is_array( $source ) || !array_key_exists( $key, $source ) ) {
+                    continue;
+                }
+                $data[$key] = $this->normalizeRolePermissionValue( $source[$key] );
+                break;
+            }
+        }
+
+        if ( $request->has( 'invoice_generate' ) ) {
+            $invoice = $request->input( 'invoice_generate' );
+            $data['invoice_generate'] = is_array( $invoice )
+                ? ( !empty( $invoice ) ? '1' : '0' )
+                : (string) $invoice;
+        }
+
+        return $data;
+    }
+
     public function index() {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
+        }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
         }
 
         $employees = $this->employeeQuery()
             ->latest()
             ->with( 'vendorRole:id,name,vendor_id' )
-            ->get( ['id', 'name', 'email', 'number', 'uniqid', 'status', 'role_type', 'vendor_role_id'] );
+            ->get( $this->employeeSelectColumns() );
 
         $roles = VendorRole::where( 'vendor_id', tenantOwnerId() )->get();
 
@@ -92,6 +187,9 @@ class TenantEmployeeController extends Controller {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
         }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
+        }
 
         $roles = VendorRole::where( 'vendor_id', tenantOwnerId() )->get();
 
@@ -105,6 +203,9 @@ class TenantEmployeeController extends Controller {
     public function store( Request $request ) {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
+        }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
         }
         if ( $response = $this->assertEmployeeFeatureAllowed() ) {
             return $response;
@@ -155,6 +256,9 @@ class TenantEmployeeController extends Controller {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
         }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
+        }
 
         $employee = $this->employeeQuery()
             ->with( 'vendorRole' )
@@ -177,6 +281,9 @@ class TenantEmployeeController extends Controller {
     public function update( Request $request, $id ) {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
+        }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
         }
 
         $validator = Validator::make( $request->all(), [
@@ -220,6 +327,9 @@ class TenantEmployeeController extends Controller {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
         }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
+        }
 
         $employee = $this->employeeQuery()->find( $id );
 
@@ -249,6 +359,9 @@ class TenantEmployeeController extends Controller {
         if ( $denied = $this->assertAdmin() ) {
             return $denied;
         }
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
+        }
 
         $user         = $this->employeeQuery()->findOrFail( $id );
         $user->status = $user->status == 'active' ? 'deactive' : 'active';
@@ -261,6 +374,10 @@ class TenantEmployeeController extends Controller {
     }
 
     public function permissions() {
+        if ( $schema = $this->assertEmployeeSchema() ) {
+            return $schema;
+        }
+
         $user = User::with( 'vendorRole' )->find( Auth::id() );
 
         if ( $user->role_type === 'admin' ) {
@@ -310,7 +427,7 @@ class TenantEmployeeController extends Controller {
         }
 
         $validator = Validator::make( $request->all(), [
-            'name' => 'required|unique:vendor_roles,name,NULL,id,vendor_id,' . tenantOwnerId(),
+            'name' => 'required|string|max:255|unique:vendor_roles,name,NULL,id,vendor_id,' . tenantOwnerId(),
         ] );
 
         if ( $validator->fails() ) {
@@ -320,8 +437,8 @@ class TenantEmployeeController extends Controller {
             ] );
         }
 
-        $data              = $request->all();
-        $data['user_id']   = Auth::id();
+        $data              = $this->buildVendorRolePayload( $request );
+        $data['user_id']   = (string) Auth::id();
         $data['vendor_id'] = tenantOwnerId();
         VendorRole::create( $data );
 
@@ -349,7 +466,7 @@ class TenantEmployeeController extends Controller {
         }
 
         $validator = Validator::make( $request->all(), [
-            'name' => 'required|unique:vendor_roles,name,' . $id . ',id,vendor_id,' . tenantOwnerId(),
+            'name' => 'required|string|max:255|unique:vendor_roles,name,' . $id . ',id,vendor_id,' . tenantOwnerId(),
         ] );
 
         if ( $validator->fails() ) {
@@ -360,8 +477,8 @@ class TenantEmployeeController extends Controller {
         }
 
         $role = VendorRole::where( 'vendor_id', tenantOwnerId() )->findOrFail( $id );
-        $data = $request->all();
-        $data['user_id']   = Auth::id();
+        $data = $this->buildVendorRolePayload( $request );
+        $data['user_id']   = (string) Auth::id();
         $data['vendor_id'] = tenantOwnerId();
         $role->update( $data );
 
