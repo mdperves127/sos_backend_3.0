@@ -73,6 +73,7 @@ use App\Http\Controllers\Tenant\BannerController;
 use App\Http\Controllers\Tenant\ConversationController as TenantConversationController;
 use App\Http\Controllers\Tenant\ContentServiceController;
 use App\Http\Controllers\Tenant\OfferController;
+use App\Http\Controllers\Tenant\TenantEmployeeController;
 use App\Http\Controllers\BuySubscription;
 use App\Http\Controllers\Tenant\NcategoryController;
 use App\Http\Controllers\Tenant\NewsController;
@@ -514,6 +515,26 @@ Route::middleware( [
             Route::get( 'sales-report-product-id', [ReportController::class, 'getProductIdsFromSalesDetails'] );
             Route::get( 'sales-report-daily-product-wise', [ReportController::class, 'salesReportDailyProductWise'] );
 
+        } );
+
+        // Employee & role-permission (merchant and dropshipper tenants)
+        Route::prefix( 'tenant-employee' )->group( function () {
+            Route::get( 'manage', [TenantEmployeeController::class, 'index'] );
+            Route::get( 'create', [TenantEmployeeController::class, 'create'] );
+            Route::post( 'store', [TenantEmployeeController::class, 'store'] );
+            Route::get( 'show/{id}', [TenantEmployeeController::class, 'show'] );
+            Route::post( 'update/{id}', [TenantEmployeeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [TenantEmployeeController::class, 'delete'] );
+            Route::get( 'status/{id}', [TenantEmployeeController::class, 'status'] );
+            Route::get( 'permissions', [TenantEmployeeController::class, 'permissions'] );
+        } );
+
+        Route::prefix( 'tenant-role-permission' )->group( function () {
+            Route::get( 'manage', [TenantEmployeeController::class, 'indexRole'] );
+            Route::post( 'store', [TenantEmployeeController::class, 'storeRole'] );
+            Route::get( 'show/{id}', [TenantEmployeeController::class, 'showRole'] );
+            Route::post( 'update/{id}', [TenantEmployeeController::class, 'updateRole'] );
+            Route::delete( 'delete/{id}', [TenantEmployeeController::class, 'deleteRole'] );
         } );
 
 

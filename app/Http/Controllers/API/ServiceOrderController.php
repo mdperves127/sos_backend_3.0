@@ -23,7 +23,7 @@ class ServiceOrderController extends Controller
     public function index()
     {
         $serviceOrder = ServiceOrder::query()
-            ->where(['user_id' => Auth::id()])
+            ->where(['tenant_id' => tenant()->id])
             ->when(request('search') != '', function ($query) {
                 $query->where('trxid', 'like', '%' . request('search') . '%');
             })
@@ -50,7 +50,7 @@ class ServiceOrderController extends Controller
     public function store(StoreServiceOrderRequest $request)
     {
         $validateData = $request->validated();
-        return    ServiceService::store($validateData);
+        return ServiceService::store($validateData);
     }
 
     /**
