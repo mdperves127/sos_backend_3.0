@@ -74,6 +74,7 @@ use App\Http\Controllers\Tenant\ConversationController as TenantConversationCont
 use App\Http\Controllers\Tenant\ContentServiceController;
 use App\Http\Controllers\Tenant\OfferController;
 use App\Http\Controllers\Tenant\MerchantDashboardController;
+use App\Http\Controllers\Tenant\TenantDashboardController;
 use App\Http\Controllers\Tenant\TenantEmployeeController;
 use App\Http\Controllers\Tenant\ProductReviewController;
 use App\Http\Controllers\BuySubscription;
@@ -179,7 +180,7 @@ Route::middleware( [
 
         Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
 
-        Route::get( 'tenant-dashboard/statistics', [MerchantDashboardController::class, 'statistics'] );
+        Route::get( 'tenant-dashboard/statistics', [TenantDashboardController::class, 'statistics'] );
 
         // Marketplace routes for category, subcategory & brand
 
