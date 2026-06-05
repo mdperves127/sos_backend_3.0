@@ -19,9 +19,7 @@ class AdminStatisticsController extends Controller {
     }
 
     public function users() {
-        return $this->responseData( [
-            'userTypeGroups' => $this->statistics->userTypeGroups(),
-        ] );
+        return $this->responseData( $this->statistics->usersStatistics() );
     }
 
     public function products() {

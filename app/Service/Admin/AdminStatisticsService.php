@@ -229,6 +229,49 @@ class AdminStatisticsService {
         ];
     }
 
+    private function totalUsersCount(): int {
+        $merchant = $this->tenantStatusCounts( 'merchant' );
+        $dropship = $this->tenantStatusCounts( 'dropshipper' );
+        $users    = $this->userStatusCounts();
+
+        return $merchant['total'] + $dropship['total'] + $users['total'];
+    }
+
+    public function registrationTrend( int $months = 12 ): array {
+        $now   = Carbon::now();
+        $trend = [];
+
+        for ( $i = $months - 1; $i >= 0; $i-- ) {
+            $monthStart = $now->copy()->subMonths( $i )->startOfMonth();
+            $monthEnd   = $now->copy()->subMonths( $i )->endOfMonth();
+
+            $tenantCount = (int) Tenant::query()
+                ->whereIn( 'type', ['merchant', 'dropshipper'] )
+                ->whereBetween( 'created_at', [$monthStart, $monthEnd] )
+                ->count();
+
+            $userCount = (int) User::query()
+                ->where( 'role_as', 4 )
+                ->whereBetween( 'created_at', [$monthStart, $monthEnd] )
+                ->count();
+
+            $trend[] = [
+                'month' => $monthStart->format( 'M' ),
+                'value' => $tenantCount + $userCount,
+            ];
+        }
+
+        return $trend;
+    }
+
+    public function usersStatistics(): array {
+        return [
+            'total'              => $this->totalUsersCount(),
+            'userTypeGroups'     => $this->userTypeGroups(),
+            'registrationTrend'  => $this->registrationTrend(),
+        ];
+    }
+
     public function userTypeGroups(): array {
         $merchant = $this->tenantStatusCounts( 'merchant' );
         $dropship = $this->tenantStatusCounts( 'dropshipper' );
