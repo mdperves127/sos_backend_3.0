@@ -64,7 +64,16 @@ class AamarpayController extends Controller
         $info = $data->info;
 
         // PaymentHistoryService::store($data->trxid, $response['amount'], 'Ammarpay', 'Payment Checkout', '-', '', $info['userid']);
-        ProductCheckoutService::store($info['cartid'], $info['productid'], $info['totalqty'], $info['userid'], $info['datas']);
+        ProductCheckoutService::store(
+            $info['cartid'],
+            $info['productid'],
+            $info['totalqty'],
+            $info['userid'],
+            $info['datas'],
+            'aamarpay',
+            $info['tenant_id'] ?? null,
+            $info['placing_tenant_id'] ?? null
+        );
 
         $user = User::find($info['userid']);
         $path = paymentredirect($user->role_as);

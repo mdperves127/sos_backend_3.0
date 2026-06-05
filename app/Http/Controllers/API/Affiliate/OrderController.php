@@ -102,7 +102,16 @@ class OrderController extends Controller {
             }
             $currentTenant->decrement( 'balance', $advancepayment );
 
-            return ProductCheckoutService::store( $cart->id, $product->id, $totalqty, $user->id, request( 'datas' ), 'aamarpay', $cart->tenant_id );
+            return ProductCheckoutService::store(
+                $cart->id,
+                $product->id,
+                $totalqty,
+                $user->id,
+                request( 'datas' ),
+                'aamarpay',
+                $cart->tenant_id,
+                $currentTenant->id
+            );
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
             PaymentStore::create( [
@@ -113,12 +122,13 @@ class OrderController extends Controller {
                 'order_media'     => 'Affiliator',
                 'payment_type'    => 'checkout',
                 'info'            => [
-                    'cartid'    => $cart->id,
-                    'productid' => $product->id,
-                    'totalqty'  => $totalqty,
-                    'userid'    => $user->id,
-                    'datas'     => request( 'datas' ),
-                    'tenant_id' => $cart->tenant_id,
+                    'cartid'            => $cart->id,
+                    'productid'         => $product->id,
+                    'totalqty'          => $totalqty,
+                    'userid'            => $user->id,
+                    'datas'             => request( 'datas' ),
+                    'tenant_id'         => $cart->tenant_id,
+                    'placing_tenant_id' => $currentTenant->id,
                 ],
                 ] );
             $successurl = url( 'api/aaparpay/product-checkout-success' );

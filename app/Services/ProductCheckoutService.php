@@ -21,11 +21,11 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductCheckoutService {
 
-    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $tenantId = null ) {
+    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $merchantTenantId = null, $placingTenantId = null ) {
 
         try {
-            // Get tenant_id from parameter or from cart
-            if ( !$tenantId ) {
+            // Merchant tenant = where the product/order row lives (cart->tenant_id).
+            if ( !$merchantTenantId ) {
                 $cartTemp = Cart::find( $cartId );
                 if ( !$cartTemp || !$cartTemp->tenant_id ) {
                     return response()->json( [
@@ -33,10 +33,14 @@ class ProductCheckoutService {
                         'message' => 'Cart not found or missing tenant information',
                     ] );
                 }
-                $tenantId = $cartTemp->tenant_id;
+                $merchantTenantId = $cartTemp->tenant_id;
             }
 
-            $tenant = Tenant::on('mysql')->find( $tenantId );
+            // Placing tenant = who created the order (dropshipper tenant on affiliate checkout).
+            $resolvedPlacingTenantId = $placingTenantId
+                ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+
+            $tenant = Tenant::on('mysql')->find( $merchantTenantId );
             if ( !$tenant ) {
                 return response()->json( [
                     'status'  => 400,
@@ -76,7 +80,7 @@ class ProductCheckoutService {
 
             // Get product from product's tenant database (request tenant - cart->tenant_id)
             $product = CrossTenantQueryService::getSingleRecordFromTenant(
-                $tenantId,
+                $merchantTenantId,
                 Product::class,
                 function ( $query ) use ( $productid ) {
                     $query->where( 'id', $productid );
@@ -225,7 +229,9 @@ class ProductCheckoutService {
                 $order->totaladvancepayment = $totaladvancepayment;
                 $order->is_unlimited        = $is_unlimited;
                 $order->delivery_charge     = $deliveryCharge;
-                $order->tenant_id           = $tenant->id;
+                if ( $resolvedPlacingTenantId ) {
+                    $order->tenant_id = $resolvedPlacingTenantId;
+                }
                 $order->save();
 
                 // Check courier using CrossTenantQueryService
@@ -270,7 +276,7 @@ class ProductCheckoutService {
                     if ( $order ) {
                         // Create OrderDeliveryToCourier using CrossTenantQueryService
                         CrossTenantQueryService::saveToTenant(
-                            $tenantId,
+                            $merchantTenantId,
                             OrderDeliveryToCourier::class,
                             function ( $model ) use ( $order, $product, $userid, $data, $isPathao, $isRedx, $defaultCourier ) {
                                 $model->order_id            = $order->id;
@@ -302,7 +308,7 @@ class ProductCheckoutService {
                 if ( $totaladvancepayment > 0 && $order ) {
                     // Create AdvancePayment using CrossTenantQueryService
                     CrossTenantQueryService::saveToTenant(
-                        $tenantId,
+                        $merchantTenantId,
                         AdvancePayment::class,
                         function ( $model ) use ( $product, $userid, $totalqty, $totaladvancepayment, $order ) {
                             $model->vendor_id    = $product->user_id;
@@ -318,7 +324,7 @@ class ProductCheckoutService {
                 if ( $order ) {
                     // Create PendingBalance using CrossTenantQueryService
                     CrossTenantQueryService::saveToTenant(
-                        $tenantId,
+                        $merchantTenantId,
                         PendingBalance::class,
                         function ( $model ) use ( $userid, $product, $order, $totalqty, $afi_amount ) {
                             $model->affiliator_id = $userid;
@@ -334,10 +340,16 @@ class ProductCheckoutService {
 
             $paymentHistoryContext = [];
 
-            if ( function_exists( 'tenant' ) && tenant() ) {
+            if ( $resolvedPlacingTenantId ) {
                 $paymentHistoryContext = [
                     'entity_type' => 'tenant',
-                    'tenant_id'   => $tenantId,
+                    'tenant_id'   => $resolvedPlacingTenantId,
+                    'user_id'     => $userid > 0 ? $userid : null,
+                ];
+            } elseif ( function_exists( 'tenant' ) && tenant() ) {
+                $paymentHistoryContext = [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => tenant()->id,
                     'user_id'     => $userid > 0 ? $userid : null,
                 ];
             }
