@@ -17,13 +17,18 @@ class CrossTenantQueryService
      * @param array $selectFields Fields to select from the model
      * @return Collection
      */
-    public static function queryAllTenants(string $modelClass, callable $queryCallback, array $selectFields = ['*']): Collection
-    {
-        $results = collect();
-        $model = new $modelClass;
+    public static function queryAllTenants( string $modelClass, callable $queryCallback, array $selectFields = ['*'] ): Collection {
+        return self::queryTenantsByType( 'merchant', $modelClass, $queryCallback, $selectFields );
+    }
 
-        // Get all tenants (vendors/merchants)
-        $tenants = Tenant::on( 'mysql' )->where( 'type', 'merchant' )->get();
+    /**
+     * Query a model across all tenant databases for a given tenant type.
+     */
+    public static function queryTenantsByType( string $tenantType, string $modelClass, callable $queryCallback, array $selectFields = ['*'] ): Collection {
+        $results = collect();
+        $model   = new $modelClass;
+
+        $tenants = Tenant::on( 'mysql' )->where( 'type', $tenantType )->get();
 
         \Log::info('CrossTenantQuery: Found tenants', ['count' => $tenants->count()]);
 
@@ -88,6 +93,10 @@ class CrossTenantQueryService
         \Log::info('CrossTenantQuery: Total results', ['count' => $results->count()]);
 
         return $results;
+    }
+
+    public static function queryAllDropshipperTenants( string $modelClass, callable $queryCallback, array $selectFields = ['*'] ): Collection {
+        return self::queryTenantsByType( 'dropshipper', $modelClass, $queryCallback, $selectFields );
     }
 
     /**

@@ -80,7 +80,7 @@ class StatisticsController extends Controller
     function affiliaterequest()
     {
         // Query ProductDetails from all merchant tenant databases
-        $allProductDetails = CrossTenantQueryService::queryAllTenants(
+        $allProductDetails = CrossTenantQueryService::queryAllDropshipperTenants(
             ProductDetails::class,
             function ( $query ) {
                 // No additional filtering needed, we'll count in memory

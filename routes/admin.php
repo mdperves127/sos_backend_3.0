@@ -48,6 +48,7 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\CouponRequestController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\RechargeController;
+use App\Http\Controllers\API\Admin\AdminStatisticsController;
 use App\Http\Controllers\API\StatisticsController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\UserController;
@@ -337,6 +338,22 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'manage-service-statistics', [StatisticsController::class, 'manageservice'] );
         Route::get( 'service-order-statistics', [StatisticsController::class, 'serviceorder'] );
         Route::get( 'advertise-order-statistics', [StatisticsController::class, 'advertise'] );
+
+        Route::prefix( 'statistics' )->group( function () {
+            Route::get( 'module-overview', [AdminStatisticsController::class, 'moduleOverview'] );
+            Route::get( 'users', [AdminStatisticsController::class, 'users'] );
+            Route::get( 'products', [AdminStatisticsController::class, 'products'] );
+            Route::get( 'requests', [AdminStatisticsController::class, 'requests'] );
+            Route::get( 'orders', [AdminStatisticsController::class, 'orders'] );
+            Route::get( 'services', [AdminStatisticsController::class, 'services'] );
+            Route::get( 'service-orders', [AdminStatisticsController::class, 'serviceOrders'] );
+            Route::get( 'advertise', [AdminStatisticsController::class, 'advertise'] );
+            Route::get( 'coupons', [AdminStatisticsController::class, 'coupons'] );
+            Route::get( 'membership', [AdminStatisticsController::class, 'membership'] );
+            Route::get( 'subscription', [AdminStatisticsController::class, 'subscription'] );
+            Route::get( 'support', [AdminStatisticsController::class, 'support'] );
+            Route::get( 'withdraw', [AdminStatisticsController::class, 'withdraw'] );
+        } );
 
         Route::delete( 'remove-rating', [ProductController::class, 'removeRating'] );
 
