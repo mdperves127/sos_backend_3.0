@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductDetails;
+use App\Models\UserSubscription;
 use App\Services\CrossTenantQueryService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -90,20 +91,34 @@ class DropshipperDashboardController extends Controller {
         return 'pending';
     }
 
-    private function expiredProductCount(): int {
-        return (int) $this->productDetailsQuery()
-            ->where( 'status', 1 )
-            ->whereHas( 'vendor', function ( $query ) {
-                $query->whereHas( 'usersubscription', function ( $query ) {
-                    $query->where( function ( $query ) {
-                        $query->whereHas( 'subscription', fn( $q ) => $q->where( 'plan_type', 'freemium' ) )
-                            ->where( 'expire_date', '<', now() );
-                    } )->orWhere( function ( $query ) {
-                        $query->whereHas( 'subscription', fn( $q ) => $q->where( 'plan_type', '!=', 'freemium' ) )
-                            ->where( 'expire_date', '<', now()->subMonth() );
-                    } );
+    private function expiredMerchantTenantIds(): array {
+        return UserSubscription::query()
+            ->whereNotNull( 'tenant_id' )
+            ->where( function ( $query ) {
+                $query->where( function ( $q ) {
+                    $q->whereHas( 'subscription', fn( $s ) => $s->where( 'plan_type', 'freemium' ) )
+                        ->where( 'expire_date', '<', now() );
+                } )->orWhere( function ( $q ) {
+                    $q->whereHas( 'subscription', fn( $s ) => $s->where( 'plan_type', '!=', 'freemium' ) )
+                        ->where( 'expire_date', '<', now()->subMonth() );
                 } );
             } )
+            ->pluck( 'tenant_id' )
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function expiredProductCount(): int {
+        $expiredMerchantTenantIds = $this->expiredMerchantTenantIds();
+
+        if ( $expiredMerchantTenantIds === [] ) {
+            return 0;
+        }
+
+        return (int) $this->productDetailsQuery()
+            ->where( 'status', 1 )
+            ->whereIn( 'tenant_id', $expiredMerchantTenantIds )
             ->count();
     }
 
