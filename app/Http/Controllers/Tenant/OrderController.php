@@ -370,7 +370,9 @@ class OrderController extends Controller
             } )->all();
         }
 
-        $cart = $request->filled( 'cart_id' ) ? Cart::where( 'id', $request->cart_id )->first() : null;
+        $cart = $request->filled( 'cart_id' )
+            ? Cart::with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )->find( $request->cart_id )
+            : null;
         $tenantId = $cart?->tenant_id ?: $request->tenant_id ?: tenant( 'id' );
 
         if ( !$tenantId && !$this->resolveGuestProductId( $request, $cart, $tenantId, $requestDatas ) ) {
@@ -413,23 +415,18 @@ class OrderController extends Controller
     }
 
     private function buildShippingPayloadForCart( Cart $cart, array $shippingTemplate ): array {
+        if ( !$cart->relationLoaded( 'cartDetails' ) ) {
+            $cart->load( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] );
+        }
+
         $variants = $cart->cartDetails
             ->map( function ( $detail ) {
                 return array_filter( [
                     'variant_id' => $detail->variant_id,
                     'qty'        => (int) $detail->qty,
-                    'color'      => $detail->color ? [
-                        'id'   => $detail->color->id,
-                        'name' => $detail->color->name,
-                    ] : null,
-                    'size'       => $detail->size ? [
-                        'id'   => $detail->size->id,
-                        'name' => $detail->size->name,
-                    ] : null,
-                    'unit'       => $detail->unit ? [
-                        'id'        => $detail->unit->id,
-                        'unit_name' => $detail->unit->unit_name,
-                    ] : null,
+                    'color'      => $this->cartDetailColorPayload( $detail ),
+                    'size'       => $this->cartDetailSizePayload( $detail ),
+                    'unit'       => $this->cartDetailUnitPayload( $detail ),
                 ], fn( $value ) => $value !== null );
             } )
             ->filter( fn( $variant ) => (int) ( $variant['qty'] ?? 0 ) > 0 )
@@ -443,6 +440,57 @@ class OrderController extends Controller
         return array_merge( $shippingTemplate, [
             'variants' => $variants,
         ] );
+    }
+
+    private function cartDetailColorPayload( $detail ): ?array {
+        if ( $detail->relationLoaded( 'color' ) ) {
+            $color = $detail->getRelation( 'color' );
+
+            if ( is_object( $color ) ) {
+                return [
+                    'id'   => $color->id,
+                    'name' => $color->name,
+                ];
+            }
+        }
+
+        $colorId = $detail->getRawOriginal( 'color' );
+
+        return $colorId ? ['id' => (int) $colorId] : null;
+    }
+
+    private function cartDetailSizePayload( $detail ): ?array {
+        if ( $detail->relationLoaded( 'size' ) ) {
+            $size = $detail->getRelation( 'size' );
+
+            if ( is_object( $size ) ) {
+                return [
+                    'id'   => $size->id,
+                    'name' => $size->name,
+                ];
+            }
+        }
+
+        $sizeId = $detail->getRawOriginal( 'size' );
+
+        return $sizeId ? ['id' => (int) $sizeId] : null;
+    }
+
+    private function cartDetailUnitPayload( $detail ): ?array {
+        if ( $detail->relationLoaded( 'unit' ) ) {
+            $unit = $detail->getRelation( 'unit' );
+
+            if ( is_object( $unit ) ) {
+                return [
+                    'id'        => $unit->id,
+                    'unit_name' => $unit->unit_name,
+                ];
+            }
+        }
+
+        $unitId = $detail->getRawOriginal( 'unit_id' );
+
+        return $unitId ? ['id' => (int) $unitId] : null;
     }
 
     private function createGuestCheckoutCart( Request $request, $product, $tenantId, $datas, ?string $purchaseType = null ) {
