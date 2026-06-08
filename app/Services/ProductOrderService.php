@@ -702,7 +702,7 @@ class ProductOrderService {
             $product      = Product::find( $order->product_id );
             $product->qty = ( $product->qty + $balance->qty );
 
-            $variants = json_decode( $order->variants );
+            $variants = is_array( $order->variants ) ? $order->variants : json_decode( $order->variants );
             $data     = collect( $variants )->pluck( 'qty', 'variant_id' );
 
             $result = [];

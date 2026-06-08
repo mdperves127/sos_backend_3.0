@@ -219,7 +219,7 @@ class ProductCheckoutService {
                 $order->email               = $data['email'];
                 $order->city                = $data['city'];
                 $order->address             = $data['address'];
-                $order->variants            = json_encode( $data['variants'] );
+                $order->variants            = $data['variants'];
                 $order->afi_amount          = $afi_amount;
                 $order->product_amount      = $totalAmount;
                 $order->due_amount          = $totalDue;
