@@ -15,180 +15,438 @@ use App\Services\ProductCheckoutService;
 class OrderController extends Controller
 {
     function guestStore( Request $request ) {
-        $datas = collect( $request->input( 'datas', [] ) )->map( function ( $data ) {
+        $requestDatas = $this->normalizeGuestDatas( $request );
+
+        if ( $requestDatas->isEmpty() ) {
+            return responsejson( 'Checkout data is required for guest checkout.', 'fail' );
+        }
+
+        $shippingTemplate = $requestDatas->first();
+        $checkoutEntries = $this->resolveGuestCheckoutEntries( $request, $requestDatas, $shippingTemplate );
+
+        if ( $checkoutEntries === [] ) {
+            return responsejson( 'Product information is missing for guest checkout.', 'fail' );
+        }
+
+        $requestedCartId = (int) $request->input( 'cart_id', 0 );
+        $paymentType = $request->input( 'payment_type', 'aamarpay' );
+        $placed = 0;
+        $failed = [];
+
+        foreach ( $checkoutEntries as $entry ) {
+            $cart = $entry['cart'];
+            $tenantId = $entry['tenant_id'];
+            $entryDatas = $entry['datas'];
+            $createdGuestCart = false;
+
+            if ( !$tenantId ) {
+                $failed[] = [
+                    'cart_id' => $cart?->id,
+                    'message' => 'Missing tenant information',
+                ];
+                continue;
+            }
+
+            if ( !$cart ) {
+                $productId = $this->resolveGuestProductId( $request, null, $tenantId, $entryDatas );
+
+                if ( !$productId ) {
+                    $failed[] = [
+                        'message' => 'Product information is missing for guest checkout.',
+                    ];
+                    continue;
+                }
+
+                $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                    $tenantId,
+                    Product::class,
+                    fn( $query ) => $query->where( ['id' => $productId, 'status' => 'active'] )
+                );
+
+                if ( !$product ) {
+                    $failed[] = [
+                        'message' => 'Product currently not available',
+                    ];
+                    continue;
+                }
+
+                $guestCart = $this->createGuestCheckoutCart(
+                    $request,
+                    $product,
+                    $tenantId,
+                    $entryDatas,
+                    $entry['purchase_type'] ?? null
+                );
+
+                if ( isset( $guestCart['error'] ) ) {
+                    $failed[] = [
+                        'message' => $guestCart['error'],
+                    ];
+                    continue;
+                }
+
+                $cart = $guestCart['cart'];
+                $createdGuestCart = true;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $tenantId,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( !$product ) {
+                if ( $createdGuestCart ) {
+                    $cart->delete();
+                }
+
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Product currently not available',
+                ];
+                continue;
+            }
+
+            $checkoutDatas = $createdGuestCart
+                ? $entryDatas->toArray()
+                : $this->resolveGuestCheckoutDatasForCart(
+                    $cart,
+                    $requestedCartId,
+                    $requestDatas,
+                    $shippingTemplate
+                );
+
+            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
+            if ( $totalqty < 1 ) {
+                $totalqty = (int) ( $cart->product_qty ?? 0 );
+            }
+
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
+            if ( $validationError ) {
+                if ( $createdGuestCart ) {
+                    $cart->delete();
+                }
+
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => $validationError,
+                ];
+                continue;
+            }
+
+            $response = ProductCheckoutService::store(
+                $cart->id,
+                $product->id,
+                $totalqty,
+                0,
+                $checkoutDatas,
+                $paymentType,
+                $tenantId
+            );
+
+            $payload = method_exists( $response, 'getContent' )
+                ? json_decode( $response->getContent(), true )
+                : null;
+
+            if ( ( $payload['status'] ?? null ) === 200 ) {
+                $placed++;
+                continue;
+            }
+
+            if ( $createdGuestCart ) {
+                $cart->delete();
+            }
+
+            $failed[] = [
+                'cart_id' => $cart->id,
+                'message' => $payload['message'] ?? 'Checkout failed',
+            ];
+        }
+
+        if ( $placed === 0 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $failed[0]['message'] ?? 'Checkout failed',
+                'failed'  => $failed,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'        => 200,
+            'message'       => $placed === 1
+                ? 'Checkout successfully!'
+                : $placed . ' orders placed successfully',
+            'orders_placed' => $placed,
+            'failed'        => $failed,
+        ] );
+    }
+
+    function store( ProductRequest $request ) {
+        $user = auth()->user();
+        $requestDatas = $request->input( 'datas', [] );
+        $shippingTemplate = $requestDatas[0] ?? [];
+        $paymentType = $request->input( 'payment_type', 'aamarpay' );
+
+        $carts = Cart::query()
+            ->where( 'user_id', $user->id )
+            ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
+            ->get();
+
+        if ( $carts->isEmpty() ) {
+            return responsejson( 'Your cart is empty.', 'fail' );
+        }
+
+        $requestedCart = $carts->firstWhere( 'id', (int) $request->cart_id );
+        if ( !$requestedCart ) {
+            return responsejson( 'Cart not found or missing tenant information', 'fail' );
+        }
+
+        $placed = 0;
+        $failed = [];
+
+        foreach ( $carts as $cart ) {
+            if ( !$cart->tenant_id ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Missing tenant information',
+                ];
+                continue;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $cart->tenant_id,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( !$product ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Product currently not available',
+                ];
+                continue;
+            }
+
+            $checkoutDatas = $this->resolveCheckoutDatasForCart(
+                $cart,
+                (int) $request->cart_id,
+                $requestDatas,
+                $shippingTemplate
+            );
+
+            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
+            if ( $totalqty < 1 ) {
+                $totalqty = (int) ( $cart->product_qty ?? 0 );
+            }
+
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
+            if ( $validationError ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => $validationError,
+                ];
+                continue;
+            }
+
+            $response = ProductCheckoutService::store(
+                $cart->id,
+                $product->id,
+                $totalqty,
+                $user->id,
+                $checkoutDatas,
+                $paymentType,
+                $cart->tenant_id
+            );
+
+            $payload = method_exists( $response, 'getContent' )
+                ? json_decode( $response->getContent(), true )
+                : null;
+
+            if ( ( $payload['status'] ?? null ) === 200 ) {
+                $placed++;
+                continue;
+            }
+
+            $failed[] = [
+                'cart_id' => $cart->id,
+                'message' => $payload['message'] ?? 'Checkout failed',
+            ];
+        }
+
+        if ( $placed === 0 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $failed[0]['message'] ?? 'Checkout failed',
+                'failed'  => $failed,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'        => 200,
+            'message'       => $placed === 1
+                ? 'Checkout successfully!'
+                : $placed . ' orders placed successfully',
+            'orders_placed' => $placed,
+            'failed'        => $failed,
+        ] );
+    }
+
+    private function validateCartForCheckout( Cart $cart, $product, int $totalqty ): ?string {
+        if ( $cart->purchase_type == 'single' && $product->selling_type == 'bulk' ) {
+            return 'Something is wrong delete the cart.';
+        }
+
+        if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
+            if ( $product->qty < $totalqty ) {
+                return 'Product quantity not available!';
+            }
+        }
+
+        if ( $product->status == Status::Pending->value ) {
+            return 'The product under construction!';
+        }
+
+        return null;
+    }
+
+    private function normalizeGuestDatas( Request $request ) {
+        return collect( $request->input( 'datas', [] ) )->map( function ( $data ) {
             $email = isset( $data['email'] ) ? trim( (string) $data['email'] ) : '';
             $data['email'] = $email !== '' ? $email : 'guest@gmail.com';
 
             return $data;
         } );
+    }
 
-        if ( $datas->isEmpty() ) {
-            return responsejson( 'Checkout data is required for guest checkout.', 'fail' );
+    private function resolveGuestCheckoutEntries( Request $request, $requestDatas, array $shippingTemplate ): array {
+        $cartIds = array_values( array_filter( (array) $request->input( 'cart_ids', [] ) ) );
+
+        if ( $cartIds !== [] ) {
+            return Cart::query()
+                ->whereIn( 'id', $cartIds )
+                ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
+                ->get()
+                ->map( fn( Cart $cart ) => [
+                    'cart'          => $cart,
+                    'tenant_id'     => $cart->tenant_id ?: $request->tenant_id ?: tenant( 'id' ),
+                    'datas'         => $requestDatas,
+                    'purchase_type' => null,
+                ] )
+                ->all();
+        }
+
+        $items = $request->input( 'items', [] );
+        if ( is_array( $items ) && $items !== [] ) {
+            return collect( $items )->map( function ( $item ) use ( $request, $shippingTemplate ) {
+                $variants = $item['variants'] ?? $item['cartItems'] ?? $shippingTemplate['variants'] ?? [];
+
+                return [
+                    'cart'          => null,
+                    'tenant_id'     => $item['tenant_id'] ?? $request->tenant_id ?? tenant( 'id' ),
+                    'datas'         => collect( [array_merge( $shippingTemplate, array_filter( [
+                        'id'         => $item['product_id'] ?? $item['id'] ?? null,
+                        'product_id' => $item['product_id'] ?? $item['id'] ?? null,
+                        'variants'   => $variants,
+                    ], fn( $value ) => $value !== null ) )] ),
+                    'purchase_type' => $item['purchase_type'] ?? null,
+                ];
+            } )->all();
+        }
+
+        $productSpecificDatas = $requestDatas->filter( function ( $data ) {
+            return !empty( $data['id'] )
+                || !empty( $data['product_id'] )
+                || !empty( $data['variants'] );
+        } );
+
+        if ( $productSpecificDatas->count() > 1 ) {
+            return $productSpecificDatas->map( function ( $data ) use ( $request, $shippingTemplate ) {
+                return [
+                    'cart'          => null,
+                    'tenant_id'     => $data['tenant_id'] ?? $request->tenant_id ?? tenant( 'id' ),
+                    'datas'         => collect( [array_merge( $shippingTemplate, $data )] ),
+                    'purchase_type' => $data['purchase_type'] ?? null,
+                ];
+            } )->all();
         }
 
         $cart = $request->filled( 'cart_id' ) ? Cart::where( 'id', $request->cart_id )->first() : null;
         $tenantId = $cart?->tenant_id ?: $request->tenant_id ?: tenant( 'id' );
 
-        if ( !$tenantId ) {
-            return responsejson( 'Tenant information is missing for guest checkout.', 'fail' );
+        if ( !$tenantId && !$this->resolveGuestProductId( $request, $cart, $tenantId, $requestDatas ) ) {
+            return [];
         }
 
-        $productId = $this->resolveGuestProductId( $request, $cart, $tenantId, $datas );
-
-        if ( !$productId ) {
-            return responsejson( 'Product information is missing for guest checkout.', 'fail' );
-        }
-
-        $product = CrossTenantQueryService::getSingleRecordFromTenant(
-            $tenantId,
-            Product::class,
-            function ( $query ) use ( $productId ) {
-                $query->where( ['id' => $productId, 'status' => 'active'] );
-            }
-        );
-
-        if ( !$product ) {
-            return responsejson( 'Product currently not available!', 'fail' );
-        }
-
-        $createdGuestCart = false;
-        if ( !$cart ) {
-            $guestCart = $this->createGuestCheckoutCart( $request, $product, $tenantId, $datas );
-
-            if ( isset( $guestCart['error'] ) ) {
-                return responsejson( $guestCart['error'], 'fail' );
-            }
-
-            $cart = $guestCart['cart'];
-            $createdGuestCart = true;
-        }
-
-        if ( $cart->purchase_type == 'single' ) {
-            if ( $product->selling_type == 'bulk' ) {
-                return responsejson( 'Something is wrong delete the cart.', 'fail' );
-            }
-        }
-
-        $totalqty = (int) $datas->pluck( 'variants' )->collapse()->sum( 'qty' );
-
-        if ( $totalqty < 1 ) {
-            if ( $createdGuestCart ) {
-                $cart->delete();
-            }
-
-            return responsejson( 'Product quantity not available!', 'fail' );
-        }
-
-        if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
-            if ( $product->qty < $totalqty ) {
-                if ( $createdGuestCart ) {
-                    $cart->delete();
-                }
-
-                return responsejson( 'Product quantity not available!', 'fail' );
-            }
-        }
-
-        if ( $product->status == Status::Pending->value ) {
-            if ( $createdGuestCart ) {
-                $cart->delete();
-            }
-
-            return responsejson( 'The product under construction!', 'fail' );
-        }
-
-        $response = ProductCheckoutService::store( $cart->id, $product->id, $totalqty, 0, $datas->toArray(), 'aamarpay', $tenantId );
-
-        if ( $createdGuestCart && method_exists( $response, 'getContent' ) ) {
-            $payload = json_decode( $response->getContent(), true );
-
-            if ( ( $payload['status'] ?? null ) !== 200 ) {
-                Cart::where( 'id', $cart->id )->delete();
-            }
-        }
-
-        return $response;
+        return [[
+            'cart'          => $cart,
+            'tenant_id'     => $tenantId,
+            'datas'         => $requestDatas,
+            'purchase_type' => $request->input( 'purchase_type' ),
+        ]];
     }
 
-    function store( ProductRequest $request ) {
-
-        $cart = Cart::where('id', $request->cart_id)->first();
-
-            if ( !$cart || !$cart->tenant_id ) {
-                return responsejson( 'Cart not found or missing tenant information', 'fail' );
-            }
-
-        // Get product from cart's tenant database
-        $product = CrossTenantQueryService::getSingleRecordFromTenant(
-            $cart->tenant_id,
-            Product::class,
-            function ( $query ) use ( $cart ) {
-                $query->where( ['id' => $cart->product_id, 'status' => 'active'] );
-            }
-        );
-
-        if ( !$product ) {
-            return responsejson( 'Product currently not available!' );
+    private function resolveGuestCheckoutDatasForCart(
+        Cart $cart,
+        int $requestedCartId,
+        $requestDatas,
+        array $shippingTemplate
+    ): array {
+        if ( (int) $cart->id === $requestedCartId && $requestDatas->isNotEmpty() ) {
+            return $requestDatas->toArray();
         }
 
-        if ( $cart->purchase_type == 'single' ) {
-            if ( $product->selling_type == 'bulk' ) {
-                return responsejson( 'Something is wrong delete the cart.', 'fail' );
-            }
-        }
-
-        $datas = collect( request( 'datas' ) );
-
-        // if ( $cart->purchase_type == 'bulk' ) {
-        //     $firstaddress = $datas->first();
-        //     $variants     = collect( $firstaddress )['variants'];
-        //     $totalqty     = collect( $variants )->sum( 'qty' );
-
-        //     if ( $product->is_connect_bulk_single == 1 ) {
-        //         if ( $product->qty < $totalqty ) {
-        //             return responsejson( 'Product quantity not available!', 'fail' );
-        //         }
-        //     }
-        // }
-
-        if ( $cart->purchase_type == 'single' ) { //single
-
-            $varients = $datas->pluck( 'variants' );
-
-            $totalqty = collect( $varients )->collapse()->sum( 'qty' );
-
-            if ( $product->qty < $totalqty ) {
-                return responsejson( 'Product quantity not available!', 'fail' );
-            }
-        }
-
-        if ( $product->status == Status::Pending->value ) {
-            return responsejson( 'The product under construction!', 'fail' );
-        }
-
-        $uservarients = collect( request()->datas )->pluck( 'variants' )->collapse();
-
-        // if ( $product->variants != '' ) {
-        //     if ( ( $cart->purchase_type != 'bulk' ) && ( $product->is_connect_bulk_single != 1 ) ) {
-        //         foreach ( $uservarients as $vr ) {
-        //             $data = collect( $product?->productVariant?->variants )->where( 'id', $vr['variant_id'] )->where( 'qty', '>=', $vr['qty'] )->first();
-        //             if ( !$data ) {
-        //                 return responsejson( 'Something is wrong. Delete the cart', 'fail' );
-        //             }
-        //         }
-        //     }
-
-        // }
-
-        // Get user - using auth()->user() or auth()->id() as needed
-        $user = auth()->user();
-
-        return ProductCheckoutService::store( $cart->id, $product->id, $totalqty, $user->id, request( 'datas' ), 'aamarpay', $cart->tenant_id );
-
+        return [$this->buildShippingPayloadForCart( $cart, $shippingTemplate )];
     }
 
-    private function createGuestCheckoutCart( Request $request, $product, $tenantId, $datas ) {
-        $purchaseType = $request->input( 'purchase_type' );
+    private function resolveCheckoutDatasForCart(
+        Cart $cart,
+        int $requestedCartId,
+        array $requestDatas,
+        array $shippingTemplate
+    ): array {
+
+        if ( (int) $cart->id === $requestedCartId && !empty( $requestDatas ) ) {
+            return $requestDatas;
+        }
+
+        return [$this->buildShippingPayloadForCart( $cart, $shippingTemplate )];
+    }
+
+    private function buildShippingPayloadForCart( Cart $cart, array $shippingTemplate ): array {
+        $variants = $cart->cartDetails
+            ->map( function ( $detail ) {
+                return array_filter( [
+                    'variant_id' => $detail->variant_id,
+                    'qty'        => (int) $detail->qty,
+                    'color'      => $detail->color ? [
+                        'id'   => $detail->color->id,
+                        'name' => $detail->color->name,
+                    ] : null,
+                    'size'       => $detail->size ? [
+                        'id'   => $detail->size->id,
+                        'name' => $detail->size->name,
+                    ] : null,
+                    'unit'       => $detail->unit ? [
+                        'id'        => $detail->unit->id,
+                        'unit_name' => $detail->unit->unit_name,
+                    ] : null,
+                ], fn( $value ) => $value !== null );
+            } )
+            ->filter( fn( $variant ) => (int) ( $variant['qty'] ?? 0 ) > 0 )
+            ->values()
+            ->all();
+
+        if ( $variants === [] && !empty( $shippingTemplate['variants'] ) ) {
+            $variants = $shippingTemplate['variants'];
+        }
+
+        return array_merge( $shippingTemplate, [
+            'variants' => $variants,
+        ] );
+    }
+
+    private function createGuestCheckoutCart( Request $request, $product, $tenantId, $datas, ?string $purchaseType = null ) {
+        $purchaseType = $purchaseType ?: $request->input( 'purchase_type' );
         $sellingType = $product->selling_type ?: 'single';
 
         if ( !$purchaseType ) {
