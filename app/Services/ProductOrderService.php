@@ -79,7 +79,7 @@ class ProductOrderService {
                 // affiliate balance back
                 $order = Order::where( 'id', $orderId )->first();
 
-                return json_decode( $order->variants, true );
+                return Order::normalizeVariants( $order->variants );
 
                 // if ( $order->order_media == "null" ) {
                 //     self::affiliateBalanceback( $order );
@@ -702,7 +702,7 @@ class ProductOrderService {
             $product      = Product::find( $order->product_id );
             $product->qty = ( $product->qty + $balance->qty );
 
-            $variants = is_array( $order->variants ) ? $order->variants : json_decode( $order->variants );
+            $variants = Order::normalizeVariants( $order->variants );
             $data     = collect( $variants )->pluck( 'qty', 'variant_id' );
 
             $result = [];

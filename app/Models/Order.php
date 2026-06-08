@@ -13,6 +13,35 @@ class Order extends Model {
         'variants' => 'array',
     ];
 
+    /**
+     * Parse variants from DB string, cast array, or legacy double-encoded JSON.
+     */
+    public static function normalizeVariants( mixed $variants ): array {
+        if ( $variants === null || $variants === '' ) {
+            return [];
+        }
+
+        if ( is_array( $variants ) ) {
+            return $variants;
+        }
+
+        if ( !is_string( $variants ) ) {
+            return [];
+        }
+
+        $decoded = json_decode( $variants, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            return [];
+        }
+
+        if ( is_string( $decoded ) ) {
+            $decoded = json_decode( $decoded, true );
+        }
+
+        return is_array( $decoded ) ? $decoded : [];
+    }
+
     function affiliator() {
         return $this->belongsTo( User::class, 'affiliator_id', 'id' );
     }

@@ -173,7 +173,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -299,7 +299,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -424,7 +424,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -550,7 +550,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -675,7 +675,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -801,7 +801,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -927,7 +927,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -1053,7 +1053,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -1176,7 +1176,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order
@@ -1292,7 +1292,7 @@ class OrderController extends Controller {
         if ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually
@@ -1385,7 +1385,7 @@ class OrderController extends Controller {
         $orders = collect( $allOrders )->map( function ( $order ) {
             // Decode variants
             if ( isset( $order->variants ) ) {
-                $order->variants = json_decode( $order->variants );
+                $order->variants = Order::normalizeVariants( $order->variants );
             }
 
             // Load relationships manually for each order

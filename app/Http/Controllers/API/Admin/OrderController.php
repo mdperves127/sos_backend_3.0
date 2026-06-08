@@ -60,7 +60,7 @@ class OrderController extends Controller {
      */
     private function enrichOrderFromTenant( object $order ): object {
         if ( isset( $order->variants ) && is_string( $order->variants ) ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
         }
 
         if ( ! isset( $order->tenant_id, $order->product_id ) ) {
@@ -114,7 +114,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -138,7 +138,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -161,7 +161,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -184,7 +184,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -208,7 +208,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -231,7 +231,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -254,7 +254,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -277,7 +277,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 
@@ -311,7 +311,7 @@ class OrderController extends Controller {
                 'affiliator',
             ] );
 
-            $allData->variants = json_decode( $allData->variants );
+            $allData->variants = Order::normalizeVariants( $allData->variants );
 
             return response()->json( [
                 'status'  => 200,
@@ -338,7 +338,7 @@ class OrderController extends Controller {
             ->withQueryString();
 
         $orders->map( function ( $order ) {
-            $order->variants = json_decode( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
             return $order;
         } );
 

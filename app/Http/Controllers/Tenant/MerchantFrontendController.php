@@ -135,35 +135,6 @@ class MerchantFrontendController extends Controller
         ];
     }
 
-    /**
-     * Ensure order variants are returned as a parsed array (not a JSON string).
-     */
-    private function normalizeOrderVariants( mixed $variants ): array {
-        if ( $variants === null || $variants === '' ) {
-            return [];
-        }
-
-        if ( is_array( $variants ) ) {
-            return $variants;
-        }
-
-        if ( !is_string( $variants ) ) {
-            return [];
-        }
-
-        $decoded = json_decode( $variants, true );
-
-        if ( json_last_error() !== JSON_ERROR_NONE ) {
-            return [];
-        }
-
-        if ( is_string( $decoded ) ) {
-            $decoded = json_decode( $decoded, true );
-        }
-
-        return is_array( $decoded ) ? $decoded : [];
-    }
-
     public function products(Request $request)
     {
         // Get filter parameters
@@ -835,7 +806,7 @@ class MerchantFrontendController extends Controller
         $eligibleStatuses   = \App\Http\Requests\TenantProductReviewRequest::PURCHASE_STATUSES;
 
         $orders = $orders->map( function ( $order ) use ( $reviewedProductIds, $eligibleStatuses ) {
-            $order->variants = $this->normalizeOrderVariants( $order->variants );
+            $order->variants = Order::normalizeVariants( $order->variants );
 
             $order->can_review = in_array( $order->status, $eligibleStatuses, true )
                 && !$reviewedProductIds->contains( $order->product_id )
