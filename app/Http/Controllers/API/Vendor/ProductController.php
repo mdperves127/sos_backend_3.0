@@ -63,8 +63,8 @@ class ProductController extends Controller
             'variants' => ['nullable', 'array'],
 
             'variants.*.qty' => ['required_with:variants', 'integer', 'min:0'],
-            'image' => ['required', 'mimes:jpeg,png,jpg'],
-            'images.*' => ['required', 'mimes:jpeg,png,jpg'],
+            'image' => ['required', 'mimes:jpeg,png,jpg,webp,gif'],
+            'images.*' => ['required', 'mimes:jpeg,png,jpg,webp,gif'],
 
             'selling_type' => ['required', Rule::in(['single', 'bulk', 'both'])],
             'advance_payment' => ['numeric', 'min:0', 'nullable'],

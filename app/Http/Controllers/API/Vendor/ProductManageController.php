@@ -71,8 +71,8 @@ class ProductManageController extends Controller {
 
             // 'image'                                  => ['required', 'mimes:jpeg,png,jpg'],
             // 'images.*'                               => ['required', 'mimes:jpeg,png,jpg'],
-            'image'                                  => ['nullable', 'mimes:jpeg,png,jpg', 'max:2048'], // Max size is in kilobytes
-            'images.*'                               => ['nullable', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'image'                                  => ['nullable', 'mimes:jpeg,png,jpg,webp,gif', 'max:2048'], // Max size is in kilobytes
+            'images.*'                               => ['nullable', 'mimes:jpeg,png,jpg,webp,gif', 'max:2048'],
 
             // 'selling_type' => ['required', Rule::in(['single', 'bulk', 'both'])],
             'advance_payment'                        => ['numeric', 'min:0', 'nullable'],
@@ -106,9 +106,9 @@ class ProductManageController extends Controller {
         ], [
             'qty.required_if'             => "The qty field is required.",
             'selling_details.required_if' => "The selling details is required.",
-            'image.mimes'                 => 'The image must be a file of type: jpeg, png, jpg.',
+            'image.mimes'                 => 'The image must be a file of type: jpeg, png, jpg, webp, gif.',
             'image.max'                   => 'The image may not be greater than 2MB.',
-            'images.*.mimes'              => 'The images must be files of type: jpeg, png, jpg.',
+            'images.*.mimes'              => 'The images must be files of type: jpeg, png, jpg, webp, gif.',
             'images.*.max'                => 'The images may not be greater than 2MB.',
         ] );
 
@@ -308,8 +308,8 @@ class ProductManageController extends Controller {
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
-            'image'                                  => ['nullable', 'mimes:jpeg,png,jpg', 'max:2048'], // Max size is in kilobytes
-            'images.*'                               => ['nullable', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'image'                                  => ['nullable', 'mimes:jpeg,png,jpg,webp,gif', 'max:2048'], // Max size is in kilobytes
+            'images.*'                               => ['nullable', 'mimes:jpeg,png,jpg,webp,gif', 'max:2048'],
 
             'selling_details'                        => ['required_if:selling_type,bulk,both', 'array'],
             'advance_payment'                        => ['nullable', 'numeric', 'min:0'],
@@ -342,9 +342,9 @@ class ProductManageController extends Controller {
         ], [
             'qty.required_if'             => "The qty field is required.",
             'selling_details.required_if' => "The selling details is required.",
-            'image.mimes'                 => 'The image must be a file of type: jpeg, png, jpg.',
+            'image.mimes'                 => 'The image must be a file of type: jpeg, png, jpg, webp, gif.',
             'image.max'                   => 'The image may not be greater than 2MB.',
-            'images.*.mimes'              => 'The images must be files of type: jpeg, png, jpg.',
+            'images.*.mimes'              => 'The images must be files of type: jpeg, png, jpg, webp, gif.',
             'images.*.max'                => 'The images may not be greater than 2MB.',
         ] );
 
