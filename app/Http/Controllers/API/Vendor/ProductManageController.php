@@ -271,7 +271,7 @@ class ProductManageController extends Controller {
     public function VendorProductEdit( $id ) {
         $userId  = vendorId();
         $product = Product::query()
-            ->with( 'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage', 'productrating.affiliate:id,name,image', 'supplier:id,supplier_name,business_name', 'warehouse:id,name' )
+            ->with( 'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage', 'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name' )
             ->with( 'productVariant', function ( $q ) {
                 $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
             } )
