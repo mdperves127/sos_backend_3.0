@@ -217,7 +217,7 @@ class OrderController extends Controller {
     }
 
     function orderView( $id ) {
-        $allData = Order::where( 'id', $id )->where( 'vendor_id', auth()->user()->id )
+        $allData = Order::where( 'id', $id )
             ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid', 'productrating' => function ( $query ) {
                 $query->with( 'affiliate:id,name' );
             }] )

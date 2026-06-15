@@ -219,6 +219,7 @@ Route::middleware( [
 
         Route::prefix( 'tenant-product-order' )->group( function () {
             Route::get( 'all-orders', [VendorOrderController::class, 'AllOrders'] );
+            Route::get( 'order/view/{id}', [VendorOrderController::class, 'orderView'] );
             Route::get( 'pending-orders', [VendorOrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [VendorOrderController::class, 'ProgressOrders'] );
             Route::get( 'product-processing', [VendorOrderController::class, 'ProductProcessing'] );
