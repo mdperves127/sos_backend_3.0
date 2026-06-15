@@ -57,7 +57,7 @@ class ProductPosSaleService {
             ->with( ['user' => function ( $query ) {
                 $query->select( 'id', 'name' );
             }] )
-            ->select( 'id', 'customer_id', 'vendor_id', 'user_id', 'barcode', 'payment_id', 'sale_date', 'source_id', 'paid_amount', 'total_price', 'due_amount', 'sale_discount', 'total_qty', 'payment_status', 'change_amount' )
+            ->select( 'id', 'customer_id', 'vendor_id', 'user_id', 'barcode', 'payment_id', 'sale_date', 'source_id', 'paid_amount', 'total_price', 'due_amount', 'sale_discount', 'total_qty', 'payment_status', 'change_amount', 'note' )
             ->first();
         return $saleShow;
     }

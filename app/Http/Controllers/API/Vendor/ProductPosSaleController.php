@@ -136,6 +136,7 @@ class ProductPosSaleController extends Controller {
             'due_amount'    => 'required|numeric|min:0',
             'sale_discount' => 'required|numeric|min:0',
             'product_id'    => 'required|array',
+            'note'          => 'nullable|string|max:1000',
             // Add validation rules for other fields as needed
         ];
 
@@ -196,6 +197,7 @@ class ProductPosSaleController extends Controller {
         $sale->payment_status = $request->total_price <= $request->paid_amount ? 'paid' : 'due';
         $sale->vendor_id      = vendorId();
         $sale->change_amount  = $request->change_amount;
+        $sale->note           = $request->note;
         $sale->save();
 
         //For product sale details
