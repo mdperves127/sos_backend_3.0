@@ -16,11 +16,82 @@ use Illuminate\Support\Facades\Notification;
  * Class SubscriptionService.
  */
 class SubscriptionService {
+    public static function applyPlanToUserSubscription( UserSubscription $userSubscription, Subscription $subscription ): void {
+        $subscription = Subscription::on( 'mysql' )->find( $subscription->id );
+        $userType     = $subscription->subscription_user_type;
+
+        $userSubscription->subscription_id    = $subscription->id;
+        $userSubscription->subscription_price = $subscription->subscription_amount;
+        $userSubscription->chat_access        = $subscription->chat_access;
+        $userSubscription->has_website        = $subscription->has_website ?? 'no';
+        $userSubscription->website_visits     = $subscription->website_visits ?? 0;
+        $userSubscription->already_visits     = 0;
+
+        if ( $userType === 'vendor' ) {
+            $userSubscription->service_qty       = $subscription->service_qty;
+            $userSubscription->product_qty       = $subscription->product_qty;
+            $userSubscription->affiliate_request = $subscription->affiliate_request;
+            $userSubscription->pos_sale_qty      = $subscription->pos_sale_qty;
+            $userSubscription->employee_create   = $subscription->employee_create;
+            $userSubscription->product_request   = null;
+            $userSubscription->product_approve   = null;
+            $userSubscription->service_create    = null;
+        }
+
+        if ( $userType === 'affiliate' ) {
+            $userSubscription->product_request   = $subscription->product_request;
+            $userSubscription->product_approve   = $subscription->product_approve;
+            $userSubscription->service_create    = $subscription->service_create;
+            $userSubscription->service_qty       = null;
+            $userSubscription->product_qty       = null;
+            $userSubscription->affiliate_request = null;
+            $userSubscription->pos_sale_qty      = null;
+            $userSubscription->employee_create   = null;
+        }
+    }
+
+    public static function findLatestUserSubscription( $entity ): ?UserSubscription {
+        if ( $entity instanceof Tenant ) {
+            return UserSubscription::on( 'mysql' )
+                ->where( 'tenant_id', $entity->id )
+                ->latest( 'id' )
+                ->first();
+        }
+
+        if ( $entity instanceof User ) {
+            return UserSubscription::on( 'mysql' )
+                ->where( 'user_id', $entity->id )
+                ->whereNull( 'tenant_id' )
+                ->latest( 'id' )
+                ->first();
+        }
+
+        return null;
+    }
+
     static function store( $subscription, $entity, $totalamount = null, $coupon = null, $paymentmethod = null, $actingUserId = null ) {
         $trxid        = uniqid();
         $subscription = Subscription::on('mysql')->find( $subscription->id );
+        $existing     = self::findLatestUserSubscription( $entity );
 
-        $userSubscription                     = new UserSubscription();
+        if ( $existing ) {
+            $existing->trxid       = $trxid;
+            $existing->expire_date = membershipexpiredate( $subscription->subscription_package_type );
+            self::applyPlanToUserSubscription( $existing, $subscription );
+            $existing->save();
+
+            return self::finalizeSubscriptionPurchase(
+                $entity,
+                $subscription,
+                $trxid,
+                $totalamount,
+                $coupon,
+                $paymentmethod,
+                $actingUserId
+            );
+        }
+
+        $userSubscription = new UserSubscription();
         if ( $entity instanceof Tenant ) {
             $userSubscription->tenant_id = $entity->id;
             $userSubscription->user_id   = $actingUserId ?? ( Auth::check() ? Auth::id() : null );
@@ -30,30 +101,32 @@ class SubscriptionService {
         } else {
             throw new \InvalidArgumentException( 'Invalid subscription entity provided.' );
         }
-        $userSubscription->trxid              = $trxid;
-        $userSubscription->subscription_id    = $subscription->id;
-        $userSubscription->expire_date        = membershipexpiredate( $subscription->subscription_package_type );
-        $userSubscription->subscription_price = $subscription->subscription_amount;
-        $userSubscription->chat_access        = $subscription->chat_access;
 
-        if ( $subscription->subscription_user_type == "vendor" ) {
-            $userSubscription->service_qty       = $subscription->service_qty;
-            $userSubscription->product_qty       = $subscription->product_qty;
-            $userSubscription->affiliate_request = $subscription->affiliate_request;
-            $userSubscription->pos_sale_qty      = $subscription->pos_sale_qty;
-            $userSubscription->employee_create   = $subscription->employee_create;
-            $userSubscription->has_website       = $subscription->has_website;
-            $userSubscription->website_visits    = $subscription->website_visits;
-        }
-
-        if ( $subscription->subscription_user_type == "affiliate" ) {
-            $userSubscription->product_request = $subscription->product_request;
-            $userSubscription->product_approve = $subscription->product_approve;
-            $userSubscription->service_create  = $subscription->service_create;
-        }
-
+        $userSubscription->trxid       = $trxid;
+        $userSubscription->expire_date   = membershipexpiredate( $subscription->subscription_package_type );
+        self::applyPlanToUserSubscription( $userSubscription, $subscription );
         $userSubscription->save();
 
+        return self::finalizeSubscriptionPurchase(
+            $entity,
+            $subscription,
+            $trxid,
+            $totalamount,
+            $coupon,
+            $paymentmethod,
+            $actingUserId
+        );
+    }
+
+    protected static function finalizeSubscriptionPurchase(
+        $entity,
+        Subscription $subscription,
+        string $trxid,
+        $totalamount = null,
+        $coupon = null,
+        $paymentmethod = null,
+        $actingUserId = null
+    ) {
         if ( !$totalamount ) {
             false;
         }
@@ -99,43 +172,35 @@ class SubscriptionService {
         }
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
-
             $getuser = User::on('mysql')->find( $entity->id );
-            if ( $subscription->subscription_user_type == "vendor" ) {
+
+            if ( $subscription->subscription_user_type == 'vendor' ) {
                 $getuser->role_as = 2;
             }
 
-            if ( $subscription->subscription_user_type == "affiliate" ) {
+            if ( $subscription->subscription_user_type == 'affiliate' ) {
                 $getuser->role_as = 3;
             }
+
             $getuser->save();
 
             return $getuser->role_as;
-
         }
 
-        //For entity (User or Tenant)
-        $subscriptionText = "Congratulations! Your package was successfully purchased!";
-        // If it's a tenant, we notify the tenant's email or owner
+        $subscriptionText   = 'Congratulations! Your package was successfully purchased!';
         $notificationTarget = $entity;
-        if ( !( $entity instanceof User ) ) {
-            // For Tenant, we might need a different notification approach or just use the Tenant model if it supports notifications
-            // If Tenant doesn't support notifications, we might need to find the owner user
-            // Assuming Tenant can receive notifications or we just skip it for now if not applicable
-        }
 
         try {
             Notification::send( $notificationTarget, new SubscriptionNotification( $notificationTarget, $subscriptionText ) );
-        } catch (\Exception $e) {
-            \Log::error("Failed to send subscription notification: " . $e->getMessage());
+        } catch ( \Exception $e ) {
+            \Log::error( 'Failed to send subscription notification: ' . $e->getMessage() );
         }
 
-        //For admin
-        $normalUser       = $entity; // Vendor or affiliate or Tenant
-        $admin            = User::on('mysql')->where( 'role_as', 1 )->first(); //Admin
-        $entityName       = ($entity instanceof User) ? $entity->email : ($entity->company_name ?? $entity->id);
-        $subscriptionText = $entityName . " Purchase a new package";
+        $admin            = User::on('mysql')->where( 'role_as', 1 )->first();
+        $entityName       = ( $entity instanceof User ) ? $entity->email : ( $entity->company_name ?? $entity->id );
+        $subscriptionText = $entityName . ' Purchase a new package';
         Notification::send( $admin, new SubscriptionNotification( $admin, $subscriptionText ) );
+
         return responsejson( 'Successfull', 'success' );
     }
 }

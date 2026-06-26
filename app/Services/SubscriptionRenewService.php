@@ -119,7 +119,7 @@ class SubscriptionRenewService {
      */
     protected static function renewForTenant( $validatedData ) {
         $tenant          = tenant();
-        $usersubscription = UserSubscription::on( 'mysql' )->where( 'tenant_id', $tenant->id )->first();
+        $usersubscription = SubscriptionService::findLatestUserSubscription( $tenant );
 
         if ( ! $usersubscription && in_array( $tenant->type ?? '', [ 'merchant', 'dropshipper' ] ) ) {
             return responsejson( 'You have not subscription.', 'fail' );
@@ -234,13 +234,16 @@ class SubscriptionRenewService {
      */
     static function subscriptionadd( $entity, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = null, $couponName = '' ) {
         $isTenant = $entity instanceof \App\Models\Tenant;
-        $userCurrentSubscription = $entity->usersubscription;
-        $getsubscription         = Subscription::on( 'mysql' )->find( $subscriptionid );
-        $usersubscriptionPlan    = Subscription::on( 'mysql' )->find( $userCurrentSubscription->subscription_id );
-        $addMonth                = getmonth( $getsubscription->subscription_package_type );
-        $entityId                = $entity->id;
-        // For tenant: map type to role_as (merchant=2=vendor, dropshipper=3=affiliate)
-        $roleAs                  = $isTenant ? ( ( $entity->type ?? 'merchant' ) === 'dropshipper' ? 3 : 2 ) : $entity->role_as;
+        $userCurrentSubscription = SubscriptionService::findLatestUserSubscription( $entity );
+
+        if ( ! $userCurrentSubscription ) {
+            return responsejson( 'You have not subscription.', 'fail' );
+        }
+
+        $getsubscription      = Subscription::on( 'mysql' )->find( $subscriptionid );
+        $usersubscriptionPlan = Subscription::on( 'mysql' )->find( $userCurrentSubscription->subscription_id );
+        $addMonth             = getmonth( $getsubscription->subscription_package_type );
+        $entityId             = $entity->id;
 
         $paymentHistoryContext = $isTenant
             ? [
@@ -298,7 +301,8 @@ class SubscriptionRenewService {
             );
         }
 
-        $userCurrentSubscription->subscription_price = $getsubscription->subscription_amount;
+        $userCurrentSubscription->trxid = $trxid;
+        SubscriptionService::applyPlanToUserSubscription( $userCurrentSubscription, $getsubscription );
 
         if ( $getsubscription->id == $usersubscriptionPlan->id ) {
             if ( $userCurrentSubscription->expire_date > now() ) {
@@ -307,46 +311,15 @@ class SubscriptionRenewService {
                 $expiretime = now()->addMonth( $addMonth );
             }
 
-            $userCurrentSubscription->expire_date       = $expiretime;
-            $userCurrentSubscription->service_qty       = $getsubscription->service_qty;
-            $userCurrentSubscription->product_qty       = $getsubscription->product_qty;
-            $userCurrentSubscription->affiliate_request = $getsubscription->affiliate_request;
-            $userCurrentSubscription->product_request   = $getsubscription->product_request;
-            $userCurrentSubscription->product_approve   = $getsubscription->product_approve;
-            $userCurrentSubscription->service_create    = $getsubscription->service_create;
-            $userCurrentSubscription->has_website       = $getsubscription->has_website;
-            $userCurrentSubscription->website_visits    = $getsubscription->website_visits;
-            $userCurrentSubscription->already_visits    = 0;
-
+            $userCurrentSubscription->expire_date = $expiretime;
             $userCurrentSubscription->save();
 
             return responsejson( 'Renew successfully' );
-        } else {
-            $expiredate = now()->addMonth( $addMonth );
-
-            $userCurrentSubscription->expire_date     = $expiredate;
-            $userCurrentSubscription->subscription_id = $getsubscription->id;
-
-            if ( userrole( $roleAs ) == 'vendor' ) {
-                $userCurrentSubscription->service_qty       = $getsubscription->service_qty;
-                $userCurrentSubscription->product_qty       = $getsubscription->product_qty;
-                $userCurrentSubscription->affiliate_request = $getsubscription->affiliate_request;
-                $userCurrentSubscription->pos_sale_qty      = $getsubscription->pos_sale_qty;
-                $userCurrentSubscription->employee_create   = $getsubscription->employee_create;
-                $userCurrentSubscription->has_website       = $getsubscription->has_website;
-                $userCurrentSubscription->website_visits    = $getsubscription->website_visits;
-                $userCurrentSubscription->chat_access       = $getsubscription->chat_access;
-            }
-
-            if ( userrole( $roleAs ) == 'affiliate' ) {
-                $userCurrentSubscription->product_request = $getsubscription->product_request;
-                $userCurrentSubscription->product_approve = $getsubscription->product_approve;
-                $userCurrentSubscription->service_create  = $getsubscription->service_create;
-                $userCurrentSubscription->chat_access     = $getsubscription->chat_access;
-            }
-            $userCurrentSubscription->save();
-
-            return responsejson( "Subscription upgrade successfully!" );
         }
+
+        $userCurrentSubscription->expire_date = now()->addMonth( $addMonth );
+        $userCurrentSubscription->save();
+
+        return responsejson( 'Subscription upgrade successfully!' );
     }
 }

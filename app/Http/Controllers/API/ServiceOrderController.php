@@ -22,17 +22,25 @@ class ServiceOrderController extends Controller
      */
     public function index()
     {
-        $serviceOrder = ServiceOrder::query()
-            ->where(['tenant_id' => tenant()->id])
+        $query = ServiceOrder::query()
             ->when(request('search') != '', function ($query) {
                 $query->where('trxid', 'like', '%' . request('search') . '%');
             })
             ->with(['servicedetails', 'packagedetails', 'vendor'])
-            ->when(request('status'),function($request){
-                $request->where('status',request('status'));
-            })
-            ->latest()
-            ->paginate(10);
+            ->when(request('status'), function ($query) {
+                $query->where('status', request('status'));
+            });
+
+        $query = $this->applyServiceOrderContext( $query );
+
+        if ( !$query ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Tenant or user context is required.',
+            ], 400 );
+        }
+
+        $serviceOrder = $query->latest()->paginate( 10 );
 
         return response()->json([
             'status' => 200,
@@ -128,5 +136,17 @@ class ServiceOrderController extends Controller
             'canceled' => $canceled,
             'progress' => $progress,
         ]);
+    }
+
+    private function applyServiceOrderContext( $query ) {
+        if ( auth()->check() ) {
+            return $query->where( 'user_id', auth()->id() );
+        }
+
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            return $query->where( 'tenant_id', tenant()->id );
+        }
+
+        return null;
     }
 }

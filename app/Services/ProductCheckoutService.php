@@ -338,19 +338,20 @@ class ProductCheckoutService {
                 }
             }
 
+            $paymentHistoryUserId = $userid > 0 ? $userid : 1;
             $paymentHistoryContext = [];
 
             if ( $resolvedPlacingTenantId ) {
                 $paymentHistoryContext = [
                     'entity_type' => 'tenant',
                     'tenant_id'   => $resolvedPlacingTenantId,
-                    'user_id'     => $userid > 0 ? $userid : null,
+                    'user_id'     => $paymentHistoryUserId,
                 ];
             } elseif ( function_exists( 'tenant' ) && tenant() ) {
                 $paymentHistoryContext = [
                     'entity_type' => 'tenant',
                     'tenant_id'   => tenant()->id,
-                    'user_id'     => $userid > 0 ? $userid : null,
+                    'user_id'     => $paymentHistoryUserId,
                 ];
             }
 
@@ -361,7 +362,7 @@ class ProductCheckoutService {
                 'Advance payment',
                 '-',
                 '',
-                $userid,
+                $paymentHistoryUserId,
                 $paymentHistoryContext
             );
 

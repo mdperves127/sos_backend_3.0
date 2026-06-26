@@ -122,6 +122,7 @@ class TenantAuthController extends Controller {
             // Load usersubscription with subscription relationship for tenant
             $usersubscription = \App\Models\UserSubscription::on('mysql')
                 ->where('tenant_id', tenant()->id)
+                ->latest('id')
                 ->with('subscription:id,card_heading')
                 ->without('user') // Explicitly prevent loading user relationship
                 ->first();
