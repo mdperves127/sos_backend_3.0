@@ -9,6 +9,7 @@ use App\Models\SupportBox;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class SupportBoxController extends Controller {
@@ -22,7 +23,7 @@ class SupportBoxController extends Controller {
         //     return $this->permissionmessage();
         // }
 
-        $supportData = SupportBox::query()
+        $supportData = SupportBox::on( 'mysql' )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
                 $query->whereHas( 'user', function ( $query ) {
@@ -83,7 +84,7 @@ class SupportBoxController extends Controller {
         //     return $this->permissionmessage();
         // }
 
-        $supportBox = SupportBox::query()
+        $supportBox = SupportBox::on( 'mysql' )
             ->when( checkpermission( 'support' ) != 1, function ( $query ) {
                 $query->whereHas( 'supportassigned', function ( $query ) {
                     $query->where( 'user_id', auth()->id() );
@@ -94,9 +95,16 @@ class SupportBoxController extends Controller {
             return responsejson( 'Not found', 'fail' );
         }
 
-        $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
-            $query->with( ['file'] );
-        }] );
+        $data = $supportBox->load( [
+            'ticketreplay' => function ( $query ) {
+                $query->with( [
+                    'file' => function ( $fileRelation ) {
+                        $fileRelation->getQuery()->getQuery()->connection = DB::connection( 'mysql' );
+                        $fileRelation->getRelated()->setConnection( 'mysql' );
+                    },
+                ] )->orderBy( 'created_at' );
+            },
+        ] );
         $this->hydrateSupportBoxUsers( $data );
 
         return $this->response( $data );
@@ -120,7 +128,7 @@ class SupportBoxController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy( $id ) {
-        $support = SupportBox::query()
+        $support = SupportBox::on( 'mysql' )
             ->when( checkpermission( 'support' ) != 1, function ( $query ) {
                 $query->whereHas( 'supportassigned', function ( $query ) {
                     $query->where( 'user_id', auth()->id() );
@@ -136,15 +144,18 @@ class SupportBoxController extends Controller {
     }
 
     private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
+        $supportBox->unsetRelation( 'user' );
         $supportBox->setRelation( 'user', $this->resolveTicketOwnerUser( $supportBox ) );
 
         if ( $supportBox->relationLoaded( 'latestTicketreplay' ) && $supportBox->latestTicketreplay ) {
             $latest = $supportBox->latestTicketreplay;
+            $latest->unsetRelation( 'user' );
             $latest->setRelation( 'user', $this->resolveReplyAuthorUser( $latest->user_id, $supportBox ) );
         }
 
         if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
             foreach ( $supportBox->ticketreplay as $reply ) {
+                $reply->unsetRelation( 'user' );
                 $reply->setRelation( 'user', $this->resolveReplyAuthorUser( $reply->user_id, $supportBox ) );
             }
         }
