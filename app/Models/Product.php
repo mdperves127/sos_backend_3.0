@@ -62,12 +62,17 @@ class Product extends Model {
     }
 
     protected $casts = [
-        'tags'            => 'array',
-        'variants'        => 'array',
-        'meta_keyword'    => 'array',
-        'selling_details' => 'array',
-        'specifications'  => 'array',
+        'tags'             => 'array',
+        'variants'         => 'array',
+        'meta_keyword'     => 'array',
+        'selling_details'  => 'array',
+        'specifications'   => 'array',
+        'is_show_website'  => 'integer',
     ];
+
+    public function scopeShownOnWebsite( $query ) {
+        return $query->where( 'is_show_website', 1 );
+    }
 
     function scopeSearch( $query, $value ) {
         $query->where( 'name', 'like', "%{$value}%" )

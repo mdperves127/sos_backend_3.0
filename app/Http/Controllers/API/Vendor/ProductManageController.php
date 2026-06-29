@@ -207,6 +207,7 @@ class ProductManageController extends Controller {
             $product->warranty       = $request->warranty;
             $product->is_feature     = $request->is_feature;
             $product->is_affiliate   = $request->is_affiliate;
+            $product->is_show_website = $request->input( 'is_show_website', 1 );
             $product->discount_price = $request->discount_price;
             $product->pre_order      = $request->pre_order;
 
@@ -391,6 +392,7 @@ class ProductManageController extends Controller {
                 $product->pre_order      = $request->pre_order;
                 $product->vendor_id      = vendorId();
                 $product->is_feature     = $request->is_feature;
+                $product->is_show_website = $request->input( 'is_show_website', $product->is_show_website ?? 1 );
                 $product->name           = $request->input( 'name' );
                 $product->slug           = slugUpdate( Product::class, $request->name, $id );
                 // $product->short_description = $request->input('short_description');

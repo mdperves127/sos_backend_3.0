@@ -65,6 +65,10 @@ class MerchantFrontendController extends Controller
         return $query;
     }
 
+    private function applyWebsiteVisibleProductFilter( $query ) {
+        return $query->shownOnWebsite();
+    }
+
     private function paginateProductCollection( Request $request, $products, int $defaultPerPage = 10 ): array {
         $page    = max( 1, (int) $request->get( 'page', 1 ) );
         $perPage = $this->requestPerPage( $request, $defaultPerPage );
@@ -187,8 +191,10 @@ class MerchantFrontendController extends Controller
                 DB::purge( $connectionName );
 
                 // Build query with filters
-                $productQuery = Product::on( $connectionName )
-                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' );
+                $productQuery = $this->applyWebsiteVisibleProductFilter(
+                    Product::on( $connectionName )
+                        ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                );
 
                 // Apply category filter (support multiple categories)
                 if ( !empty( $categoryIds ) ) {
@@ -244,8 +250,10 @@ class MerchantFrontendController extends Controller
 
         } else {
             // Build query with filters for non-dropshippers
-            $productQuery = Product::where('status', 'active')
-                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
+            $productQuery = $this->applyWebsiteVisibleProductFilter(
+                Product::where( 'status', 'active' )
+                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
+            );
 
             // Apply category filter (support multiple categories)
             if ( !empty( $categoryIds ) ) {
@@ -347,20 +355,22 @@ class MerchantFrontendController extends Controller
             $reviewConnection = $connectionName;
 
             // Load product from the tenant database using product_id
-            $product = Product::on( $connectionName )
-                ->with( [
-                    'category',
-                    'subcategory',
-                    'brand',
-                    'productImage',
-                    'productdetails',
-                    'vendor',
-                    'productVariant.size',
-                    'productVariant.unit',
-                    'productVariant.color',
-                    'productVariant.product'
-                ] )
-                ->where('slug', $slug)->first();
+            $product = $this->applyWebsiteVisibleProductFilter(
+                Product::on( $connectionName )
+                    ->with( [
+                        'category',
+                        'subcategory',
+                        'brand',
+                        'productImage',
+                        'productdetails',
+                        'vendor',
+                        'productVariant.size',
+                        'productVariant.unit',
+                        'productVariant.color',
+                        'productVariant.product',
+                    ] )
+                    ->where( 'slug', $slug )
+            )->first();
 
             if ( !$product ) {
                 return response()->json( [
@@ -369,10 +379,12 @@ class MerchantFrontendController extends Controller
                 ] );
             }
 
-            $relatedQuery = Product::on( $connectionName )
-                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                ->where( 'market_place_category_id', $product->market_place_category_id )
-                ->where( 'id', '!=', $product->id );
+            $relatedQuery = $this->applyWebsiteVisibleProductFilter(
+                Product::on( $connectionName )
+                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                    ->where( 'market_place_category_id', $product->market_place_category_id )
+                    ->where( 'id', '!=', $product->id )
+            );
             $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
 
             if ( !$product ) {
@@ -382,18 +394,20 @@ class MerchantFrontendController extends Controller
                 ] );
             }
         } else {
-            $product = Product::with( [
-                'category',
-                'subcategory',
-                'brand',
-                'productImage',
-                'productdetails',
-                'vendor',
-                'productVariant.size',
-                'productVariant.unit',
-                'productVariant.color',
-                'productVariant.product'
-            ] )->where('slug', $slug)->first();
+            $product = $this->applyWebsiteVisibleProductFilter(
+                Product::with( [
+                    'category',
+                    'subcategory',
+                    'brand',
+                    'productImage',
+                    'productdetails',
+                    'vendor',
+                    'productVariant.size',
+                    'productVariant.unit',
+                    'productVariant.color',
+                    'productVariant.product',
+                ] )->where( 'slug', $slug )
+            )->first();
 
             if ( !$product ) {
                 return response()->json( [
@@ -402,9 +416,12 @@ class MerchantFrontendController extends Controller
                 ] );
             }
 
-            $relatedQuery = Product::with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                ->where( 'category_id', $product->category_id )
-                ->where( 'id', '!=', $product->id );
+            $relatedQuery = $this->applyWebsiteVisibleProductFilter(
+                Product::with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                    ->where( 'status', 'active' )
+                    ->where( 'category_id', $product->category_id )
+                    ->where( 'id', '!=', $product->id )
+            );
             $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
         }
 
@@ -463,6 +480,7 @@ class MerchantFrontendController extends Controller
                 $categoryId = DB::connection( $connectionName )
                     ->table( 'products' )
                     ->where( 'id', $productDetail->product_id )
+                    ->where( 'is_show_website', 1 )
                     ->value( 'market_place_category_id' );
 
                 if ( $categoryId ) {
@@ -556,6 +574,7 @@ class MerchantFrontendController extends Controller
                 $subcategoryId = DB::connection( $connectionName )
                     ->table( 'products' )
                     ->where( 'id', $productDetail->product_id )
+                    ->where( 'is_show_website', 1 )
                     ->value( 'market_place_subcategory_id' );
 
                 if ( $subcategoryId ) {
@@ -637,6 +656,7 @@ class MerchantFrontendController extends Controller
                 $brandId = DB::connection( $connectionName )
                     ->table( 'products' )
                     ->where( 'id', $productDetail->product_id )
+                    ->where( 'is_show_website', 1 )
                     ->value( 'market_place_brand_id' );
 
                 if ( $brandId ) {
@@ -754,9 +774,11 @@ class MerchantFrontendController extends Controller
         $products = collect();
 
         if ( $sub_category_id != null ) {
-            $query = Product::where( 'status', 'active' )
-                ->where( 'subcategory_id', $sub_category_id )
-                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
+            $query = $this->applyWebsiteVisibleProductFilter(
+                Product::where( 'status', 'active' )
+                    ->where( 'subcategory_id', $sub_category_id )
+                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
+            );
 
             $listLimit = $this->requestListLimit( $request );
             if ( $listLimit !== null ) {
@@ -776,9 +798,11 @@ class MerchantFrontendController extends Controller
         // category_id from route (search/item/term/2) or query string (?category_id=2)
         $category_id = $category_id ?? $request->query( 'category_id' );
 
-        $query = Product::where( 'status', 'active' )
-            ->where( 'name', 'like', '%' . $search . '%' )
-            ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' );
+        $query = $this->applyWebsiteVisibleProductFilter(
+            Product::where( 'status', 'active' )
+                ->where( 'name', 'like', '%' . $search . '%' )
+                ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
+        );
 
         if ( $category_id !== null && $category_id !== '' && (int) $category_id > 0 ) {
             $query->where( 'category_id', (int) $category_id );
