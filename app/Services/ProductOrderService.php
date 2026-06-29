@@ -737,7 +737,7 @@ class ProductOrderService {
 
     static function deliveredOrder( $order ) {
 
-        if ( $order->order_media == null ) {
+        if ( $order->order_media === null && self::orderHasDropshipperCommission( $order ) ) {
             $affiliateData = self::orderPendingBalance( $order );
             if ( !$affiliateData ) {
                 return response()->json( [
@@ -746,20 +746,12 @@ class ProductOrderService {
                 ], 500 );
             }
 
-            // $affiliator = User::find( $affiliateData->affiliator_id );
-            // if ( $affiliator ) {
-            //     $affiliator->increment( 'balance', $affiliateData->amount );
-            //     PaymentHistoryService::store( uniqid(), $affiliateData->amount, 'My wallet', 'Product commission', '+', '', $affiliator->id );
-            // }
-
-            $affiliateData->update( ['status' => 'success'] );
-
-            // $vendor = User::find( $order->vendor_id );
-            // if ( $vendor ) {
-            //     $vendor->increment( 'balance', $order->totaladvancepayment );
-            //     PaymentHistoryService::store( uniqid(), $order->totaladvancepayment, 'My wallet', 'Order advance', '+', '', $vendor->id );
-            // }
-
+            if ( $affiliateData->status !== 'success' && !self::creditDropshipperCommission( $order, $affiliateData ) ) {
+                return response()->json( [
+                    'status'  => 500,
+                    'message' => 'Unable to credit dropshipper commission. Confirm the order has a valid dropshipper tenant.',
+                ], 500 );
+            }
         }
 
         $order->update( ['status' => 'delivered', 'last_status' => 'delivered'] );
@@ -784,7 +776,7 @@ class ProductOrderService {
             return $pendingBalance;
         }
 
-        if ( !$order->affiliator_id || $order->afi_amount === null ) {
+        if ( !self::orderHasDropshipperCommission( $order ) ) {
             return null;
         }
 
@@ -796,6 +788,50 @@ class ProductOrderService {
             'amount'        => $order->afi_amount,
             'status'        => 'pending',
         ] );
+    }
+
+    protected static function orderHasDropshipperCommission( Order $order ): bool {
+        return (bool) $order->tenant_id
+            && (int) $order->affiliator_id > 0
+            && $order->afi_amount !== null
+            && (float) $order->afi_amount > 0;
+    }
+
+    protected static function creditDropshipperCommission( Order $order, PendingBalance $affiliateData ): bool {
+        $amount = (float) $affiliateData->amount;
+        if ( $amount <= 0 ) {
+            $affiliateData->update( ['status' => 'success'] );
+
+            return true;
+        }
+
+        $dropshipperTenant = Tenant::on( 'mysql' )->find( $order->tenant_id );
+        if ( !$dropshipperTenant ) {
+            return false;
+        }
+
+        DB::connection( 'mysql' )->transaction( function () use ( $dropshipperTenant, $amount, $order, $affiliateData ) {
+            $dropshipperTenant->increment( 'balance', $amount );
+
+            PaymentHistoryService::store(
+                uniqid(),
+                $amount,
+                'My wallet',
+                'Product commission',
+                '+',
+                '',
+                $dropshipperTenant->id,
+                [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $dropshipperTenant->id,
+                    'user_id'     => $order->affiliator_id,
+                ]
+            );
+
+            $affiliateData->update( ['status' => 'success'] );
+        } );
+
+        return true;
     }
 
     protected static function pendingBalanceTableExists() {
