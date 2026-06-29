@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportBoxRequest;
 use App\Http\Requests\UpdateSupportBoxRequest;
 use App\Enums\SupportBoxTicketStatus;
+use App\Enums\TicketReplyUserSource;
 use App\Models\SupportBox;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
@@ -27,7 +28,7 @@ class SupportBoxController extends Controller {
         $supportData = SupportBox::on( 'mysql' )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
+                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->when( request( 'search' ), function ( $query ) {
                 $query->where( 'ticket_no', request( 'search' ) );

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Enums\SupportBoxTicketStatus;
+use App\Enums\TicketReplyUserSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportBoxRequest;
 use App\Http\Requests\TIcketReviewRequest;
@@ -23,7 +24,7 @@ class SupportBoxController extends Controller {
     public function index() {
         $datas = SupportBox::on('mysql')->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_id', 1 );
+                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
@@ -109,10 +110,11 @@ class SupportBoxController extends Controller {
 
         $validateData                = $request->validated();
         $validateData['user_id']     = userid();
-        $validateData['read_status'] = "unread";
+        $validateData['user_source'] = TicketReplyUserSource::Admin->value;
+        $validateData['read_status'] = 'unread';
         $validateData['status']      = SupportBoxTicketStatus::Replied->value;
 
-        $ticketreplay = TicketReply::create( $validateData );
+        $ticketreplay = TicketReply::on( 'mysql' )->create( $validateData );
 
         SupportBox::on( 'mysql' )->where( 'id', $validateData['support_box_id'] )->update( [
             'status' => SupportBoxTicketStatus::Replied->value,
@@ -146,7 +148,7 @@ class SupportBoxController extends Controller {
     public function supportCount() {
         $all_support = SupportBox::on('mysql')->where( 'user_id', auth()->user()->id )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_id', 1 );
+                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();

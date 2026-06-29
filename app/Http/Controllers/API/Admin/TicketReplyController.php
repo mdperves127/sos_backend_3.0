@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Enums\SupportBoxTicketStatus;
+use App\Enums\TicketReplyUserSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketReplyRequest;
 use App\Http\Requests\UpdateTicketReplyRequest;
@@ -26,9 +27,10 @@ class TicketReplyController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store( StoreTicketReplyRequest $request ) {
-        $validateData            = $request->validated();
-        $validateData['user_id'] = userid();
-        $validateData['status']  = SupportBoxTicketStatus::Answered->value;
+        $validateData                = $request->validated();
+        $validateData['user_id']     = userid();
+        $validateData['user_source'] = TicketReplyUserSource::Admin->value;
+        $validateData['status']      = SupportBoxTicketStatus::Answered->value;
         $validateData['read_status'] = 'unread';
 
         $ticketreplay = TicketReply::on( 'mysql' )->create( $validateData );

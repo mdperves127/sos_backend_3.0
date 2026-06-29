@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Enums\SupportBoxTicketStatus;
+use App\Enums\TicketReplyUserSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportBoxRequest;
 use App\Http\Requests\TIcketReviewRequest;
@@ -27,7 +28,7 @@ class SupportBoxController extends Controller {
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
+                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
@@ -83,7 +84,7 @@ class SupportBoxController extends Controller {
         $this->hydrateSupportBoxUsers( $data );
 
         TicketReply::on( 'mysql' )->where( 'support_box_id', $id )
-            ->where( 'status', SupportBoxTicketStatus::Answered->value )
+            ->where( 'user_source', TicketReplyUserSource::Admin->value )
             ->whereHas( 'supportBox', function ( $q ) {
                 $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
             } )
@@ -147,6 +148,7 @@ class SupportBoxController extends Controller {
 
         $validateData                = $request->validated();
         $validateData['user_id']     = auth()->id();
+        $validateData['user_source'] = TicketReplyUserSource::Tenant->value;
         $validateData['read_status'] = 'unread';
         $validateData['status']      = SupportBoxTicketStatus::Replied->value;
 
@@ -182,7 +184,7 @@ class SupportBoxController extends Controller {
 
     function supportReplyCount() {
         $msgCount = TicketReply::on( 'mysql' )->where( 'read_status', 'unread' )
-            ->where( 'status', SupportBoxTicketStatus::Answered->value )
+            ->where( 'user_source', TicketReplyUserSource::Admin->value )
             ->whereHas( 'supportBox', function ( $q ) {
                 $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
             } )
@@ -208,7 +210,7 @@ class SupportBoxController extends Controller {
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
+                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
