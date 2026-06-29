@@ -372,119 +372,183 @@ class ProductStatusController extends Controller
 
     function AdminRequestAll()
     {
-        // if(checkpermission('all-request') != 1){
-        //     return $this->permissionmessage();
-        // }
+        return response()->json( [
+            'status'  => 200,
+            'product' => $this->adminDropshipperProductRequests(),
+        ] );
+    }
 
-        $search = request('search');
+    /**
+     * Dropshipper requests are stored in dropshipper tenant DBs (counts use the same source).
+     */
+    private function adminDropshipperProductRequests( ?string $status = null, bool $withLinks = true ): array {
+        $search              = request( 'search' );
+        $dropshipperTenants  = Tenant::on( 'mysql' )->where( 'type', 'dropshipper' )->get();
+        $allProductDetails   = collect();
 
-        // Query ProductDetails from all merchant tenant databases
-        $allProductDetails = CrossTenantQueryService::queryAllTenants(
-            ProductDetails::class,
-            function ( $query ) use ( $search ) {
-                // Handle search functionality - join with products table for search
+        foreach ( $dropshipperTenants as $dropshipperTenant ) {
+            try {
+                $connectionName = $this->configureAdminTenantConnection( $dropshipperTenant->id );
+                if ( !$connectionName ) {
+                    continue;
+                }
+
+                $query = DB::connection( $connectionName )->table( 'product_details' );
+
+                if ( $status !== null ) {
+                    $query->where( 'status', $status );
+                }
+
                 if ( $search ) {
                     $query->leftJoin( 'products', 'product_details.product_id', '=', 'products.id' )
-                          ->where( function ( $q ) use ( $search ) {
-                              $q->where( 'products.name', 'like', "%{$search}%" )
-                                ->orWhere( 'products.uniqid', 'like', "%{$search}%" );
-                          } )
-                          ->select( 'product_details.*' )
-                          ->groupBy( 'product_details.id' );
+                        ->where( function ( $q ) use ( $search ) {
+                            $q->where( 'products.name', 'like', "%{$search}%" )
+                                ->orWhere( 'product_details.uniqid', 'like', "%{$search}%" );
+                        } )
+                        ->select(
+                            'product_details.*',
+                            DB::raw( 'product_details.tenant_id as merchant_tenant_id' )
+                        )
+                        ->groupBy( 'product_details.id' );
+                } else {
+                    $query->select(
+                        'product_details.*',
+                        DB::raw( 'product_details.tenant_id as merchant_tenant_id' )
+                    );
                 }
 
-                // Order by latest
-                $query->orderBy( 'created_at', 'desc' );
+                $tenantResults = $query->orderBy( 'product_details.created_at', 'desc' )->get();
+
+                $tenantResults->transform( function ( $item ) use ( $dropshipperTenant ) {
+                    $item->dropshipper_tenant_id   = $dropshipperTenant->id;
+                    $item->dropshipper_tenant_name = $dropshipperTenant->company_name;
+
+                    return $item;
+                } );
+
+                $allProductDetails = $allProductDetails->merge( $tenantResults );
+            } catch ( \Exception $e ) {
+                \Log::warning( "Failed to query dropshipper tenant {$dropshipperTenant->id}: " . $e->getMessage() );
+                continue;
+            } finally {
+                DB::setDefaultConnection( 'mysql' );
             }
-        );
+        }
 
-        // Convert stdClass objects and load relationships
-        $productDetails = collect( $allProductDetails )->map( function ( $productDetail ) {
-            // Load relationships manually for each product detail
-            if ( isset( $productDetail->product_id ) && isset( $productDetail->tenant_id ) ) {
-                $tenant = Tenant::find( $productDetail->tenant_id );
-                if ( $tenant ) {
-                    $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'affsellc_' . $tenant->id;
+        $productDetails = $this->enrichAdminDropshipperProductDetails( $allProductDetails );
 
-                    // Configure connection using the same method as CrossTenantQueryService
-                    config([
-                        'database.connections.' . $connectionName => [
-                            'driver' => 'mysql',
-                            'host' => config('database.connections.mysql.host'),
-                            'port' => config('database.connections.mysql.port'),
-                            'database' => $databaseName,
-                            'username' => config('database.connections.mysql.username'),
-                            'password' => config('database.connections.mysql.password'),
-                            'charset' => 'utf8mb4',
-                            'collation' => 'utf8mb4_unicode_ci',
-                            'strict' => false,
-                        ]
-                    ]);
-                    DB::purge( $connectionName );
-
-                    // Load product
-                    $product = Product::on( $connectionName )->select( 'id', 'name', 'image', 'discount_rate' )->find( $productDetail->product_id );
-                    $productDetail->product = $product;
-
-                    // Load vendor
-                    if ( isset( $productDetail->vendor_id ) ) {
-                        $vendor = User::on( $connectionName )->select( 'id', 'name' )->find( $productDetail->vendor_id );
-                        $productDetail->vendor = $vendor;
-                    }
-
-                    // Load affiliator (from Tenant table where type = dropshipper)
-                    if ( isset( $productDetail->tenant_id ) ) {
-                        $affiliator = Tenant::on('mysql')->select('id', 'company_name as name')->find( $productDetail->tenant_id );
-                        $productDetail->affiliator = $affiliator;
-                    }
-                }
-            }
-
-            return $productDetail;
-        } );
-
-        // Sort by latest (created_at desc) - already sorted in query but ensure consistency
-        $productDetails = $productDetails->sortByDesc( function ( $productDetail ) {
-            return $productDetail->created_at ?? '';
-        } )->values();
-
-        // Re-paginate after processing
-        $page = request()->get( 'page', 1 );
+        $page    = (int) request()->get( 'page', 1 );
         $perPage = 10;
-        $offset = ( $page - 1 ) * $perPage;
-        $paginatedProductDetails = $productDetails->slice( $offset, $perPage );
-        $lastPage = ceil( $productDetails->count() / $perPage );
+        $offset  = ( $page - 1 ) * $perPage;
+        $total   = $productDetails->count();
+        $lastPage = (int) max( 1, ceil( $total / $perPage ) );
 
-        // Build pagination URLs
-        $path = request()->url();
+        $path        = request()->url();
         $queryParams = request()->query();
-        $buildUrl = function ( $pageNum ) use ( $path, $queryParams ) {
+        $buildUrl    = function ( $pageNum ) use ( $path, $queryParams ) {
             $queryParams['page'] = $pageNum;
+
             return $path . '?' . http_build_query( $queryParams );
         };
 
-        // Build pagination response
         $response = [
-            'data' => $paginatedProductDetails->values(),
-            'current_page' => (int) $page,
-            'per_page' => $perPage,
-            'total' => $productDetails->count(),
-            'last_page' => $lastPage,
-            'from' => $offset + 1,
-            'to' => min( $offset + $perPage, $productDetails->count() ),
-            'path' => $path,
-            'first_page_url' => $buildUrl( 1 ),
-            'last_page_url' => $buildUrl( $lastPage ),
-            'prev_page_url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'next_page_url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+            'data'            => $productDetails->slice( $offset, $perPage )->values(),
+            'current_page'    => $page,
+            'per_page'        => $perPage,
+            'total'           => $total,
+            'last_page'       => $lastPage,
+            'from'            => $total ? $offset + 1 : null,
+            'to'              => min( $offset + $perPage, $total ),
+            'path'            => $path,
+            'first_page_url'  => $buildUrl( 1 ),
+            'last_page_url'   => $total ? $buildUrl( $lastPage ) : null,
+            'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
+            'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
         ];
 
-        return response()->json([
-            'status' => 200,
-            'product' => $response,
-        ]);
+        if ( $withLinks ) {
+            $links   = [];
+            $links[] = [
+                'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
+                'label'  => '&laquo; Previous',
+                'active' => false,
+            ];
 
+            for ( $i = 1; $i <= $lastPage; $i++ ) {
+                $links[] = [
+                    'url'    => $buildUrl( $i ),
+                    'label'  => (string) $i,
+                    'active' => $i == $page,
+                ];
+            }
+
+            $links[] = [
+                'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
+                'label'  => 'Next &raquo;',
+                'active' => false,
+            ];
+
+            $response['links'] = $links;
+        }
+
+        return $response;
+    }
+
+    private function configureAdminTenantConnection( string $tenantId ): ?string {
+        $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+        if ( !$tenant ) {
+            return null;
+        }
+
+        $connectionName = 'tenant_' . $tenant->id;
+
+        config( [
+            'database.connections.' . $connectionName => [
+                'driver'   => 'mysql',
+                'host'     => config( 'database.connections.mysql.host' ),
+                'port'     => config( 'database.connections.mysql.port' ),
+                'database' => 'affsellc_' . $tenant->id,
+                'username' => config( 'database.connections.mysql.username' ),
+                'password' => config( 'database.connections.mysql.password' ),
+                'charset'  => 'utf8mb4',
+                'collation'=> 'utf8mb4_unicode_ci',
+                'strict'   => false,
+            ],
+        ] );
+        DB::purge( $connectionName );
+
+        return $connectionName;
+    }
+
+    private function enrichAdminDropshipperProductDetails( $allProductDetails ) {
+        return collect( $allProductDetails )->map( function ( $productDetail ) {
+            $merchantTenantId    = $productDetail->merchant_tenant_id ?? $productDetail->tenant_id ?? null;
+            $dropshipperTenantId = $productDetail->dropshipper_tenant_id ?? null;
+
+            if ( $merchantTenantId && isset( $productDetail->product_id ) ) {
+                $merchantConnection = $this->configureAdminTenantConnection( $merchantTenantId );
+
+                if ( $merchantConnection ) {
+                    $productDetail->product = Product::on( $merchantConnection )
+                        ->select( 'id', 'name', 'image', 'discount_rate' )
+                        ->find( $productDetail->product_id );
+
+                    if ( isset( $productDetail->vendor_id ) ) {
+                        $productDetail->vendor = User::on( $merchantConnection )
+                            ->select( 'id', 'name' )
+                            ->find( $productDetail->vendor_id );
+                    }
+                }
+            }
+
+            if ( $dropshipperTenantId ) {
+                $productDetail->affiliator = Tenant::on( 'mysql' )
+                    ->select( 'id', 'company_name as name' )
+                    ->find( $dropshipperTenantId );
+            }
+
+            return $productDetail;
+        } )->sortByDesc( fn ( $item ) => $item->created_at ?? '' )->values();
     }
 
 
