@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportBoxRequest;
 use App\Http\Requests\UpdateSupportBoxRequest;
+use App\Enums\SupportBoxTicketStatus;
 use App\Models\SupportBox;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
@@ -26,9 +27,7 @@ class SupportBoxController extends Controller {
         $supportData = SupportBox::on( 'mysql' )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->whereHas( 'user', function ( $query ) {
-                    $query->where( 'role_as', 1 );
-                } );
+                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
             }] )
             ->when( request( 'search' ), function ( $query ) {
                 $query->where( 'ticket_no', request( 'search' ) );
@@ -150,13 +149,13 @@ class SupportBoxController extends Controller {
         if ( $supportBox->relationLoaded( 'latestTicketreplay' ) && $supportBox->latestTicketreplay ) {
             $latest = $supportBox->latestTicketreplay;
             $latest->unsetRelation( 'user' );
-            $latest->setRelation( 'user', $this->resolveReplyAuthorUser( $latest->user_id, $supportBox ) );
+            $latest->setRelation( 'user', $latest->resolveAuthor( $supportBox ) );
         }
 
         if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
             foreach ( $supportBox->ticketreplay as $reply ) {
                 $reply->unsetRelation( 'user' );
-                $reply->setRelation( 'user', $this->resolveReplyAuthorUser( $reply->user_id, $supportBox ) );
+                $reply->setRelation( 'user', $reply->resolveAuthor( $supportBox ) );
             }
         }
     }
@@ -174,25 +173,6 @@ class SupportBoxController extends Controller {
         }
 
         return CrossTenantQueryService::getTenantUserById( $supportBox->tenant_id, (int) $userId );
-    }
-
-    /**
-     * Reply author: tenant user when present; otherwise central (e.g. SOS admin staff).
-     */
-    private function resolveReplyAuthorUser( ?int $userId, SupportBox $supportBox ): ?User {
-        if ( $userId === null || $userId === 0 ) {
-            return null;
-        }
-        if ( ! $this->ticketBelongsToTenant( $supportBox ) ) {
-            return User::on( 'mysql' )->withoutGlobalScopes()->whereKey( $userId )->first();
-        }
-
-        $fromTenant = CrossTenantQueryService::getTenantUserById( $supportBox->tenant_id, $userId );
-        if ( $fromTenant !== null ) {
-            return $fromTenant;
-        }
-
-        return User::on( 'mysql' )->withoutGlobalScopes()->whereKey( $userId )->first();
     }
 
     private function ticketBelongsToTenant( SupportBox $supportBox ): bool {

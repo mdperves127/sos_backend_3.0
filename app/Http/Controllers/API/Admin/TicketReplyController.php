@@ -28,11 +28,12 @@ class TicketReplyController extends Controller {
     public function store( StoreTicketReplyRequest $request ) {
         $validateData            = $request->validated();
         $validateData['user_id'] = userid();
-        $validateData['status']  = 'answered';
+        $validateData['status']  = SupportBoxTicketStatus::Answered->value;
+        $validateData['read_status'] = 'unread';
 
-        $ticketreplay = TicketReply::create( $validateData );
+        $ticketreplay = TicketReply::on( 'mysql' )->create( $validateData );
 
-        SupportBox::where( 'id', $ticketreplay->support_box_id )->update( ['status' => SupportBoxTicketStatus::Answered->value] );
+        SupportBox::on( 'mysql' )->where( 'id', $ticketreplay->support_box_id )->update( ['status' => SupportBoxTicketStatus::Answered->value] );
 
         if ( request()->hasFile( 'file' ) ) {
             $filename = uploadany_file( request( 'file' ) );

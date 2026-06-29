@@ -26,7 +26,9 @@ class SupportBoxController extends Controller {
         $datas = SupportBox::on( 'mysql' )
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
-            ->withCount( 'ticketreplay as total_admin_replay' )
+            ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
+                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
+            }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
             ->paginate( 10 );
@@ -81,6 +83,7 @@ class SupportBoxController extends Controller {
         $this->hydrateSupportBoxUsers( $data );
 
         TicketReply::on( 'mysql' )->where( 'support_box_id', $id )
+            ->where( 'status', SupportBoxTicketStatus::Answered->value )
             ->whereHas( 'supportBox', function ( $q ) {
                 $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
             } )
@@ -144,7 +147,7 @@ class SupportBoxController extends Controller {
 
         $validateData                = $request->validated();
         $validateData['user_id']     = auth()->id();
-        $validateData['read_status'] = "unread";
+        $validateData['read_status'] = 'unread';
         $validateData['status']      = SupportBoxTicketStatus::Replied->value;
 
         $ticketreplay = TicketReply::on( 'mysql' )->create( $validateData );
@@ -179,7 +182,7 @@ class SupportBoxController extends Controller {
 
     function supportReplyCount() {
         $msgCount = TicketReply::on( 'mysql' )->where( 'read_status', 'unread' )
-            ->where( 'user_id', '!=', auth()->id() )
+            ->where( 'status', SupportBoxTicketStatus::Answered->value )
             ->whereHas( 'supportBox', function ( $q ) {
                 $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
             } )
@@ -204,7 +207,9 @@ class SupportBoxController extends Controller {
         $all_support = SupportBox::on( 'mysql' )
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
-            ->withCount( 'ticketreplay as total_admin_replay' )
+            ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
+                $query->where( 'status', SupportBoxTicketStatus::Answered->value );
+            }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
         foreach ( $all_support as $supportBox ) {
@@ -235,22 +240,6 @@ class SupportBoxController extends Controller {
         return CrossTenantQueryService::getTenantUserById( tenant()->id, (int) $userId );
     }
 
-    /**
-     * Reply author: tenant user when present; central admin when the reply is from SOS staff.
-     */
-    private function resolveReplyAuthorUser( ?int $userId ): ?User {
-        if ( $userId === null || (int) $userId === 0 ) {
-            return null;
-        }
-
-        $fromTenant = CrossTenantQueryService::getTenantUserById( tenant()->id, (int) $userId );
-        if ( $fromTenant !== null ) {
-            return $fromTenant;
-        }
-
-        return User::on( 'mysql' )->withoutGlobalScopes()->whereKey( $userId )->first();
-    }
-
     private function hydrateSupportBoxUsers( SupportBox $supportBox ): void {
         $supportBox->unsetRelation( 'user' );
         $supportBox->setRelation( 'user', $this->resolveTicketOwnerUser( $supportBox->user_id ) );
@@ -258,13 +247,13 @@ class SupportBoxController extends Controller {
         if ( $supportBox->relationLoaded( 'latestTicketreplay' ) && $supportBox->latestTicketreplay ) {
             $latest = $supportBox->latestTicketreplay;
             $latest->unsetRelation( 'user' );
-            $latest->setRelation( 'user', $this->resolveReplyAuthorUser( $latest->user_id ) );
+            $latest->setRelation( 'user', $latest->resolveAuthor( $supportBox ) );
         }
 
         if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
             foreach ( $supportBox->ticketreplay as $reply ) {
                 $reply->unsetRelation( 'user' );
-                $reply->setRelation( 'user', $this->resolveReplyAuthorUser( $reply->user_id ) );
+                $reply->setRelation( 'user', $reply->resolveAuthor( $supportBox ) );
             }
         }
     }
