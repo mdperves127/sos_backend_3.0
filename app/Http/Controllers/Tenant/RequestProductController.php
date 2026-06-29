@@ -43,10 +43,8 @@ class RequestProductController extends Controller {
                 $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
-                        $query->where( 'expire_date', '>', now() );
-                    } )
-                    ->withSum( 'usersubscription', 'product_approve' )
+                    ->whereCentralSubscription()
+                    ->withCentralSubscriptionProductApproveSum()
                     ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
             } )
             ->latest()
@@ -78,9 +76,7 @@ class RequestProductController extends Controller {
                 $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
-                        $query->where( 'expire_date', '<=', now() );
-                    } );
+                    ->whereCentralSubscription( false );
             } )
             ->latest()
             ->paginate( 10 )
@@ -102,10 +98,8 @@ class RequestProductController extends Controller {
                 $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
-                        $query->where( 'expire_date', '>', now() );
-                    } )
-                    ->withSum( 'usersubscription', 'product_approve' )
+                    ->whereCentralSubscription()
+                    ->withCentralSubscriptionProductApproveSum()
                     ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
             } )
             ->find( $id );
@@ -146,9 +140,10 @@ class RequestProductController extends Controller {
                 $query->select( 'id', 'name' )->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->withWhereHas( 'usersubscription', function ( $query ) {
+                    ->whereCentralSubscription()
+                    ->with( ['usersubscription' => function ( $query ) {
                         $query->select( 'user_id', 'chat_access' )->where( 'expire_date', '>', now() );
-                    } );
+                    }] );
             } )
             ->latest()
             ->paginate( 10 )
@@ -392,10 +387,8 @@ class RequestProductController extends Controller {
                 $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
-                        $query->where( 'expire_date', '>', now() );
-                    } )
-                    ->withSum( 'usersubscription', 'product_approve' )
+                    ->whereCentralSubscription()
+                    ->withCentralSubscriptionProductApproveSum()
                     ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
             } )
             ->latest()
@@ -512,9 +505,7 @@ class RequestProductController extends Controller {
                 $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
                     $query->where( 'status', 1 );
                 }] )
-                    ->whereHas( 'usersubscription', function ( $query ) {
-                        $query->where( 'expire_date', '<=', now() );
-                    } );
+                    ->whereCentralSubscription( false );
             } )
             ->count();
 
