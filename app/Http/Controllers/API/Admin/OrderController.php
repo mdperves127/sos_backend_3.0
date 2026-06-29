@@ -102,189 +102,72 @@ class OrderController extends Controller {
         return $order;
     }
 
-    function ProductProcessing() {
-        if ( checkpermission( 'order-processing' ) != 1 ) {
+    private function tenantOrdersListing( string $status, ?string $permissionKey = null ) {
+        if ( $permissionKey && checkpermission( $permissionKey ) != 1 ) {
             return $this->permissionmessage();
         }
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Processing->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
 
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
+        $search = request( 'search' );
+
+        $allOrders = CrossTenantQueryService::queryAllTenants(
+            Order::class,
+            function ( $query ) use ( $search, $status ) {
+                $query->where( 'orders.status', $status );
+
+                if ( $search ) {
+                    $query->leftJoin( 'products', 'orders.product_id', '=', 'products.id' )
+                        ->where( function ( $q ) use ( $search ) {
+                            $q->where( 'orders.order_id', 'like', "%{$search}%" )
+                                ->orWhere( 'products.name', 'like', "%{$search}%" );
+                        } )
+                        ->select( 'orders.*' )
+                        ->groupBy( 'orders.id' );
+                }
+
+                $query->orderBy( 'orders.created_at', 'desc' );
+            }
+        );
+
+        $orders = collect( $allOrders )
+            ->map( fn ( $order ) => $this->enrichOrderFromTenant( $order ) )
+            ->sortByDesc( fn ( $order ) => $order->created_at ?? '' )
+            ->values();
 
         return response()->json( [
             'status'  => 200,
-            'message' => $orders,
+            'message' => CrossTenantQueryService::paginateCollection( $orders ),
         ] );
+    }
+
+    function ProductProcessing() {
+        return $this->tenantOrdersListing( Status::Processing->value, 'order-processing' );
     }
 
     function OrderReady() {
-
-        if ( checkpermission( 'order-ready' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Ready->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Ready->value, 'order-ready' );
     }
 
     function orderReturn() {
-
-        if ( checkpermission( 'order-return' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Return ->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Return ->value, 'order-return' );
     }
 
     function pendingOrders() {
-        if ( checkpermission( 'order-pending' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Pending->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Pending->value, 'order-pending' );
     }
 
     function ProgressOrders() {
-        if ( checkpermission( 'delivery-processing' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Progress->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Progress->value, 'delivery-processing' );
     }
     function ReceivedOrders() {
-        if ( checkpermission( 'order-received' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', 'received' )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( 'received', 'order-received' );
     }
 
     function DeliveredOrders() {
-        if ( checkpermission( 'product-delivered' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Delivered->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Delivered->value, 'product-delivered' );
     }
 
     function CanceldOrders() {
-        if ( checkpermission( 'order-cancel' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Cancel->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Cancel->value, 'order-cancel' );
     }
 
     function updateStatus( ProductOrderRequest $request, $id ) {
@@ -326,26 +209,7 @@ class OrderController extends Controller {
     }
 
     function HoldOrders() {
-        if ( checkpermission( 'order-hold' ) != 1 ) {
-            return $this->permissionmessage();
-        }
-
-        $orders = Order::searchProduct()
-            ->where( 'status', Status::Hold->value )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
-            ->latest()
-            ->paginate( 10 )
-            ->withQueryString();
-
-        $orders->map( function ( $order ) {
-            $order->variants = Order::normalizeVariants( $order->variants );
-            return $order;
-        } );
-
-        return response()->json( [
-            'status'  => 200,
-            'message' => $orders,
-        ] );
+        return $this->tenantOrdersListing( Status::Hold->value, 'order-hold' );
     }
 
     public function getDeliveryCompany( $vendorId ) {
