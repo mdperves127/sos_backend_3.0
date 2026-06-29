@@ -116,12 +116,9 @@ class OrderController extends Controller
                     $shippingTemplate
                 );
 
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, $cart );
 
-            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas );
             if ( $validationError ) {
                 if ( $createdGuestCart ) {
                     $cart->delete();
@@ -234,12 +231,9 @@ class OrderController extends Controller
                 $shippingTemplate
             );
 
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, $cart );
 
-            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas );
             if ( $validationError ) {
                 $failed[] = [
                     'cart_id' => $cart->id,
@@ -291,14 +285,34 @@ class OrderController extends Controller
         ] );
     }
 
-    private function validateCartForCheckout( Cart $cart, $product, int $totalqty ): ?string {
+    private function validateCartForCheckout( Cart $cart, $product, int $totalqty, array $checkoutDatas = [] ): ?string {
         if ( $cart->purchase_type == 'single' && $product->selling_type == 'bulk' ) {
             return 'Something is wrong delete the cart.';
         }
 
         if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
-            if ( $product->qty < $totalqty ) {
-                return 'Product quantity not available!';
+            $variantLines = $this->extractCheckoutVariants( $checkoutDatas )
+                ->filter( fn ( $variant ) => !empty( $variant['variant_id'] ) && (int) ( $variant['qty'] ?? 0 ) > 0 );
+
+            if ( $variantLines->isNotEmpty() ) {
+                foreach ( $variantLines as $variant ) {
+                    $requestedQty = (int) $variant['qty'];
+                    $productVariant = CrossTenantQueryService::getSingleRecordFromTenant(
+                        $cart->tenant_id,
+                        ProductVariant::class,
+                        fn ( $query ) => $query->where( 'id', $variant['variant_id'] )
+                            ->where( 'product_id', $product->id )
+                    );
+
+                    if ( !$productVariant || (int) $productVariant->qty < $requestedQty ) {
+                        return 'Product quantity not available!';
+                    }
+                }
+            } else {
+                $availableQty = $this->resolveAvailableProductQuantity( $cart->tenant_id, $product );
+                if ( $availableQty < $totalqty ) {
+                    return 'Product quantity not available!';
+                }
             }
         }
 
@@ -307,6 +321,66 @@ class OrderController extends Controller
         }
 
         return null;
+    }
+
+    private function resolveCheckoutTotalQty( array $checkoutDatas, ?Cart $cart = null ): int {
+        $totalqty = (int) $this->extractCheckoutVariants( $checkoutDatas )->sum( 'qty' );
+
+        if ( $totalqty < 1 && $cart ) {
+            $totalqty = (int) ( $cart->product_qty ?? 0 );
+        }
+
+        if ( $totalqty < 1 && $cart ) {
+            if ( !$cart->relationLoaded( 'cartDetails' ) ) {
+                $cart->load( 'cartDetails' );
+            }
+
+            $totalqty = (int) $cart->cartDetails->sum( 'qty' );
+        }
+
+        return $totalqty;
+    }
+
+    private function extractCheckoutVariants( array $checkoutDatas ) {
+        return collect( $checkoutDatas )
+            ->pluck( 'variants' )
+            ->filter()
+            ->flatMap( fn ( $variants ) => is_array( $variants ) ? $variants : [] )
+            ->values();
+    }
+
+    private function mergeCheckoutPayloadWithCart( Cart $cart, array $shippingTemplate, array $data ): array {
+        $payload = array_merge( $shippingTemplate, $data );
+
+        if ( empty( $payload['variants'] ) ) {
+            $built               = $this->buildShippingPayloadForCart( $cart, $shippingTemplate );
+            $payload['variants'] = $built['variants'] ?? [];
+        }
+
+        return $payload;
+    }
+
+    private function resolveAvailableProductQuantity( $tenantId, $product ): int {
+        if ( !$tenantId ) {
+            return (int) ( $product->qty ?? 0 );
+        }
+
+        $tenant = \App\Models\Tenant::on( 'mysql' )->find( $tenantId );
+        if ( !$tenant ) {
+            return (int) ( $product->qty ?? 0 );
+        }
+
+        $variants = CrossTenantQueryService::queryTenant(
+            $tenant,
+            ProductVariant::class,
+            fn ( $query ) => $query->where( 'product_id', $product->id )
+        );
+
+        if ( $variants->isNotEmpty() ) {
+            return (int) collect( $variants )->sum( fn ( $variant ) => (int) ( $variant->qty ?? 0 ) );
+        }
+
+        return (int) ( $product->qty ?? 0 );
     }
 
     private function normalizeGuestDatas( Request $request ) {
@@ -394,7 +468,10 @@ class OrderController extends Controller
         array $shippingTemplate
     ): array {
         if ( (int) $cart->id === $requestedCartId && $requestDatas->isNotEmpty() ) {
-            return $requestDatas->toArray();
+            return $requestDatas
+                ->map( fn ( $data ) => $this->mergeCheckoutPayloadWithCart( $cart, $shippingTemplate, $data ) )
+                ->values()
+                ->all();
         }
 
         return [$this->buildShippingPayloadForCart( $cart, $shippingTemplate )];
@@ -408,7 +485,10 @@ class OrderController extends Controller
     ): array {
 
         if ( (int) $cart->id === $requestedCartId && !empty( $requestDatas ) ) {
-            return $requestDatas;
+            return collect( $requestDatas )
+                ->map( fn ( $data ) => $this->mergeCheckoutPayloadWithCart( $cart, $shippingTemplate, $data ) )
+                ->values()
+                ->all();
         }
 
         return [$this->buildShippingPayloadForCart( $cart, $shippingTemplate )];
@@ -516,7 +596,42 @@ class OrderController extends Controller
         $totalqty = (int) $datas->pluck( 'variants' )->collapse()->sum( 'qty' );
 
         if ( $totalqty < 1 ) {
+            $totalqty = (int) collect( $request->input( 'cartItems', [] ) )->sum( 'qty' );
+        }
+
+        if ( $totalqty < 1 ) {
+            $totalqty = (int) $request->input( 'qty', 0 );
+        }
+
+        if ( $totalqty < 1 ) {
             return ['error' => 'Product quantity not available!'];
+        }
+
+        $checkoutDatas = $datas->values()->all();
+        if ( $this->extractCheckoutVariants( $checkoutDatas )->isEmpty() && is_array( $request->input( 'cartItems' ) ) ) {
+            $firstPayload = $checkoutDatas[0] ?? $datas->first() ?? [];
+            $firstPayload['variants'] = collect( $request->input( 'cartItems', [] ) )
+                ->map( fn ( $item ) => array_filter( [
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'qty'        => (int) ( $item['qty'] ?? 0 ),
+                    'color'      => $item['color'] ?? null,
+                    'size'       => $item['size'] ?? null,
+                    'unit'       => $item['unit'] ?? null,
+                ], fn ( $value ) => $value !== null ) )
+                ->values()
+                ->all();
+            $checkoutDatas = [$firstPayload];
+            $totalqty       = $this->resolveCheckoutTotalQty( $checkoutDatas );
+        }
+
+        $previewCart   = new Cart( [
+            'purchase_type' => $purchaseType,
+            'tenant_id'     => $tenantId,
+        ] );
+        $validationError = $this->validateCartForCheckout( $previewCart, $product, $totalqty, $checkoutDatas );
+
+        if ( $validationError ) {
+            return ['error' => $validationError];
         }
 
         $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
