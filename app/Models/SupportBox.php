@@ -59,10 +59,30 @@ class SupportBox extends Model
 
     function ticketreplay()
     {
-        return $this->hasMany(TicketReply::class);
+        return $this->hasMany( TicketReply::class, 'support_box_id', 'id' );
     }
+
     function latestTicketreplay(){
-        return $this->hasOne(TicketReply::class,'support_box_id')->latestOfMany();
+        return $this->hasOne( TicketReply::class, 'support_box_id', 'id' )->latestOfMany();
+    }
+
+    /**
+     * Load replies for this ticket only (explicit support_box_id — avoids cross-ticket bleed in tenant context).
+     */
+    public function loadTicketRepliesWithFiles(): self {
+        $replies = TicketReply::query()
+            ->where( 'support_box_id', $this->getKey() )
+            ->orderBy( 'created_at' )
+            ->with( [
+                'file' => function ( $fileRelation ) {
+                    $fileRelation->getRelated()->setConnection( 'mysql' );
+                },
+            ] )
+            ->get();
+
+        $this->setRelation( 'ticketreplay', $replies );
+
+        return $this;
     }
 
     function supportassigned()

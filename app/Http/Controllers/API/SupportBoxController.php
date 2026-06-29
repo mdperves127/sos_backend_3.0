@@ -24,7 +24,8 @@ class SupportBoxController extends Controller {
     public function index() {
         $datas = SupportBox::on('mysql')->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
+                $query->whereColumn( 'ticket_replies.support_box_id', 'support_boxes.id' )
+                    ->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
@@ -52,16 +53,21 @@ class SupportBoxController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show( $id ) {
-        $supportBox = SupportBox::where( ['id' => $id, 'user_id' => auth()->user()->id] )->first();
+        $supportBox = SupportBox::on( 'mysql' )->where( [
+            'id'      => $id,
+            'user_id' => auth()->user()->id,
+        ] )->first();
+
         if ( !$supportBox ) {
             return responsejson( 'Not found', 'fail' );
         }
 
-        $data = $supportBox->load( ['ticketreplay' => function ( $query ) {
-            $query->with( ['file', 'user'] );
-        }] );
+        $data = $supportBox->loadTicketRepliesWithFiles();
+        $this->hydrateSupportBoxReplyUsers( $data );
 
-        TicketReply::where( 'support_box_id', $id )->update( ['read_status' => 'read'] );
+        TicketReply::on( 'mysql' )->where( 'support_box_id', $id )
+            ->where( 'user_source', TicketReplyUserSource::Admin->value )
+            ->update( ['read_status' => 'read'] );
 
         return $this->response( $data );
     }
@@ -148,7 +154,8 @@ class SupportBoxController extends Controller {
     public function supportCount() {
         $all_support = SupportBox::on('mysql')->where( 'user_id', auth()->user()->id )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
+                $query->whereColumn( 'ticket_replies.support_box_id', 'support_boxes.id' )
+                    ->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
@@ -160,5 +167,14 @@ class SupportBoxController extends Controller {
             'closed'      => $closed,
             'all_support' => $all_support,
         ] );
+    }
+
+    private function hydrateSupportBoxReplyUsers( SupportBox $supportBox ): void {
+        if ( $supportBox->relationLoaded( 'ticketreplay' ) ) {
+            foreach ( $supportBox->ticketreplay as $reply ) {
+                $reply->unsetRelation( 'user' );
+                $reply->setRelation( 'user', $reply->resolveAuthor( $supportBox ) );
+            }
+        }
     }
 }

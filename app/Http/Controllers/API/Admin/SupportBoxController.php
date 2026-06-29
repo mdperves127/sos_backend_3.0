@@ -11,7 +11,6 @@ use App\Models\SupportBox;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class SupportBoxController extends Controller {
@@ -28,7 +27,8 @@ class SupportBoxController extends Controller {
         $supportData = SupportBox::on( 'mysql' )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
+                $query->whereColumn( 'ticket_replies.support_box_id', 'support_boxes.id' )
+                    ->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->when( request( 'search' ), function ( $query ) {
                 $query->where( 'ticket_no', request( 'search' ) );
@@ -95,16 +95,7 @@ class SupportBoxController extends Controller {
             return responsejson( 'Not found', 'fail' );
         }
 
-        $data = $supportBox->load( [
-            'ticketreplay' => function ( $query ) {
-                $query->with( [
-                    'file' => function ( $fileRelation ) {
-                        $fileRelation->getQuery()->getQuery()->connection = DB::connection( 'mysql' );
-                        $fileRelation->getRelated()->setConnection( 'mysql' );
-                    },
-                ] )->orderBy( 'created_at' );
-            },
-        ] );
+        $data = $supportBox->loadTicketRepliesWithFiles();
         $this->hydrateSupportBoxUsers( $data );
 
         return $this->response( $data );

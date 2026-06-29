@@ -33,7 +33,7 @@ class TicketReply extends Model {
     }
 
     public function supportBox() {
-        return $this->belongsTo( SupportBox::class );
+        return $this->belongsTo( SupportBox::class, 'support_box_id', 'id' );
     }
 
     public function isFromAdminDatabase( ?SupportBox $supportBox = null ): bool {

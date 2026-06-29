@@ -14,7 +14,6 @@ use App\Models\User;
 use App\Services\CrossTenantQueryService;
 use App\Services\SosService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class SupportBoxController extends Controller {
@@ -28,7 +27,8 @@ class SupportBoxController extends Controller {
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
+                $query->whereColumn( 'ticket_replies.support_box_id', 'support_boxes.id' )
+                    ->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->latest()
@@ -71,16 +71,7 @@ class SupportBoxController extends Controller {
             return responsejson( 'Not found', 'fail' );
         }
 
-        $data = $supportBox->load( [
-            'ticketreplay' => function ( $query ) {
-                $query->with( [
-                    'file' => function ( $fileRelation ) {
-                        $fileRelation->getQuery()->getQuery()->connection = DB::connection( 'mysql' );
-                        $fileRelation->getRelated()->setConnection( 'mysql' );
-                    },
-                ] )->orderBy( 'created_at' );
-            },
-        ] );
+        $data = $supportBox->loadTicketRepliesWithFiles();
         $this->hydrateSupportBoxUsers( $data );
 
         TicketReply::on( 'mysql' )->where( 'support_box_id', $id )
@@ -183,12 +174,17 @@ class SupportBoxController extends Controller {
     }
 
     function supportReplyCount() {
-        $msgCount = TicketReply::on( 'mysql' )->where( 'read_status', 'unread' )
+        $replyQuery = TicketReply::on( 'mysql' )->where( 'read_status', 'unread' )
             ->where( 'user_source', TicketReplyUserSource::Admin->value )
             ->whereHas( 'supportBox', function ( $q ) {
                 $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
-            } )
-            ->count();
+            } );
+
+        if ( $supportBoxId = request( 'support_box_id' ) ) {
+            $replyQuery->where( 'support_box_id', $supportBoxId );
+        }
+
+        $msgCount = $replyQuery->count();
         $boxScope = function ( $q ) {
             $q->where( 'tenant_id', tenant()->id )->where( 'user_id', auth()->id() );
         };
@@ -206,11 +202,32 @@ class SupportBoxController extends Controller {
     }
 
     public function supportCount() {
+        if ( $supportBoxId = request( 'support_box_id' ) ) {
+            $supportBox = SupportBox::on( 'mysql' )->where( [
+                'id'        => $supportBoxId,
+                'tenant_id' => tenant()->id,
+                'user_id'   => auth()->id(),
+            ] )->first();
+
+            if ( ! $supportBox ) {
+                return responsejson( 'Not found', 'fail' );
+            }
+
+            $supportBox->loadTicketRepliesWithFiles();
+            $this->hydrateSupportBoxUsers( $supportBox );
+
+            return response()->json( [
+                'closed'      => 0,
+                'all_support' => [$supportBox],
+            ] );
+        }
+
         $all_support = SupportBox::on( 'mysql' )
             ->where( 'tenant_id', tenant()->id )
             ->where( 'user_id', auth()->id() )
             ->withCount( ['ticketreplay as total_admin_replay' => function ( $query ) {
-                $query->where( 'user_source', TicketReplyUserSource::Admin->value );
+                $query->whereColumn( 'ticket_replies.support_box_id', 'support_boxes.id' )
+                    ->where( 'user_source', TicketReplyUserSource::Admin->value );
             }] )
             ->with( ['latestTicketreplay', 'category:id,name', 'problem_topic:id,name'] )
             ->get();
