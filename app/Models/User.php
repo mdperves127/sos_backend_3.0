@@ -135,14 +135,18 @@ class User extends Authenticatable {
         } );
     }
 
-    public function scopeWithCentralSubscriptionProductApproveSum( $query ) {
+    /**
+     * Active product count must not exceed product_approve on central user_subscriptions.
+     * Uses whereRaw because HAVING aliases break inside whereHas EXISTS subqueries.
+     */
+    public function scopeWithinCentralSubscriptionProductApproveLimit( $query ) {
         $centralDb = DB::connection( 'mysql' )->getDatabaseName();
 
-        return $query->addSelect( [
-            'usersubscription_sum_product_approve' => DB::raw(
-                "(SELECT COALESCE(SUM(us.product_approve), 0) FROM `{$centralDb}`.`user_subscriptions` us WHERE us.user_id = users.id AND us.deleted_at IS NULL)"
-            ),
-        ] );
+        return $query->whereRaw(
+            '(SELECT COUNT(*) FROM `product_details` pd WHERE pd.user_id = users.id AND pd.status = 1) <= '
+            . "(SELECT COALESCE(SUM(us.product_approve), 0) FROM `{$centralDb}`.`user_subscriptions` us "
+            . 'WHERE us.user_id = users.id AND us.deleted_at IS NULL)'
+        );
     }
 
     function paymenthistories() {

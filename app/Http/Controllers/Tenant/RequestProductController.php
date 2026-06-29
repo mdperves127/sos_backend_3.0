@@ -40,12 +40,8 @@ class RequestProductController extends Controller {
             } )
             ->with( ['affiliator:id,name', 'vendor:id,name'] )
             ->whereHas( 'affiliator', function ( $query ) {
-                $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] )
-                    ->whereCentralSubscription()
-                    ->withCentralSubscriptionProductApproveSum()
-                    ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
+                $query->whereCentralSubscription()
+                    ->withinCentralSubscriptionProductApproveLimit();
             } )
             ->latest()
             ->paginate( 10 )
@@ -95,12 +91,8 @@ class RequestProductController extends Controller {
             }] )
             ->where( 'vendor_id', auth()->id() )
             ->whereHas( 'affiliator', function ( $query ) {
-                $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] )
-                    ->whereCentralSubscription()
-                    ->withCentralSubscriptionProductApproveSum()
-                    ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
+                $query->whereCentralSubscription()
+                    ->withinCentralSubscriptionProductApproveLimit();
             } )
             ->find( $id );
         if ( !$product ) {
@@ -384,12 +376,8 @@ class RequestProductController extends Controller {
             } )
             ->with( ['affiliator:id,name', 'vendor:id,name'] )
             ->whereHas( 'affiliator', function ( $query ) {
-                $query->withCount( ['affiliatoractiveproducts' => function ( $query ) {
-                    $query->where( 'status', 1 );
-                }] )
-                    ->whereCentralSubscription()
-                    ->withCentralSubscriptionProductApproveSum()
-                    ->having( 'affiliatoractiveproducts_count', '<=', DB::raw( 'usersubscription_sum_product_approve' ) );
+                $query->whereCentralSubscription()
+                    ->withinCentralSubscriptionProductApproveLimit();
             } )
             ->latest()
             ->paginate( 10 )
