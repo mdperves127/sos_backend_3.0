@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\PosSales;
+use App\Models\PosSalesDetails;
 use App\Models\Product;
 use App\Models\ProductPurchase;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -22,16 +25,47 @@ class MerchantDashboardController extends Controller {
 
     private const REVENUE_STATUSES = ['pending', 'progress', 'processing', 'delivered', 'completed', 'received'];
 
-    private function merchantOrders() {
-        return Order::query()->where( 'vendor_id', tenantOwnerId() );
+    private function merchantOwnerId(): int {
+        return (int) tenantOwnerId();
+    }
+
+    private function merchantOrders(): Builder {
+        return Order::query()->where( 'vendor_id', $this->merchantOwnerId() );
+    }
+
+    private function merchantPosSales(): Builder {
+        return PosSales::query()->where( 'vendor_id', $this->merchantOwnerId() );
+    }
+
+    private function posSaleDateExpression(): string {
+        return 'DATE(COALESCE(NULLIF(sale_date, ""), created_at))';
+    }
+
+    private function scopePosSalesOnDate( Builder $query, Carbon $date ): Builder {
+        return ( clone $query )->whereRaw( $this->posSaleDateExpression() . ' = ?', [$date->toDateString()] );
+    }
+
+    private function scopePosSalesBetween( Builder $query, Carbon $start, Carbon $end ): Builder {
+        return ( clone $query )->whereRaw(
+            $this->posSaleDateExpression() . ' BETWEEN ? AND ?',
+            [$start->toDateString(), $end->toDateString()]
+        );
     }
 
     private function countOrders( $query ): int {
         return (int) ( clone $query )->count();
     }
 
+    private function countPosSales( $query ): int {
+        return (int) ( clone $query )->count();
+    }
+
     private function sumRevenue( $query ): float {
         return (float) ( clone $query )->sum( DB::raw( 'COALESCE(product_amount, 0) + COALESCE(delivery_charge, 0)' ) );
+    }
+
+    private function sumPosRevenue( $query ): float {
+        return (float) ( clone $query )->sum( DB::raw( 'COALESCE(total_price, 0)' ) );
     }
 
     private function metricTrend( int|float $current, int|float $previous, string $unit, string $label ): array {
@@ -105,7 +139,8 @@ class MerchantDashboardController extends Controller {
         $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
         $lastMonthEnd   = $now->copy()->subMonth()->endOfMonth();
 
-        $base = $this->merchantOrders();
+        $base    = $this->merchantOrders();
+        $posBase = $this->merchantPosSales();
 
         $activeNow = $this->countOrders( ( clone $base )->whereIn( 'status', self::ACTIVE_STATUSES ) );
         $activeLastMonth = $this->countOrders(
@@ -120,21 +155,29 @@ class MerchantDashboardController extends Controller {
         );
 
         $todayOrders = $this->countOrders( ( clone $base )->whereDate( 'created_at', $today ) );
+        $todayPosSales = $this->countPosSales( $this->scopePosSalesOnDate( clone $posBase, $today ) );
         $yesterdayOrders = $this->countOrders( ( clone $base )->whereDate( 'created_at', $yesterday ) );
+        $yesterdayPosSales = $this->countPosSales( $this->scopePosSalesOnDate( clone $posBase, $yesterday ) );
 
         $todayCompletedQuery = ( clone $base )->whereIn( 'status', self::COMPLETED_STATUSES )->whereDate( 'created_at', $today );
+        $todayPosRevenueQuery = $this->scopePosSalesOnDate( clone $posBase, $today );
 
-        $todaySell = $this->sumRevenue( clone $todayCompletedQuery );
+        $todaySell = $this->sumRevenue( clone $todayCompletedQuery )
+            + $this->sumPosRevenue( clone $todayPosRevenueQuery );
         $yesterdaySell = $this->sumRevenue(
             ( clone $base )->whereIn( 'status', self::COMPLETED_STATUSES )->whereDate( 'created_at', $yesterday )
-        );
+        ) + $this->sumPosRevenue( $this->scopePosSalesOnDate( clone $posBase, $yesterday ) );
         $todayCompletedCount = $this->countOrders( clone $todayCompletedQuery );
 
         $totalOrders = $this->countOrders( clone $base );
+        $totalPosSales = $this->countPosSales( clone $posBase );
+
+        $todaySalesCount = $todayOrders + $todayPosSales;
+        $yesterdaySalesCount = $yesterdayOrders + $yesterdayPosSales;
 
         $activeTrend  = $this->metricTrend( $activeNow, $activeLastMonth, 'orders', 'vs last month' );
         $pendingTrend = $this->metricTrend( $pendingNow, $pendingLastMonth, 'orders', 'vs last month' );
-        $todayOrderTrend = $this->metricTrend( $todayOrders, $yesterdayOrders, 'orders', 'vs yesterday' );
+        $todayOrderTrend = $this->metricTrend( $todaySalesCount, $yesterdaySalesCount, 'sales', 'vs yesterday' );
         $todaySellTrend  = $this->metricTrend( $todaySell, $yesterdaySell, 'Tk', 'vs yesterday' );
 
         $summaryMetrics = [
@@ -145,7 +188,8 @@ class MerchantDashboardController extends Controller {
                 'format' => 'number',
                 'change' => $activeTrend['change'],
                 'trend'  => $activeTrend['trend'],
-                'footer' => 'Based on ' . $this->formatNumber( $totalOrders ) . ' total orders',
+                'footer' => 'Based on ' . $this->formatNumber( $totalOrders ) . ' online orders and '
+                    . $this->formatNumber( $totalPosSales ) . ' POS sales',
             ],
             [
                 'id'     => 'pending',
@@ -159,11 +203,11 @@ class MerchantDashboardController extends Controller {
             [
                 'id'     => 'today-order',
                 'title'  => 'Today Order',
-                'value'  => $todayOrders,
+                'value'  => $todaySalesCount,
                 'format' => 'number',
                 'change' => $todayOrderTrend['change'],
                 'trend'  => $todayOrderTrend['trend'],
-                'footer' => 'Updated just now',
+                'footer' => $todayOrders . ' online, ' . $todayPosSales . ' POS',
             ],
             [
                 'id'     => 'today-sell',
@@ -172,7 +216,7 @@ class MerchantDashboardController extends Controller {
                 'format' => 'currency',
                 'change' => $todaySellTrend['change'],
                 'trend'  => $todaySellTrend['trend'],
-                'footer' => 'From ' . $todayCompletedCount . ' completed orders',
+                'footer' => 'From ' . $todayCompletedCount . ' completed orders and ' . $todayPosSales . ' POS sales',
             ],
         ];
 
@@ -183,14 +227,17 @@ class MerchantDashboardController extends Controller {
         for ( $i = 0; $i < 7; $i++ ) {
             $day     = $weekStart->copy()->addDays( $i );
             $dayBase = ( clone $base )->whereDate( 'created_at', $day );
+            $dayPos  = $this->scopePosSalesOnDate( clone $posBase, $day );
 
             $weeklyRevenueData[] = [
                 'day'      => $dayLabels[$i],
-                'revenue'  => round( $this->sumRevenue(
-                    ( clone $dayBase )->whereIn( 'status', self::REVENUE_STATUSES )
-                ), 2 ),
+                'revenue'  => round(
+                    $this->sumRevenue( ( clone $dayBase )->whereIn( 'status', self::REVENUE_STATUSES ) )
+                    + $this->sumPosRevenue( clone $dayPos ),
+                    2
+                ),
                 'expenses' => round( (float) ProductPurchase::query()
-                    ->where( 'vendor_id', tenantOwnerId() )
+                    ->where( 'vendor_id', $this->merchantOwnerId() )
                     ->whereDate( 'created_at', $day )
                     ->sum( DB::raw( 'COALESCE(total_price, 0)' ) ), 2 ),
             ];
@@ -202,23 +249,29 @@ class MerchantDashboardController extends Controller {
             $monthStart = $now->copy()->subMonths( $i )->startOfMonth();
             $monthEnd   = $now->copy()->subMonths( $i )->endOfMonth();
             $monthBase  = ( clone $base )->whereBetween( 'created_at', [$monthStart, $monthEnd] );
+            $monthPos   = $this->scopePosSalesBetween( clone $posBase, $monthStart, $monthEnd );
 
             $salesPipelineOrders[] = [
                 'month' => $monthStart->format( 'M' ),
-                'value' => $this->countOrders( clone $monthBase ),
+                'value' => $this->countOrders( clone $monthBase ) + $this->countPosSales( clone $monthPos ),
             ];
             $salesPipelineSales[] = [
                 'month' => $monthStart->format( 'M' ),
-                'value' => round( $this->sumRevenue(
-                    ( clone $monthBase )->whereIn( 'status', self::REVENUE_STATUSES )
-                ), 2 ),
+                'value' => round(
+                    $this->sumRevenue( ( clone $monthBase )->whereIn( 'status', self::REVENUE_STATUSES ) )
+                    + $this->sumPosRevenue( clone $monthPos ),
+                    2
+                ),
             ];
         }
+
+        $completedOrders = $this->countOrders( ( clone $base )->whereIn( 'status', self::COMPLETED_STATUSES ) );
+        $posSalesCount   = $this->countPosSales( clone $posBase );
 
         $ordersOverviewData = [
             [
                 'status' => 'completed',
-                'orders' => $this->countOrders( ( clone $base )->whereIn( 'status', self::COMPLETED_STATUSES ) ),
+                'orders' => $completedOrders + $posSalesCount,
             ],
             [
                 'status' => 'processing',
@@ -234,7 +287,7 @@ class MerchantDashboardController extends Controller {
             ],
         ];
 
-        $recentOrders = ( clone $base )
+        $recentOnlineOrders = ( clone $base )
             ->with( 'product:id,name' )
             ->latest()
             ->limit( 15 )
@@ -247,14 +300,48 @@ class MerchantDashboardController extends Controller {
                     'customerName' => $order->name,
                     'initials'     => $this->customerInitials( (string) $order->name ),
                     'date'         => $order->created_at?->format( 'M j, Y' ) ?? '',
+                    'sortDate'     => $order->created_at,
                     'amount'       => round( $amount, 2 ),
                     'priority'     => $this->mapOrderPriority( (float) ( $order->due_amount ?? 0 ), $amount ),
                     'status'       => $this->mapRecentOrderStatus( (string) $order->status, (float) ( $order->due_amount ?? 0 ) ),
+                    'source'       => 'order',
                 ];
-            } )
+            } );
+
+        $recentPosSales = ( clone $posBase )
+            ->with( ['customer' => fn ( $query ) => $query->select( 'id', 'customer_name' )] )
+            ->latest()
+            ->limit( 15 )
+            ->get()
+            ->map( function ( PosSales $sale ) {
+                $customerName = $sale->customer?->customer_name ?? 'Walk-in Customer';
+                $amount       = (float) ( $sale->total_price ?? 0 );
+                $dueAmount    = (float) ( $sale->due_amount ?? 0 );
+                $saleDate     = $sale->sale_date
+                    ? Carbon::parse( $sale->sale_date )
+                    : $sale->created_at;
+
+                return [
+                    'id'           => $sale->barcode ?: ( 'POS-' . str_pad( (string) $sale->id, 5, '0', STR_PAD_LEFT ) ),
+                    'customerName' => $customerName,
+                    'initials'     => $this->customerInitials( $customerName ),
+                    'date'         => $saleDate?->format( 'M j, Y' ) ?? '',
+                    'sortDate'     => $saleDate,
+                    'amount'       => round( $amount, 2 ),
+                    'priority'     => $this->mapOrderPriority( $dueAmount, $amount ),
+                    'status'       => $sale->payment_status === 'paid' ? 'paid' : ( $dueAmount > 0 ? 'overdue' : 'pending' ),
+                    'source'       => 'pos',
+                ];
+            } );
+
+        $recentOrders = $recentOnlineOrders
+            ->concat( $recentPosSales )
+            ->sortByDesc( fn ( array $item ) => $item['sortDate'] ?? null )
+            ->take( 15 )
+            ->map( fn ( array $item ) => collect( $item )->except( 'sortDate' )->all() )
             ->values();
 
-        $ownerId        = tenantOwnerId();
+        $ownerId        = $this->merchantOwnerId();
         $soldStatuses   = self::COMPLETED_STATUSES;
         $topProducts    = Product::query()
             ->where( 'user_id', $ownerId )
@@ -265,22 +352,35 @@ class MerchantDashboardController extends Controller {
                     ->whereColumn( 'product_id', 'products.id' )
                     ->where( 'vendor_id', $ownerId )
                     ->whereIn( 'status', $soldStatuses ),
+                'pos_sold' => PosSalesDetails::query()
+                    ->selectRaw( 'COALESCE(SUM(pos_sales_details.qty), 0)' )
+                    ->join( 'pos_sales', 'pos_sales.id', '=', 'pos_sales_details.pos_sales_id' )
+                    ->whereColumn( 'pos_sales_details.product_id', 'products.id' )
+                    ->where( 'pos_sales.vendor_id', $ownerId ),
                 'revenue' => Order::query()
                     ->selectRaw( 'COALESCE(SUM(COALESCE(product_amount, 0) + COALESCE(delivery_charge, 0)), 0)' )
                     ->whereColumn( 'product_id', 'products.id' )
                     ->where( 'vendor_id', $ownerId )
                     ->whereIn( 'status', $soldStatuses ),
+                'pos_revenue' => PosSalesDetails::query()
+                    ->selectRaw( 'COALESCE(SUM(pos_sales_details.sub_total), 0)' )
+                    ->join( 'pos_sales', 'pos_sales.id', '=', 'pos_sales_details.pos_sales_id' )
+                    ->whereColumn( 'pos_sales_details.product_id', 'products.id' )
+                    ->where( 'pos_sales.vendor_id', $ownerId ),
             ] )
-            ->orderByDesc( 'sold' )
+            ->orderByRaw( '(COALESCE(sold, 0) + COALESCE(pos_sold, 0)) DESC' )
             ->limit( 10 )
             ->get();
 
         $topSellingProducts = $topProducts->values()->map( function ( Product $product, int $index ) {
+            $sold    = (int) ( $product->sold ?? 0 ) + (int) ( $product->pos_sold ?? 0 );
+            $revenue = (float) ( $product->revenue ?? 0 ) + (float) ( $product->pos_revenue ?? 0 );
+
             return [
                 'rank'    => $index + 1,
                 'name'    => $product->name,
-                'sold'    => (int) ( $product->sold ?? 0 ),
-                'revenue' => round( (float) ( $product->revenue ?? 0 ), 2 ),
+                'sold'    => $sold,
+                'revenue' => round( $revenue, 2 ),
             ];
         } );
 
