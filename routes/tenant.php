@@ -635,7 +635,7 @@ Route::middleware( [
         Route::prefix( 'tenant-chat' )->group( function () {
             Route::get( 'conversation', [TenantConversationController::class, 'index'] );
             Route::post( 'messages/send', [TenantMessageController::class, 'sendMessage'] );
-            Route::get( 'messages/{peerId}', [TenantMessageController::class, 'getMessages'] );
+            Route::get( 'messages/{tenant_id}', [TenantMessageController::class, 'getMessages'] );
             Route::post( 'chat-report/{id}', [TenantMessageController::class, 'chatReport'] );
         } );
 

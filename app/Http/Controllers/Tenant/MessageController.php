@@ -18,11 +18,30 @@ use Illuminate\Validation\Rule;
 class MessageController extends Controller {
     use ResolvesTenantChatAccess;
 
-    public function getMessages( int|string $peerId ) {
-        $peerId = (int) $peerId;
-        $me     = (int) Auth::id();
+    public function getMessages( int|string $tenantId ) {
+        $tenantId = (string) $tenantId;
+        $me       = (int) Auth::id();
+        $tid      = (string) tenant()->id;
 
-        $tid = (string) tenant()->id;
+        if ( ! Tenant::on( 'mysql' )->where( 'id', $tenantId )->exists() ) {
+            return response()->json( [
+                'success' => false,
+                'message' => 'Tenant not found',
+            ], 404 );
+        }
+
+        // Path param is the peer's tenant_id (mysql.tenants.id), not a local users.id.
+        // Resolve the local chat user created/found via users.uniqid = tenant_id.
+        $peerId = null;
+        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'uniqid' ) ) {
+            $peerId = User::on( 'tenant' )->where( 'uniqid', $tenantId )->value( 'id' );
+        }
+
+        if ( ! $peerId ) {
+            return response()->json( ['success' => true, 'messages' => []] );
+        }
+
+        $peerId = (int) $peerId;
 
         $messages = Message::on( 'tenant' )
             ->where( 'tenant_id', $tid )

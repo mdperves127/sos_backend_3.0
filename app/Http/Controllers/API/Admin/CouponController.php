@@ -129,12 +129,13 @@ class CouponController extends Controller {
 
         return $this->response( 'Updated Successfull' );
     }
-    public function couponUpdate( UpdateCouponRequest $request, Coupon $coupon ) {
-        if ( !$coupon ) {
+    public function couponUpdate( UpdateCouponRequest $request, $id ) {
+        $coupon = Coupon::find( $id );
+        if ( ! $coupon ) {
             return responsejson( 'Not found', 'fail' );
         }
-        $validatedData = $request->validated();
-        $coupon->update( $validatedData );
+
+        $coupon->update( $request->validated() );
 
         return $this->response( 'Updated Successfull' );
     }

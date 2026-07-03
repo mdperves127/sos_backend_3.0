@@ -28,26 +28,30 @@ class UpdateCouponRequest extends FormRequest
      */
     public function rules()
     {
+        $couponId = $this->route( 'id' ) ?? $this->route( 'coupon' );
+        if ( $couponId instanceof Coupon ) {
+            $couponId = $couponId->getKey();
+        }
+
         return [
             'name' => ['required', 'max:256'],
-            'type' => ['required',Rule::in(['flat','percentage'])],
+            'type' => ['required', Rule::in( ['flat', 'percentage'] )],
             'amount' => ['required'],
             'commission' => ['required'],
-            'commission_type' => ['required',Rule::in(['flat','percentage'])],
+            'commission_type' => ['required', Rule::in( ['flat', 'percentage'] )],
             'expire_date' => ['required'],
             'limitation' => ['required'],
-            'tenant_id' => ['required', 'string',Rule::exists('tenants', 'id'),function($attribute,$value,$fail){
-                if(request('tenant_id') != ''){
-                   $data = Coupon::on('mysql')
-                    ->where('tenant_id',request('tenant_id'))
-                    ->where('id','!=',request('id'))
+            'tenant_id' => ['required', 'string', Rule::exists( 'tenants', 'id' ), function ( $attribute, $value, $fail ) use ( $couponId ) {
+                $exists = Coupon::on( 'mysql' )
+                    ->where( 'tenant_id', $value )
+                    ->when( $couponId, fn ( $query ) => $query->where( 'id', '!=', $couponId ) )
                     ->exists();
-                    if($data){
-                        $fail('Coupon already exists for this tenant');
-                    }
+
+                if ( $exists ) {
+                    $fail( 'Coupon already exists for this tenant' );
                 }
             }],
-            'status'=>['required',Rule::in([Status::Active->value,Status::Deactivate->value])]
+            'status' => ['required', Rule::in( [Status::Active->value, Status::Deactivate->value] )],
         ];
     }
 
