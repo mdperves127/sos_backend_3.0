@@ -28,13 +28,13 @@ return new class extends Migration
             $table->string('seo_meta_keywords');
             $table->string('seo_meta_image');
 
-            $table->string('scripts_google_analytics');
-            $table->string('scripts_google_adsense');
-            $table->string('scripts_google_recaptcha');
-            $table->string('scripts_facebook_pixel');
-            $table->string('scripts_facebook_messenger');
-            $table->string('scripts_whatsapp_chat');
-            $table->string('scripts_google_tag_manager');
+            $table->longText('scripts_google_analytics')->nullable();
+            $table->longText('scripts_google_adsense')->nullable();
+            $table->longText('scripts_google_recaptcha')->nullable();
+            $table->longText('scripts_facebook_pixel')->nullable();
+            $table->longText('scripts_facebook_messenger')->nullable();
+            $table->longText('scripts_whatsapp_chat')->nullable();
+            $table->longText('scripts_google_tag_manager')->nullable();
 
             $table->string('footer_logo');
             $table->string('footer_description');
