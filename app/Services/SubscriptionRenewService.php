@@ -270,35 +270,13 @@ class SubscriptionRenewService {
         $getcoupon = Coupon::on( 'mysql' )->find( $couponName ?? 0 );
 
         if ( $getcoupon ) {
-            $couponUser = User::on( 'mysql' )->find( $getcoupon->user_id );
-
             if ( $getcoupon->commission_type == "flat" ) {
                 $commission = $getcoupon->commission;
             } else {
                 $commission = ( ( $totalsubscriptionamount / 100 ) * $getcoupon->commission );
             }
 
-            $couponUser->increment( 'balance', $commission );
-
-            CouponUsed::create( [
-                'user_id'          => $getcoupon->user_id,
-                'coupon_id'        => $couponName,
-                'total_commission' => $commission,
-            ] );
-
-            PaymentHistoryService::store(
-                $trxid,
-                $commission,
-                'My wallet',
-                'Referral bonus',
-                '+',
-                $couponName,
-                $couponUser->id,
-                [
-                    'entity_type' => 'user',
-                    'user_id'     => $couponUser->id,
-                ]
-            );
+            SubscriptionService::creditCouponReferralBonus( $getcoupon, $commission, $trxid, $couponName );
         }
 
         $userCurrentSubscription->trxid = $trxid;

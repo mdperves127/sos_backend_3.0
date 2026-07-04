@@ -11,6 +11,7 @@ use App\Models\UserSubscription;
 use App\Notifications\SubscriptionNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Class SubscriptionService.
@@ -146,29 +147,8 @@ class SubscriptionService {
         $getcoupon = Coupon::on('mysql')->find( $coupon );
 
         if ( $getcoupon ) {
-            $couponUser        = User::on('mysql')->find( $getcoupon->user_id );
             $totalreffralBonus = colculateflatpercentage( $getcoupon->commission_type, $subscription->subscription_amount, $getcoupon->commission );
-            $couponUser->increment( 'balance', $totalreffralBonus );
-
-            CouponUsed::create( [
-                'user_id'          => $getcoupon->user_id,
-                'coupon_id'        => $coupon,
-                'total_commission' => $totalreffralBonus,
-            ] );
-
-            PaymentHistoryService::store(
-                $trxid,
-                $totalreffralBonus,
-                'My wallet',
-                'Referral bonus',
-                '+',
-                $coupon,
-                $couponUser->id,
-                [
-                    'entity_type' => 'user',
-                    'user_id'     => $couponUser->id,
-                ]
-            );
+            self::creditCouponReferralBonus( $getcoupon, $totalreffralBonus, $trxid, $coupon );
         }
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
@@ -202,5 +182,89 @@ class SubscriptionService {
         Notification::send( $admin, new SubscriptionNotification( $admin, $subscriptionText ) );
 
         return responsejson( 'Successfull', 'success' );
+    }
+
+    /**
+     * Credit coupon referral commission to the coupon owner (tenant wallet preferred, else user wallet).
+     */
+    public static function creditCouponReferralBonus( Coupon $coupon, $amount, string $trxid, $couponId ): void {
+        $amount = (float) $amount;
+        if ( $amount <= 0 ) {
+            return;
+        }
+
+        $couponTenant = ! empty( $coupon->tenant_id )
+            ? Tenant::on( 'mysql' )->find( $coupon->tenant_id )
+            : null;
+        $couponUser = ! empty( $coupon->user_id )
+            ? User::on( 'mysql' )->find( $coupon->user_id )
+            : null;
+
+        if ( $couponTenant ) {
+            $couponTenant->increment( 'balance', $amount );
+            self::recordCouponUsage( $couponUser?->id, $couponTenant->id, $couponId, $amount );
+
+            PaymentHistoryService::store(
+                $trxid,
+                $amount,
+                'My wallet',
+                'Referral bonus',
+                '+',
+                $couponId,
+                $couponTenant->id,
+                [
+                    'entity_type' => 'tenant',
+                    'tenant_id'   => $couponTenant->id,
+                    'user_id'     => $couponUser?->id,
+                ]
+            );
+
+            return;
+        }
+
+        if ( ! $couponUser ) {
+            \Log::warning( 'Coupon referral bonus skipped: no tenant or user owner found.', [
+                'coupon_id' => $couponId,
+                'user_id'   => $coupon->user_id,
+                'tenant_id' => $coupon->tenant_id,
+            ] );
+
+            return;
+        }
+
+        $couponUser->increment( 'balance', $amount );
+        self::recordCouponUsage( $couponUser->id, null, $couponId, $amount );
+
+        PaymentHistoryService::store(
+            $trxid,
+            $amount,
+            'My wallet',
+            'Referral bonus',
+            '+',
+            $couponId,
+            $couponUser->id,
+            [
+                'entity_type' => 'user',
+                'user_id'     => $couponUser->id,
+            ]
+        );
+    }
+
+    protected static function recordCouponUsage( $userId, $tenantId, $couponId, $amount ): void {
+        $payload = [
+            'coupon_id'        => $couponId,
+            'total_commission' => $amount,
+            'user_id'          => $userId,
+        ];
+
+        if ( Schema::connection( 'mysql' )->hasColumn( 'coupon_useds', 'tenant_id' ) ) {
+            $payload['tenant_id'] = $tenantId;
+        }
+
+        try {
+            CouponUsed::create( $payload );
+        } catch ( \Throwable $e ) {
+            \Log::error( 'Failed to record coupon usage: ' . $e->getMessage(), $payload );
+        }
     }
 }
