@@ -45,6 +45,13 @@ class PaymentHistoryService
             $userId = null;
         }
 
+        // payment_histories.user_id is NOT NULL; tenant wallet rows still need a user reference
+        // (e.g. aamarpay callbacks have no auth user and tenant coupons may have no user_id).
+        if ( $userId === null || $userId === 0 || $userId === '0' ) {
+            $userId = User::on( 'mysql' )->where( 'role_as', 1 )->value( 'id' )
+                ?? User::on( 'mysql' )->orderBy( 'id' )->value( 'id' );
+        }
+
         return PaymentHistory::on( 'mysql' )->create( [
             'trxid'           => $trxid,
             'amount'          => $amount,

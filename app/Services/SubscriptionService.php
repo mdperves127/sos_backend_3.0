@@ -148,7 +148,13 @@ class SubscriptionService {
 
         if ( $getcoupon ) {
             $totalreffralBonus = colculateflatpercentage( $getcoupon->commission_type, $subscription->subscription_amount, $getcoupon->commission );
-            self::creditCouponReferralBonus( $getcoupon, $totalreffralBonus, $trxid, $coupon );
+            self::creditCouponReferralBonus(
+                $getcoupon,
+                $totalreffralBonus,
+                $trxid,
+                $coupon,
+                $actingUserId ?? ( Auth::check() ? Auth::id() : null )
+            );
         }
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
@@ -187,7 +193,7 @@ class SubscriptionService {
     /**
      * Credit coupon referral commission to the coupon owner (tenant wallet preferred, else user wallet).
      */
-    public static function creditCouponReferralBonus( Coupon $coupon, $amount, string $trxid, $couponId ): void {
+    public static function creditCouponReferralBonus( Coupon $coupon, $amount, string $trxid, $couponId, $actingUserId = null ): void {
         $amount = (float) $amount;
         if ( $amount <= 0 ) {
             return;
@@ -215,7 +221,7 @@ class SubscriptionService {
                 [
                     'entity_type' => 'tenant',
                     'tenant_id'   => $couponTenant->id,
-                    'user_id'     => $couponUser?->id,
+                    'user_id'     => $couponUser?->id ?? $actingUserId,
                 ]
             );
 
