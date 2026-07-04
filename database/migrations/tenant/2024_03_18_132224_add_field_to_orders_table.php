@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->integer('customer_id')->nullable();
             $table->integer('source_id')->nullable();
-            $table->enum('order_media',['Affiliator','Direct'])->nullable();
+            $table->enum('order_media',['Affiliator','Direct','Woocommerce','website','website-guest','dropshipper'])->nullable();
         });
     }
 
