@@ -737,7 +737,10 @@ class ProductOrderService {
 
     static function deliveredOrder( $order ) {
 
-        if ( $order->order_media === null && self::orderHasDropshipperCommission( $order ) ) {
+        $dropshipperMedia = $order->order_media === null
+            || in_array( $order->order_media, ['dropshipper', 'Affiliator'], true );
+
+        if ( $dropshipperMedia && self::orderHasDropshipperCommission( $order ) ) {
             $affiliateData = self::orderPendingBalance( $order );
             if ( !$affiliateData ) {
                 return response()->json( [

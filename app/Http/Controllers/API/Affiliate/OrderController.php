@@ -110,7 +110,8 @@ class OrderController extends Controller {
                 request( 'datas' ),
                 'aamarpay',
                 $cart->tenant_id,
-                $currentTenant->id
+                $currentTenant->id,
+                'dropshipper'
             );
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
@@ -119,7 +120,7 @@ class OrderController extends Controller {
                 'trxid'           => $trx,
                 'status'          => 'pending',
                 'last_status'     => 'pending',
-                'order_media'     => 'Affiliator',
+                'order_media'     => 'dropshipper',
                 'payment_type'    => 'checkout',
                 'info'            => [
                     'cartid'            => $cart->id,
@@ -129,6 +130,7 @@ class OrderController extends Controller {
                     'datas'             => request( 'datas' ),
                     'tenant_id'         => $cart->tenant_id,
                     'placing_tenant_id' => $currentTenant->id,
+                    'order_media'       => 'dropshipper',
                 ],
                 ] );
             $successurl = url( 'api/aaparpay/product-checkout-success' );

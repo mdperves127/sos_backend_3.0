@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductCheckoutService {
 
-    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $merchantTenantId = null, $placingTenantId = null ) {
+    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $merchantTenantId = null, $placingTenantId = null, $orderMedia = null ) {
 
         try {
             // Merchant tenant = where the product/order row lives (cart->tenant_id).
@@ -229,6 +229,9 @@ class ProductCheckoutService {
                 $order->totaladvancepayment = $totaladvancepayment;
                 $order->is_unlimited        = $is_unlimited;
                 $order->delivery_charge     = $deliveryCharge;
+                if ( $orderMedia !== null && $orderMedia !== '' ) {
+                    $order->order_media = $orderMedia;
+                }
                 if ( $resolvedPlacingTenantId ) {
                     $order->tenant_id = $resolvedPlacingTenantId;
                 }

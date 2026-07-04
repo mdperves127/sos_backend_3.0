@@ -72,7 +72,8 @@ class AamarpayController extends Controller
             $info['datas'],
             'aamarpay',
             $info['tenant_id'] ?? null,
-            $info['placing_tenant_id'] ?? null
+            $info['placing_tenant_id'] ?? null,
+            $info['order_media'] ?? $data->order_media ?? null
         );
 
         $user = User::find($info['userid']);
