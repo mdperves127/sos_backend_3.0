@@ -525,20 +525,42 @@ class ProductStatusController extends Controller
             $merchantTenantId    = $productDetail->merchant_tenant_id ?? $productDetail->tenant_id ?? null;
             $dropshipperTenantId = $productDetail->dropshipper_tenant_id ?? null;
 
-            if ( $merchantTenantId && isset( $productDetail->product_id ) ) {
-                $merchantConnection = $this->configureAdminTenantConnection( $merchantTenantId );
+            if ( $merchantTenantId ) {
+                $merchantTenant = Tenant::on( 'mysql' )
+                    ->select( 'id', 'company_name', 'owner_name', 'email' )
+                    ->find( $merchantTenantId );
 
-                if ( $merchantConnection ) {
-                    $productDetail->product = Product::on( $merchantConnection )
-                        ->select( 'id', 'name', 'image', 'discount_rate' )
-                        ->find( $productDetail->product_id );
+                $productDetail->merchant_name        = $merchantTenant?->company_name;
+                $productDetail->merchant_tenant_name = $merchantTenant?->company_name;
+                $productDetail->merchant             = $merchantTenant
+                    ? (object) [
+                        'id'           => $merchantTenant->id,
+                        'name'         => $merchantTenant->company_name,
+                        'company_name' => $merchantTenant->company_name,
+                        'owner_name'   => $merchantTenant->owner_name,
+                        'email'        => $merchantTenant->email,
+                    ]
+                    : null;
 
-                    if ( isset( $productDetail->vendor_id ) ) {
-                        $productDetail->vendor = User::on( $merchantConnection )
-                            ->select( 'id', 'name' )
-                            ->find( $productDetail->vendor_id );
+                if ( isset( $productDetail->product_id ) ) {
+                    $merchantConnection = $this->configureAdminTenantConnection( $merchantTenantId );
+
+                    if ( $merchantConnection ) {
+                        $productDetail->product = Product::on( $merchantConnection )
+                            ->select( 'id', 'name', 'image', 'discount_rate' )
+                            ->find( $productDetail->product_id );
+
+                        if ( isset( $productDetail->vendor_id ) ) {
+                            $productDetail->vendor = User::on( $merchantConnection )
+                                ->select( 'id', 'name' )
+                                ->find( $productDetail->vendor_id );
+                        }
                     }
                 }
+            } else {
+                $productDetail->merchant_name        = null;
+                $productDetail->merchant_tenant_name = null;
+                $productDetail->merchant             = null;
             }
 
             if ( $dropshipperTenantId ) {
