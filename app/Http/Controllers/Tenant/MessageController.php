@@ -9,6 +9,7 @@ use App\Models\ChatReport;
 use App\Models\Message;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\CrossTenantQueryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,6 @@ class MessageController extends Controller {
 
     public function getMessages( int|string $tenantId ) {
         $tenantId = (string) $tenantId;
-        $me       = (int) Auth::id();
         $tid      = (string) tenant()->id;
 
         if ( ! Tenant::on( 'mysql' )->where( 'id', $tenantId )->exists() ) {
@@ -43,14 +43,11 @@ class MessageController extends Controller {
 
         $peerId = (int) $peerId;
 
+        // Shared inbox: any local staff can read the full thread with this external tenant peer.
         $messages = Message::on( 'tenant' )
             ->where( 'tenant_id', $tid )
-            ->where( function ( $query ) use ( $peerId, $me ) {
-                $query->where( function ( $q ) use ( $peerId, $me ) {
-                    $q->where( 'sender_id', $me )->where( 'receiver_id', $peerId );
-                } )->orWhere( function ( $q ) use ( $peerId, $me ) {
-                    $q->where( 'sender_id', $peerId )->where( 'receiver_id', $me );
-                } );
+            ->where( function ( $query ) use ( $peerId ) {
+                $query->where( 'sender_id', $peerId )->orWhere( 'receiver_id', $peerId );
             } )
             ->orderBy( 'created_at' )
             ->get();
@@ -136,9 +133,11 @@ class MessageController extends Controller {
             ], 401 );
         }
 
+        $localTenantId = (string) tenant()->id;
+
         $message              = new Message();
         $message->setConnection( 'tenant' );
-        $message->tenant_id   = (string) tenant()->id;
+        $message->tenant_id   = $localTenantId;
         $message->sender_id   = $senderId;
         $message->receiver_id = $receiverId;
         $message->user_id     = $senderId;
@@ -146,14 +145,168 @@ class MessageController extends Controller {
         $message->conversation_id = 0;
         $message->save();
 
+        $payload = $message->fresh()->toArray();
+
         event( new TenantChatMessageSent(
-            (string) tenant()->id,
+            $localTenantId,
             $senderId,
             $receiverId,
-            $message->fresh()->toArray(),
+            $payload,
         ) );
 
+        // Cross-tenant DM: also write into the peer tenant DB so their conversation list can see it.
+        if ( $receiverIsExternalTenant ) {
+            $this->mirrorMessageToPeerTenant(
+                (string) $receiverUniqid,
+                $localTenantId,
+                (string) $request->message
+            );
+        }
+
         return response()->json( ['status' => 200] );
+    }
+
+    /**
+     * Copy a chat message into the peer tenant database.
+     * Local sender tenant is represented there as a synthetic user (users.uniqid = local tenant id).
+     */
+    private function mirrorMessageToPeerTenant(
+        string $peerTenantId,
+        string $localTenantId,
+        string $messageText
+    ): void {
+        if ( $peerTenantId === '' || $peerTenantId === $localTenantId ) {
+            return;
+        }
+
+        $peerTenant = Tenant::on( 'mysql' )->find( $peerTenantId );
+        if ( ! $peerTenant ) {
+            return;
+        }
+
+        $syntheticSenderId = $this->ensureChatUserOnTenant( $peerTenantId, $localTenantId );
+        if ( $syntheticSenderId <= 0 ) {
+            return;
+        }
+
+        $peerReceiverId = $this->resolvePeerInboxUserId( $peerTenantId, $syntheticSenderId );
+        if ( $peerReceiverId <= 0 ) {
+            return;
+        }
+
+        $peerMessage = CrossTenantQueryService::saveToTenant(
+            $peerTenantId,
+            Message::class,
+            function ( Message $model ) use ( $peerTenantId, $syntheticSenderId, $peerReceiverId, $messageText ) {
+                $model->tenant_id       = $peerTenantId;
+                $model->sender_id       = $syntheticSenderId;
+                $model->receiver_id     = $peerReceiverId;
+                $model->user_id         = $syntheticSenderId;
+                $model->message         = $messageText;
+                $model->conversation_id = 0;
+            }
+        );
+
+        if ( ! $peerMessage ) {
+            return;
+        }
+
+        event( new TenantChatMessageSent(
+            $peerTenantId,
+            $syntheticSenderId,
+            $peerReceiverId,
+            $peerMessage->toArray(),
+        ) );
+    }
+
+    /**
+     * Ensure a synthetic chat user exists on {@see $targetTenantId}'s DB for {@see $representedTenantId}.
+     */
+    private function ensureChatUserOnTenant( string $targetTenantId, string $representedTenantId ): int {
+        $existing = CrossTenantQueryService::getSingleFromTenant(
+            $targetTenantId,
+            User::class,
+            function ( $query ) use ( $representedTenantId ) {
+                $query->where( 'uniqid', $representedTenantId );
+            }
+        );
+
+        if ( $existing ) {
+            return (int) $existing->id;
+        }
+
+        $represented = Tenant::on( 'mysql' )->find( $representedTenantId );
+        $name        = $represented?->company_name ?: ( 'Tenant ' . $representedTenantId );
+        $email       = 'tenant-' . $representedTenantId . '@chat.local';
+
+        $user = CrossTenantQueryService::saveToTenant(
+            $targetTenantId,
+            User::class,
+            function ( User $u ) use ( $name, $email, $representedTenantId ) {
+                $u->name      = $name;
+                $u->email     = $email;
+                $u->password  = bcrypt( str()->random( 24 ) );
+                $u->last_seen = now();
+                $u->uniqid    = $representedTenantId;
+
+                $connection = $u->getConnectionName();
+                if ( $connection && Schema::connection( $connection )->hasColumn( 'users', 'role_type' ) ) {
+                    $u->role_type = 'tenant_user';
+                }
+            }
+        );
+
+        return $user ? (int) $user->id : 0;
+    }
+
+    /**
+     * Pick who should receive the mirrored message on the peer tenant.
+     * Prefer an existing thread participant; otherwise the first real (non-synthetic) user.
+     */
+    private function resolvePeerInboxUserId( string $peerTenantId, int $syntheticSenderId ): int {
+        $prior = CrossTenantQueryService::getSingleFromTenant(
+            $peerTenantId,
+            Message::class,
+            function ( $query ) use ( $syntheticSenderId ) {
+                $query->where( function ( $q ) use ( $syntheticSenderId ) {
+                    $q->where( 'sender_id', $syntheticSenderId )
+                        ->orWhere( 'receiver_id', $syntheticSenderId );
+                } )->orderByDesc( 'id' );
+            }
+        );
+
+        if ( $prior ) {
+            $other = (int) $prior->sender_id === $syntheticSenderId
+                ? (int) $prior->receiver_id
+                : (int) $prior->sender_id;
+            if ( $other > 0 && $other !== $syntheticSenderId ) {
+                return $other;
+            }
+        }
+
+        $primary = CrossTenantQueryService::getSingleFromTenant(
+            $peerTenantId,
+            User::class,
+            function ( $query ) {
+                $query->where( function ( $q ) {
+                    $q->whereNull( 'uniqid' )->orWhere( 'uniqid', '' );
+                } )->orderBy( 'id' );
+            }
+        );
+
+        if ( $primary ) {
+            return (int) $primary->id;
+        }
+
+        $any = CrossTenantQueryService::getSingleFromTenant(
+            $peerTenantId,
+            User::class,
+            function ( $query ) {
+                $query->orderBy( 'id' );
+            }
+        );
+
+        return $any ? (int) $any->id : 0;
     }
 
     /**
