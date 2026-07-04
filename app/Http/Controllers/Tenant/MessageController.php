@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Events\TenantChatMessageSent;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\ResolvesCrossTenantChat;
 use App\Http\Controllers\Tenant\Concerns\ResolvesTenantChatAccess;
 use App\Models\ChatReport;
 use App\Models\Message;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\CrossTenantQueryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -18,6 +18,7 @@ use Illuminate\Validation\Rule;
 
 class MessageController extends Controller {
     use ResolvesTenantChatAccess;
+    use ResolvesCrossTenantChat;
 
     public function getMessages( int|string $tenantId ) {
         $tenantId = (string) $tenantId;
@@ -30,27 +31,27 @@ class MessageController extends Controller {
             ], 404 );
         }
 
-        // Path param is the peer's tenant_id (mysql.tenants.id), not a local users.id.
-        // Resolve the local chat user created/found via users.uniqid = tenant_id.
-        $peerId = null;
-        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'uniqid' ) ) {
-            $peerId = User::on( 'tenant' )->where( 'uniqid', $tenantId )->value( 'id' );
-        }
+        $localPartnerId = $this->ensureLocalChatUserForTenant( $tenantId );
 
-        if ( ! $peerId ) {
-            return response()->json( ['success' => true, 'messages' => []] );
-        }
-
-        $peerId = (int) $peerId;
-
-        // Shared inbox: any local staff can read the full thread with this external tenant peer.
-        $messages = Message::on( 'tenant' )
+        // Local copy (mirrored messages), if any.
+        $localMessages = Message::on( 'tenant' )
             ->where( 'tenant_id', $tid )
-            ->where( function ( $query ) use ( $peerId ) {
-                $query->where( 'sender_id', $peerId )->orWhere( 'receiver_id', $peerId );
+            ->where( function ( $query ) use ( $localPartnerId ) {
+                $query->where( 'sender_id', $localPartnerId )->orWhere( 'receiver_id', $localPartnerId );
             } )
             ->orderBy( 'created_at' )
             ->get();
+
+        // Source-of-truth for dropshipper→merchant: messages stored on the peer tenant DB.
+        $remoteMessages = $this->remoteMessagesWithPeerTenant( $tenantId );
+
+        $messages = $localMessages
+            ->concat( $remoteMessages )
+            ->unique( function ( Message $m ) {
+                return (string) $m->created_at . '|' . (string) $m->message . '|' . (int) $m->sender_id . '|' . (int) $m->receiver_id;
+            } )
+            ->sortBy( 'created_at' )
+            ->values();
 
         $userIds = $messages->pluck( 'sender_id' )
             ->merge( $messages->pluck( 'receiver_id' ) )
@@ -63,8 +64,12 @@ class MessageController extends Controller {
             : User::on( 'tenant' )->whereIn( 'id', $userIds )->get()->keyBy( 'id' );
 
         $messages->each( function ( Message $m ) use ( $usersById ) {
-            $m->setRelation( 'sender', $usersById->get( (int) $m->sender_id ) );
-            $m->setRelation( 'receiver', $usersById->get( (int) $m->receiver_id ) );
+            if ( ! $m->relationLoaded( 'sender' ) || ! $m->sender ) {
+                $m->setRelation( 'sender', $usersById->get( (int) $m->sender_id ) );
+            }
+            if ( ! $m->relationLoaded( 'receiver' ) || ! $m->receiver ) {
+                $m->setRelation( 'receiver', $usersById->get( (int) $m->receiver_id ) );
+            }
         } );
 
         return response()->json( ['success' => true, 'messages' => $messages] );
@@ -117,16 +122,10 @@ class MessageController extends Controller {
             ], 401 );
         }
 
-        // If the receiver is a synthetic "external tenant" chat user (users.uniqid = mysql.tenants.id),
-        // the product_details based partner check does not apply (those rows store business user ids,
-        // not the synthetic local user id). Subscription checks above still enforce chat eligibility.
-        $receiverUniqid = $receiver->uniqid ?? null;
-        $receiverIsExternalTenant =
-            is_string( $receiverUniqid ) &&
-            $receiverUniqid !== '' &&
-            Tenant::on( 'mysql' )->where( 'id', $receiverUniqid )->exists();
+        $peerTenantId = $this->externalTenantIdFromUser( $receiver );
+        $receiverIsExternalTenant = $peerTenantId !== null;
 
-        if ( !$receiverIsExternalTenant && !$this->tenantUsersAreChatPartners( $senderId, $receiverId ) ) {
+        if ( ! $receiverIsExternalTenant && ! $this->tenantUsersAreChatPartners( $senderId, $receiverId ) ) {
             return response()->json( [
                 'status'  => 401,
                 'message' => 'Oops! This user not eligible to access this feature.',
@@ -154,159 +153,16 @@ class MessageController extends Controller {
             $payload,
         ) );
 
-        // Cross-tenant DM: also write into the peer tenant DB so their conversation list can see it.
+        // Also write into the peer tenant DB so their panel can list/read the thread.
         if ( $receiverIsExternalTenant ) {
             $this->mirrorMessageToPeerTenant(
-                (string) $receiverUniqid,
+                $peerTenantId,
                 $localTenantId,
                 (string) $request->message
             );
         }
 
         return response()->json( ['status' => 200] );
-    }
-
-    /**
-     * Copy a chat message into the peer tenant database.
-     * Local sender tenant is represented there as a synthetic user (users.uniqid = local tenant id).
-     */
-    private function mirrorMessageToPeerTenant(
-        string $peerTenantId,
-        string $localTenantId,
-        string $messageText
-    ): void {
-        if ( $peerTenantId === '' || $peerTenantId === $localTenantId ) {
-            return;
-        }
-
-        $peerTenant = Tenant::on( 'mysql' )->find( $peerTenantId );
-        if ( ! $peerTenant ) {
-            return;
-        }
-
-        $syntheticSenderId = $this->ensureChatUserOnTenant( $peerTenantId, $localTenantId );
-        if ( $syntheticSenderId <= 0 ) {
-            return;
-        }
-
-        $peerReceiverId = $this->resolvePeerInboxUserId( $peerTenantId, $syntheticSenderId );
-        if ( $peerReceiverId <= 0 ) {
-            return;
-        }
-
-        $peerMessage = CrossTenantQueryService::saveToTenant(
-            $peerTenantId,
-            Message::class,
-            function ( Message $model ) use ( $peerTenantId, $syntheticSenderId, $peerReceiverId, $messageText ) {
-                $model->tenant_id       = $peerTenantId;
-                $model->sender_id       = $syntheticSenderId;
-                $model->receiver_id     = $peerReceiverId;
-                $model->user_id         = $syntheticSenderId;
-                $model->message         = $messageText;
-                $model->conversation_id = 0;
-            }
-        );
-
-        if ( ! $peerMessage ) {
-            return;
-        }
-
-        event( new TenantChatMessageSent(
-            $peerTenantId,
-            $syntheticSenderId,
-            $peerReceiverId,
-            $peerMessage->toArray(),
-        ) );
-    }
-
-    /**
-     * Ensure a synthetic chat user exists on {@see $targetTenantId}'s DB for {@see $representedTenantId}.
-     */
-    private function ensureChatUserOnTenant( string $targetTenantId, string $representedTenantId ): int {
-        $existing = CrossTenantQueryService::getSingleFromTenant(
-            $targetTenantId,
-            User::class,
-            function ( $query ) use ( $representedTenantId ) {
-                $query->where( 'uniqid', $representedTenantId );
-            }
-        );
-
-        if ( $existing ) {
-            return (int) $existing->id;
-        }
-
-        $represented = Tenant::on( 'mysql' )->find( $representedTenantId );
-        $name        = $represented?->company_name ?: ( 'Tenant ' . $representedTenantId );
-        $email       = 'tenant-' . $representedTenantId . '@chat.local';
-
-        $user = CrossTenantQueryService::saveToTenant(
-            $targetTenantId,
-            User::class,
-            function ( User $u ) use ( $name, $email, $representedTenantId ) {
-                $u->name      = $name;
-                $u->email     = $email;
-                $u->password  = bcrypt( str()->random( 24 ) );
-                $u->last_seen = now();
-                $u->uniqid    = $representedTenantId;
-
-                $connection = $u->getConnectionName();
-                if ( $connection && Schema::connection( $connection )->hasColumn( 'users', 'role_type' ) ) {
-                    $u->role_type = 'tenant_user';
-                }
-            }
-        );
-
-        return $user ? (int) $user->id : 0;
-    }
-
-    /**
-     * Pick who should receive the mirrored message on the peer tenant.
-     * Prefer an existing thread participant; otherwise the first real (non-synthetic) user.
-     */
-    private function resolvePeerInboxUserId( string $peerTenantId, int $syntheticSenderId ): int {
-        $prior = CrossTenantQueryService::getSingleFromTenant(
-            $peerTenantId,
-            Message::class,
-            function ( $query ) use ( $syntheticSenderId ) {
-                $query->where( function ( $q ) use ( $syntheticSenderId ) {
-                    $q->where( 'sender_id', $syntheticSenderId )
-                        ->orWhere( 'receiver_id', $syntheticSenderId );
-                } )->orderByDesc( 'id' );
-            }
-        );
-
-        if ( $prior ) {
-            $other = (int) $prior->sender_id === $syntheticSenderId
-                ? (int) $prior->receiver_id
-                : (int) $prior->sender_id;
-            if ( $other > 0 && $other !== $syntheticSenderId ) {
-                return $other;
-            }
-        }
-
-        $primary = CrossTenantQueryService::getSingleFromTenant(
-            $peerTenantId,
-            User::class,
-            function ( $query ) {
-                $query->where( function ( $q ) {
-                    $q->whereNull( 'uniqid' )->orWhere( 'uniqid', '' );
-                } )->orderBy( 'id' );
-            }
-        );
-
-        if ( $primary ) {
-            return (int) $primary->id;
-        }
-
-        $any = CrossTenantQueryService::getSingleFromTenant(
-            $peerTenantId,
-            User::class,
-            function ( $query ) {
-                $query->orderBy( 'id' );
-            }
-        );
-
-        return $any ? (int) $any->id : 0;
     }
 
     /**
@@ -332,11 +188,9 @@ class MessageController extends Controller {
             if ( !$hasUniqid ) {
                 return ['receiver_uniqid' => ['Tenant users have no uniqid column yet. Run tenant migrations, or send numeric receiver_id.']];
             }
-            $uid = User::on( 'tenant' )->where( 'uniqid', $uniqField )->value( 'id' );
-            if ( !$uid ) {
-                return ['receiver_uniqid' => ['No user found for this receiver_uniqid.']];
-            }
-            $request->merge( ['receiver_id' => (int) $uid] );
+            $uid = $this->ensureLocalChatUserForTenant( (string) $uniqField );
+
+            $request->merge( ['receiver_id' => $uid] );
 
             return null;
         }
@@ -347,6 +201,29 @@ class MessageController extends Controller {
 
         if ( is_bool( $raw ) ) {
             return ['receiver_id' => ['The receiver id must be a numeric user id or a user uniqid string.']];
+        }
+
+        // Prefer tenant id when the value matches a tenant (string or numeric tenant keys).
+        if ( is_string( $raw ) || is_numeric( $raw ) ) {
+            $asString = (string) $raw;
+            $tenant   = Tenant::on( 'mysql' )->where( 'id', $asString )->first();
+            if ( $tenant && $hasUniqid ) {
+                // Only treat numeric values as tenant ids when no local user exists with that id,
+                // or that local user is already the synthetic chat user for this tenant.
+                if ( ! is_numeric( $raw ) ) {
+                    $request->merge( ['receiver_id' => $this->ensureLocalChatUserForTenant( (string) $tenant->id )] );
+
+                    return null;
+                }
+
+                $localUser = User::on( 'tenant' )->find( (int) $raw );
+                $localIsSynthetic = $localUser && $this->externalTenantIdFromUser( $localUser ) === (string) $tenant->id;
+                if ( ! $localUser || $localIsSynthetic ) {
+                    $request->merge( ['receiver_id' => $this->ensureLocalChatUserForTenant( (string) $tenant->id )] );
+
+                    return null;
+                }
+            }
         }
 
         if ( is_numeric( $raw ) ) {
@@ -364,15 +241,6 @@ class MessageController extends Controller {
                 return ['receiver_id' => ['Non-numeric receiver_id requires a uniqid column on tenant users. Run tenant migrations or send a numeric user id.']];
             }
 
-            // Frontend often sends `mysql.tenants.id` (tenant/store id). In that case, we create/find
-            // a local "chat user" row in the current tenant DB keyed by users.uniqid = tenant id.
-            $tenant = Tenant::on( 'mysql' )->where( 'id', $raw )->first();
-            if ( $tenant ) {
-                $uid = $this->ensureTenantChatUserForExternalTenant( (string) $tenant->id );
-                $request->merge( ['receiver_id' => (int) $uid] );
-                return null;
-            }
-
             $uid = User::on( 'tenant' )->where( 'uniqid', $raw )->value( 'id' );
             if ( !$uid ) {
                 return ['receiver_id' => ['No user found for this receiver id (tried as uniqid). Use numeric id or receiver_uniqid.']];
@@ -383,45 +251,6 @@ class MessageController extends Controller {
         }
 
         return ['receiver_id' => ['The receiver id must be a numeric user id or a user uniqid string.']];
-    }
-
-    /**
-     * Ensure there is a local tenant-db `users` row representing an external tenant (vendor/affiliate).
-     * We store the external tenant id into tenant.users.uniqid, and use a synthetic unique email
-     * to avoid collisions with the current tenant's real users.
-     */
-    private function ensureTenantChatUserForExternalTenant( string $externalTenantId ): int {
-        $existingId = User::on( 'tenant' )
-            ->where( 'uniqid', $externalTenantId )
-            ->value( 'id' );
-        if ( $existingId ) {
-            return (int) $existingId;
-        }
-
-        $t = Tenant::on( 'mysql' )->find( $externalTenantId );
-        $name = $t?->company_name ?: ( 'Tenant ' . $externalTenantId );
-
-        // tenant.users.email is unique; use a synthetic value guaranteed unique per tenant id.
-        $email = 'tenant-' . $externalTenantId . '@chat.local';
-
-        $u = new User();
-        $u->setConnection( 'tenant' );
-        $u->name = $name;
-        $u->email = $email;
-        $u->password = bcrypt( str()->random( 24 ) );
-        $u->last_seen = now();
-
-        // Optional columns on tenant users
-        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'role_type' ) ) {
-            $u->role_type = 'tenant_user';
-        }
-        if ( Schema::connection( 'tenant' )->hasColumn( 'users', 'uniqid' ) ) {
-            $u->uniqid = $externalTenantId;
-        }
-
-        $u->save();
-
-        return (int) $u->id;
     }
 
     public function chatReport( int|string $id ) {
