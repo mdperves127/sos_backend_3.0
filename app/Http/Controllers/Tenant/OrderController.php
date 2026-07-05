@@ -11,6 +11,8 @@ use App\Services\CrossTenantQueryService;
 use App\Enums\Status;
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
+use App\Services\TenantCouponService;
+use App\Models\TenantCoupon;
 
 class OrderController extends Controller
 {
@@ -30,8 +32,19 @@ class OrderController extends Controller
 
         $requestedCartId = (int) $request->input( 'cart_id', 0 );
         $paymentType = $request->input( 'payment_type', 'aamarpay' );
+        $couponContext = $this->resolveCheckoutCouponContext(
+            $request->input( 'coupon_code' ),
+            $this->estimateGuestCheckoutTotal( $checkoutEntries, $requestedCartId, $requestDatas, $shippingTemplate ),
+            0,
+            data_get( $shippingTemplate, 'email' )
+        );
+        if ( isset( $couponContext['error'] ) ) {
+            return responsejson( $couponContext['error'], 'fail' );
+        }
+
         $placed = 0;
         $failed = [];
+        $couponApplied = false;
 
         foreach ( $checkoutEntries as $entry ) {
             $cart = $entry['cart'];
@@ -143,12 +156,18 @@ class OrderController extends Controller
                 $paymentType,
                 $tenantId,
                 null,
-                'website-guest'
+                'website-guest',
+                $couponApplied ? null : $couponContext['coupon'],
+                $couponApplied ? 0 : $couponContext['discount']
             );
 
             $payload = method_exists( $response, 'getContent' )
                 ? json_decode( $response->getContent(), true )
                 : null;
+
+            if ( ! $couponApplied && $couponContext['coupon'] && ( $payload['status'] ?? null ) === 200 ) {
+                $couponApplied = true;
+            }
 
             if ( ( $payload['status'] ?? null ) === 200 ) {
                 $placed++;
@@ -203,8 +222,19 @@ class OrderController extends Controller
             return responsejson( 'Cart not found or missing tenant information', 'fail' );
         }
 
+        $couponContext = $this->resolveCheckoutCouponContext(
+            $request->input( 'coupon_code' ),
+            $this->estimateAuthenticatedCheckoutTotal( $carts, (int) $request->cart_id, $requestDatas, $shippingTemplate ),
+            (int) $user->id,
+            data_get( $shippingTemplate, 'email' )
+        );
+        if ( isset( $couponContext['error'] ) ) {
+            return responsejson( $couponContext['error'], 'fail' );
+        }
+
         $placed = 0;
         $failed = [];
+        $couponApplied = false;
 
         foreach ( $carts as $cart ) {
             if ( !$cart->tenant_id ) {
@@ -259,7 +289,9 @@ class OrderController extends Controller
                 $paymentType,
                 $cart->tenant_id,
                 null,
-                'website'
+                'website',
+                $couponApplied ? null : $couponContext['coupon'],
+                $couponApplied ? 0 : $couponContext['discount']
             );
 
             $payload = method_exists( $response, 'getContent' )
@@ -267,6 +299,9 @@ class OrderController extends Controller
                 : null;
 
             if ( ( $payload['status'] ?? null ) === 200 ) {
+                if ( ! $couponApplied && $couponContext['coupon'] ) {
+                    $couponApplied = true;
+                }
                 $placed++;
                 continue;
             }
@@ -689,5 +724,140 @@ class OrderController extends Controller
         );
 
         return $variant?->product_id;
+    }
+
+    /**
+     * @return array{coupon: ?TenantCoupon, discount: float}|array{error: string}
+     */
+    private function resolveCheckoutCouponContext(
+        ?string $couponCode,
+        float $orderAmount,
+        int $userId = 0,
+        ?string $guestEmail = null
+    ): array {
+        $couponCode = trim( (string) $couponCode );
+        if ( $couponCode === '' ) {
+            return ['coupon' => null, 'discount' => 0.0];
+        }
+
+        $result = TenantCouponService::validateForCheckout(
+            $couponCode,
+            $orderAmount,
+            $userId > 0 ? $userId : null,
+            $guestEmail
+        );
+
+        if ( isset( $result['error'] ) ) {
+            return ['error' => $result['error']];
+        }
+
+        return [
+            'coupon'   => $result['coupon'],
+            'discount' => (float) $result['discount_amount'],
+        ];
+    }
+
+    private function computeLineOrderAmount( Cart $cart, array $checkoutDatas, int $totalqty ): float {
+        $productAmount = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
+        $first         = $checkoutDatas[0] ?? [];
+        $deliveryCharge = isset( $first['delivery_charge']['charge'] )
+            ? (float) $first['delivery_charge']['charge']
+            : ( isset( $first['delivery_charge'] ) && is_numeric( $first['delivery_charge'] )
+                ? (float) $first['delivery_charge']
+                : 0 );
+
+        return $productAmount + $deliveryCharge;
+    }
+
+    private function estimateAuthenticatedCheckoutTotal(
+        $carts,
+        int $requestedCartId,
+        array $requestDatas,
+        array $shippingTemplate
+    ): float {
+        $total = 0.0;
+
+        foreach ( $carts as $cart ) {
+            if ( ! $cart->tenant_id ) {
+                continue;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $cart->tenant_id,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( ! $product ) {
+                continue;
+            }
+
+            $checkoutDatas = $this->resolveCheckoutDatasForCart(
+                $cart,
+                $requestedCartId,
+                $requestDatas,
+                $shippingTemplate
+            );
+
+            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
+            if ( $totalqty < 1 ) {
+                $totalqty = (int) ( $cart->product_qty ?? 0 );
+            }
+
+            if ( $this->validateCartForCheckout( $cart, $product, $totalqty ) ) {
+                continue;
+            }
+
+            $total += $this->computeLineOrderAmount( $cart, $checkoutDatas, $totalqty );
+        }
+
+        return $total;
+    }
+
+    private function estimateGuestCheckoutTotal(
+        array $checkoutEntries,
+        int $requestedCartId,
+        $requestDatas,
+        array $shippingTemplate
+    ): float {
+        $total = 0.0;
+
+        foreach ( $checkoutEntries as $entry ) {
+            $cart     = $entry['cart'];
+            $tenantId = $entry['tenant_id'];
+            $entryDatas = $entry['datas'];
+
+            if ( ! $tenantId ) {
+                continue;
+            }
+
+            if ( ! $cart ) {
+                continue;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $tenantId,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( ! $product ) {
+                continue;
+            }
+
+            $checkoutDatas = $entryDatas->toArray();
+            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
+            if ( $totalqty < 1 ) {
+                $totalqty = (int) ( $cart->product_qty ?? 0 );
+            }
+
+            if ( $this->validateCartForCheckout( $cart, $product, $totalqty ) ) {
+                continue;
+            }
+
+            $total += $this->computeLineOrderAmount( $cart, $checkoutDatas, $totalqty );
+        }
+
+        return $total;
     }
 }

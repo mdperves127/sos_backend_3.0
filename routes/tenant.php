@@ -141,6 +141,7 @@ Route::middleware( [
         Route::get('products/{sub_category_id}', [MerchantFrontendController::class, 'productsFilter']);
 
         Route::post('contact', [MerchantFrontendController::class, 'contact']);
+        Route::post('apply-coupon', [TenantCouponController::class, 'apply']);
 
         // authenticated routes
         Route::middleware('tenantAuth')->group(function () {
@@ -549,6 +550,7 @@ Route::middleware( [
 
         Route::prefix( 'tenant-product-review' )->group( function () {
             Route::get( 'manage', [ProductReviewController::class, 'adminIndex'] );
+            Route::post( 'status/{id}', [ProductReviewController::class, 'updateStatus'] );
             Route::post( 'approve/{id}', [ProductReviewController::class, 'approve'] );
             Route::post( 'hide/{id}', [ProductReviewController::class, 'hide'] );
             Route::delete( 'delete/{id}', [ProductReviewController::class, 'destroy'] );

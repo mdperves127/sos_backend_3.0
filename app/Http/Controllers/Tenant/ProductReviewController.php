@@ -7,7 +7,9 @@ use App\Http\Requests\TenantProductReviewRequest;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductRating;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ProductReviewController extends Controller {
 
@@ -118,6 +120,7 @@ class ProductReviewController extends Controller {
         }
 
         $reviews = $query->paginate( request( 'per_page', 20 ) );
+        $reviews->getCollection()->transform( fn ( ProductRating $review ) => $this->formatAdminReview( $review ) );
 
         return response()->json( [
             'status'         => 200,
@@ -125,6 +128,41 @@ class ProductReviewController extends Controller {
             'pending_count'  => ProductRating::where( 'is_visible', false )->count(),
             'approved_count' => ProductRating::where( 'is_visible', true )->count(),
         ] );
+    }
+
+    public function updateStatus( Request $request, $id ) {
+        if ( !isTenantAdmin() ) {
+            return response()->json( ['status' => 403, 'message' => 'Access denied.'], 403 );
+        }
+
+        $request->validate( [
+            'status' => ['required', Rule::in( ['approved', 'pending', 'hidden'] )],
+        ] );
+
+        $review = ProductRating::findOrFail( $id );
+        $review->update( [
+            'is_visible' => $request->input( 'status' ) === 'approved',
+        ] );
+
+        $message = match ( $request->input( 'status' ) ) {
+            'approved' => 'Review is now visible on the storefront.',
+            'hidden'   => 'Review hidden from the storefront.',
+            default    => 'Review moved to pending approval.',
+        };
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => $message,
+            'review'  => $this->formatAdminReview(
+                $review->fresh( ['user:id,name,email', 'product:id,name,slug'] )
+            ),
+        ] );
+    }
+
+    private function formatAdminReview( ProductRating $review ): ProductRating {
+        $review->setAttribute( 'status', $review->is_visible ? 'approved' : 'pending' );
+
+        return $review;
     }
 
     public function approve( $id ) {
@@ -138,7 +176,9 @@ class ProductReviewController extends Controller {
         return response()->json( [
             'status'  => 200,
             'message' => 'Review is now visible on the storefront.',
-            'review'  => $review->fresh( ['user:id,name,email', 'product:id,name,slug'] ),
+            'review'  => $this->formatAdminReview(
+                $review->fresh( ['user:id,name,email', 'product:id,name,slug'] )
+            ),
         ] );
     }
 
@@ -153,7 +193,9 @@ class ProductReviewController extends Controller {
         return response()->json( [
             'status'  => 200,
             'message' => 'Review hidden from the storefront.',
-            'review'  => $review->fresh( ['user:id,name,email', 'product:id,name,slug'] ),
+            'review'  => $this->formatAdminReview(
+                $review->fresh( ['user:id,name,email', 'product:id,name,slug'] )
+            ),
         ] );
     }
 

@@ -46,6 +46,7 @@ class ProductRequest extends FormRequest {
             'datas.*.address'        => ['required', 'string', 'min:10'],
             'datas.*.variants'       => ['required', 'array'],
             'datas.*.variants.*.qty' => ['required', 'integer', 'min:1'],
+            'coupon_code'            => ['nullable', 'string', 'max:255'],
             // 'datas.*.merchant_order_id'   => ['required', 'string', 'min:1'],
             // 'datas.*.city_id'             => ['required', 'integer', 'min:1'],
             // 'datas.*.zone_id'             => ['required', 'integer', 'min:1'],

@@ -13,7 +13,9 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Tenant;
+use App\Models\TenantCoupon;
 use App\Services\CrossTenantQueryService;
+use App\Services\TenantCouponService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductCheckoutService {
 
-    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $merchantTenantId = null, $placingTenantId = null, $orderMedia = null ) {
+    static function store( $cartId, $productid, $totalquantity, $userid, $datas, $paymentprocess = 'aamarpay', $merchantTenantId = null, $placingTenantId = null, $orderMedia = null, $tenantCoupon = null, $couponDiscount = 0 ) {
 
         try {
             // Merchant tenant = where the product/order row lives (cart->tenant_id).
@@ -95,6 +97,7 @@ class ProductCheckoutService {
             }
 
             $categoryId = $cart->category_id;
+            $couponAppliedInStore = false;
 
             foreach ( $datas as $data ) {
 
@@ -201,6 +204,15 @@ class ProductCheckoutService {
 
                 $totalDue = ( $totalAmount + $deliveryCharge ) - $totaladvancepayment;
 
+                $saleDiscount = 0.0;
+                if ( ! $couponAppliedInStore && $tenantCoupon instanceof TenantCoupon && $couponDiscount > 0 ) {
+                    $saleDiscount         = min( (float) $couponDiscount, max( 0, $totalDue ) );
+                    $couponAppliedInStore = true;
+                }
+                if ( $saleDiscount > 0 ) {
+                    $totalDue = max( 0, $totalDue - $saleDiscount );
+                }
+
                 $customerUserId = $userid > 0 ? $userid : null;
 
                 // Generate unique order_id using the tenant connection
@@ -229,6 +241,10 @@ class ProductCheckoutService {
                 $order->totaladvancepayment = $totaladvancepayment;
                 $order->is_unlimited        = $is_unlimited;
                 $order->delivery_charge     = $deliveryCharge;
+                if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
+                    $order->sale_discount = $saleDiscount;
+                    $order->coupon_code   = $tenantCoupon->code;
+                }
                 if ( $orderMedia !== null && $orderMedia !== '' ) {
                     $order->order_media = $orderMedia;
                 }
@@ -236,6 +252,16 @@ class ProductCheckoutService {
                     $order->tenant_id = $resolvedPlacingTenantId;
                 }
                 $order->save();
+
+                if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
+                    TenantCouponService::recordUsage(
+                        $tenantCoupon,
+                        $saleDiscount,
+                        (int) $order->id,
+                        $customerUserId,
+                        $data['email'] ?? null
+                    );
+                }
 
                 // Check courier using CrossTenantQueryService
                 $courierCredentials = CrossTenantQueryService::queryTenant(
