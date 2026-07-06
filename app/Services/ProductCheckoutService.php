@@ -100,81 +100,11 @@ class ProductCheckoutService {
             $couponAppliedInStore = false;
 
             foreach ( $datas as $data ) {
+                $data     = (array) $data;
                 $variants = is_array( $data['variants'] ?? null ) ? $data['variants'] : [];
-                $totalqty = (int) collect( $variants )->sum( 'qty' );
-                if ( $totalqty < 1 ) {
-                    $totalqty = (int) ( $data['qty'] ?? $data['product_qty'] ?? $data['quantity'] ?? $totalquantity );
-                }
-                if ( $totalqty < 1 ) {
-                    $totalqty = (int) $totalquantity;
-                }
+                $totalqty = self::resolveLineQuantity( $data, $variants, (int) $totalquantity );
 
-                $is_unlimited = 1;
-                if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
-                    // Get current product qty using DB facade with CrossTenantQueryService connection
-                    $currentProduct = DB::connection($connectionName)->table('products')
-                        ->where('id', $productid)
-                        ->first();
-
-                    if ($currentProduct) {
-                        // Update product quantity using DB facade directly to avoid tenant attributes
-                        DB::connection($connectionName)->table('products')
-                            ->where('id', $productid)
-                            ->update(['qty' => $currentProduct->qty - $totalqty]);
-                    }
-
-                    // Update product variants from product's tenant database
-                    if (isset($data['variants']) && is_array($data['variants'])) {
-                        foreach ( $data['variants'] as $variant ) {
-                            if (!isset($variant['variant_id'])) {
-                                continue;
-                            }
-
-                            $currentVariant = DB::connection($connectionName)->table('product_variants')
-                                ->where('id', $variant['variant_id'])
-                                ->first();
-
-                            if ($currentVariant && isset($variant['qty'])) {
-                                // Update variant qty using DB facade directly
-                                DB::connection($connectionName)->table('product_variants')
-                                    ->where('id', $variant['variant_id'])
-                                    ->update(['qty' => $currentVariant->qty - $variant['qty']]);
-                            }
-                        }
-                    }
-
-                    // Update product variants array from product's tenant database
-                    $databaseValue = DB::connection($connectionName)->table('products')
-                        ->where('id', $productid)
-                        ->first();
-
-                    if ( $databaseValue && $databaseValue->variants != '' ) {
-                        $variantsArray = is_string($databaseValue->variants)
-                            ? json_decode($databaseValue->variants, true)
-                            : $databaseValue->variants;
-
-                        $result = [];
-                        if (is_array($variantsArray) && isset($data['variants']) && is_array($data['variants'])) {
-                            foreach ( $variantsArray as $dbItem ) {
-                                foreach ( $data['variants'] as $userItem ) {
-                                    if (isset($userItem['variant_id']) && isset($dbItem['id']) && isset($userItem['qty'])) {
-                                        if ( $dbItem['id'] == $userItem['variant_id'] ) {
-                                            $dbItem['qty'] -= $userItem['qty'];
-                                            break;
-                                        }
-                                    }
-                                }
-                                $result[] = $dbItem;
-                            }
-                        }
-
-                        // Update variants using DB facade directly
-                        DB::connection($connectionName)->table('products')
-                            ->where('id', $productid)
-                            ->update(['variants' => json_encode($result)]);
-                    }
-                    $is_unlimited = 0;
-                }
+                $is_unlimited = ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) ? 0 : 1;
 
                 // Get vendor balance from product's tenant database using CrossTenantQueryService connection
                 $vendor_balance = DB::connection($connectionName)->table('users')
@@ -212,8 +142,7 @@ class ProductCheckoutService {
 
                 $saleDiscount = 0.0;
                 if ( ! $couponAppliedInStore && $tenantCoupon instanceof TenantCoupon && $couponDiscount > 0 ) {
-                    $saleDiscount         = min( (float) $couponDiscount, max( 0, $totalDue ) );
-                    $couponAppliedInStore = true;
+                    $saleDiscount = min( (float) $couponDiscount, max( 0, $totalDue ) );
                 }
                 if ( $saleDiscount > 0 ) {
                     $totalDue = max( 0, $totalDue - $saleDiscount );
@@ -235,9 +164,9 @@ class ProductCheckoutService {
                 $order->name                = $data['name'];
                 $order->phone               = $data['phone'];
                 $order->email               = $data['email'];
-                $order->city                = $data['city'];
+                $order->city                = $data['city'] ?? null;
                 $order->address             = $data['address'];
-                $order->variants            = $data['variants'];
+                $order->variants            = $variants;
                 $order->afi_amount          = $afi_amount;
                 $order->product_amount      = $totalAmount;
                 $order->due_amount          = $totalDue;
@@ -257,63 +186,78 @@ class ProductCheckoutService {
                 if ( $resolvedPlacingTenantId ) {
                     $order->tenant_id = $resolvedPlacingTenantId;
                 }
-                $order->save();
 
-                if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
-                    TenantCouponService::recordUsage(
-                        $tenantCoupon,
-                        $saleDiscount,
-                        (int) $order->id,
-                        $customerUserId,
-                        $data['email'] ?? null
-                    );
-                }
-
-                // Check courier using CrossTenantQueryService
-                $courierCredentials = CrossTenantQueryService::queryTenant(
+                DB::connection( $connectionName )->transaction( function () use (
+                    $connectionName,
+                    $productid,
+                    $totalqty,
+                    $variants,
+                    $cart,
+                    $product,
+                    $order,
+                    $saleDiscount,
+                    $tenantCoupon,
+                    $customerUserId,
+                    $data,
+                    $userid,
+                    $merchantTenantId,
                     $tenant,
-                    CourierCredential::class,
-                    function ( $query ) use ( $product ) {
-                        $query->where( 'vendor_id', $product->vendor_id ?? $product->user_id )
-                            ->where( 'status', 'active' )
-                            ->where( 'default', 'yes' );
+                    $totaladvancepayment,
+                    $afi_amount,
+                    &$couponAppliedInStore
+                ) {
+                    $order->save();
+
+                    self::decreaseProductStock( $connectionName, $productid, $totalqty, $variants, $cart, $product );
+
+                    if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
+                        TenantCouponService::recordUsage(
+                            $tenantCoupon,
+                            $saleDiscount,
+                            (int) $order->id,
+                            $customerUserId,
+                            $data['email'] ?? null
+                        );
+                        $couponAppliedInStore = true;
                     }
-                );
 
-                $checkCourier = $courierCredentials->isNotEmpty();
-                $defaultCourier = $courierCredentials->first();
-                $isPathao = false;
-                $isRedx = false;
-
-                if ( $checkCourier ) {
-                    $isPathao = CrossTenantQueryService::queryTenant(
+                    $courierCredentials = CrossTenantQueryService::queryTenant(
                         $tenant,
                         CourierCredential::class,
                         function ( $query ) use ( $product ) {
                             $query->where( 'vendor_id', $product->vendor_id ?? $product->user_id )
                                 ->where( 'status', 'active' )
-                                ->where( 'default', 'yes' )
-                                ->where( 'courier_name', 'pathao' );
+                                ->where( 'default', 'yes' );
                         }
-                    )->isNotEmpty();
+                    );
 
-                    $isRedx = CrossTenantQueryService::queryTenant(
-                        $tenant,
-                        CourierCredential::class,
-                        function ( $query ) use ( $product ) {
-                            $query->where( 'vendor_id', $product->vendor_id ?? $product->user_id )
-                                ->where( 'status', 'active' )
-                                ->where( 'default', 'yes' )
-                                ->where( 'courier_name', 'redx' );
-                        }
-                    )->isNotEmpty();
+                    if ( $courierCredentials->isNotEmpty() ) {
+                        $defaultCourier = $courierCredentials->first();
+                        $isPathao       = CrossTenantQueryService::queryTenant(
+                            $tenant,
+                            CourierCredential::class,
+                            function ( $query ) use ( $product ) {
+                                $query->where( 'vendor_id', $product->vendor_id ?? $product->user_id )
+                                    ->where( 'status', 'active' )
+                                    ->where( 'default', 'yes' )
+                                    ->where( 'courier_name', 'pathao' );
+                            }
+                        )->isNotEmpty();
+                        $isRedx = CrossTenantQueryService::queryTenant(
+                            $tenant,
+                            CourierCredential::class,
+                            function ( $query ) use ( $product ) {
+                                $query->where( 'vendor_id', $product->vendor_id ?? $product->user_id )
+                                    ->where( 'status', 'active' )
+                                    ->where( 'default', 'yes' )
+                                    ->where( 'courier_name', 'redx' );
+                            }
+                        )->isNotEmpty();
 
-                    if ( $order ) {
-                        // Create OrderDeliveryToCourier using CrossTenantQueryService
                         CrossTenantQueryService::saveToTenant(
                             $merchantTenantId,
                             OrderDeliveryToCourier::class,
-                            function ( $model ) use ( $order, $product, $userid, $data, $isPathao, $isRedx, $defaultCourier ) {
+                            function ( $model ) use ( $order, $product, $userid, $data, $isPathao, $isRedx, $defaultCourier, $totalqty ) {
                                 $model->order_id            = $order->id;
                                 $model->vendor_id           = $product->user_id;
                                 $model->affiliator_id       = $userid;
@@ -322,42 +266,36 @@ class ProductCheckoutService {
                                 $model->recipient_phone     = $data['phone'];
                                 $model->recipient_address   = $data['address'];
                                 $model->courier_id          = $data['courier_id'] ?? $defaultCourier?->id;
-                                $model->item_weight         = $data['item_weight'];
-                                $model->recipient_city      = $isPathao ? $data['city_id'] : null;
-                                $model->recipient_zone      = $isPathao ? $data['zone_id'] : null;
-                                $model->recipient_area      = $isPathao ? $data['area_id'] : ( $isRedx ? $data['area_id'] : null );
-                                $model->area_name           = $isRedx ? $data['area_name'] : null;
+                                $model->item_weight         = $data['item_weight'] ?? null;
+                                $model->recipient_city      = $isPathao ? ( $data['city_id'] ?? null ) : null;
+                                $model->recipient_zone      = $isPathao ? ( $data['zone_id'] ?? null ) : null;
+                                $model->recipient_area      = $isPathao ? ( $data['area_id'] ?? null ) : ( $isRedx ? ( $data['area_id'] ?? null ) : null );
+                                $model->area_name           = $isRedx ? ( $data['area_name'] ?? null ) : null;
                                 $model->delivery_type       = 48;
-                                $model->item_type           = $data['item_type'];
-                                $model->special_instruction = $data['special_instruction'];
-                                $model->item_quantity       = $data['item_quantity'];
+                                $model->item_type           = $data['item_type'] ?? null;
+                                $model->special_instruction = $data['special_instruction'] ?? null;
+                                $model->item_quantity       = $data['item_quantity'] ?? $totalqty;
                                 $model->amount_to_collect   = $order->due_amount;
-                                $model->item_description    = $data['item_description'];
+                                $model->item_description    = $data['item_description'] ?? null;
                             }
                         );
                     }
-                }
 
-                // Removed commented code block
+                    if ( $totaladvancepayment > 0 ) {
+                        CrossTenantQueryService::saveToTenant(
+                            $merchantTenantId,
+                            AdvancePayment::class,
+                            function ( $model ) use ( $product, $userid, $totalqty, $totaladvancepayment, $order ) {
+                                $model->vendor_id    = $product->user_id;
+                                $model->affiliate_id = $userid;
+                                $model->product_id   = $product->id;
+                                $model->qty          = $totalqty;
+                                $model->amount       = $totaladvancepayment;
+                                $model->order_id     = $order->id;
+                            }
+                        );
+                    }
 
-                if ( $totaladvancepayment > 0 && $order ) {
-                    // Create AdvancePayment using CrossTenantQueryService
-                    CrossTenantQueryService::saveToTenant(
-                        $merchantTenantId,
-                        AdvancePayment::class,
-                        function ( $model ) use ( $product, $userid, $totalqty, $totaladvancepayment, $order ) {
-                            $model->vendor_id    = $product->user_id;
-                            $model->affiliate_id = $userid;
-                            $model->product_id   = $product->id;
-                            $model->qty          = $totalqty;
-                            $model->amount       = $totaladvancepayment;
-                            $model->order_id     = $order->id;
-                        }
-                    );
-                }
-
-                if ( $order ) {
-                    // Create PendingBalance using CrossTenantQueryService
                     CrossTenantQueryService::saveToTenant(
                         $merchantTenantId,
                         PendingBalance::class,
@@ -370,7 +308,7 @@ class ProductCheckoutService {
                             $model->status        = Status::Pending->value;
                         }
                     );
-                }
+                } );
             }
 
             $paymentHistoryUserId = $userid > 0 ? $userid : 1;
@@ -441,5 +379,120 @@ class ProductCheckoutService {
         } while ($exists);
 
         return $orderId;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<int, array<string, mixed>>  $variants
+     */
+    private static function resolveLineQuantity( array $data, array $variants, int $totalquantity ): int {
+        $totalqty = (int) collect( $variants )->sum( 'qty' );
+
+        if ( $totalqty < 1 ) {
+            $totalqty = (int) ( $data['qty'] ?? $data['product_qty'] ?? $data['quantity'] ?? $totalquantity );
+        }
+
+        if ( $totalqty < 1 ) {
+            $totalqty = $totalquantity;
+        }
+
+        return max( 0, $totalqty );
+    }
+
+    /**
+     * @param  array<string, mixed>  $variant
+     */
+    private static function resolveVariantQuantity( array $variant, int $fallbackQty ): int {
+        $qty = (int) ( $variant['qty'] ?? $variant['quantity'] ?? 0 );
+
+        return $qty > 0 ? $qty : max( 1, $fallbackQty );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variants
+     */
+    private static function decreaseProductStock(
+        string $connectionName,
+        int $productId,
+        int $totalqty,
+        array $variants,
+        Cart $cart,
+        Product $product
+    ): void {
+        if ( $cart->purchase_type != 'single' && $product->is_connect_bulk_single != 1 ) {
+            return;
+        }
+
+        $currentProduct = DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->first();
+
+        if ( $currentProduct ) {
+            DB::connection( $connectionName )->table( 'products' )
+                ->where( 'id', $productId )
+                ->update( ['qty' => max( 0, (int) $currentProduct->qty - $totalqty )] );
+        }
+
+        foreach ( $variants as $variant ) {
+            $variant = (array) $variant;
+
+            if ( empty( $variant['variant_id'] ) ) {
+                continue;
+            }
+
+            $variantQty = self::resolveVariantQuantity( $variant, $totalqty );
+
+            $currentVariant = DB::connection( $connectionName )->table( 'product_variants' )
+                ->where( 'id', $variant['variant_id'] )
+                ->first();
+
+            if ( $currentVariant ) {
+                DB::connection( $connectionName )->table( 'product_variants' )
+                    ->where( 'id', $variant['variant_id'] )
+                    ->update( ['qty' => max( 0, (int) $currentVariant->qty - $variantQty )] );
+            }
+        }
+
+        $databaseValue = DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->first();
+
+        if ( ! $databaseValue || $databaseValue->variants == '' ) {
+            return;
+        }
+
+        $variantsArray = is_string( $databaseValue->variants )
+            ? json_decode( $databaseValue->variants, true )
+            : $databaseValue->variants;
+
+        if ( ! is_array( $variantsArray ) ) {
+            return;
+        }
+
+        $result = [];
+
+        foreach ( $variantsArray as $dbItem ) {
+            $dbItem = (array) $dbItem;
+
+            foreach ( $variants as $userItem ) {
+                $userItem = (array) $userItem;
+
+                if (
+                    ! empty( $userItem['variant_id'] )
+                    && isset( $dbItem['id'] )
+                    && (int) $dbItem['id'] === (int) $userItem['variant_id']
+                ) {
+                    $deductQty     = self::resolveVariantQuantity( $userItem, $totalqty );
+                    $dbItem['qty'] = max( 0, (int) ( $dbItem['qty'] ?? 0 ) - $deductQty );
+                    break;
+                }
+            }
+
+            $result[] = $dbItem;
+        }
+
+        DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->update( ['variants' => json_encode( $result )] );
     }
 }
