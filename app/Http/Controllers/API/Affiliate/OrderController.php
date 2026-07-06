@@ -81,7 +81,12 @@ class OrderController extends Controller {
         if ( $product->variants != '' ) {
             if ( ( $cart->purchase_type != 'bulk' ) && ( $product->is_connect_bulk_single != 1 ) ) {
                 foreach ( $uservarients as $vr ) {
-                    $data = collect( $product?->productVariant?->variants )->where( 'id', $vr['variant_id'] )->where( 'qty', '>=', $vr['qty'] )->first();
+                    $variantQty = (int) ( $vr['qty'] ?? $vr['quantity'] ?? 0 );
+                    if ( $variantQty < 1 ) {
+                        return responsejson( 'Product quantity is required for each variant.', 'fail' );
+                    }
+
+                    $data = collect( $product?->productVariant?->variants )->where( 'id', $vr['variant_id'] )->where( 'qty', '>=', $variantQty )->first();
                     if ( !$data ) {
                         return responsejson( 'Something is wrong. Delete the cart', 'fail' );
                     }

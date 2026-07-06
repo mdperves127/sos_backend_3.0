@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\CartDetails;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\CrossTenantQueryService;
@@ -129,10 +130,12 @@ class OrderController extends Controller
                     $shippingTemplate
                 );
 
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
+
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ) );
 
             $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
             if ( $validationError ) {
@@ -266,10 +269,12 @@ class OrderController extends Controller
                 $shippingTemplate
             );
 
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
+
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ) );
 
             $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty );
             if ( $validationError ) {
@@ -346,6 +351,87 @@ class OrderController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $checkoutDatas
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeCheckoutDataVariants( array $checkoutDatas, int $fallbackQty = 1 ): array {
+        $fallbackQty = max( 1, $fallbackQty );
+
+        return array_map( function ( $data ) use ( $fallbackQty ) {
+            $data     = (array) $data;
+            $lineQty  = (int) ( $data['qty'] ?? $data['product_qty'] ?? $data['quantity'] ?? $fallbackQty );
+            $lineQty  = $lineQty > 0 ? $lineQty : $fallbackQty;
+            $variants = $data['variants'] ?? [];
+
+            if ( !is_array( $variants ) ) {
+                $variants = [];
+            }
+
+            if ( $variants !== [] && !array_is_list( $variants ) && ( isset( $variants['variant_id'] ) || isset( $variants['id'] ) || isset( $variants['qty'] ) || isset( $variants['quantity'] ) ) ) {
+                $variants = [$variants];
+            }
+
+            if ( $variants === [] ) {
+                $variants = [['qty' => $lineQty]];
+            } else {
+                $variants = $this->normalizeVariantList( $variants, $lineQty );
+            }
+
+            $data['variants'] = array_values( $variants );
+
+            return $data;
+        }, $checkoutDatas );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variants
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeVariantList( array $variants, int $fallbackQty = 1 ): array {
+        $fallbackQty = max( 1, $fallbackQty );
+
+        return array_values( array_map( function ( $variant ) use ( $fallbackQty ) {
+            $variant = (array) $variant;
+            $qty     = (int) ( $variant['qty'] ?? $variant['quantity'] ?? 0 );
+
+            $variant['qty'] = $qty > 0 ? $qty : $fallbackQty;
+
+            return $variant;
+        }, $variants ) );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $checkoutDatas
+     */
+    private function resolveCheckoutTotalQty( array $checkoutDatas, int $cartProductQty = 0 ): int {
+        $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
+
+        if ( $totalqty < 1 ) {
+            $totalqty = (int) collect( $checkoutDatas )->max( function ( $data ) {
+                $data = (array) $data;
+
+                return (int) ( $data['qty'] ?? $data['product_qty'] ?? $data['quantity'] ?? 0 );
+            } );
+        }
+
+        if ( $totalqty < 1 ) {
+            $totalqty = $cartProductQty;
+        }
+
+        return max( 0, $totalqty );
+    }
+
+    private function variantAttributeId( array $variant, string $key, ?string $flatKey = null ): mixed {
+        $value = $variant[$key] ?? ( $flatKey ? ( $variant[$flatKey] ?? null ) : null );
+
+        if ( is_array( $value ) ) {
+            return $value['id'] ?? null;
+        }
+
+        return $value;
     }
 
     private function normalizeGuestDatas( Request $request ) {
@@ -476,8 +562,12 @@ class OrderController extends Controller
             $variants = $shippingTemplate['variants'];
         }
 
+        if ( $variants === [] && (int) ( $cart->product_qty ?? 0 ) > 0 ) {
+            $variants = [['qty' => (int) $cart->product_qty]];
+        }
+
         return array_merge( $shippingTemplate, [
-            'variants' => $variants,
+            'variants' => $this->normalizeVariantList( $variants, (int) ( $cart->product_qty ?? 0 ) ?: 1 ),
         ] );
     }
 
@@ -552,11 +642,16 @@ class OrderController extends Controller
             return ['error' => 'Invalid purchase type for guest checkout.'];
         }
 
-        $totalqty = (int) $datas->pluck( 'variants' )->collapse()->sum( 'qty' );
+        $totalqty = $this->resolveCheckoutTotalQty(
+            $datas->toArray(),
+            (int) ( $request->input( 'qty' ) ?: $request->input( 'product_qty' ) ?: 0 )
+        );
 
         if ( $totalqty < 1 ) {
             return ['error' => 'Product quantity not available!'];
         }
+
+        $normalizedDatas = $this->normalizeCheckoutDataVariants( $datas->toArray(), $totalqty );
 
         $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
         $affiliateCommission = 0;
@@ -638,6 +733,18 @@ class OrderController extends Controller
             'totaladvancepayment'        => $totalAdvancePayment,
             'tenant_id'                  => $tenantId,
         ] );
+
+        $variantsForDetails = $normalizedDatas[0]['variants'] ?? [['qty' => $totalqty]];
+        foreach ( $variantsForDetails as $variant ) {
+            CartDetails::create( [
+                'cart_id'    => $cart->id,
+                'color'      => $this->variantAttributeId( $variant, 'color' ),
+                'size'       => $this->variantAttributeId( $variant, 'size' ),
+                'qty'        => (int) ( $variant['qty'] ?? $totalqty ),
+                'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                'unit_id'    => $this->variantAttributeId( $variant, 'unit', 'unit_id' ),
+            ] );
+        }
 
         return ['cart' => $cart];
     }
@@ -799,11 +906,12 @@ class OrderController extends Controller
                 $shippingTemplate
             );
 
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
 
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ) );
             if ( $this->validateCartForCheckout( $cart, $product, $totalqty ) ) {
                 continue;
             }
@@ -832,6 +940,42 @@ class OrderController extends Controller
             }
 
             if ( ! $cart ) {
+                $productId = $this->resolveGuestProductId( request(), null, $tenantId, $entryDatas );
+
+                if ( ! $productId ) {
+                    continue;
+                }
+
+                $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                    $tenantId,
+                    Product::class,
+                    fn( $query ) => $query->where( ['id' => $productId, 'status' => 'active'] )
+                );
+
+                if ( ! $product ) {
+                    continue;
+                }
+
+                $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                    $entryDatas->toArray(),
+                    (int) ( request()->input( 'qty' ) ?: request()->input( 'product_qty' ) ?: 1 )
+                );
+                $totalqty = $this->resolveCheckoutTotalQty(
+                    $checkoutDatas,
+                    (int) ( request()->input( 'qty' ) ?: request()->input( 'product_qty' ) ?: 0 )
+                );
+
+                if ( $totalqty < 1 ) {
+                    continue;
+                }
+
+                $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+                $previewCart  = new Cart( [
+                    'product_price' => $productPrice,
+                    'product_qty'   => $totalqty,
+                ] );
+
+                $total += $this->computeLineOrderAmount( $previewCart, $checkoutDatas, $totalqty );
                 continue;
             }
 
@@ -846,10 +990,11 @@ class OrderController extends Controller
             }
 
             $checkoutDatas = $entryDatas->toArray();
-            $totalqty = (int) collect( $checkoutDatas )->pluck( 'variants' )->collapse()->sum( 'qty' );
-            if ( $totalqty < 1 ) {
-                $totalqty = (int) ( $cart->product_qty ?? 0 );
-            }
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ) );
 
             if ( $this->validateCartForCheckout( $cart, $product, $totalqty ) ) {
                 continue;

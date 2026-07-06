@@ -100,8 +100,14 @@ class ProductCheckoutService {
             $couponAppliedInStore = false;
 
             foreach ( $datas as $data ) {
-
-                $totalqty = collect( $data['variants'] )->sum( 'qty' );
+                $variants = is_array( $data['variants'] ?? null ) ? $data['variants'] : [];
+                $totalqty = (int) collect( $variants )->sum( 'qty' );
+                if ( $totalqty < 1 ) {
+                    $totalqty = (int) ( $data['qty'] ?? $data['product_qty'] ?? $data['quantity'] ?? $totalquantity );
+                }
+                if ( $totalqty < 1 ) {
+                    $totalqty = (int) $totalquantity;
+                }
 
                 $is_unlimited = 1;
                 if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
