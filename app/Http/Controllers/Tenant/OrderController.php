@@ -46,6 +46,7 @@ class OrderController extends Controller
         $placed = 0;
         $failed = [];
         $couponApplied = false;
+        $placedOrderIds = [];
 
         foreach ( $checkoutEntries as $entry ) {
             $cart = $entry['cart'];
@@ -168,11 +169,20 @@ class OrderController extends Controller
                 ? json_decode( $response->getContent(), true )
                 : null;
 
-            if ( ! $couponApplied && $couponContext['coupon'] && ( $payload['status'] ?? null ) === 200 ) {
-                $couponApplied = true;
-            }
-
             if ( ( $payload['status'] ?? null ) === 200 ) {
+                if ( ! $couponApplied && $couponContext['coupon'] ) {
+                    $couponApplied = true;
+                }
+                if ( ! empty( $payload['order_id'] ) ) {
+                    $placedOrderIds[] = $payload['order_id'];
+                }
+                if ( ! empty( $payload['orders'] ) && is_array( $payload['orders'] ) ) {
+                    foreach ( $payload['orders'] as $savedOrder ) {
+                        if ( ! empty( $savedOrder['order_id'] ) ) {
+                            $placedOrderIds[] = $savedOrder['order_id'];
+                        }
+                    }
+                }
                 $placed++;
                 continue;
             }
@@ -201,6 +211,8 @@ class OrderController extends Controller
                 ? 'Checkout successfully!'
                 : $placed . ' orders placed successfully',
             'orders_placed' => $placed,
+            'order_id'      => $placedOrderIds[0] ?? null,
+            'order_ids'     => array_values( array_unique( $placedOrderIds ) ),
             'failed'        => $failed,
         ] );
     }
@@ -238,6 +250,7 @@ class OrderController extends Controller
         $placed = 0;
         $failed = [];
         $couponApplied = false;
+        $placedOrderIds = [];
 
         foreach ( $carts as $cart ) {
             if ( !$cart->tenant_id ) {
@@ -307,6 +320,16 @@ class OrderController extends Controller
                 if ( ! $couponApplied && $couponContext['coupon'] ) {
                     $couponApplied = true;
                 }
+                if ( ! empty( $payload['order_id'] ) ) {
+                    $placedOrderIds[] = $payload['order_id'];
+                }
+                if ( ! empty( $payload['orders'] ) && is_array( $payload['orders'] ) ) {
+                    foreach ( $payload['orders'] as $savedOrder ) {
+                        if ( ! empty( $savedOrder['order_id'] ) ) {
+                            $placedOrderIds[] = $savedOrder['order_id'];
+                        }
+                    }
+                }
                 $placed++;
                 continue;
             }
@@ -331,6 +354,8 @@ class OrderController extends Controller
                 ? 'Checkout successfully!'
                 : $placed . ' orders placed successfully',
             'orders_placed' => $placed,
+            'order_id'      => $placedOrderIds[0] ?? null,
+            'order_ids'     => array_values( array_unique( $placedOrderIds ) ),
             'failed'        => $failed,
         ] );
     }

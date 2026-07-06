@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model {
     use HasFactory;
@@ -71,22 +72,25 @@ class Order extends Model {
         parent::boot();
 
         static::creating( function ( $order ) {
-            $order->order_id = self::generateTransactionId();
+            if ( ! empty( $order->order_id ) ) {
+                return;
+            }
+
+            $order->order_id = self::generateTransactionId( $order->getConnectionName() );
         } );
     }
 
-    public static function generateTransactionId() {
-        $text   = 'OR'; // Prefix for the transaction ID
-        $number = str_pad( mt_rand( 1, 999999 ), 6, '0', STR_PAD_LEFT ); // Random 6-digit number
+    public static function generateTransactionId( ?string $connectionName = null ) {
+        $text = 'OR';
 
-        $transactionId = $text . $number;
+        do {
+            $number        = str_pad( mt_rand( 1, 999999 ), 6, '0', STR_PAD_LEFT );
+            $transactionId = $text . $number;
 
-        // Check if the generated transaction ID already exists in the database
-        $existingTransaction = Order::where( 'order_id', $transactionId )->first();
-        if ( $existingTransaction ) {
-            // If the transaction ID exists, regenerate it recursively until a unique one is found
-            return self::generateTransactionId();
-        }
+            $exists = $connectionName
+                ? DB::connection( $connectionName )->table( 'orders' )->where( 'order_id', $transactionId )->exists()
+                : self::query()->where( 'order_id', $transactionId )->exists();
+        } while ( $exists );
 
         return $transactionId;
     }
