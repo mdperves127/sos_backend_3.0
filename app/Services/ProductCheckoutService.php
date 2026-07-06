@@ -410,6 +410,7 @@ class ProductCheckoutService {
 
     /**
      * @param  array<int, array<string, mixed>>  $variants
+     * @param  object  $product  Product model or stdClass from cross-tenant query
      */
     private static function decreaseProductStock(
         string $connectionName,
@@ -417,9 +418,9 @@ class ProductCheckoutService {
         int $totalqty,
         array $variants,
         Cart $cart,
-        Product $product
+        object $product
     ): void {
-        if ( $cart->purchase_type != 'single' && $product->is_connect_bulk_single != 1 ) {
+        if ( $cart->purchase_type != 'single' && (int) ( $product->is_connect_bulk_single ?? 0 ) !== 1 ) {
             return;
         }
 
