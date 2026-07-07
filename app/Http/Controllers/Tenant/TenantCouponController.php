@@ -146,14 +146,16 @@ class TenantCouponController extends Controller
 
         return response()->json( [
             'status'          => 200,
+            'success'         => true,
             'message'         => 'Coupon applied successfully.',
-            'coupon'          => [
-                'id'             => $coupon->id,
-                'name'           => $coupon->name,
-                'code'           => $coupon->code,
-                'discount_type'  => $coupon->discount_type,
-                'discount_value' => $coupon->discount_value,
+            'data'            => [
+                'coupon'          => $coupon,
+                'order_amount'    => (float) $request->input( 'order_amount' ),
+                'discount_amount' => $result['discount_amount'],
+                'payable_amount'  => $result['payable_amount'],
             ],
+            'coupon'          => $coupon,
+            'order_amount'    => (float) $request->input( 'order_amount' ),
             'discount_amount' => $result['discount_amount'],
             'payable_amount'  => $result['payable_amount'],
         ] );
