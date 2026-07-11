@@ -151,6 +151,7 @@ Route::middleware( [
 
             Route::post('add-to-cart', [TenantCartController::class, 'addToCart']);
             Route::get('cart', [TenantCartController::class, 'cart']);
+            Route::put('cart/{id}/quantity', [TenantCartController::class, 'updateQuantity']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
             Route::get('dashboard/orders', [MerchantFrontendController::class, 'orders']);
             Route::post('product-review', [ProductReviewController::class, 'store']);

@@ -206,4 +206,218 @@ class CartController extends Controller
             'success' => true,
         ]);
     }
+
+    public function updateQuantity( Request $request, $id )
+    {
+        $request->validate( [
+            'qty'               => 'nullable|integer|min:1',
+            'cartItems'         => 'nullable|array',
+            'cartItems.*.id'    => 'required_with:cartItems|integer',
+            'cartItems.*.qty'   => 'required_with:cartItems|integer|min:1',
+        ] );
+
+        if ( ! $request->filled( 'qty' ) && ! $request->filled( 'cartItems' ) ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Quantity or cartItems is required.',
+            ], 422 );
+        }
+
+        $cart = Cart::where( 'user_id', auth()->id() )
+            ->with( 'cartDetails' )
+            ->find( $id );
+
+        if ( ! $cart ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Cart not found.',
+            ], 404 );
+        }
+
+        if ( ! $cart->tenant_id ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Cart is missing tenant information.',
+            ], 400 );
+        }
+
+        $product = CrossTenantQueryService::getSingleRecordFromTenant(
+            $cart->tenant_id,
+            Product::class,
+            fn( $query ) => $query->where( 'id', $cart->product_id )->where( 'status', 'active' )
+        );
+
+        if ( ! $product ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Product not found or unavailable.',
+            ], 404 );
+        }
+
+        if ( $request->filled( 'cartItems' ) ) {
+            foreach ( $request->input( 'cartItems' ) as $item ) {
+                $detail = $cart->cartDetails->firstWhere( 'id', (int) $item['id'] );
+
+                if ( ! $detail ) {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Cart item not found.',
+                    ], 404 );
+                }
+
+                $detail->qty = (int) $item['qty'];
+                $detail->save();
+            }
+        } else {
+            $qty = (int) $request->input( 'qty' );
+
+            if ( $cart->cartDetails->count() === 1 ) {
+                $cart->cartDetails->first()->update( ['qty' => $qty] );
+            } elseif ( $cart->cartDetails->isEmpty() ) {
+                CartDetails::create( [
+                    'cart_id' => $cart->id,
+                    'qty'     => $qty,
+                ] );
+            } else {
+                return response()->json( [
+                    'status'  => 422,
+                    'message' => 'Use cartItems to update quantity for multi-variant products.',
+                ], 422 );
+            }
+        }
+
+        $cart->load( 'cartDetails' );
+        $totalqty = (int) $cart->cartDetails->sum( 'qty' );
+
+        if ( $totalqty < 1 ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Quantity must be at least 1.',
+            ], 422 );
+        }
+
+        if ( $cart->purchase_type === 'single' || ( $cart->purchase_type === 'bulk' && $product->is_connect_bulk_single == 1 ) ) {
+            if ( (int) $product->qty < $totalqty ) {
+                return responsejson( 'Quantity not available', 'fail' );
+            }
+        }
+
+        if ( $cart->purchase_type !== 'single' ) {
+            $sellingDetails = is_array( $product->selling_details )
+                ? $product->selling_details
+                : ( json_decode( $product->selling_details ?? '[]', true ) ?: [] );
+
+            if ( $sellingDetails !== [] ) {
+                $minBulkQty = min( array_column( $sellingDetails, 'min_bulk_qty' ) );
+
+                if ( $minBulkQty > $totalqty ) {
+                    return responsejson( 'Minimum  Bulk Quantity ' . $minBulkQty . '.', 'fail' );
+                }
+            }
+        }
+
+        try {
+            $pricing = $this->calculateCartPricing( $product, $cart->purchase_type, $totalqty );
+        } catch ( \RuntimeException $e ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => $e->getMessage(),
+            ], 422 );
+        }
+
+        $cart->update( [
+            'product_qty'                => $totalqty,
+            'product_price'              => $pricing['product_price'],
+            'amount'                     => $pricing['affiliate_commission'],
+            'totalproductprice'          => $pricing['total_product_price'],
+            'total_affiliate_commission' => $pricing['total_affiliate_commission'],
+            'advancepayment'             => $pricing['advance_payment'],
+            'totaladvancepayment'        => $pricing['total_advance_payment'],
+        ] );
+
+        $cart->load( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] );
+
+        return response()->json( [
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Cart quantity updated successfully.',
+            'cart'    => $cart,
+        ] );
+    }
+
+    /**
+     * @return array{
+     *     product_price: float,
+     *     affiliate_commission: float,
+     *     total_product_price: float,
+     *     total_affiliate_commission: float,
+     *     advance_payment: float,
+     *     total_advance_payment: float
+     * }
+     */
+    private function calculateCartPricing( object $product, string $purchaseType, int $totalqty ): array
+    {
+        $productAmount = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+
+        if ( $purchaseType === 'single' ) {
+            $productPrice = $productAmount;
+
+            if ( $product->discount_type == 'percent' ) {
+                $affiliateCommission = ( $productPrice / 100 ) * $product->discount_rate;
+            } else {
+                $affiliateCommission = $product->discount_rate;
+            }
+
+            if ( $product->single_advance_payment_type == 'percent' ) {
+                $advancePayment = ( $productPrice / 100 ) * $product->advance_payment;
+            } else {
+                $advancePayment = $product->advance_payment;
+            }
+
+            return [
+                'product_price'              => $productPrice,
+                'affiliate_commission'       => $affiliateCommission,
+                'total_product_price'        => $productPrice * $totalqty,
+                'total_affiliate_commission' => $affiliateCommission * $totalqty,
+                'advance_payment'            => $advancePayment,
+                'total_advance_payment'      => $advancePayment * $totalqty,
+            ];
+        }
+
+        $sellingDetails = is_array( $product->selling_details )
+            ? $product->selling_details
+            : ( json_decode( $product->selling_details ?? '[]', true ) ?: [] );
+
+        $bulkdetails = collect( $sellingDetails )
+            ->filter( fn( $detail ) => (int) ( $detail['min_bulk_qty'] ?? 0 ) <= $totalqty )
+            ->sortByDesc( fn( $detail ) => (int) ( $detail['min_bulk_qty'] ?? 0 ) )
+            ->first();
+
+        if ( ! $bulkdetails ) {
+            throw new \RuntimeException( 'Bulk pricing is not available for this quantity.' );
+        }
+
+        $productPrice = $bulkdetails['min_bulk_price'] ?? 0;
+
+        if ( ( $bulkdetails['bulk_commission_type'] ?? null ) == 'percent' ) {
+            $affiliateCommission = ( $productPrice / 100 ) * ( $bulkdetails['bulk_commission'] ?? 0 );
+        } else {
+            $affiliateCommission = $bulkdetails['bulk_commission'] ?? 0;
+        }
+
+        if ( ( $bulkdetails['advance_payment_type'] ?? null ) == 'percent' ) {
+            $advancePayment = ( $productPrice / 100 ) * ( $bulkdetails['advance_payment'] ?? 0 );
+        } else {
+            $advancePayment = $bulkdetails['advance_payment'] ?? 0;
+        }
+
+        return [
+            'product_price'              => $productPrice,
+            'affiliate_commission'       => $affiliateCommission,
+            'total_product_price'        => $productPrice * $totalqty,
+            'total_affiliate_commission' => $affiliateCommission * $totalqty,
+            'advance_payment'            => $advancePayment,
+            'total_advance_payment'      => $advancePayment * $totalqty,
+        ];
+    }
 }
