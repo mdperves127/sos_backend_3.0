@@ -27,8 +27,8 @@ class BuySubscription extends Controller {
             $entityId = auth()->id();
         }
 
-        $proviousdue       = SubscriptionDueService::on('mysql')->subscriptiondue( $entityId );
-        $membership_credit = SubscriptionDueService::on('mysql')->membership_credit( $entityId, $subscription->id );
+        $proviousdue       = SubscriptionDueService::subscriptiondue( $entityId );
+        $membership_credit = SubscriptionDueService::membership_credit( $entityId, $subscription->id );
 
         return response()->json(
             [
