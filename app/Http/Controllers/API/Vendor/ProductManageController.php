@@ -102,6 +102,7 @@ class ProductManageController extends Controller {
             'selling_details.*.bulk_commission_type' => [Rule::in( ['percent', 'flat'] ), 'required'],
             'selling_details.*.advance_payment'      => ['present', 'numeric', 'min:0'],
             'selling_details.*.advance_payment_type' => [Rule::in( ['percent', 'flat'] ), 'required'],
+            'dropshipper_message'                  => ['nullable', 'string'],
 
         ], [
             'qty.required_if'             => "The qty field is required.",
@@ -222,6 +223,7 @@ class ProductManageController extends Controller {
             $product->advance_payment             = request( 'advance_payment' );
             $product->single_advance_payment_type = request( 'single_advance_payment_type' );
             $product->is_connect_bulk_single      = request( 'is_connect_bulk_single' );
+            $product->dropshipper_message       = $request->input( 'dropshipper_message' );
 
             if ( $request->hasFile( 'image' ) ) {
                 $filename       = fileUpload( $request->file( 'image' ), 'uploads/product', 500, 500 );
@@ -339,6 +341,7 @@ class ProductManageController extends Controller {
             'selling_details.*.bulk_commission_type' => ['required_if:selling_type,bulk', Rule::in( ['percent', 'flat'] )],
             'selling_details.*.advance_payment'      => ['nullable', 'numeric', 'min:0'],
             'selling_details.*.advance_payment_type' => ['required_if:selling_type,bulk', Rule::in( ['percent', 'flat'] )],
+            'dropshipper_message'                  => ['nullable', 'string'],
 
         ], [
             'qty.required_if'             => "The qty field is required.",
@@ -423,6 +426,7 @@ class ProductManageController extends Controller {
                 $product->market_place_brand_id = $request->market_place_brand_id ?? null;
                 $product->market_place_category_id = $request->market_place_category_id ?? null;
                 $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
+                $product->dropshipper_message         = $request->input( 'dropshipper_message' );
 
                 $product->update();
 
