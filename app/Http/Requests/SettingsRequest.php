@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class SettingsRequest extends FormRequest
 {
@@ -117,7 +118,8 @@ class SettingsRequest extends FormRequest
             'mission_image'   => 'nullable', 'image', 'mimes:png,jpg,jpeg',
             'subscription_heading' => 'nullable',
             'subscription_title' => 'nullable',
-            'tag_manager'=> 'nullable'
+            'tag_manager'=> 'nullable',
+            'is_stock_show' => ['nullable', Rule::in( ['yes', 'no'] )],
         ];
     }
 

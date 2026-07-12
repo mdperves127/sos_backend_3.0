@@ -125,5 +125,6 @@ class Settings extends Model {
         'withdraw_charge_status',
         'google_tag',
         'add_product_tutorial',
+        'is_stock_show',
     ];
 }
