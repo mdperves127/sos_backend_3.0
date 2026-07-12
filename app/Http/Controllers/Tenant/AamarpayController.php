@@ -25,7 +25,12 @@ class AamarpayController extends Controller
     function servicesuccess()
     {
         $response = request()->all();
-        $vendorservice = ServiceOrder::where('trxid', $response['mer_txnid'])->first();
+        $vendorservice = ServiceOrder::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] ?? null )->first();
+
+        if ( ! $vendorservice ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'all-service-order?message=Payment not found' );
+        }
+
         $vendorservice->update([
             'is_paid' => 1
         ]);
@@ -44,12 +49,10 @@ class AamarpayController extends Controller
             ]
         );
 
-        $user = User::find($vendorservice->user_id);
-        $path = paymentredirect($user->role_as);
-        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Service purchase successfully';
-        return redirect($url);
+        $redirectBase = RedirectHelper::getTenantRedirectUrl( $vendorservice->tenant_id );
+        $url          = $redirectBase . 'all-service-order?message=' . urlencode( 'Service purchase successfully' );
 
-
+        return redirect( $url );
     }
 
     function productcheckoutsuccess()

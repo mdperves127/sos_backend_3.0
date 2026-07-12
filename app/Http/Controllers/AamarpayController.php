@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\RechargeNotification;
 use App\Notifications\SubscriptionNotification;
 use App\Models\Tenant;
+use App\Helper\RedirectHelper;
 
 class AamarpayController extends Controller
 {
@@ -26,18 +27,28 @@ class AamarpayController extends Controller
     function servicesuccess()
     {
         $response = request()->all();
-        $vendorservice = ServiceOrder::where('trxid', $response['mer_txnid'])->first();
+        $vendorservice = ServiceOrder::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] ?? null )->first();
+
+        if ( ! $vendorservice ) {
+            return redirect( rtrim( config( 'app.redirecturl' ), '/' ) . '/all-service-order?message=Payment not found' );
+        }
+
         $vendorservice->update([
             'is_paid' => 1
         ]);
         PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'Ammarpay', 'Service', '-', '', $vendorservice->user_id);
 
+        if ( ! empty( $vendorservice->tenant_id ) ) {
+            $url = RedirectHelper::getTenantRedirectUrl( $vendorservice->tenant_id )
+                . 'all-service-order?message=' . urlencode( 'Service purchase successfully' );
+
+            return redirect( $url );
+        }
+
         $user = User::find($vendorservice->user_id);
         $path = paymentredirect($user->role_as);
         $url = config('app.redirecturl') . $path . '?message=Service purchase successfully';
         return redirect($url);
-
-
     }
 
     function productcheckoutsuccess()

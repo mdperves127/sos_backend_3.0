@@ -98,11 +98,14 @@ class ServiceService
                 $paymentHistoryContext
             );
 
-        }else{
+        } else {
+            $isTenantContext = function_exists( 'tenant' ) && tenant();
+            $successurl      = $isTenantContext
+                ? rtrim( request()->getSchemeAndHttpHost(), '/' ) . '/api/aaparpay/service-success'
+                : url( 'api/user/aaparpay/service-success' );
+            $tenantType      = $isTenantContext ? 'tenant' : 'user';
 
-            $successurl = url('api/user/aaparpay/service-success');
-            return  AamarPayService::gateway($package->price,$trxid,'Service',$successurl, 'user');
-
+            return AamarPayService::gateway( $package->price, $trxid, 'Service', $successurl, $tenantType );
         }
 
         return response()->json([
