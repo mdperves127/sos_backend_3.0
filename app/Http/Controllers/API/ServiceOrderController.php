@@ -22,31 +22,37 @@ class ServiceOrderController extends Controller
      */
     public function index()
     {
-        $query = ServiceOrder::query()
-            ->when(request('search') != '', function ($query) {
-                $query->where('trxid', 'like', '%' . request('search') . '%');
-            })
-            ->with(['servicedetails', 'packagedetails', 'vendor'])
-            ->when(request('status'), function ($query) {
-                $query->where('status', request('status'));
-            });
+        $query = ServiceOrder::on( 'mysql' )
+            ->when( request( 'search' ) != '', function ( $query ) {
+                $query->where( 'trxid', 'like', '%' . request( 'search' ) . '%' );
+            } )
+            ->when( request( 'status' ), function ( $query ) {
+                $query->where( 'status', request( 'status' ) );
+            } );
 
         $query = $this->applyServiceOrderContext( $query );
 
-        if ( !$query ) {
+        if ( ! $query ) {
             return response()->json( [
                 'status'  => 400,
                 'message' => 'Tenant or user context is required.',
             ], 400 );
         }
 
-        $serviceOrder = $query->latest()->paginate( 10 );
+        if ( $this->isTenantMerchantContext() ) {
+            $query->where( 'is_paid', 1 );
+        }
 
-        return response()->json([
-            'status' => 200,
+        $serviceOrder = $query
+            ->with( ['servicedetails', 'packagedetails', 'vendor', 'customerdetails'] )
+            ->latest()
+            ->paginate( 10 );
+
+        return response()->json( [
+            'status'  => 200,
             'message' => 'Service orders fetched successfully',
-            'data' => $serviceOrder,
-        ]);
+            'data'    => $serviceOrder,
+        ] );
     }
 
     /**
@@ -67,17 +73,31 @@ class ServiceOrderController extends Controller
      * @param  \App\Models\ServiceOrder  $serviceOrder
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show( $id )
     {
-        $data = ServiceOrder::where(['user_id' => userid(), 'id' => $id])->first();
-        if (!$data) {
-            return responsejson('Not found', 'fail');
+        $baseQuery = ServiceOrder::on( 'mysql' );
+        $baseQuery = $this->applyServiceOrderContext( $baseQuery );
+
+        if ( ! $baseQuery ) {
+            return responsejson( 'Not found', 'fail' );
         }
 
-        $serviceOrder = ServiceOrder::where('user_id', userid())->with(['servicedetails', 'packagedetails', 'requirementsfiles', 'vendor:id,name,email', 'servicerating', 'orderdelivery' => function ($query) {
-            $query->with('deliveryfiles');
-        }])->find($id);
-        return $this->response($serviceOrder);
+        if ( $this->isTenantMerchantContext() ) {
+            $baseQuery->where( 'is_paid', 1 );
+        }
+
+        $serviceOrder = $baseQuery
+            ->with( ['servicedetails', 'packagedetails', 'requirementsfiles', 'vendor:id,name,email', 'customerdetails', 'servicerating', 'orderdelivery' => function ( $query ) {
+                $query->with( 'deliveryfiles' );
+            }] )
+            ->where( 'id', $id )
+            ->first();
+
+        if ( ! $serviceOrder ) {
+            return responsejson( 'Not found', 'fail' );
+        }
+
+        return $this->response( $serviceOrder );
     }
 
     /**
@@ -109,42 +129,39 @@ class ServiceOrderController extends Controller
     }
 
     public function serviceOrderCount() {
-        if (auth()->check()) {
-            $all = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->count();
-            $success = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where('status', 'success')->count();
-            $delivered = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where('status', 'delivered')->count();
-            $revision = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where('status', 'revision')->count();
-            $pending = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where(['status'=> 'pending','is_paid'=>1])->count();
-            $canceled = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where('status', 'canceled')->count();
-            $progress = ServiceOrder::on('mysql')->where('user_id', auth()->user()->id)->where('status', 'progress')->count();
+        $query = ServiceOrder::on( 'mysql' );
+        $query = $this->applyServiceOrderContext( $query );
 
-        } else {
-            $all = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->count();
-            $success = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'success')->count();
-            $delivered = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'delivered')->count();
-            $revision = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'revision')->count();
-            $pending = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where(['status'=> 'pending','is_paid'=>1])->count();
-            $canceled = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'canceled')->count();
-            $progress = ServiceOrder::on('mysql')->where('tenant_id', tenant()->id)->where('status', 'progress')->count();
+        if ( ! $query ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Tenant or user context is required.',
+            ], 400 );
         }
-        return response()->json([
-            'all' => $all,
-            'success' => $success,
-            'delivered' => $delivered,
-            'revision' => $revision,
-            'pending' => $pending,
-            'canceled' => $canceled,
-            'progress' => $progress,
-        ]);
+
+        return response()->json( [
+            'all'       => (clone $query)->count(),
+            'success'   => (clone $query)->where( 'status', 'success' )->count(),
+            'delivered' => (clone $query)->where( 'status', 'delivered' )->count(),
+            'revision'  => (clone $query)->where( 'status', 'revision' )->count(),
+            'pending'   => (clone $query)->where( ['status' => 'pending', 'is_paid' => 1] )->count(),
+            'canceled'  => (clone $query)->where( 'status', 'canceled' )->count(),
+            'progress'  => (clone $query)->where( 'status', 'progress' )->count(),
+        ] );
+    }
+
+    private function isTenantMerchantContext(): bool
+    {
+        return function_exists( 'tenant' ) && tenant();
     }
 
     private function applyServiceOrderContext( $query ) {
-        if ( auth()->check() ) {
-            return $query->where( 'user_id', auth()->id() );
+        if ( $this->isTenantMerchantContext() ) {
+            return $query->where( 'tenant_id', tenant()->id );
         }
 
-        if ( function_exists( 'tenant' ) && tenant() ) {
-            return $query->where( 'tenant_id', tenant()->id );
+        if ( auth()->check() ) {
+            return $query->where( 'user_id', auth()->id() );
         }
 
         return null;

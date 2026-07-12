@@ -19,7 +19,11 @@ class PosSales extends Model {
     }
 
     function returnDetails() {
-        return $this->hasMany( PosSaleReturn::class );
+        return $this->hasMany( PosSaleReturn::class, 'pos_sales_id' );
+    }
+
+    function exchangeDetails() {
+        return $this->hasMany( ExchangeSaleProduct::class, 'pos_sales_id' );
     }
 
     function product() {

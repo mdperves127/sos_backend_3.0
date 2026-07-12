@@ -25,4 +25,9 @@ class CustomerPayment extends Model
     {
         return $this->belongsTo(PaymentMethod::class);
     }
+
+    public function posSale()
+    {
+        return $this->belongsTo(PosSales::class, 'pos_sales_id');
+    }
 }

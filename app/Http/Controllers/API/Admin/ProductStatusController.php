@@ -772,45 +772,87 @@ class ProductStatusController extends Controller
 
     function RequestUpdate(Request $request, $tenant_id, $id)
     {
-        // Get tenant from request
-        $tenant = Tenant::where('id',$tenant_id)->first();
-        if (!$tenant) {
-            return response()->json([
-                'status' => 404,
+        $merchantTenant = Tenant::on( 'mysql' )->find( $tenant_id );
+        if ( ! $merchantTenant ) {
+            return response()->json( [
+                'status'  => 404,
                 'message' => 'Tenant not found',
-            ]);
+            ], 404 );
         }
 
-        // Get ProductDetails from tenant's database
-        $data = CrossTenantQueryService::getSingleFromTenant(
-            $tenant_id,
-            ProductDetails::class,
-            function ($query) use ($id) {
-                $query->where('id', $id);
-            }
+        $resolved = $this->resolveAdminDropshipperProductDetail(
+            (string) $tenant_id,
+            (int) $id,
+            $request->input( 'dropshipper_tenant_id' )
         );
 
-        if (!$data) {
-            return response()->json([
-                'status' => 404,
+        if ( ! $resolved ) {
+            return response()->json( [
+                'status'  => 404,
                 'message' => 'ProductDetails not found',
-            ]);
+            ], 404 );
         }
 
-        // Remove tenant context attributes that were added by getSingleFromTenant
-        // These are not actual database columns and will cause errors if saved
-        unset($data->tenant_id);
-        unset($data->tenant_domain);
-        unset($data->tenant_name);
+        $updated = DB::connection( $resolved['connection'] )
+            ->table( 'product_details' )
+            ->where( 'id', (int) $id )
+            ->where( 'tenant_id', (string) $tenant_id )
+            ->update( [
+                'status'     => $request->input( 'status' ),
+                'reason'     => $request->input( 'reason' ),
+                'updated_at' => now(),
+            ] );
 
-        // Update the ProductDetails
-        $data->status = $request->status;
-        $data->reason = $request->reason;
-        $data->save();
-        return response()->json([
-            'status' => 200,
+        if ( ! $updated ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'ProductDetails not found',
+            ], 404 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
             'message' => 'updated successfully',
-        ]);
+        ] );
+    }
+
+    /**
+     * Dropshipper product requests live in dropshipper tenant DBs; tenant_id column stores merchant tenant.
+     *
+     * @return array{connection: string, dropshipper_tenant_id: string}|null
+     */
+    private function resolveAdminDropshipperProductDetail(
+        string $merchantTenantId,
+        int $productDetailId,
+        ?string $dropshipperTenantId = null
+    ): ?array {
+        $dropshipperQuery = Tenant::on( 'mysql' )->where( 'type', 'dropshipper' );
+
+        if ( $dropshipperTenantId ) {
+            $dropshipperQuery->where( 'id', $dropshipperTenantId );
+        }
+
+        foreach ( $dropshipperQuery->get() as $dropshipperTenant ) {
+            $connectionName = $this->configureAdminTenantConnection( $dropshipperTenant->id );
+            if ( ! $connectionName ) {
+                continue;
+            }
+
+            $exists = DB::connection( $connectionName )
+                ->table( 'product_details' )
+                ->where( 'id', $productDetailId )
+                ->where( 'tenant_id', $merchantTenantId )
+                ->exists();
+
+            if ( $exists ) {
+                return [
+                    'connection'            => $connectionName,
+                    'dropshipper_tenant_id' => $dropshipperTenant->id,
+                ];
+            }
+        }
+
+        return null;
     }
 
 

@@ -34,6 +34,13 @@ class ProductOrderService {
             ], 404 );
         }
 
+        if ( auth()->check() && (int) $order->vendor_id !== (int) auth()->id() ) {
+            return response()->json( [
+                'status'  => 403,
+                'message' => 'You are not authorized to update this order.',
+            ], 403 );
+        }
+
         $status = $validatedData['status'] ?? request( 'status' );
         if ( !$status ) {
             return response()->json( [
@@ -62,31 +69,14 @@ class ProductOrderService {
 
         DB::beginTransaction();
         try {
-
-            return $order;
-            $orderId = $order->id ?? null;
+            $orderId        = $order->id;
+            $previousStatus = $order->status;
 
             $order->reason = request( 'reason' );
-            // $order->update( ['status' => 'cancel'] );
+            $order->update( ['status' => 'cancel', 'last_status' => 'cancel'] );
 
-            if ( $order->productVariant == NULL ) {
-
-                // order current status
-                if ( $order->status != 'hold' && $order->order_media == "null" ) {
-                    self::vendorBalanceBack( $order );
-                }
-
-                // affiliate balance back
-                $order = Order::where( 'id', $orderId )->first();
-
-                return Order::normalizeVariants( $order->variants );
-
-                // if ( $order->order_media == "null" ) {
-                //     self::affiliateBalanceback( $order );
-                //     self::quantityadded( $order );
-                // }
-            } else {
-                $orderDetails        = OrderDetails::where( 'order_id', $orderId )->get();
+            $orderDetails = OrderDetails::where( 'order_id', $orderId )->get();
+            if ( $orderDetails->isNotEmpty() ) {
                 $processedProductIds = [];
                 foreach ( $orderDetails as $orderDetail ) {
                     Product::where( 'id', $orderDetail->product_id )->increment( 'qty', $orderDetail->sub_qty );
@@ -96,6 +86,13 @@ class ProductOrderService {
                         $processedProductIds[] = $orderDetail->product_id;
                     }
                 }
+            } elseif ( $previousStatus !== 'hold' ) {
+                if ( self::isDropshipperOrderMedia( $order ) ) {
+                    self::vendorBalanceBack( $order );
+                    self::affiliateBalanceback( $order );
+                }
+
+                self::quantityadded( $order );
             }
 
             if ( $order->wc_order_no != null ) {
@@ -157,8 +154,59 @@ class ProductOrderService {
     }
 
     static function receivedOrder( $order ) {
+        DB::beginTransaction();
 
-        $order->update( ['status' => 'received', 'last_status' => 'received'] );
+        try {
+            $order->update( ['status' => 'received', 'last_status' => 'received'] );
+
+            if ( self::orderRequiresAffiliateCommissionPayment( $order ) ) {
+                $vendor = function_exists( 'tenant' ) && tenant()
+                    ? Tenant::on( 'mysql' )->find( tenant()->id )
+                    : null;
+
+                if ( ! $vendor ) {
+                    DB::rollBack();
+
+                    return response()->json( [
+                        'status'  => 500,
+                        'message' => 'Tenant not found.',
+                    ], 500 );
+                }
+
+                $afiAmount = (float) ( $order->afi_amount ?? 0 );
+                if ( $afiAmount > 0 ) {
+                    if ( (float) $vendor->balance < $afiAmount ) {
+                        DB::rollBack();
+
+                        return response()->json( [
+                            'status'  => 400,
+                            'message' => 'Balance not available!',
+                        ], 400 );
+                    }
+
+                    $vendor->decrement( 'balance', $afiAmount );
+
+                    PaymentHistoryService::store(
+                        uniqid(),
+                        $afiAmount,
+                        'My wallet',
+                        'Affiliate commission',
+                        '-',
+                        '',
+                        auth()->id()
+                    );
+                }
+            }
+
+            DB::commit();
+        } catch ( \Exception $e ) {
+            DB::rollBack();
+
+            return response()->json( [
+                'status'  => 400,
+                'message' => $e->getMessage(),
+            ], 400 );
+        }
 
         if ( $order->wc_order_no != null ) {
             $wcOrderNo = explode( "-", $order->wc_order_no )[1];
@@ -167,16 +215,6 @@ class ProductOrderService {
             }
         }
 
-        // $vendor = User::find( $order->vendor_id );
-        $vendor = Tenant::on('mysql')->find( tenant()->id );
-        if ( $order->custom_order == 0 ) {
-            $vendor->decrement( 'balance', $order->afi_amount );
-        }
-
-        PaymentHistoryService::store( uniqid(), $order->afi_amount, 'My wallet', 'Affiliate commission', '-', '', auth()->id() );
-
-        // $vendor_balance->balance = ( $vendor_balance->balance - $afi_amount );
-        // $vendor_balance->save();
         return self::response( 'Order received successfull!' );
     }
 
@@ -798,6 +836,36 @@ class ProductOrderService {
             && (int) $order->affiliator_id > 0
             && $order->afi_amount !== null
             && (float) $order->afi_amount > 0;
+    }
+
+    protected static function orderRequiresAffiliateCommissionPayment( Order $order ): bool {
+        if ( (int) ( $order->custom_order ?? 0 ) !== 0 ) {
+            return false;
+        }
+
+        if ( (int) ( $order->affiliator_id ?? 0 ) <= 0 ) {
+            return false;
+        }
+
+        if ( (float) ( $order->afi_amount ?? 0 ) <= 0 ) {
+            return false;
+        }
+
+        return ! self::isDirectWebsiteOrderMedia( $order );
+    }
+
+    protected static function isDirectWebsiteOrderMedia( Order $order ): bool {
+        return in_array(
+            (string) ( $order->order_media ?? '' ),
+            ['website', 'website-guest', 'Direct'],
+            true
+        );
+    }
+
+    protected static function isDropshipperOrderMedia( Order $order ): bool {
+        $media = (string) ( $order->order_media ?? '' );
+
+        return $media === '' || $media === 'null' || in_array( $media, ['dropshipper', 'Affiliator'], true );
     }
 
     protected static function creditDropshipperCommission( Order $order, PendingBalance $affiliateData ): bool {

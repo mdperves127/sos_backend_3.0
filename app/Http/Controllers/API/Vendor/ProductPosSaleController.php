@@ -356,38 +356,9 @@ class ProductPosSaleController extends Controller {
     }
 
     public function paymentHistory() {
-        $userId = Auth::id();
-
-        $payment_histories = CustomerPayment::where( 'user_id', $userId )
-            ->when( request( 'customer_id' ), function ( $q, $supplierId ) {
-                return $q->where( 'customer_id', $supplierId );
-            } )
-
-            ->when( request()->filled( 'search' ), function ( $query ) {
-                $search = request()->input( 'search' );
-                $query->where( function ( $q ) use ( $search ) {
-                    $q->where( 'invoice_no', 'like', '%' . $search . '%' );
-                } );
-            } )
-            ->when( request( 'start_date' ) && request( 'end_date' ), function ( $q ) {
-                $startDate = request( 'start_date' );
-                $endDate   = request( 'end_date' );
-                return $q->whereBetween( 'date', [$startDate, $endDate] );
-            } )
-            ->select( 'id', 'invoice_no', 'pos_sales_id', 'customer_id', 'date', 'payment_method_id', 'paid_amount' )
-            ->latest()
-            ->with( ['customer' => function ( $query ) {
-                $query->select( 'id', 'customer_name' );
-            }] )
-            ->with( ['paymentMethod' => function ( $query ) {
-                $query->select( 'id', 'payment_method_name' );
-            }] )
-            ->paginate( 10 )
-            ->withQueryString();
-
         return response()->json( [
             'status'          => 200,
-            'payment_history' => $payment_histories,
+            'payment_history' => ProductPosSaleService::paymentHistory(),
         ] );
     }
 

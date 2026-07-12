@@ -35,12 +35,30 @@ class ProductPosSaleService {
             } )
             ->select( 'id', 'barcode', 'total_price', 'sale_date', 'payment_status', 'due_amount', 'customer_id', 'source_id', 'exchange_qty' )
             ->latest()
-            ->with( ['customer' => function ( $query ) {
-                $query->select( 'id', 'customer_name' );
-            }] )
-            ->with( 'saleDetails', 'source' )
+            ->with( [
+                'customer' => function ( $query ) {
+                    $query->select( 'id', 'customer_name' );
+                },
+                'saleDetails' => function ( $query ) {
+                    $query->select( 'id', 'pos_sales_id', 'product_id', 'qty', 'rate', 'sub_total', 'status' )
+                        ->with( ['product' => function ( $q ) {
+                            $q->select( 'id', 'name' );
+                        }] );
+                },
+                'source',
+            ] )
             ->paginate( 10 )
             ->withQueryString();
+
+        $productSales->getCollection()->transform( function ( $sale ) {
+            $sale->product_names = $sale->saleDetails
+                ->map( fn ( $detail ) => $detail->product?->name )
+                ->filter()
+                ->unique()
+                ->values();
+
+            return $sale;
+        } );
 
         return $productSales;
 
@@ -184,6 +202,93 @@ class ProductPosSaleService {
             }
         }
 
+    }
+
+    public static function paymentHistory() {
+        $vendorId = vendorId();
+
+        $paymentHistories = CustomerPayment::where( 'vendor_id', $vendorId )
+            ->when( request( 'customer_id' ), function ( $q, $customerId ) {
+                return $q->where( 'customer_id', $customerId );
+            } )
+            ->when( request()->filled( 'search' ), function ( $query ) {
+                $search = request()->input( 'search' );
+                $query->where( function ( $q ) use ( $search ) {
+                    $q->where( 'invoice_no', 'like', '%' . $search . '%' );
+                } );
+            } )
+            ->when( request( 'start_date' ) && request( 'end_date' ), function ( $q ) {
+                $startDate = request( 'start_date' );
+                $endDate   = request( 'end_date' );
+                return $q->whereBetween( 'date', [$startDate, $endDate] );
+            } )
+            ->select( 'id', 'invoice_no', 'pos_sales_id', 'customer_id', 'date', 'payment_method_id', 'paid_amount', 'due_amount' )
+            ->latest()
+            ->with( [
+                'customer' => function ( $query ) {
+                    $query->select( 'id', 'customer_name' );
+                },
+                'paymentMethod' => function ( $query ) {
+                    $query->select( 'id', 'payment_method_name' );
+                },
+                'posSale' => function ( $query ) {
+                    $query->select(
+                        'id',
+                        'barcode',
+                        'return_qty',
+                        'return_date',
+                        'return_amount',
+                        'exchange_qty',
+                        'exchange_date',
+                        'exchange_amount'
+                    )->with( [
+                        'returnDetails' => function ( $q ) {
+                            $q->select( 'id', 'pos_sales_id', 'product_id', 'color_id', 'unit_id', 'size_id', 'return_qty', 'rate', 'sub_total', 'remark' )
+                                ->with( 'product', 'color', 'size', 'unit' );
+                        },
+                        'exchangeDetails' => function ( $q ) {
+                            $q->select( 'id', 'pos_sales_id', 'product_id', 'color_id', 'unit_id', 'size_id', 'return_qty', 'rate', 'sub_total', 'remark', 'type' )
+                                ->with( 'product', 'color', 'size', 'unit' );
+                        },
+                    ] );
+                },
+            ] )
+            ->paginate( 10 )
+            ->withQueryString();
+
+        $paymentHistories->getCollection()->transform( function ( $payment ) {
+            $sale = $payment->posSale;
+
+            $hasReturn   = $sale && (
+                (int) ( $sale->return_qty ?? 0 ) > 0
+                || $sale->returnDetails->isNotEmpty()
+            );
+            $hasExchange = $sale && (
+                (int) ( $sale->exchange_qty ?? 0 ) > 0
+                || $sale->exchangeDetails->isNotEmpty()
+            );
+
+            $payment->return_available   = $hasReturn;
+            $payment->exchange_available = $hasExchange;
+            $payment->return             = $hasReturn ? [
+                'return_qty'    => $sale->return_qty,
+                'return_date'   => $sale->return_date,
+                'return_amount' => $sale->return_amount,
+                'details'       => $sale->returnDetails,
+            ] : null;
+            $payment->exchange           = $hasExchange ? [
+                'exchange_qty'    => $sale->exchange_qty,
+                'exchange_date'   => $sale->exchange_date,
+                'exchange_amount' => $sale->exchange_amount,
+                'details'         => $sale->exchangeDetails,
+            ] : null;
+
+            $payment->makeHidden( ['posSale'] );
+
+            return $payment;
+        } );
+
+        return $paymentHistories;
     }
 
 }
