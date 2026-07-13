@@ -59,9 +59,9 @@ class SupplierProductReturnController extends Controller
                     // Update qty for the product variant
                     ProductVariantService::decrementStock(
                         (int) $purchaseDetail->product_id,
-                        $purchaseDetail->unit_id ? (int) $purchaseDetail->unit_id : null,
-                        $purchaseDetail->size_id ? (int) $purchaseDetail->size_id : null,
-                        $purchaseDetail->color_id ? (int) $purchaseDetail->color_id : null,
+                        ProductVariantService::normalizeNullableId( $purchaseDetail->unit_id ),
+                        ProductVariantService::normalizeNullableId( $purchaseDetail->size_id ),
+                        ProductVariantService::normalizeNullableId( $purchaseDetail->color_id ),
                         (int) $request->return_qty[$key],
                         vendorId()
                     );

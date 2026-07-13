@@ -100,24 +100,26 @@ class ProductPosSaleService {
         $variantsData = [];
         foreach ( $product_ids as $key => $product_id ) {
             $variantsData[] = [
-                'user_id'    => vendorId(),
-                'product_id' => $product_id,
-                'unit_id'    => $variant['unit_id'][$key],
-                'size_id'    => $variant['size_id'][$key],
-                'color_id'   => $variant['color_id'][$key],
-                'qty'        => $variant['qty'][$key],
-                'rate'       => $variant['rate'][$key],
+                'user_id'     => vendorId(),
+                'product_id'  => $product_id,
+                'variant_id'  => $variant['variant_id'][$key] ?? $variant['product_variant_id'][$key] ?? null,
+                'unit_id'     => $variant['unit_id'][$key] ?? null,
+                'size_id'     => $variant['size_id'][$key] ?? null,
+                'color_id'    => $variant['color_id'][$key] ?? null,
+                'qty'         => $variant['qty'][$key],
+                'rate'        => $variant['rate'][$key],
             ];
         }
 
         foreach ( $variantsData as $variantData ) {
             ProductVariantService::decrementStock(
                 (int) $variantData['product_id'],
-                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
-                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
-                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                ProductVariantService::normalizeNullableId( $variantData['unit_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['size_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['color_id'] ),
                 (int) $variantData['qty'],
-                vendorId()
+                vendorId(),
+                ProductVariantService::normalizeNullableId( $variantData['variant_id'] )
             );
         }
 
@@ -167,9 +169,9 @@ class ProductPosSaleService {
         foreach ( $variantsData as $variantData ) {
             ProductVariantService::decrementStock(
                 (int) $variantData['product_id'],
-                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
-                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
-                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                ProductVariantService::normalizeNullableId( $variantData['unit_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['size_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['color_id'] ),
                 (int) $variantData['qty'],
                 vendorId()
             );

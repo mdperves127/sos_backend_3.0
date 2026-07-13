@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Damage;
 use App\Models\DamageDetails;
+use App\Service\Vendor\ProductVariantService;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
@@ -74,10 +75,11 @@ class DamageController extends Controller {
             $damageDetails->remark     = $request->remark[$key];
             $damageDetails->save();
 
-            $variant->decrement( 'qty', $request->damage_qty[$key] );
+            ProductVariantService::decrementStockById(
+                (int) $variant_id,
+                (int) $request->damage_qty[$key]
+            );
         }
-
-        $product->decrement( 'qty', $request->qty );
 
         return response()->json( [
             'status'  => 200,

@@ -76,11 +76,6 @@ class ProductPosSaleController extends Controller {
     public function productSelect( $slug ) {
         $product = Product::where( 'slug', $slug )
             ->where( 'vendor_id', vendorId() )
-            ->select( 'id', 'category_id', 'brand_id', 'name', 'slug', 'sku',
-                DB::raw( 'CASE
-                WHEN discount_price IS NULL THEN selling_price
-                ELSE discount_price
-                END AS discount_price' ), 'discount_percentage', 'selling_price' )
             ->first();
 
         if ( ! $product ) {
@@ -91,13 +86,21 @@ class ProductPosSaleController extends Controller {
         }
 
         ProductVariantService::reconcileProduct( $product );
+        $product->refresh();
 
-        $product->load( [
-            'productVariant' => function ( $q ) {
-                $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )
-                    ->with( 'product', 'color', 'size', 'unit' );
-            },
-        ] );
+        $product = Product::where( 'id', $product->id )
+            ->select( 'id', 'category_id', 'brand_id', 'name', 'slug', 'sku', 'qty',
+                DB::raw( 'CASE
+                WHEN discount_price IS NULL THEN selling_price
+                ELSE discount_price
+                END AS discount_price' ), 'discount_percentage', 'selling_price' )
+            ->with( [
+                'productVariant' => function ( $q ) {
+                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )
+                        ->with( 'product', 'color', 'size', 'unit' );
+                },
+            ] )
+            ->first();
 
         return response()->json( [
             'status'  => 200,
@@ -284,9 +287,9 @@ class ProductPosSaleController extends Controller {
                     // Update qty for the product variant
                     ProductVariantService::incrementStock(
                         (int) $saleDetail->product_id,
-                        $saleDetail->unit_id ? (int) $saleDetail->unit_id : null,
-                        $saleDetail->size_id ? (int) $saleDetail->size_id : null,
-                        $saleDetail->color_id ? (int) $saleDetail->color_id : null,
+                        ProductVariantService::normalizeNullableId( $saleDetail->unit_id ),
+                        ProductVariantService::normalizeNullableId( $saleDetail->size_id ),
+                        ProductVariantService::normalizeNullableId( $saleDetail->color_id ),
                         (int) $request->return_qty[$key],
                         vendorId()
                     );

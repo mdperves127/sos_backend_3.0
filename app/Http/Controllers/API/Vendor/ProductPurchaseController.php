@@ -186,9 +186,9 @@ class ProductPurchaseController extends Controller {
 
             $productVariant = ProductVariantService::findOrCreateVariant(
                 (int) $productDetail->product_id,
-                $productDetail->unit_id ? (int) $productDetail->unit_id : null,
-                $productDetail->size_id ? (int) $productDetail->size_id : null,
-                $productDetail->color_id ? (int) $productDetail->color_id : null,
+                ProductVariantService::normalizeNullableId( $productDetail->unit_id ),
+                ProductVariantService::normalizeNullableId( $productDetail->size_id ),
+                ProductVariantService::normalizeNullableId( $productDetail->color_id ),
                 vendorId()
             );
             $productVariant->qty = (int) ( $productVariant->qty ?? 0 ) + $receivedQty;

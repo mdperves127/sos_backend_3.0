@@ -252,7 +252,7 @@ class ProductManageController extends Controller {
             }
 
             $product->save();
-            ProductVariantService::syncFromProductVariantsJson( $product );
+            ProductVariantService::syncFromProductVariantsJson( $product, null, false );
 
             $productId = $product->id;
 
@@ -440,12 +440,8 @@ class ProductManageController extends Controller {
                 $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
                 $product->dropshipper_message         = $request->input( 'dropshipper_message' );
 
-                if ( is_array( $request->variants ) && $request->variants !== [] ) {
-                    $product->qty = collect( $request->variants )->sum( fn ( $variant ) => max( 0, (int) ( $variant['qty'] ?? 0 ) ) );
-                }
-
                 $product->update();
-                ProductVariantService::syncFromProductVariantsJson( $product );
+                ProductVariantService::syncFromProductVariantsJson( $product, null, true );
 
                 $specification     = request( 'specification', [] );
                 $specification_ans = request( 'specification_ans', [] );

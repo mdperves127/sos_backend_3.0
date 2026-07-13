@@ -11,6 +11,7 @@ use App\Models\OrderDetails;
 use App\Models\PendingBalance;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Service\Vendor\ProductVariantService;
 use App\Models\User;
 use App\Models\WoocommerceCredential;
 use App\Services\PathaoService;
@@ -77,14 +78,15 @@ class ProductOrderService {
 
             $orderDetails = OrderDetails::where( 'order_id', $orderId )->get();
             if ( $orderDetails->isNotEmpty() ) {
-                $processedProductIds = [];
                 foreach ( $orderDetails as $orderDetail ) {
-                    Product::where( 'id', $orderDetail->product_id )->increment( 'qty', $orderDetail->sub_qty );
-
-                    if ( !in_array( $orderDetail->product_id, $processedProductIds ) ) {
-                        ProductVariant::where( 'product_id', $orderDetail->product_id )->increment( 'qty', $orderDetail->sub_qty );
-                        $processedProductIds[] = $orderDetail->product_id;
-                    }
+                    ProductVariantService::incrementStock(
+                        (int) $orderDetail->product_id,
+                        ProductVariantService::normalizeNullableId( $orderDetail->unit_id ),
+                        ProductVariantService::normalizeNullableId( $orderDetail->size_id ),
+                        ProductVariantService::normalizeNullableId( $orderDetail->color_id ),
+                        (int) $orderDetail->sub_qty,
+                        $orderDetail->product?->vendor_id ?? vendorId()
+                    );
                 }
             } elseif ( $previousStatus !== 'hold' ) {
                 if ( self::isDropshipperOrderMedia( $order ) ) {

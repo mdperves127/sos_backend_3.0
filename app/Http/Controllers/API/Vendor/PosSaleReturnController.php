@@ -52,9 +52,9 @@ class PosSaleReturnController extends Controller {
                     // Update qty for the product variant
                     ProductVariantService::incrementStock(
                         (int) $saleDetail->product_id,
-                        $saleDetail->unit_id ? (int) $saleDetail->unit_id : null,
-                        $saleDetail->size_id ? (int) $saleDetail->size_id : null,
-                        $saleDetail->color_id ? (int) $saleDetail->color_id : null,
+                        ProductVariantService::normalizeNullableId( $saleDetail->unit_id ),
+                        ProductVariantService::normalizeNullableId( $saleDetail->size_id ),
+                        ProductVariantService::normalizeNullableId( $saleDetail->color_id ),
                         (int) $request->return_qty[$key],
                         vendorId()
                     );

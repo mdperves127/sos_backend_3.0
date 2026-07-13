@@ -100,9 +100,9 @@ class ProductService {
 
             ProductVariantService::incrementStock(
                 (int) $variantData['product_id'],
-                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
-                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
-                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                ProductVariantService::normalizeNullableId( $variantData['unit_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['size_id'] ),
+                ProductVariantService::normalizeNullableId( $variantData['color_id'] ),
                 (int) $variantData['qty'],
                 vendorId()
             );

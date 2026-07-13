@@ -19,6 +19,7 @@ use App\Services\PathaoService;
 use App\Services\ProductOrderService;
 use App\Services\RedxService;
 use App\Services\Vendor\VariantApiService;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -572,16 +573,14 @@ class OrderController extends Controller {
                 $orderDetails->sub_total  = $request->sub_total[$key];
                 $orderDetails->save();
 
-                Product::where( 'id', $product_id )->decrement( 'qty', $request->sub_qty[$key] );
-            }
-
-            $processedProductIds = [];
-
-            foreach ( $product_ids as $key => $product_id ) {
-                if ( !in_array( $product_id, $processedProductIds ) ) {
-                    ProductVariant::where( 'product_id', $product_id )->decrement( 'qty', $request->sub_qty[$key] );
-                    $processedProductIds[] = $product_id;
-                }
+                ProductVariantService::decrementStock(
+                    (int) $product_id,
+                    ProductVariantService::normalizeNullableId( $request->unit_id[$key] ?? null ),
+                    ProductVariantService::normalizeNullableId( $request->size_id[$key] ?? null ),
+                    ProductVariantService::normalizeNullableId( $request->color_id[$key] ?? null ),
+                    (int) $request->sub_qty[$key],
+                    vendorId()
+                );
             }
 
             $defaultCourier = CourierCredential::where( ['vendor_id' => vendorId(), 'status' => 'active', 'default' => 'yes'] )->first();
