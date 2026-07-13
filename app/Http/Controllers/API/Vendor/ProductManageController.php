@@ -226,7 +226,7 @@ class ProductManageController extends Controller {
             $product->dropshipper_message       = $request->input( 'dropshipper_message' );
 
             if ( $request->hasFile( 'image' ) ) {
-                $filename       = fileUpload( $request->file( 'image' ), 'uploads/product', 500, 500 );
+                $filename       = productImageUpload( $request->file( 'image' ) );
                 $product->image = $filename;
             }
 
@@ -251,7 +251,7 @@ class ProductManageController extends Controller {
 
             if ( $request->hasFile( 'images' ) ) {
                 foreach ( $request->file( 'images' ) as $image ) {
-                    $imageUrl             = fileUpload( $image, 'uploads/product' );
+                    $imageUrl             = productImageUpload( $image );
                     $proimage             = new ProductImage();
                     $proimage->product_id = $productId;
                     $proimage->image      = $imageUrl;
@@ -452,13 +452,13 @@ class ProductManageController extends Controller {
                     }
 
                     if ( request()->hasFile( 'image' ) ) {
-                        $pendingproduct->image = fileUpload( $request->file( 'image' ), 'uploads/product' );
+                        $pendingproduct->image = productImageUpload( $request->file( 'image' ) );
                     }
 
                     $allimages = [];
                     if ( $request->file( 'images' ) ) {
                         foreach ( $request->file( 'images' ) as $key => $image ) {
-                            $allimages[] = fileUpload( $request->file( 'images' )[$key], 'uploads/product' );
+                            $allimages[] = productImageUpload( $request->file( 'images' )[$key] );
                         }
                     }
 

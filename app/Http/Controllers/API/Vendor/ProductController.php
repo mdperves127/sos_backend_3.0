@@ -175,7 +175,7 @@ class ProductController extends Controller
             $product->is_connect_bulk_single = request('is_connect_bulk_single');
 
             if ($request->hasFile('image')) {
-                $filename =   fileUpload($request->file('image'), 'uploads/product', 500, 500);
+                $filename = productImageUpload( $request->file( 'image' ) );
                 $product->image =  $filename;
             }
 
@@ -198,7 +198,7 @@ class ProductController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $imageUrl =   fileUpload($image, 'uploads/product');
+                    $imageUrl = productImageUpload( $image );
                     $proimage = new ProductImage();
                     $proimage->product_id = $productId;
                     $proimage->image = $imageUrl;

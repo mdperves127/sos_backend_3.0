@@ -34,30 +34,67 @@ function slugUpdate( $modelName, $slug_text, $modelId, $slugColumn = 'slug' ) {
     return $slug;
 }
 
-function fileUpload( $file, $path, $withd = 400, $height = 400 ) {
-    $image_name = uniqid() . '-' . time() . '.' . $file->getClientOriginalExtension();
+function fileUpload( $file, $path, $withd = 400, $height = 400, $quality = 90 ) {
+    $extension  = strtolower( $file->getClientOriginalExtension() ?: 'jpg' );
+    $image_name = uniqid() . '-' . time() . '.' . $extension;
     $imagePath  = $path . '/' . $image_name;
-    Image::make( $file )->resize( $withd, $height, function ( $constraint ) {
+    $fullPath   = public_path( $imagePath );
+
+    $directory = dirname( $fullPath );
+    if ( ! is_dir( $directory ) ) {
+        mkdir( $directory, 0755, true );
+    }
+
+    $image = Image::make( $file );
+    $image->resize( $withd, $height, function ( $constraint ) {
         $constraint->aspectRatio();
-    } )->save( public_path( $imagePath ) );
+        $constraint->upsize();
+    } );
+
+    if ( in_array( $extension, ['jpg', 'jpeg'], true ) ) {
+        $image->encode( 'jpg', $quality )->save( $fullPath );
+    } elseif ( $extension === 'webp' ) {
+        $image->encode( 'webp', $quality )->save( $fullPath );
+    } else {
+        $image->save( $fullPath );
+    }
 
     return $imagePath;
 }
 
-function fileUploadFromUrl( $url, $path, $width = 400, $height = 400 ) {
-    $imageName = Str::random( 10 ) . '-' . time() . '.' . pathinfo( $url, PATHINFO_EXTENSION );
+function productImageUpload( $file, $path = 'uploads/product' ) {
+    return fileUpload( $file, $path, 1200, 1200, 92 );
+}
+
+function fileUploadFromUrl( $url, $path, $width = 400, $height = 400, $quality = 90 ) {
+    $extension = strtolower( pathinfo( parse_url( $url, PHP_URL_PATH ) ?? '', PATHINFO_EXTENSION ) ?: 'jpg' );
+    $imageName = Str::random( 10 ) . '-' . time() . '.' . $extension;
     $imagePath = $path . '/' . $imageName;
+    $fullPath  = public_path( $imagePath );
+
+    $directory = dirname( $fullPath );
+    if ( ! is_dir( $directory ) ) {
+        mkdir( $directory, 0755, true );
+    }
 
     $imageContents = file_get_contents( $url );
     $tempPath      = sys_get_temp_dir() . '/' . $imageName;
 
     file_put_contents( $tempPath, $imageContents );
 
-    Image::make( $tempPath )
-        ->resize( $width, $height, function ( $constraint ) {
-            $constraint->aspectRatio();
-        } )
-        ->save( public_path( $imagePath ) );
+    $image = Image::make( $tempPath );
+    $image->resize( $width, $height, function ( $constraint ) {
+        $constraint->aspectRatio();
+        $constraint->upsize();
+    } );
+
+    if ( in_array( $extension, ['jpg', 'jpeg'], true ) ) {
+        $image->encode( 'jpg', $quality )->save( $fullPath );
+    } elseif ( $extension === 'webp' ) {
+        $image->encode( 'webp', $quality )->save( $fullPath );
+    } else {
+        $image->save( $fullPath );
+    }
 
     unlink( $tempPath );
 
