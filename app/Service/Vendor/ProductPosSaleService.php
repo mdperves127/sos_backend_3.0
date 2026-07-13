@@ -5,10 +5,7 @@ namespace App\Service\Vendor;
 use App\Models\CustomerPayment;
 use App\Models\PosSales;
 use App\Models\PosSalesDetails;
-use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ProductPosSaleService {
 
@@ -113,28 +110,15 @@ class ProductPosSaleService {
             ];
         }
 
-        foreach ( $variantsData as $key => $variantData ) {
-            ProductVariant::updateOrCreate(
-                [
-                    'user_id'    => vendorId(),
-                    'product_id' => $variantData['product_id'],
-                    'unit_id'    => $variantData['unit_id'],
-                    'size_id'    => $variantData['size_id'],
-                    'color_id'   => $variantData['color_id'],
-                ],
-                [
-                    'qty' => DB::raw( 'qty - ' . $variantData['qty'] ), // Decrement the qty column
-                    // 'rate' => $variantData['rate'], // Update rate if needed
-                ]
+        foreach ( $variantsData as $variantData ) {
+            ProductVariantService::decrementStock(
+                (int) $variantData['product_id'],
+                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
+                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
+                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                (int) $variantData['qty'],
+                vendorId()
             );
-
-            // Update qty for the product
-            $product = Product::find( $variantData['product_id'] );
-
-            if ( $product ) {
-                $product->qty -= $variantData['qty']; // Decrement stock
-                $product->save();
-            }
         }
 
     }
@@ -181,25 +165,14 @@ class ProductPosSaleService {
         }
 
         foreach ( $variantsData as $variantData ) {
-            ProductVariant::updateOrCreate(
-                [
-                    'product_id' => $variantData['product_id'],
-                    'unit_id'    => $variantData['unit_id'],
-                    'size_id'    => $variantData['size_id'],
-                    'color_id'   => $variantData['color_id'],
-                ],
-                [
-                    'qty' => DB::raw( 'qty - ' . $variantData['qty'] ), // Increment the qty column
-                    // 'rate' => $variantData['rate'], // Update rate if needed
-                ]
+            ProductVariantService::decrementStock(
+                (int) $variantData['product_id'],
+                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
+                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
+                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                (int) $variantData['qty'],
+                vendorId()
             );
-
-            // Update qty for the product
-            $product = Product::find( $product_id );
-            if ( $product ) {
-                $product->qty -= $variantData['qty']; // Increase stock
-                $product->save();
-            }
         }
 
     }

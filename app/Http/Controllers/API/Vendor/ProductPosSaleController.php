@@ -16,6 +16,7 @@ use App\Models\ProductVariant;
 use App\Models\SaleOrderResource;
 use App\Models\VendorInfo;
 use App\Service\Vendor\ProductPosSaleService;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -75,15 +76,28 @@ class ProductPosSaleController extends Controller {
     public function productSelect( $slug ) {
         $product = Product::where( 'slug', $slug )
             ->where( 'vendor_id', vendorId() )
-            ->with( 'productVariant', function ( $q ) {
-                $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
-            } )
             ->select( 'id', 'category_id', 'brand_id', 'name', 'slug', 'sku',
                 DB::raw( 'CASE
                 WHEN discount_price IS NULL THEN selling_price
                 ELSE discount_price
                 END AS discount_price' ), 'discount_percentage', 'selling_price' )
             ->first();
+
+        if ( ! $product ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Product not found.',
+            ] );
+        }
+
+        ProductVariantService::reconcileProduct( $product );
+
+        $product->load( [
+            'productVariant' => function ( $q ) {
+                $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )
+                    ->with( 'product', 'color', 'size', 'unit' );
+            },
+        ] );
 
         return response()->json( [
             'status'  => 200,
@@ -268,25 +282,16 @@ class ProductPosSaleController extends Controller {
                     $returnProduct->save();
 
                     // Update qty for the product variant
-                    ProductVariant::updateOrCreate(
-                        [
-                            'user_id'    => vendorId(),
-                            'product_id' => $saleDetail->product_id,
-                            'unit_id'    => $saleDetail->unit_id,
-                            'size_id'    => $saleDetail->size_id,
-                            'color_id'   => $saleDetail->color_id,
-                        ],
-                        [
-                            'qty' => DB::raw( 'qty + ' . $request->return_qty[$key] ),
-                        ]
+                    ProductVariantService::incrementStock(
+                        (int) $saleDetail->product_id,
+                        $saleDetail->unit_id ? (int) $saleDetail->unit_id : null,
+                        $saleDetail->size_id ? (int) $saleDetail->size_id : null,
+                        $saleDetail->color_id ? (int) $saleDetail->color_id : null,
+                        (int) $request->return_qty[$key],
+                        vendorId()
                     );
 
-                    // Update qty for the product
-                    $product = Product::find( $saleDetail->product_id );
-                    if ( $product ) {
-                        $product->qty += $request->return_qty[$key]; // Increase stock
-                        $product->save();
-                    }
+                    // Update qty for the product — handled by ProductVariantService::incrementStock
 
                     // Store return qty for the product
                     if ( $sale ) {

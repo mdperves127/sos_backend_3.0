@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ProductPurchase;
 use App\Models\SupplierReturnProduct;
-use App\Models\ProductVariant;
-use App\Models\Product;
-use Illuminate\Support\Facades\DB;
+use App\Service\Vendor\ProductVariantService;
 
 
 class SupplierProductReturnController extends Controller
@@ -59,24 +57,16 @@ class SupplierProductReturnController extends Controller
                     $returnProduct->save();
 
                     // Update qty for the product variant
-                    ProductVariant::updateOrCreate(
-                        [
-                            'product_id' => $purchaseDetail->product_id,
-                            'unit_id' => $purchaseDetail->unit_id,
-                            'size_id' => $purchaseDetail->size_id,
-                            'color_id' => $purchaseDetail->color_id,
-                        ],
-                        [
-                            'qty' => DB::raw('qty - ' . $request->return_qty[$key]),
-                        ]
+                    ProductVariantService::decrementStock(
+                        (int) $purchaseDetail->product_id,
+                        $purchaseDetail->unit_id ? (int) $purchaseDetail->unit_id : null,
+                        $purchaseDetail->size_id ? (int) $purchaseDetail->size_id : null,
+                        $purchaseDetail->color_id ? (int) $purchaseDetail->color_id : null,
+                        (int) $request->return_qty[$key],
+                        vendorId()
                     );
 
-                    // Update qty for the product
-                    $product = Product::find($purchaseDetail->product_id);
-                    if ($product) {
-                        $product->qty -= $request->return_qty[$key]; // Decrease stock
-                        $product->save();
-                    }
+                    // Update qty for the product — handled by ProductVariantService::decrementStock
 
 
                     // Store return qty for the product

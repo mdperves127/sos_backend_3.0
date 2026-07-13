@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\PosSaleReturn;
 use App\Models\PosSales;
 use App\Models\PosSaleWastageReturn;
-use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PosSaleReturnController extends Controller {
 
@@ -52,24 +50,16 @@ class PosSaleReturnController extends Controller {
                     $returnProduct->save();
 
                     // Update qty for the product variant
-                    ProductVariant::updateOrCreate(
-                        [
-                            'product_id' => $saleDetail->product_id,
-                            'unit_id'    => $saleDetail->unit_id,
-                            'size_id'    => $saleDetail->size_id,
-                            'color_id'   => $saleDetail->color_id,
-                        ],
-                        [
-                            'qty' => DB::raw( 'qty + ' . $request->return_qty[$key] ),
-                        ]
+                    ProductVariantService::incrementStock(
+                        (int) $saleDetail->product_id,
+                        $saleDetail->unit_id ? (int) $saleDetail->unit_id : null,
+                        $saleDetail->size_id ? (int) $saleDetail->size_id : null,
+                        $saleDetail->color_id ? (int) $saleDetail->color_id : null,
+                        (int) $request->return_qty[$key],
+                        vendorId()
                     );
 
-                    // Update qty for the product
-                    $product = Product::find( $saleDetail->product_id );
-                    if ( $product ) {
-                        $product->qty += $request->return_qty[$key]; // Increase stock
-                        $product->save();
-                    }
+                    // Update qty for the product — handled by ProductVariantService::incrementStock
 
                     // Store return qty for the product
                     if ( $sale ) {

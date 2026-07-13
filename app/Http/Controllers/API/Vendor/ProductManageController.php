@@ -14,6 +14,7 @@ use App\Rules\CategoryRule;
 use App\Rules\SubCategorydRule;
 use App\Services\Vendor\VariantApiService;
 use App\Service\Vendor\ProductService;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -245,7 +246,13 @@ class ProductManageController extends Controller {
             $product->market_place_category_id = $request->market_place_category_id ?? null;
             $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
             $product->uniqid         = uniqid();
+
+            if ( is_array( $request->variants ) && $request->variants !== [] ) {
+                $product->qty = collect( $request->variants )->sum( fn ( $variant ) => max( 0, (int) ( $variant['qty'] ?? 0 ) ) );
+            }
+
             $product->save();
+            ProductVariantService::syncFromProductVariantsJson( $product );
 
             $productId = $product->id;
 
@@ -274,15 +281,20 @@ class ProductManageController extends Controller {
     public function VendorProductEdit( $id ) {
         $userId  = vendorId();
         $product = Product::query()
-            ->with( 'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage', 'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name' )
-            ->with( 'productVariant', function ( $q ) {
-                $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
-            } )
             ->withAvg( 'productrating', 'rating' )
             ->where( 'user_id', $userId )
             ->find( $id );
 
         if ( $product ) {
+            ProductVariantService::reconcileProduct( $product );
+            $product->load( [
+                'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage',
+                'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name',
+                'productVariant' => function ( $q ) {
+                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
+                },
+            ] );
+
             return response()->json( [
                 'status'  => 200,
                 'product' => $product,
@@ -428,7 +440,12 @@ class ProductManageController extends Controller {
                 $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
                 $product->dropshipper_message         = $request->input( 'dropshipper_message' );
 
+                if ( is_array( $request->variants ) && $request->variants !== [] ) {
+                    $product->qty = collect( $request->variants )->sum( fn ( $variant ) => max( 0, (int) ( $variant['qty'] ?? 0 ) ) );
+                }
+
                 $product->update();
+                ProductVariantService::syncFromProductVariantsJson( $product );
 
                 $specification     = request( 'specification', [] );
                 $specification_ans = request( 'specification_ans', [] );

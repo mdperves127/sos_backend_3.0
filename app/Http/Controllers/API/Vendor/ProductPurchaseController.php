@@ -15,6 +15,7 @@ use App\Models\SupplierPayment;
 use App\Models\Unit;
 use App\Models\VendorInfo;
 use App\Service\Vendor\ProductPurchaseService;
+use App\Service\Vendor\ProductVariantService;
 use App\Service\Vendor\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -183,20 +184,21 @@ class ProductPurchaseController extends Controller {
         foreach ( $productDetails as $productDetail ) {
             $receivedQty = (int) $productDetail->qty;
 
-            $productVariant = ProductVariant::firstOrNew( [
-                'product_id' => $productDetail->product_id,
-                'unit_id'    => $productDetail->unit_id,
-                'size_id'    => $productDetail->size_id,
-                'color_id'   => $productDetail->color_id,
-            ] );
+            $productVariant = ProductVariantService::findOrCreateVariant(
+                (int) $productDetail->product_id,
+                $productDetail->unit_id ? (int) $productDetail->unit_id : null,
+                $productDetail->size_id ? (int) $productDetail->size_id : null,
+                $productDetail->color_id ? (int) $productDetail->color_id : null,
+                vendorId()
+            );
             $productVariant->qty = (int) ( $productVariant->qty ?? 0 ) + $receivedQty;
             $productVariant->save();
 
             // Update qty for the product
             $product = Product::find( $productDetail->product_id );
             if ( $product ) {
-                $product->qty = (int) ( $product->qty ?? 0 ) + $receivedQty; // Increase stock safely even when qty is stored as string
-                $product->save();
+                ProductVariantService::syncJsonFromDb( $product );
+                ProductVariantService::recalculateProductQty( $product );
             }
         }
 

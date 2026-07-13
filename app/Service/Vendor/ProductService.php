@@ -4,6 +4,7 @@ namespace App\Service\Vendor;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -93,26 +94,18 @@ class ProductService {
         }
 
         foreach ( $variantsData as $variantData ) {
-            ProductVariant::updateOrCreate(
-                [
-                    'user_id'    => vendorId(),
-                    'product_id' => $variantData['product_id'],
-                    'unit_id'    => $variantData['unit_id'],
-                    'size_id'    => $variantData['size_id'],
-                    'color_id'   => $variantData['color_id'],
-                ],
-                [
-                    'qty' => DB::raw( 'qty + ' . (int) $variantData['qty'] ), // Increment the qty column
-                    // 'rate' => $variantData['rate'], // Update rate if needed
-                ]
-            );
-
-            // Update qty for the product
-            $product = Product::find( $variantData['product_id'] );
-            if ( $product && $purchaseStatus == "received" ) {
-                $product->qty = (string) ((int) $product->qty + (int) $variantData['qty']);
-                $product->save();
+            if ( $purchaseStatus !== 'received' ) {
+                continue;
             }
+
+            ProductVariantService::incrementStock(
+                (int) $variantData['product_id'],
+                $variantData['unit_id'] ? (int) $variantData['unit_id'] : null,
+                $variantData['size_id'] ? (int) $variantData['size_id'] : null,
+                $variantData['color_id'] ? (int) $variantData['color_id'] : null,
+                (int) $variantData['qty'],
+                vendorId()
+            );
         }
 
     }
