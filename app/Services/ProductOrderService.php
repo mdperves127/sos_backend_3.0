@@ -79,13 +79,15 @@ class ProductOrderService {
             $orderDetails = OrderDetails::where( 'order_id', $orderId )->get();
             if ( $orderDetails->isNotEmpty() ) {
                 foreach ( $orderDetails as $orderDetail ) {
-                    ProductVariantService::incrementStock(
+                    ProductVariantService::incrementStockOnConnection(
+                        $order->getConnectionName(),
                         (int) $orderDetail->product_id,
                         ProductVariantService::normalizeNullableId( $orderDetail->unit_id ),
                         ProductVariantService::normalizeNullableId( $orderDetail->size_id ),
                         ProductVariantService::normalizeNullableId( $orderDetail->color_id ),
                         (int) $orderDetail->sub_qty,
-                        $orderDetail->product?->vendor_id ?? vendorId()
+                        null,
+                        (int) ( $order->vendor_id ?? 0 ) ?: null
                     );
                 }
             } elseif ( $previousStatus !== 'hold' ) {
@@ -738,41 +740,49 @@ class ProductOrderService {
             return;
         }
 
-        if ( $order->is_unlimited != 1 ) {
-            $product      = Product::find( $order->product_id );
-            $product->qty = ( $product->qty + $balance->qty );
+        if ( $order->is_unlimited == 1 ) {
+            return;
+        }
 
-            $variants = Order::normalizeVariants( $order->variants );
-            $data     = collect( $variants )->pluck( 'qty', 'variant_id' );
+        $connectionName = $order->getConnectionName();
+        $variants       = Order::normalizeVariants( $order->variants );
 
-            $result = [];
+        if ( $variants !== [] ) {
+            foreach ( $variants as $variant ) {
+                $variant = (array) $variant;
+                $qty     = (int) ( $variant['qty'] ?? $variant['quantity'] ?? $balance->qty ?? 0 );
 
-            foreach ( $data as $variantId => $qty ) {
-                $result[] = [
-                    "variant_id" => $variantId,
-                    "qty"        => $qty,
-                ];
-            }
-
-            $databaseValues = $product->variants;
-            $userValues     = $result;
-
-            if ( $databaseValues != '' ) {
-                foreach ( $databaseValues as &$databaseItem ) {
-                    $variantId         = $databaseItem['id'];
-                    $matchingUserValue = collect( $userValues )->firstWhere( 'variant_id', $variantId );
-
-                    if ( $matchingUserValue ) {
-                        $userQty = $matchingUserValue['qty'];
-                        $databaseItem['qty'] += $userQty;
-                    }
+                if ( $qty < 1 ) {
+                    continue;
                 }
 
-                $product->variants = $databaseValues;
+                $variantId = (int) ( $variant['variant_id'] ?? $variant['id'] ?? 0 ) ?: null;
+
+                ProductVariantService::incrementStockOnConnection(
+                    $connectionName,
+                    (int) $order->product_id,
+                    ProductVariantService::normalizeNullableId( $variant['unit_id'] ?? ( is_array( $variant['unit'] ?? null ) ? ( $variant['unit']['id'] ?? null ) : ( $variant['unit'] ?? null ) ) ),
+                    ProductVariantService::normalizeNullableId( $variant['size_id'] ?? ( is_array( $variant['size'] ?? null ) ? ( $variant['size']['id'] ?? null ) : ( $variant['size'] ?? $variant['variation'] ?? null ) ) ),
+                    ProductVariantService::normalizeNullableId( $variant['color_id'] ?? ( is_array( $variant['color'] ?? null ) ? ( $variant['color']['id'] ?? null ) : ( $variant['color'] ?? null ) ) ),
+                    $qty,
+                    $variantId,
+                    (int) ( $order->vendor_id ?? 0 ) ?: null
+                );
             }
 
-            $product->save();
+            return;
         }
+
+        ProductVariantService::incrementStockOnConnection(
+            $connectionName,
+            (int) $order->product_id,
+            null,
+            null,
+            null,
+            (int) ( $balance->qty ?? $order->qty ?? 0 ),
+            null,
+            (int) ( $order->vendor_id ?? 0 ) ?: null
+        );
     }
 
     static function deliveredOrder( $order ) {

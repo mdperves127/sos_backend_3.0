@@ -16,6 +16,7 @@ use App\Models\Tenant;
 use App\Models\TenantCoupon;
 use App\Services\CrossTenantQueryService;
 use App\Services\TenantCouponService;
+use App\Service\Vendor\ProductVariantService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -182,10 +183,11 @@ class ProductCheckoutService {
                     $variants,
                     $cart,
                     $product,
-                    $order
+                    $order,
+                    $orderMedia
                 ) {
                     $order->save();
-                    self::decreaseProductStock( $connectionName, $productid, $totalqty, $variants, $cart, $product );
+                    self::decreaseProductStock( $connectionName, $productid, $totalqty, $variants, $cart, $product, $orderMedia );
                 } );
 
                 $savedOrders[] = [
@@ -341,83 +343,70 @@ class ProductCheckoutService {
         int $totalqty,
         array $variants,
         Cart $cart,
-        object $product
+        object $product,
+        ?string $orderMedia = null
     ): void {
-        if ( $cart->purchase_type != 'single' && (int) ( $product->is_connect_bulk_single ?? 0 ) !== 1 ) {
+        if ( ! self::shouldDecreaseStock( $cart, $product, $orderMedia ) ) {
             return;
         }
 
-        $currentProduct = DB::connection( $connectionName )->table( 'products' )
-            ->where( 'id', $productId )
-            ->first();
-
-        if ( $currentProduct ) {
-            DB::connection( $connectionName )->table( 'products' )
-                ->where( 'id', $productId )
-                ->update( ['qty' => max( 0, (int) $currentProduct->qty - $totalqty )] );
+        if ( $variants === [] ) {
+            $variants = [['qty' => $totalqty]];
         }
+
+        $vendorId = (int) ( $product->vendor_id ?? $product->user_id ?? 0 );
 
         foreach ( $variants as $variant ) {
-            $variant = (array) $variant;
-
-            if ( empty( $variant['variant_id'] ) ) {
-                continue;
-            }
-
+            $variant    = (array) $variant;
             $variantQty = self::resolveVariantQuantity( $variant, $totalqty );
+            $variantId  = (int) ( $variant['variant_id'] ?? $variant['id'] ?? 0 ) ?: null;
 
-            $currentVariant = DB::connection( $connectionName )->table( 'product_variants' )
-                ->where( 'id', $variant['variant_id'] )
-                ->first();
+            ProductVariantService::decrementStockOnConnection(
+                $connectionName,
+                $productId,
+                ProductVariantService::normalizeNullableId( self::resolveCheckoutAttributeId( $variant, 'unit', 'unit_id' ) ),
+                ProductVariantService::normalizeNullableId( self::resolveCheckoutSizeId( $variant ) ),
+                ProductVariantService::normalizeNullableId( self::resolveCheckoutAttributeId( $variant, 'color', 'color_id' ) ),
+                $variantQty,
+                $variantId,
+                $vendorId > 0 ? $vendorId : null
+            );
+        }
+    }
 
-            if ( $currentVariant ) {
-                DB::connection( $connectionName )->table( 'product_variants' )
-                    ->where( 'id', $variant['variant_id'] )
-                    ->update( ['qty' => max( 0, (int) $currentVariant->qty - $variantQty )] );
-            }
+    private static function shouldDecreaseStock( Cart $cart, object $product, ?string $orderMedia ): bool {
+        $purchaseType = trim( (string) ( $cart->purchase_type ?? '' ) );
+
+        if ( $purchaseType === '' ) {
+            $purchaseType = ( $product->selling_type ?? 'single' ) === 'bulk' ? 'bulk' : 'single';
         }
 
-        $databaseValue = DB::connection( $connectionName )->table( 'products' )
-            ->where( 'id', $productId )
-            ->first();
-
-        if ( ! $databaseValue || $databaseValue->variants == '' ) {
-            return;
+        if ( in_array( $orderMedia, ['website', 'website-guest', 'Direct'], true ) ) {
+            return $purchaseType === 'single' || (int) ( $product->is_connect_bulk_single ?? 0 ) === 1;
         }
 
-        $variantsArray = is_string( $databaseValue->variants )
-            ? json_decode( $databaseValue->variants, true )
-            : $databaseValue->variants;
+        return $purchaseType === 'single' || (int) ( $product->is_connect_bulk_single ?? 0 ) === 1;
+    }
 
-        if ( ! is_array( $variantsArray ) ) {
-            return;
+    /**
+     * @param  array<string, mixed>  $variant
+     */
+    private static function resolveCheckoutAttributeId( array $variant, string $key, ?string $flatKey = null ): mixed {
+        $value = $variant[$key] ?? ( $flatKey ? ( $variant[$flatKey] ?? null ) : null );
+
+        if ( is_array( $value ) ) {
+            return $value['id'] ?? null;
         }
 
-        $result = [];
+        return $value;
+    }
 
-        foreach ( $variantsArray as $dbItem ) {
-            $dbItem = (array) $dbItem;
-
-            foreach ( $variants as $userItem ) {
-                $userItem = (array) $userItem;
-
-                if (
-                    ! empty( $userItem['variant_id'] )
-                    && isset( $dbItem['id'] )
-                    && (int) $dbItem['id'] === (int) $userItem['variant_id']
-                ) {
-                    $deductQty     = self::resolveVariantQuantity( $userItem, $totalqty );
-                    $dbItem['qty'] = max( 0, (int) ( $dbItem['qty'] ?? 0 ) - $deductQty );
-                    break;
-                }
-            }
-
-            $result[] = $dbItem;
-        }
-
-        DB::connection( $connectionName )->table( 'products' )
-            ->where( 'id', $productId )
-            ->update( ['variants' => json_encode( $result )] );
+    /**
+     * @param  array<string, mixed>  $variant
+     */
+    private static function resolveCheckoutSizeId( array $variant ): mixed {
+        return self::resolveCheckoutAttributeId( $variant, 'size', 'size_id' )
+            ?? self::resolveCheckoutAttributeId( $variant, 'variation', 'variation_id' );
     }
 
     /**

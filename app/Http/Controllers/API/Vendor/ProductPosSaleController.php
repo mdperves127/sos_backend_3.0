@@ -34,8 +34,13 @@ class ProductPosSaleController extends Controller {
     public function create() {
 
         $product = Product::where( 'pre_order', '=', '0' )
-            ->where( 'qty', '>', 0 )
             ->where( 'vendor_id', vendorId() )
+            ->where( function ( $query ) {
+                $query->whereRaw( 'CAST(qty AS SIGNED) > 0' )
+                    ->orWhereHas( 'productVariant', function ( $variantQuery ) {
+                        $variantQuery->where( 'qty', '>', 0 );
+                    } );
+            } )
             ->when( request( 'category_id' ), function ( $q, $category ) {
                 $q->where( 'category_id', $category );
             } )

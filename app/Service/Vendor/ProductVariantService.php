@@ -164,6 +164,8 @@ class ProductVariantService {
         }
 
         DB::transaction( function () use ( $productId, $unitId, $sizeId, $colorId, $qty, $vendorId, $variantId ) {
+            $product = Product::find( $productId );
+
             if ( $variantId ) {
                 $variant = self::findVariantById( $productId, $variantId );
 
@@ -171,11 +173,10 @@ class ProductVariantService {
                     $variant->qty = max( 0, (int) $variant->qty - $qty );
                     $variant->save();
 
-                    $product = Product::find( $productId );
-
                     if ( $product ) {
+                        $product->qty = (string) max( 0, (int) $product->qty - $qty );
+                        $product->saveQuietly();
                         self::syncJsonFromDb( $product );
-                        self::recalculateProductQty( $product );
                     }
 
                     return;
@@ -186,11 +187,10 @@ class ProductVariantService {
             $variant->qty = max( 0, (int) $variant->qty - $qty );
             $variant->save();
 
-            $product = Product::find( $productId );
-
             if ( $product ) {
+                $product->qty = (string) max( 0, (int) $product->qty - $qty );
+                $product->saveQuietly();
                 self::syncJsonFromDb( $product );
-                self::recalculateProductQty( $product );
             }
         } );
     }
@@ -332,9 +332,270 @@ class ProductVariantService {
             return;
         }
 
-        $totalQty     = (int) ProductVariant::where( 'product_id', $product->id )->sum( 'qty' );
+        $totalQty          = (int) ProductVariant::where( 'product_id', $product->id )->sum( 'qty' );
+        $currentProductQty = (int) $product->qty;
+
+        if ( $totalQty === 0 && $currentProductQty > 0 ) {
+            return;
+        }
+
         $product->qty = (string) max( 0, $totalQty );
         $product->saveQuietly();
+    }
+
+    public static function decrementStockOnConnection(
+        string $connectionName,
+        int $productId,
+        ?int $unitId,
+        ?int $sizeId,
+        ?int $colorId,
+        int $qty,
+        ?int $variantId = null,
+        ?int $vendorId = null
+    ): void {
+        if ( $qty <= 0 ) {
+            return;
+        }
+
+        DB::connection( $connectionName )->transaction( function () use (
+            $connectionName,
+            $productId,
+            $unitId,
+            $sizeId,
+            $colorId,
+            $qty,
+            $variantId,
+            $vendorId
+        ) {
+            $variantRow = self::findVariantRowOnConnection( $connectionName, $productId, $unitId, $sizeId, $colorId, $variantId );
+
+            if ( $variantRow ) {
+                DB::connection( $connectionName )->table( 'product_variants' )
+                    ->where( 'id', $variantRow->id )
+                    ->update( ['qty' => max( 0, (int) $variantRow->qty - $qty )] );
+            } else {
+                $productRow = DB::connection( $connectionName )->table( 'products' )
+                    ->where( 'id', $productId )
+                    ->first();
+
+                if ( $productRow ) {
+                    DB::connection( $connectionName )->table( 'products' )
+                        ->where( 'id', $productId )
+                        ->update( ['qty' => max( 0, (int) $productRow->qty - $qty )] );
+                }
+
+                return;
+            }
+
+            $productRow = DB::connection( $connectionName )->table( 'products' )
+                ->where( 'id', $productId )
+                ->first();
+
+            if ( $productRow ) {
+                DB::connection( $connectionName )->table( 'products' )
+                    ->where( 'id', $productId )
+                    ->update( ['qty' => max( 0, (int) $productRow->qty - $qty )] );
+            }
+
+            self::syncJsonFromDbOnConnection( $connectionName, $productId );
+        } );
+    }
+
+    public static function incrementStockOnConnection(
+        string $connectionName,
+        int $productId,
+        ?int $unitId,
+        ?int $sizeId,
+        ?int $colorId,
+        int $qty,
+        ?int $variantId = null,
+        ?int $vendorId = null
+    ): void {
+        if ( $qty <= 0 ) {
+            return;
+        }
+
+        DB::connection( $connectionName )->transaction( function () use (
+            $connectionName,
+            $productId,
+            $unitId,
+            $sizeId,
+            $colorId,
+            $qty,
+            $variantId,
+            $vendorId
+        ) {
+            $variantRow = self::findVariantRowOnConnection( $connectionName, $productId, $unitId, $sizeId, $colorId, $variantId );
+
+            if ( $variantRow ) {
+                DB::connection( $connectionName )->table( 'product_variants' )
+                    ->where( 'id', $variantRow->id )
+                    ->update( ['qty' => (int) $variantRow->qty + $qty ] );
+            } else {
+                DB::connection( $connectionName )->table( 'product_variants' )->insert( [
+                    'user_id'    => $vendorId ?? 0,
+                    'product_id' => $productId,
+                    'unit_id'    => $unitId,
+                    'size_id'    => $sizeId,
+                    'color_id'   => $colorId,
+                    'qty'        => $qty,
+                    'rate'       => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ] );
+            }
+
+            self::syncJsonFromDbOnConnection( $connectionName, $productId );
+            self::recalculateProductQtyOnConnection( $connectionName, $productId, true );
+        } );
+    }
+
+    public static function getEffectiveQty( int $productId ): int {
+        $product = Product::find( $productId );
+
+        if ( ! $product ) {
+            return 0;
+        }
+
+        $variantTotal = (int) ProductVariant::where( 'product_id', $productId )->sum( 'qty' );
+        $productQty   = (int) $product->qty;
+
+        if ( ProductVariant::where( 'product_id', $productId )->exists() ) {
+            return max( $productQty, $variantTotal );
+        }
+
+        return max( 0, $productQty );
+    }
+
+    private static function findVariantRowOnConnection(
+        string $connectionName,
+        int $productId,
+        ?int $unitId,
+        ?int $sizeId,
+        ?int $colorId,
+        ?int $variantId = null
+    ): ?object {
+        if ( $variantId ) {
+            $variant = DB::connection( $connectionName )->table( 'product_variants' )
+                ->where( 'product_id', $productId )
+                ->where( 'id', $variantId )
+                ->first();
+
+            if ( $variant ) {
+                return $variant;
+            }
+        }
+
+        $query = DB::connection( $connectionName )->table( 'product_variants' )
+            ->where( 'product_id', $productId );
+
+        self::applyNullableColumnFilter( $query, 'unit_id', $unitId );
+        self::applyNullableColumnFilter( $query, 'size_id', $sizeId );
+        self::applyNullableColumnFilter( $query, 'color_id', $colorId );
+
+        return $query->first();
+    }
+
+    private static function applyNullableColumnFilter( $query, string $column, ?int $value ): void {
+        if ( $value === null ) {
+            $query->whereNull( $column );
+        } else {
+            $query->where( $column, $value );
+        }
+    }
+
+    private static function recalculateProductQtyOnConnection( string $connectionName, int $productId, bool $force = false ): void {
+        $variantCount = DB::connection( $connectionName )->table( 'product_variants' )
+            ->where( 'product_id', $productId )
+            ->count();
+
+        if ( $variantCount === 0 ) {
+            return;
+        }
+
+        $totalQty = (int) DB::connection( $connectionName )->table( 'product_variants' )
+            ->where( 'product_id', $productId )
+            ->sum( 'qty' );
+
+        $currentProductQty = (int) ( DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->value( 'qty' ) ?? 0 );
+
+        if ( ! $force && $totalQty === 0 && $currentProductQty > 0 ) {
+            return;
+        }
+
+        DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->update( ['qty' => (string) max( 0, $totalQty )] );
+    }
+
+    private static function syncJsonFromDbOnConnection( string $connectionName, int $productId ): void {
+        $productRow = DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->first();
+
+        if ( ! $productRow ) {
+            return;
+        }
+
+        $dbVariants = DB::connection( $connectionName )->table( 'product_variants' )
+            ->where( 'product_id', $productId )
+            ->get( ['id', 'unit_id', 'size_id', 'color_id', 'qty'] );
+
+        if ( $dbVariants->isEmpty() ) {
+            return;
+        }
+
+        $jsonVariants = [];
+
+        if ( ! empty( $productRow->variants ) ) {
+            $decoded = is_string( $productRow->variants )
+                ? json_decode( $productRow->variants, true )
+                : $productRow->variants;
+            $jsonVariants = is_array( $decoded ) ? $decoded : [];
+        }
+
+        $updatedJson = [];
+
+        foreach ( $dbVariants as $dbVariant ) {
+            $matched = false;
+
+            foreach ( $jsonVariants as $jsonVariant ) {
+                $jsonVariant = (array) $jsonVariant;
+
+                if (
+                    self::normalizeNullableId( self::resolveAttributeId( $jsonVariant, 'unit', 'unit_id' ) ) === self::normalizeNullableId( $dbVariant->unit_id )
+                    && self::normalizeNullableId( self::resolveSizeId( $jsonVariant ) ) === self::normalizeNullableId( $dbVariant->size_id )
+                    && self::normalizeNullableId( self::resolveAttributeId( $jsonVariant, 'color', 'color_id' ) ) === self::normalizeNullableId( $dbVariant->color_id )
+                ) {
+                    $jsonVariant['id']         = $dbVariant->id;
+                    $jsonVariant['variant_id'] = $dbVariant->id;
+                    $jsonVariant['qty']        = max( 0, (int) $dbVariant->qty );
+                    $jsonVariant['unit_id']    = $dbVariant->unit_id;
+                    $jsonVariant['size_id']    = $dbVariant->size_id;
+                    $jsonVariant['color_id']   = $dbVariant->color_id;
+                    $updatedJson[]             = $jsonVariant;
+                    $matched                   = true;
+                    break;
+                }
+            }
+
+            if ( ! $matched ) {
+                $updatedJson[] = [
+                    'id'         => $dbVariant->id,
+                    'variant_id' => $dbVariant->id,
+                    'unit_id'    => $dbVariant->unit_id,
+                    'size_id'    => $dbVariant->size_id,
+                    'color_id'   => $dbVariant->color_id,
+                    'qty'        => max( 0, (int) $dbVariant->qty ),
+                ];
+            }
+        }
+
+        DB::connection( $connectionName )->table( 'products' )
+            ->where( 'id', $productId )
+            ->update( ['variants' => json_encode( $updatedJson )] );
     }
 
     public static function syncJsonFromDb( Product $product ): void {
