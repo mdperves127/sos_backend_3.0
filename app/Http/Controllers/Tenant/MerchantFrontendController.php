@@ -139,6 +139,12 @@ class MerchantFrontendController extends Controller
         ];
     }
 
+    private function attachDropshipperProductMeta( $product, ProductDetails $productDetail ): void {
+        $product->profit_amount                 = $productDetail->profit_amount;
+        $product->dropshipper_product_detail_id = $productDetail->id;
+        $product->dropshipper_uniqid            = $productDetail->uniqid;
+    }
+
     public function products(Request $request)
     {
         // Get filter parameters
@@ -244,6 +250,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 if ( $product ) {
+                    $this->attachDropshipperProductMeta( $product, $productDetail );
                     $products->push( $product );
                 }
             }
@@ -365,6 +372,11 @@ class MerchantFrontendController extends Controller
 
                 if ( ! $product ) {
                     continue;
+                }
+
+                $matchingDetail = $productDetails->firstWhere( 'product_id', $product->id );
+                if ( $matchingDetail ) {
+                    $this->attachDropshipperProductMeta( $product, $matchingDetail );
                 }
 
                 $reviewConnection = $connectionName;
