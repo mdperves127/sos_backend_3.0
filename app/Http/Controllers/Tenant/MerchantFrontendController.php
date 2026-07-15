@@ -305,92 +305,85 @@ class MerchantFrontendController extends Controller
         $reviewConnection = null;
 
         if(tenant()->type == 'dropshipper') {
-            // Step 1: Get ProductDetails from current tenant's database by ID
-            $productDetail = ProductDetails::where('slug', $slug)->first();
+            $product           = null;
+            $reviewConnection  = null;
+            $related_products  = collect();
 
-            if ( !$productDetail ) {
+            $productDetailsByTenant = ProductDetails::where( 'status', 1 )->get()->groupBy( 'tenant_id' );
+
+            foreach ( $productDetailsByTenant as $storedTenantId => $productDetails ) {
+                if ( ! $storedTenantId ) {
+                    continue;
+                }
+
+                $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
+                if ( ! $tenant ) {
+                    continue;
+                }
+
+                $connectionName = 'tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
+
+                config( [
+                    'database.connections.' . $connectionName => [
+                        'driver'   => 'mysql',
+                        'host'     => config( 'database.connections.mysql.host' ),
+                        'port'     => config( 'database.connections.mysql.port' ),
+                        'database' => $databaseName,
+                        'username' => config( 'database.connections.mysql.username' ),
+                        'password' => config( 'database.connections.mysql.password' ),
+                        'charset'  => 'utf8mb4',
+                        'collation'=> 'utf8mb4_unicode_ci',
+                        'strict'   => false,
+                    ],
+                ] );
+                DB::purge( $connectionName );
+
+                $approvedProductIds = $productDetails->pluck( 'product_id' )->filter()->unique()->values();
+
+                if ( $approvedProductIds->isEmpty() ) {
+                    continue;
+                }
+
+                $product = $this->applyWebsiteVisibleProductFilter(
+                    Product::on( $connectionName )
+                        ->with( [
+                            'category',
+                            'subcategory',
+                            'brand',
+                            'productImage',
+                            'productdetails',
+                            'vendor',
+                            'productVariant.size',
+                            'productVariant.unit',
+                            'productVariant.color',
+                            'productVariant.product',
+                        ] )
+                        ->where( 'slug', $slug )
+                        ->whereIn( 'id', $approvedProductIds )
+                )->first();
+
+                if ( ! $product ) {
+                    continue;
+                }
+
+                $reviewConnection = $connectionName;
+
+                $relatedQuery = $this->applyWebsiteVisibleProductFilter(
+                    Product::on( $connectionName )
+                        ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                        ->where( 'market_place_category_id', $product->market_place_category_id )
+                        ->where( 'id', '!=', $product->id )
+                );
+                $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
+
+                break;
+            }
+
+            if ( ! $product ) {
                 return response()->json( [
                     'status'  => 404,
                     'message' => 'Product not found',
-                ] );
-            }
-
-            // Get tenant_id from ProductDetails record (this is the merchant tenant ID)
-            $storedTenantId = $productDetail->tenant_id;
-
-            if ( !$storedTenantId || !$productDetail->product_id ) {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Product tenant information not found',
-                ] );
-            }
-
-            // Lookup tenant from central database
-            $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
-            if ( !$tenant ) {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Tenant not found',
-                ] );
-            }
-
-            $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'affsellc_' . $tenant->id;
-
-            // Configure connection to the tenant database specified by tenant_id
-            config( [
-                'database.connections.' . $connectionName => [
-                    'driver'   => 'mysql',
-                    'host'     => config( 'database.connections.mysql.host' ),
-                    'port'     => config( 'database.connections.mysql.port' ),
-                    'database' => $databaseName,
-                    'username' => config( 'database.connections.mysql.username' ),
-                    'password' => config( 'database.connections.mysql.password' ),
-                    'charset'  => 'utf8mb4',
-                    'collation'=> 'utf8mb4_unicode_ci',
-                    'strict'   => false,
-                ],
-            ] );
-            DB::purge( $connectionName );
-            $reviewConnection = $connectionName;
-
-            // Load product from the tenant database using product_id
-            $product = $this->applyWebsiteVisibleProductFilter(
-                Product::on( $connectionName )
-                    ->with( [
-                        'category',
-                        'subcategory',
-                        'brand',
-                        'productImage',
-                        'productdetails',
-                        'vendor',
-                        'productVariant.size',
-                        'productVariant.unit',
-                        'productVariant.color',
-                        'productVariant.product',
-                    ] )
-                    ->where( 'slug', $slug )
-            )->first();
-
-            if ( !$product ) {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Product not found in tenant database',
-                ] );
-            }
-
-            $relatedQuery = $this->applyWebsiteVisibleProductFilter(
-                Product::on( $connectionName )
-                    ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                    ->where( 'market_place_category_id', $product->market_place_category_id )
-                    ->where( 'id', '!=', $product->id )
-            );
-            $related_products = $this->applyListLimitToQuery( $relatedQuery, $request )->get();
-
-            if ( !$product ) {
-                return response()->json( [
-                    'status'  => 404,
-                    'message' => 'Product not found in tenant database',
                 ] );
             }
         } else {
