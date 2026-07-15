@@ -698,6 +698,30 @@ class MerchantFrontendController extends Controller
         return response()->json($brands);
     }
 
+    private function resolveCmsCategory( ?CmsSetting $cms, string $field ) {
+        if ( ! $cms || ! $cms->{$field} ) {
+            return null;
+        }
+
+        if ( tenant()->type === 'dropshipper' ) {
+            return MPCategory::on( 'mysql' )->find( $cms->{$field} );
+        }
+
+        return Category::find( $cms->{$field} );
+    }
+
+    private function resolveCmsSubcategory( ?CmsSetting $cms, string $field ) {
+        if ( ! $cms || ! $cms->{$field} ) {
+            return null;
+        }
+
+        if ( tenant()->type === 'dropshipper' ) {
+            return MPSubCategory::on( 'mysql' )->find( $cms->{$field} );
+        }
+
+        return Subcategory::find( $cms->{$field} );
+    }
+
     public function cmsFront()
     {
         $contentServices = ServiceContent::orderBy('order', 'asc')->get();
@@ -706,38 +730,38 @@ class MerchantFrontendController extends Controller
         $cms = CmsSetting::first();
         $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
 
-        $website_visits = $package_info->website_visits;
-        $already_visits = $package_info->already_visits;
-        $has_website = $package_info->has_website;
-        // Use null-safe operator to prevent errors when $cms is null
-        $populer_section_category_id_1 = $cms ? Category::find($cms->populer_section_category_id_1) : null;
-        $populer_section_category_id_2 = $cms ? Category::find($cms->populer_section_category_id_2) : null;
-        $populer_section_category_id_3 = $cms ? Category::find($cms->populer_section_category_id_3) : null;
-        $populer_section_category_id_4 = $cms ? Category::find($cms->populer_section_category_id_4) : null;
-        $populer_section_subcategory_id_1 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_1) : null;
-        $populer_section_subcategory_id_2 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_2) : null;
-        $populer_section_subcategory_id_3 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_3) : null;
-        $populer_section_subcategory_id_4 = $cms ? Subcategory::find($cms->populer_section_subcategory_id_4) : null;
+        $website_visits = $package_info?->website_visits;
+        $already_visits = $package_info?->already_visits;
+        $has_website = $package_info?->has_website;
 
-        $recomended_category_id_1 = $cms ? Category::find($cms->recomended_category_id_1) : null;
-        $recomended_category_id_2 = $cms ? Category::find($cms->recomended_category_id_2) : null;
-        $recomended_category_id_3 = $cms ? Category::find($cms->recomended_category_id_3) : null;
-        $recomended_category_id_4 = $cms ? Category::find($cms->recomended_category_id_4) : null;
-        $recomended_sub_category_id_1 = $cms ? Subcategory::find($cms->recomended_sub_category_id_1) : null;
-        $recomended_sub_category_id_2 = $cms ? Subcategory::find($cms->recomended_sub_category_id_2) : null;
-        $recomended_sub_category_id_3 = $cms ? Subcategory::find($cms->recomended_sub_category_id_3) : null;
-        $recomended_sub_category_id_4 = $cms ? Subcategory::find($cms->recomended_sub_category_id_4) : null;
+        $populer_section_category_id_1 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' );
+        $populer_section_category_id_2 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' );
+        $populer_section_category_id_3 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' );
+        $populer_section_category_id_4 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_4' );
+        $populer_section_subcategory_id_1 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_1' );
+        $populer_section_subcategory_id_2 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_2' );
+        $populer_section_subcategory_id_3 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_3' );
+        $populer_section_subcategory_id_4 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_4' );
 
-        $best_setting_category_id_1 = $cms ? Category::find($cms->best_setting_category_id_1) : null;
-        $best_setting_category_id_2 = $cms ? Category::find($cms->best_setting_category_id_2) : null;
-        $best_setting_category_id_3 = $cms ? Category::find($cms->best_setting_category_id_3) : null;
-        $best_setting_category_id_4 = $cms ? Category::find($cms->best_setting_category_id_4) : null;
-        $best_setting_sub_category_id_1 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_1) : null;
-        $best_setting_sub_category_id_2 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_2) : null;
-        $best_setting_sub_category_id_3 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_3) : null;
-        $best_setting_sub_category_id_4 = $cms ? Subcategory::find($cms->best_setting_sub_category_id_4) : null;
-        $best_category_id = $cms ? Category::find($cms->best_category_id) : null;
-        $best_sub_category_id = $cms ? Subcategory::find($cms->best_sub_category_id) : null;
+        $recomended_category_id_1 = $this->resolveCmsCategory( $cms, 'recomended_category_id_1' );
+        $recomended_category_id_2 = $this->resolveCmsCategory( $cms, 'recomended_category_id_2' );
+        $recomended_category_id_3 = $this->resolveCmsCategory( $cms, 'recomended_category_id_3' );
+        $recomended_category_id_4 = $this->resolveCmsCategory( $cms, 'recomended_category_id_4' );
+        $recomended_sub_category_id_1 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_1' );
+        $recomended_sub_category_id_2 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_2' );
+        $recomended_sub_category_id_3 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_3' );
+        $recomended_sub_category_id_4 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_4' );
+
+        $best_setting_category_id_1 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_1' );
+        $best_setting_category_id_2 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_2' );
+        $best_setting_category_id_3 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_3' );
+        $best_setting_category_id_4 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_4' );
+        $best_setting_sub_category_id_1 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_1' );
+        $best_setting_sub_category_id_2 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_2' );
+        $best_setting_sub_category_id_3 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_3' );
+        $best_setting_sub_category_id_4 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_4' );
+        $best_category_id = $this->resolveCmsCategory( $cms, 'best_category_id' );
+        $best_sub_category_id = $this->resolveCmsSubcategory( $cms, 'best_sub_category_id' );
         return response()->json([
             'content_services' => $contentServices,
             'banners' => $banners,
