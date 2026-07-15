@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductAddToCartRequest;
 use App\Models\CartDetails;
 use App\Models\DeliveryCharge;
+use App\Models\ProductDetails;
 
 
 class CartController extends Controller
@@ -186,7 +187,15 @@ class CartController extends Controller
     }
     public function cart(Request $request)
     {
-        $cart = Cart::where('user_id', auth()->id())->with('cartDetails', 'product')->get();
+        $cart = Cart::where( 'user_id', auth()->id() )
+            ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
+            ->get();
+
+        if ( $this->isDropshipperStorefront() ) {
+            $cart = $this->enrichDropshipperCartItems( $cart );
+        } else {
+            $cart->load( 'product' );
+        }
 
         $deliveryCharge = DeliveryCharge::where('status', 'active')->select('id', 'area', 'charge')->get();
         return response()->json(
@@ -337,6 +346,10 @@ class CartController extends Controller
 
         $cart->load( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] );
 
+        if ( $this->isDropshipperStorefront() ) {
+            $cart = $this->enrichDropshipperCartItems( collect( [$cart] ) )->first();
+        }
+
         return response()->json( [
             'status'  => 200,
             'success' => true,
@@ -419,5 +432,47 @@ class CartController extends Controller
             'advance_payment'            => $advancePayment,
             'total_advance_payment'      => $advancePayment * $totalqty,
         ];
+    }
+
+    private function isDropshipperStorefront(): bool {
+        return function_exists( 'tenant' ) && tenant() && tenant()->type === 'dropshipper';
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Cart>  $cartItems
+     * @return \Illuminate\Support\Collection<int, \App\Models\Cart>
+     */
+    private function enrichDropshipperCartItems( $cartItems ) {
+        return $cartItems->map( function ( Cart $cartItem ) {
+            $productDetailQuery = ProductDetails::query()
+                ->where( 'product_id', $cartItem->product_id )
+                ->where( 'status', 1 );
+
+            if ( $cartItem->tenant_id ) {
+                $productDetailQuery->where( 'tenant_id', $cartItem->tenant_id );
+            }
+
+            $productDetail = $productDetailQuery->first();
+
+            $cartItem->profit_amount                 = $productDetail?->profit_amount ?? 0;
+            $cartItem->total_profit_amount           = (int) ( $productDetail?->profit_amount ?? 0 ) * (int) $cartItem->product_qty;
+            $cartItem->dropshipper_product_detail_id = $productDetail?->id;
+            $cartItem->dropshipper_uniqid            = $productDetail?->uniqid;
+
+            if ( $cartItem->tenant_id ) {
+                $merchantProduct = CrossTenantQueryService::getSingleRecordFromTenant(
+                    $cartItem->tenant_id,
+                    Product::class,
+                    fn ( $query ) => $query->where( 'id', $cartItem->product_id )->where( 'status', 'active' )
+                );
+
+                if ( $merchantProduct ) {
+                    $cartItem->unsetRelation( 'product' );
+                    $cartItem->setAttribute( 'product', $merchantProduct );
+                }
+            }
+
+            return $cartItem;
+        } );
     }
 }
