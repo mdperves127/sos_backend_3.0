@@ -802,10 +802,70 @@ class MerchantFrontendController extends Controller
     public function productsFilter( Request $request, $sub_category_id ) {
         $products = collect();
 
-        if ( $sub_category_id != null ) {
+        if ( $sub_category_id == null ) {
+            return response()->json( $products );
+        }
+
+        $filterId = (int) $sub_category_id;
+
+        if ( tenant()->type == 'dropshipper' ) {
+            $allProductDetails = ProductDetails::where( 'status', 1 )->get();
+
+            foreach ( $allProductDetails as $productDetail ) {
+                $storedTenantId = $productDetail->tenant_id;
+
+                if ( ! $storedTenantId || ! $productDetail->product_id ) {
+                    continue;
+                }
+
+                $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
+                if ( ! $tenant ) {
+                    continue;
+                }
+
+                $connectionName = 'tenant_' . $tenant->id;
+                $databaseName   = 'affsellc_' . $tenant->id;
+
+                config( [
+                    'database.connections.' . $connectionName => [
+                        'driver'   => 'mysql',
+                        'host'     => config( 'database.connections.mysql.host' ),
+                        'port'     => config( 'database.connections.mysql.port' ),
+                        'database' => $databaseName,
+                        'username' => config( 'database.connections.mysql.username' ),
+                        'password' => config( 'database.connections.mysql.password' ),
+                        'charset'  => 'utf8mb4',
+                        'collation'=> 'utf8mb4_unicode_ci',
+                        'strict'   => false,
+                    ],
+                ] );
+                DB::purge( $connectionName );
+
+                $productQuery = $this->applyWebsiteVisibleProductFilter(
+                    Product::on( $connectionName )
+                        ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                );
+
+                $productQuery->where( function ( $q ) use ( $filterId ) {
+                    $q->where( 'market_place_subcategory_id', $filterId )
+                        ->orWhere( 'market_place_category_id', $filterId );
+                } );
+
+                try {
+                    $product = $productQuery->find( $productDetail->product_id );
+                } catch ( \Exception $e ) {
+                    continue;
+                }
+
+                if ( $product ) {
+                    $this->attachDropshipperProductMeta( $product, $productDetail );
+                    $products->push( $product );
+                }
+            }
+        } else {
             $query = $this->applyWebsiteVisibleProductFilter(
                 Product::where( 'status', 'active' )
-                    ->where( 'subcategory_id', $sub_category_id )
+                    ->where( 'subcategory_id', $filterId )
                     ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
             );
 
@@ -814,10 +874,16 @@ class MerchantFrontendController extends Controller
                 $products = $this->applyListLimitToQuery( $query, $request )->get();
             } else {
                 $products = $query->get();
-                if ( $request->filled( 'page' ) || $request->filled( 'per_page' ) ) {
-                    return response()->json( $this->paginateProductCollection( $request, $products ) );
-                }
             }
+        }
+
+        $listLimit = $this->requestListLimit( $request );
+        if ( tenant()->type == 'dropshipper' && $listLimit !== null ) {
+            $products = $products->take( $listLimit )->values();
+        }
+
+        if ( $request->filled( 'page' ) || $request->filled( 'per_page' ) ) {
+            return response()->json( $this->paginateProductCollection( $request, $products ) );
         }
 
         return response()->json( $products );
