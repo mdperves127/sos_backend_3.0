@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Product;
+use App\Models\ProductDetails;
 use App\Models\Tenant;
 use App\Services\CrossTenantQueryService;
 use Illuminate\Contracts\Validation\Validator;
@@ -11,39 +12,33 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class ProductAddToCartRequest extends FormRequest {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
+
     public function authorize() {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, mixed>
-     */
-    public function rules() {
-        $getproduct = null;
-        if ( request('product_id') && request('tenant_id') ) {
-            $getproduct = CrossTenantQueryService::getSingleRecordFromTenant(
-                request('tenant_id'),
-                Product::class,
-                function($query){
-                    $query->where('id', request('product_id'))
-                        ->where('status','active');
-                }
-            );
+    protected function prepareForValidation(): void {
+        if ( ! $this->isDropshipperStorefront() || ! $this->filled( 'product_id' ) ) {
+            return;
         }
+
+        $productDetail = ProductDetails::query()
+            ->where( 'product_id', $this->input( 'product_id' ) )
+            ->where( 'status', 1 )
+            ->first();
+
+        if ( $productDetail?->tenant_id ) {
+            $this->merge( ['tenant_id' => $productDetail->tenant_id] );
+        }
+    }
+
+    public function rules() {
+        $getproduct = $this->resolveCartProduct();
 
         return [
             'product_id'      => ['required', function ( $attribute, $value, $fail ) use ( $getproduct ) {
-                if ( request( 'product_id' ) != '' ) {
-                    if ( !$getproduct ) {
-                        $fail( 'Product not found!' );
-                    }
+                if ( request( 'product_id' ) != '' && ! $getproduct ) {
+                    $fail( 'Product not found!' );
                 }
             }],
 
@@ -51,12 +46,12 @@ class ProductAddToCartRequest extends FormRequest {
                 if ( request( 'purchase_type' ) != '' && $getproduct ) {
                     $selling_type = $getproduct->selling_type;
                     if ( $selling_type == null ) {
-                        if (request('frontend_purchase') == 'yes') {
+                        if ( request( 'frontend_purchase' ) == 'yes' ) {
                             return true;
-                        } else {
-                            $fail( 'No selling type found in this product' );
                         }
-                    } 
+
+                        $fail( 'No selling type found in this product' );
+                    }
                     if ( $selling_type == 'both' ) {
                         $purchase_waya = ['single', 'bulk'];
                     } elseif ( $selling_type == 'bulk' ) {
@@ -65,46 +60,65 @@ class ProductAddToCartRequest extends FormRequest {
                         $purchase_waya = ['single'];
                     }
 
-                    if ( in_array( request( 'purchase_type' ), $purchase_waya ) ) {
-                        return true;
-                    } else {
-                        return $fail( 'Invalid purchase type.' );
+                    if ( ! in_array( request( 'purchase_type' ), $purchase_waya ) ) {
+                        $fail( 'Invalid purchase type.' );
                     }
                 }
             }],
             'cartItems'       => [
-                // 'required',
                 'array',
             ],
             'cartItems.*.qty' => [
-                // 'required',
                 'integer',
                 function ( $attribute, $value, $fail ) use ( $getproduct ) {
+                    if ( ! $getproduct ) {
+                        return;
+                    }
 
                     if ( request( 'purchase_type' ) == 'bulk' ) {
                         if ( $getproduct->is_connect_bulk_single == 1 ) {
-                            if ( $getproduct->qty < $value ) {
+                            if ( (int) $getproduct->qty < (int) $value ) {
                                 $fail( 'Product quantity not available!' );
                             }
                         }
-                        return true;
+
+                        return;
                     }
-                    if ( $getproduct?->qty < $value ) {
+
+                    if ( (int) $getproduct->qty < (int) $value ) {
                         $fail( 'Product quantity not available!' );
                     }
                 },
             ],
-            'tenant_id'       => ['required', 'string', Rule::exists('mysql.tenants', 'id'), function ( $attribute, $value, $fail ) use ( $getproduct ) {
-                if ( request( 'tenant_id' ) != '' ) {
-                    $tenant = Tenant::on('mysql')->find( request( 'tenant_id' ) );
-                    if ( !$tenant ) {
-                        $fail( 'Tenant not found!' );
+            'tenant_id'       => [
+                Rule::requiredIf( fn () => ! $this->isDropshipperStorefront() ),
+                'nullable',
+                'string',
+                Rule::exists( 'mysql.tenants', 'id' ),
+                function ( $attribute, $value, $fail ) {
+                    $tenantId = $this->input( 'tenant_id' );
+
+                    if ( ! $tenantId ) {
+                        if ( $this->isDropshipperStorefront() ) {
+                            $fail( 'This product is not available for this store.' );
+                        }
+
+                        return;
                     }
-                    if ( $tenant->type != 'merchant' ) {
+
+                    $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+
+                    if ( ! $tenant ) {
+                        $fail( 'Tenant not found!' );
+
+                        return;
+                    }
+
+                    if ( $tenant->type !== 'merchant' ) {
                         $fail( 'This product is not available for this tenant!' );
                     }
-                }
-            }],
+                },
+            ],
         ];
     }
 
@@ -115,4 +129,40 @@ class ProductAddToCartRequest extends FormRequest {
             'data'    => $validator->errors(),
         ] ) );
     }
+
+    private function isDropshipperStorefront(): bool {
+        return function_exists( 'tenant' ) && tenant() && tenant()->type === 'dropshipper';
+    }
+
+    private function resolveCartProduct(): ?object {
+        if ( ! $this->filled( 'product_id' ) || ! $this->filled( 'tenant_id' ) ) {
+            return null;
+        }
+
+        if ( $this->isDropshipperStorefront() ) {
+            $isApproved = ProductDetails::query()
+                ->where( 'product_id', $this->input( 'product_id' ) )
+                ->where( 'tenant_id', $this->input( 'tenant_id' ) )
+                ->where( 'status', 1 )
+                ->exists();
+
+            if ( ! $isApproved ) {
+                return null;
+            }
+        }
+
+        return CrossTenantQueryService::getSingleRecordFromTenant(
+            $this->input( 'tenant_id' ),
+            Product::class,
+            function ( $query ) {
+                $query->where( 'id', $this->input( 'product_id' ) )
+                    ->where( 'status', 'active' );
+
+                if ( $this->isDropshipperStorefront() ) {
+                    $query->where( 'is_show_website', 1 );
+                }
+            }
+        );
+    }
+
 }

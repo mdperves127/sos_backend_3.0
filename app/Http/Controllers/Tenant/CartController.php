@@ -41,7 +41,7 @@ class CartController extends Controller
         // $totalqty = collect( request( 'qty' ) )->sum();
 
         if ( request( 'purchase_type' ) == 'single' || ( request( 'purchase_type' ) == 'bulk' && $getproduct->is_connect_bulk_single == 1 ) ) {
-            if ( $getproduct->qty < $totalqty ) {
+            if ( (int) $getproduct->qty < $totalqty ) {
                 return responsejson( 'Quantity not available', 'fail' );
             }
         }
