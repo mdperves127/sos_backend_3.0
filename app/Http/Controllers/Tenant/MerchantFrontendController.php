@@ -796,6 +796,7 @@ class MerchantFrontendController extends Controller
             'website_visits' => $website_visits,
             'already_visits' => $already_visits,
             'has_website' => $has_website,
+            'tenant_type' => tenant()->type,
         ]);
     }
 
