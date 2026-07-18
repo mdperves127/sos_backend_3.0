@@ -28,6 +28,11 @@ return [
     ],
 
     /**
+     * Expected A-record IP for tenant custom domains.
+     */
+    'custom_domain_target_ip' => env('CUSTOM_DOMAIN_TARGET_IP'),
+
+    /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.
      *

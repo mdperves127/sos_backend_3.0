@@ -49,6 +49,7 @@ use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\Tenant\BankController;
 use App\Http\Controllers\Tenant\CouponRequestController;
 use App\Http\Controllers\Tenant\ProfileController;
+use App\Http\Controllers\Tenant\CustomDomainController;
 use App\Http\Controllers\Tenant\RechargeController;
 use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
 use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
@@ -179,6 +180,14 @@ Route::middleware( [
         } );
         Route::get( 'shop-info', [ProfileController::class, 'shopInfo'] );
         Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
+
+        Route::prefix( 'domains' )->group( function () {
+            Route::get( '/', [CustomDomainController::class, 'show'] );
+            Route::get( 'status', [CustomDomainController::class, 'status'] );
+            Route::post( '/', [CustomDomainController::class, 'store'] );
+            Route::post( 'verify', [CustomDomainController::class, 'verify'] );
+            Route::post( 'activate', [CustomDomainController::class, 'activate'] );
+        } );
 
         Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
 

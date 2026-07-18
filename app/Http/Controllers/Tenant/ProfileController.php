@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\CmsSetting;
+use App\Models\TenantCustomDomain;
+use App\Services\CustomDomainService;
 
 class ProfileController extends Controller
 {
@@ -99,9 +101,27 @@ class ProfileController extends Controller
     public function shopInfo()
     {
         $tenant = Tenant::on('mysql')->where('id', tenant()->id)->first();
+        $domainRecord = TenantCustomDomain::on('mysql')->where('tenant_id', tenant()->id)->first();
+        $targetIp = app(CustomDomainService::class)->targetIp();
+
         return response()->json([
             'status' => 200,
             'shop_info' => $tenant,
+            'custom_domain_connection' => $domainRecord ? [
+                'domain' => $domainRecord->domain,
+                'status' => $domainRecord->status,
+                'verification' => $domainRecord->verification,
+                'ssl' => $domainRecord->ssl,
+                'target_ip' => $domainRecord->target_ip,
+                'verified_at' => $domainRecord->verified_at,
+                'activated_at' => $domainRecord->activated_at,
+                'last_dns_check' => $domainRecord->last_dns_check,
+            ] : null,
+            'dns_instructions' => [
+                'type' => 'A',
+                'host' => '@',
+                'value' => $targetIp,
+            ],
         ]);
     }
 
@@ -116,7 +136,7 @@ class ProfileController extends Controller
             'owner_name' => 'required',
             'phone' => 'required|unique:mysql.tenants,phone,' . $tenant->id,
             'address' => 'required',
-            'custom_domain' => 'required|unique:mysql.tenants,custom_domain,' . $tenant->id,
+            'custom_domain' => 'nullable|string|max:255|unique:mysql.tenants,custom_domain,' . $tenant->id,
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -126,13 +146,18 @@ class ProfileController extends Controller
         }
 
 
-        Tenant::on('mysql')->where('id', tenant()->id)->update([
+        $updateData = [
             'company_name' => $request->company_name,
-            'owner_name' => $request->owner_name,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'custom_domain' => $request->custom_domain,
-        ]);
+            'owner_name'   => $request->owner_name,
+            'phone'        => $request->phone,
+            'address'      => $request->address,
+        ];
+
+        if ( $request->filled( 'custom_domain' ) ) {
+            $updateData['custom_domain'] = $request->custom_domain;
+        }
+
+        Tenant::on('mysql')->where('id', tenant()->id)->update( $updateData );
 
         return response()->json([
             "status" => 200,

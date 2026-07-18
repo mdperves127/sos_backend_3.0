@@ -43,6 +43,7 @@ use App\Http\Controllers\DollerRateController;
 use App\Http\Controllers\RenewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\Tenant\CustomDomainController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\HistoryController;
 //register
@@ -203,6 +204,8 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
 Route::get('have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant']);
+
+Route::post( 'domain/resolve', [CustomDomainController::class, 'resolve'] );
 
 // cPanel API Routes (environment-based subdomain and database creation)
 Route::prefix( 'cpanel' )->group( function () {
