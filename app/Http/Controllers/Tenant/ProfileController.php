@@ -116,6 +116,7 @@ class ProfileController extends Controller
             'owner_name' => 'required',
             'phone' => 'required|unique:mysql.tenants,phone,' . $tenant->id,
             'address' => 'required',
+            'custom_domain' => 'required|unique:mysql.tenants,custom_domain,' . $tenant->id,
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -130,6 +131,7 @@ class ProfileController extends Controller
             'owner_name' => $request->owner_name,
             'phone' => $request->phone,
             'address' => $request->address,
+            'custom_domain' => $request->custom_domain,
         ]);
 
         return response()->json([
