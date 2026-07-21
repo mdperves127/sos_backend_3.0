@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
-use App\Models\TenantCustomDomain;
 use App\Services\CustomDomainService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Stancl\Tenancy\Database\Models\Domain;
 
 class CustomDomainController extends Controller
 {
@@ -18,9 +15,9 @@ class CustomDomainController extends Controller
     }
 
     public function status() {
-        $tenant = Tenant::on( 'mysql' )->find( tenant()->id );
+        $domainStatus = $this->customDomainService->getSavedDomainStatusForTenant( tenant()->id );
 
-        if ( ! $tenant?->custom_domain ) {
+        if ( ! ( $domainStatus['saved'] ?? false ) ) {
             return response()->json( [
                 'status'  => 200,
                 'active'  => false,
@@ -30,24 +27,14 @@ class CustomDomainController extends Controller
             ] );
         }
 
-        $domain       = $this->customDomainService->normalizeDomain( $tenant->custom_domain );
-        $record       = TenantCustomDomain::on( 'mysql' )->where( 'tenant_id', $tenant->id )->first();
-        $isRegistered = Domain::on( 'mysql' )
-            ->where( 'tenant_id', $tenant->id )
-            ->where( 'domain', $domain )
-            ->exists();
-
-        $connectionStatus = $record?->status ?? ( $isRegistered ? 'active' : 'pending' );
-        $isActive         = $connectionStatus === 'active' || $isRegistered;
-
         return response()->json( [
-            'status'       => 200,
-            'active'       => $isActive,
-            'saved'        => true,
-            'domain'       => $domain,
-            'connection_status' => $connectionStatus,
-            'verification' => $record?->verification ?? ( $isActive ? 'verified' : 'pending' ),
-            'ssl'          => $record?->ssl ?? ( $isActive ? 'active' : 'pending' ),
+            'status'            => 200,
+            'active'            => $domainStatus['active'],
+            'saved'             => true,
+            'domain'            => $domainStatus['domain'],
+            'connection_status' => $domainStatus['connection_status'],
+            'verification'      => $domainStatus['verification'],
+            'ssl'               => $domainStatus['ssl'],
         ] );
     }
 

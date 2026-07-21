@@ -49,6 +49,44 @@ class CustomDomainService
         return TenantCustomDomain::on( 'mysql' )->where( 'tenant_id', $tenantId )->first();
     }
 
+    public function getSavedDomainStatusForTenant( string $tenantId ): array {
+        $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+
+        if ( ! $tenant ) {
+            return ['found' => false];
+        }
+
+        if ( ! $tenant->custom_domain ) {
+            return [
+                'found'             => true,
+                'has_custom_domain' => false,
+                'active'            => false,
+                'saved'             => false,
+                'domain'            => null,
+            ];
+        }
+
+        $domain         = $this->normalizeDomain( $tenant->custom_domain );
+        $record         = TenantCustomDomain::on( 'mysql' )->where( 'tenant_id', $tenantId )->first();
+        $isRegistered   = Domain::on( 'mysql' )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'domain', $domain )
+            ->exists();
+        $connectionStatus = $record?->status ?? ( $isRegistered ? 'active' : 'pending' );
+        $isActive         = $connectionStatus === 'active' || $isRegistered;
+
+        return [
+            'found'             => true,
+            'has_custom_domain' => true,
+            'active'            => $isActive,
+            'saved'             => true,
+            'domain'            => $domain,
+            'connection_status' => $connectionStatus,
+            'verification'      => $record?->verification ?? ( $isActive ? 'verified' : 'pending' ),
+            'ssl'               => $record?->ssl ?? ( $isActive ? 'active' : 'pending' ),
+        ];
+    }
+
     public function addDomain( string $tenantId, string $domain ): TenantCustomDomain {
         $domain    = $this->normalizeDomain( $domain );
         $targetIp  = $this->targetIp();
