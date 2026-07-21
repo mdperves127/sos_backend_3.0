@@ -50,13 +50,19 @@ class CustomDomainService
     }
 
     public function getSavedDomainStatusForTenant( string $tenantId ): array {
-        $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+        $tenantRow = DB::connection( 'mysql' )
+            ->table( 'tenants' )
+            ->whereNull( 'deleted_at' )
+            ->where( 'id', $tenantId )
+            ->first();
 
-        if ( ! $tenant ) {
+        if ( ! $tenantRow ) {
             return ['found' => false];
         }
 
-        if ( ! $tenant->custom_domain ) {
+        $customDomain = $tenantRow->custom_domain ?? null;
+
+        if ( ! $customDomain ) {
             return [
                 'found'             => true,
                 'has_custom_domain' => false,
@@ -66,7 +72,7 @@ class CustomDomainService
             ];
         }
 
-        $domain         = $this->normalizeDomain( $tenant->custom_domain );
+        $domain         = $this->normalizeDomain( (string) $customDomain );
         $record         = TenantCustomDomain::on( 'mysql' )->where( 'tenant_id', $tenantId )->first();
         $isRegistered   = Domain::on( 'mysql' )
             ->where( 'tenant_id', $tenantId )
@@ -95,13 +101,30 @@ class CustomDomainService
             return null;
         }
 
-        $tenant = Tenant::on( 'mysql' )
+        $tenantRow = DB::connection( 'mysql' )
+            ->table( 'tenants' )
+            ->whereNull( 'deleted_at' )
+            ->whereNotNull( 'custom_domain' )
+            ->where( function ( $query ) use ( $normalized, $identifier ) {
+                $query->where( 'custom_domain', $normalized )
+                    ->orWhere( 'custom_domain', $identifier )
+                    ->orWhere( 'custom_domain', 'www.' . $normalized );
+            } )
+            ->first();
+
+        if ( $tenantRow ) {
+            return Tenant::on( 'mysql' )->find( $tenantRow->id );
+        }
+
+        $tenantRow = DB::connection( 'mysql' )
+            ->table( 'tenants' )
+            ->whereNull( 'deleted_at' )
             ->whereNotNull( 'custom_domain' )
             ->get()
-            ->first( fn ( Tenant $row ) => $this->normalizeDomain( (string) $row->custom_domain ) === $normalized );
+            ->first( fn ( $row ) => $this->normalizeDomain( (string) $row->custom_domain ) === $normalized );
 
-        if ( $tenant ) {
-            return $tenant;
+        if ( $tenantRow ) {
+            return Tenant::on( 'mysql' )->find( $tenantRow->id );
         }
 
         $customDomainRecord = TenantCustomDomain::on( 'mysql' )->where( 'domain', $normalized )->first();
