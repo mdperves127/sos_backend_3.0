@@ -181,13 +181,7 @@ Route::middleware( [
         Route::get( 'shop-info', [ProfileController::class, 'shopInfo'] );
         Route::post( 'shop-info-update', [ProfileController::class, 'shopInfoUpdate'] );
 
-        Route::prefix( 'domains' )->group( function () {
-            Route::get( '/', [CustomDomainController::class, 'show'] );
-            Route::get( 'status', [CustomDomainController::class, 'status'] );
-            Route::post( '/', [CustomDomainController::class, 'store'] );
-            Route::post( 'verify', [CustomDomainController::class, 'verify'] );
-            Route::post( 'activate', [CustomDomainController::class, 'activate'] );
-        } );
+        Route::get( 'custom-domain/status', [CustomDomainController::class, 'status'] );
 
         Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
 
