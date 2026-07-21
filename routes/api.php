@@ -206,6 +206,7 @@ Route::post( '/tenants/register', [TenantRegistrationController::class, 'registe
 Route::get('have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant']);
 
 Route::post( 'domain/resolve', [CustomDomainController::class, 'resolve'] );
+Route::match( ['get', 'post'], 'domain/lookup', [CustomDomainController::class, 'lookup'] );
 
 // cPanel API Routes (environment-based subdomain and database creation)
 Route::prefix( 'cpanel' )->group( function () {
@@ -214,3 +215,4 @@ Route::prefix( 'cpanel' )->group( function () {
     Route::post( '/infrastructure', [CpanelController::class, 'createTenantInfrastructure'] );
     Route::get( '/environment-info', [CpanelController::class, 'getEnvironmentInfo'] );
 } );
+

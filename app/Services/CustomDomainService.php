@@ -142,6 +142,101 @@ class CustomDomainService
         return $this->formatStatusPayload( $record->fresh(), $record->last_dns_check ?? [], true, 'Custom domain activated successfully.' );
     }
 
+    public function lookupCustomDomain( string $domain ): ?array {
+        $domain = $this->normalizeDomain( $domain );
+
+        if ( $domain === '' ) {
+            return null;
+        }
+
+        $record = TenantCustomDomain::on( 'mysql' )->where( 'domain', $domain )->first();
+
+        if ( ! $record ) {
+            $tenant = Tenant::on( 'mysql' )->where( 'custom_domain', $domain )->first();
+
+            if ( ! $tenant ) {
+                return null;
+            }
+
+            $subdomain = $this->getTenantSubdomain( $tenant->id, $domain );
+
+            return [
+                'custom_domain'  => $domain,
+                'tenant_id'      => $tenant->id,
+                'subdomain'      => $subdomain['subdomain'] ?? null,
+                'subdomain_name' => $subdomain['subdomain_name'] ?? null,
+                'status'         => null,
+                'verification'   => null,
+                'ssl'            => null,
+                'connected'      => true,
+            ];
+        }
+
+        $subdomain = $this->getTenantSubdomain( $record->tenant_id, $domain );
+
+        return [
+            'custom_domain'  => $domain,
+            'tenant_id'      => $record->tenant_id,
+            'subdomain'      => $subdomain['subdomain'] ?? null,
+            'subdomain_name' => $subdomain['subdomain_name'] ?? null,
+            'status'         => $record->status,
+            'verification'   => $record->verification,
+            'ssl'            => $record->ssl,
+            'connected'      => true,
+        ];
+    }
+
+    /**
+     * @return array{subdomain: string, subdomain_name: string}|null
+     */
+    private function getTenantSubdomain( string $tenantId, ?string $customDomain = null ): ?array {
+        $mainDomain = env( 'MAIN_DOMAIN' );
+        $domains    = Domain::on( 'mysql' )
+            ->where( 'tenant_id', $tenantId )
+            ->pluck( 'domain' );
+
+        $normalizedCustom = $customDomain ? $this->normalizeDomain( $customDomain ) : null;
+
+        foreach ( $domains as $domain ) {
+            $normalizedDomain = $this->normalizeDomain( $domain );
+
+            if ( $normalizedCustom && $normalizedDomain === $normalizedCustom ) {
+                continue;
+            }
+
+            if ( $mainDomain && str_ends_with( $normalizedDomain, '.' . strtolower( $mainDomain ) ) ) {
+                return [
+                    'subdomain'      => $normalizedDomain,
+                    'subdomain_name' => str_replace( '.' . strtolower( $mainDomain ), '', $normalizedDomain ),
+                ];
+            }
+        }
+
+        $fallback = $domains->first( function ( $domain ) use ( $normalizedCustom ) {
+            if ( ! $normalizedCustom ) {
+                return true;
+            }
+
+            return $this->normalizeDomain( $domain ) !== $normalizedCustom;
+        } );
+
+        if ( ! $fallback ) {
+            return null;
+        }
+
+        $normalizedFallback = $this->normalizeDomain( $fallback );
+        $subdomainName      = $normalizedFallback;
+
+        if ( $mainDomain && str_contains( $normalizedFallback, '.' ) ) {
+            $subdomainName = str_replace( '.' . strtolower( $mainDomain ), '', $normalizedFallback );
+        }
+
+        return [
+            'subdomain'      => $normalizedFallback,
+            'subdomain_name' => $subdomainName,
+        ];
+    }
+
     public function resolveHost( string $host ): ?array {
         $host = $this->normalizeDomain( $host );
 

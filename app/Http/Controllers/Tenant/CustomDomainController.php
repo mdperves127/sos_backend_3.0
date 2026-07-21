@@ -129,6 +129,38 @@ class CustomDomainController extends Controller
         ], $payload['success'] ? 200 : 422 );
     }
 
+    public function lookup( Request $request ) {
+        $domain = $request->input( 'domain', $request->query( 'domain' ) );
+
+        $validator = Validator::make( ['domain' => $domain], [
+            'domain' => ['required', 'string', 'max:255', 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i'],
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422 );
+        }
+
+        $result = $this->customDomainService->lookupCustomDomain( (string) $domain );
+
+        if ( ! $result ) {
+            return response()->json( [
+                'status'    => 404,
+                'connected' => false,
+                'message'   => 'Custom domain is not registered to any tenant.',
+            ], 404 );
+        }
+
+        return response()->json( [
+            'status'    => 200,
+            'connected' => true,
+            'data'      => $result,
+        ] );
+    }
+
     public function resolve( Request $request ) {
         $validator = Validator::make( $request->all(), [
             'host' => 'required|string|max:255',
