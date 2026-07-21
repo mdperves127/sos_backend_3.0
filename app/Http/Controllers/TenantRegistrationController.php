@@ -60,31 +60,26 @@ class TenantRegistrationController extends Controller
             ], 500);
         }
     }
-    public function haveTenant($tenant)
+    public function haveTenant( $tenant )
     {
-        $tenantModel = Tenant::on('mysql')->find($tenant);
+        $resolved = $this->customDomainService->resolveTenantByIdentifier( (string) $tenant );
 
-        if ( ! $tenantModel ) {
+        if ( ! $resolved ) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tenant not found',
+                'message' => 'No tenant found for this tenant id or custom domain.',
             ], 404);
         }
-
-        $domainStatus = $this->customDomainService->getSavedDomainStatusForTenant( $tenantModel->id );
 
         return response()->json([
             'success'           => true,
             'message'           => 'Tenant found successfully',
-            'tenant_id'         => $tenantModel->id,
-            'has_custom_domain' => $domainStatus['has_custom_domain'] ?? false,
-            'custom_domain'     => ( $domainStatus['has_custom_domain'] ?? false ) ? [
-                'domain'            => $domainStatus['domain'],
-                'active'            => $domainStatus['active'],
-                'connection_status' => $domainStatus['connection_status'],
-                'verification'      => $domainStatus['verification'],
-                'ssl'               => $domainStatus['ssl'],
-            ] : null,
+            'matched_by'        => $resolved['matched_by'],
+            'tenant_id'         => $resolved['tenant_id'],
+            'subdomain'         => $resolved['subdomain'],
+            'subdomain_name'    => $resolved['subdomain_name'],
+            'has_custom_domain' => $resolved['has_custom_domain'],
+            'custom_domain'     => $resolved['custom_domain'],
         ]);
     }
 }

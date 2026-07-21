@@ -87,6 +87,70 @@ class CustomDomainService
         ];
     }
 
+    public function findTenantByIdOrCustomDomain( string $identifier ): ?Tenant {
+        $identifier = trim( $identifier );
+        $normalized = $this->normalizeDomain( $identifier );
+
+        if ( $normalized === '' ) {
+            return null;
+        }
+
+        $tenant = Tenant::on( 'mysql' )
+            ->whereNotNull( 'custom_domain' )
+            ->get()
+            ->first( fn ( Tenant $row ) => $this->normalizeDomain( (string) $row->custom_domain ) === $normalized );
+
+        if ( $tenant ) {
+            return $tenant;
+        }
+
+        $customDomainRecord = TenantCustomDomain::on( 'mysql' )->where( 'domain', $normalized )->first();
+
+        if ( $customDomainRecord ) {
+            return Tenant::on( 'mysql' )->find( $customDomainRecord->tenant_id );
+        }
+
+        return null;
+    }
+
+    public function resolveTenantByIdentifier( string $identifier ): ?array {
+        $identifier = trim( $identifier );
+
+        if ( $identifier === '' ) {
+            return null;
+        }
+
+        $matchedBy = 'tenant_id';
+        $tenant    = Tenant::on( 'mysql' )->find( $identifier );
+
+        if ( ! $tenant ) {
+            $matchedBy = 'custom_domain';
+            $tenant    = $this->findTenantByIdOrCustomDomain( $identifier );
+        }
+
+        if ( ! $tenant ) {
+            return null;
+        }
+
+        $domainStatus = $this->getSavedDomainStatusForTenant( $tenant->id );
+        $subdomain    = $this->getTenantSubdomain( $tenant->id, $domainStatus['domain'] ?? null );
+
+        return [
+            'matched_by'        => $matchedBy,
+            'tenant_id'         => $tenant->id,
+            'subdomain'         => $subdomain['subdomain'] ?? null,
+            'subdomain_name'    => $subdomain['subdomain_name'] ?? null,
+            'has_custom_domain' => $domainStatus['has_custom_domain'] ?? false,
+            'custom_domain'     => ( $domainStatus['has_custom_domain'] ?? false ) ? [
+                'domain'            => $domainStatus['domain'],
+                'active'            => $domainStatus['active'],
+                'connection_status' => $domainStatus['connection_status'],
+                'verification'      => $domainStatus['verification'],
+                'ssl'               => $domainStatus['ssl'],
+            ] : null,
+        ];
+    }
+
     public function addDomain( string $tenantId, string $domain ): TenantCustomDomain {
         $domain    = $this->normalizeDomain( $domain );
         $targetIp  = $this->targetIp();

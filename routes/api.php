@@ -203,7 +203,8 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
-Route::get('have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant']);
+Route::get( 'have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant'] )
+    ->where( 'tenant', '.*' );
 
 Route::post( 'domain/resolve', [CustomDomainController::class, 'resolve'] );
 Route::match( ['get', 'post'], 'domain/lookup', [CustomDomainController::class, 'lookup'] );
