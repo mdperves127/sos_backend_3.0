@@ -206,6 +206,9 @@ Route::post( '/tenants/register', [TenantRegistrationController::class, 'registe
 Route::get( 'have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant'] )
     ->where( 'tenant', '.*' );
 
+Route::post( 'custom-domain/status/{tenant}', [CustomDomainController::class, 'updateStatus'] )
+    ->where( 'tenant', '.*' );
+
 Route::post( 'domain/resolve', [CustomDomainController::class, 'resolve'] );
 Route::match( ['get', 'post'], 'domain/lookup', [CustomDomainController::class, 'lookup'] );
 

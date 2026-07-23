@@ -174,6 +174,100 @@ class CustomDomainService
         ];
     }
 
+    public function updateCustomDomainStatus( string $tenantId, array $data ): ?array {
+        $tenantRow = DB::connection( 'mysql' )
+            ->table( 'tenants' )
+            ->whereNull( 'deleted_at' )
+            ->where( 'id', $tenantId )
+            ->first();
+
+        if ( ! $tenantRow || ! $tenantRow->custom_domain ) {
+            return null;
+        }
+
+        $domain = $this->normalizeDomain( (string) $tenantRow->custom_domain );
+
+        $record = TenantCustomDomain::on( 'mysql' )->firstOrCreate(
+            ['tenant_id' => $tenantId],
+            [
+                'domain'    => $domain,
+                'status'    => 'pending',
+                'verification' => 'pending',
+                'ssl'       => 'pending',
+                'target_ip' => $this->targetIp(),
+            ]
+        );
+
+        if ( $record->domain !== $domain ) {
+            $record->update( ['domain' => $domain] );
+        }
+
+        $updates = [];
+
+        if ( array_key_exists( 'connection_status', $data ) && $data['connection_status'] !== null ) {
+            $updates['status'] = $data['connection_status'];
+        }
+
+        if ( array_key_exists( 'verification', $data ) && $data['verification'] !== null ) {
+            $updates['verification'] = $data['verification'];
+        }
+
+        if ( array_key_exists( 'ssl', $data ) && $data['ssl'] !== null ) {
+            $updates['ssl'] = $data['ssl'];
+        }
+
+        if ( array_key_exists( 'active', $data ) && $data['active'] !== null ) {
+            if ( $data['active'] ) {
+                $updates['status']       = $updates['status'] ?? 'active';
+                $updates['verification'] = $updates['verification'] ?? 'verified';
+                $updates['ssl']          = $updates['ssl'] ?? 'active';
+                $updates['activated_at'] = now();
+            } else {
+                $updates['status'] = $updates['status'] ?? 'pending';
+            }
+        }
+
+        if ( isset( $updates['verification'] ) && $updates['verification'] === 'verified' ) {
+            $updates['verified_at'] = $record->verified_at ?? now();
+        }
+
+        if ( isset( $updates['status'] ) && $updates['status'] === 'active' ) {
+            $updates['activated_at'] = $record->activated_at ?? now();
+        }
+
+        if ( $updates !== [] ) {
+            $record->update( $updates );
+            $record->refresh();
+        }
+
+        $connectionStatus = $record->status;
+
+        if ( $connectionStatus === 'active' ) {
+            Domain::on( 'mysql' )->updateOrCreate(
+                ['domain' => $domain],
+                ['tenant_id' => $tenantId]
+            );
+        } else {
+            Domain::on( 'mysql' )
+                ->where( 'tenant_id', $tenantId )
+                ->where( 'domain', $domain )
+                ->delete();
+        }
+
+        $domainStatus = $this->getSavedDomainStatusForTenant( $tenantId );
+
+        return [
+            'tenant_id'     => $tenantId,
+            'custom_domain' => [
+                'domain'            => $domainStatus['domain'],
+                'active'            => $domainStatus['active'],
+                'connection_status' => $domainStatus['connection_status'],
+                'verification'      => $domainStatus['verification'],
+                'ssl'               => $domainStatus['ssl'],
+            ],
+        ];
+    }
+
     public function addDomain( string $tenantId, string $domain ): TenantCustomDomain {
         $domain    = $this->normalizeDomain( $domain );
         $targetIp  = $this->targetIp();
