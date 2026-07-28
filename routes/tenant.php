@@ -237,6 +237,14 @@ Route::middleware( [
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
             Route::match( ['POST', 'PUT', 'PATCH'], 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
         } );
+
+        Route::prefix( 'tenant-product-manual-order' )->group( function () {
+            Route::get( 'create', [VendorOrderController::class, 'create'] );
+            Route::get( 'customer/select/{id}', [VendorOrderController::class, 'customerSelect'] );
+            Route::post( 'order/store', [VendorOrderController::class, 'orderStore'] );
+            Route::get( 'invoice-show/{id}', [VendorOrderController::class, 'invoiceShow'] );
+        } );
+
         Route::resource( 'tenant-service/delivery-to-customer', OrderDeliveryController::class );
 
         Route::prefix('tenant-coupon')->group(function () {

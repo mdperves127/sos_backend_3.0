@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
 class MembersController extends Controller
@@ -36,7 +37,7 @@ class MembersController extends Controller
         }else{
             $data = $request->all();
             if($request->photo){
-                $data['photo'] = fileUpload($request->photo, 'uploads/members/', 310, 231);
+                $data['photo'] = fileUpload($request->photo, 'uploads/members', 310, 231);
             }
             Member::create($data);
             return response()->json([
@@ -78,14 +79,20 @@ class MembersController extends Controller
             ]);
         }else{
             $old_image = Member::find($id);
+
+            if ( ! $old_image ) {
+                return response()->json([
+                    'status'  => 404,
+                    'message' => 'No Member Found',
+                ]);
+            }
+
             $data = $request->all();
             if ($request->photo) {
-                if ($old_image->photo) {
-                    unlink($old_image->photo);
-                }
-                $data['photo'] = fileUpload($request->photo, 'uploads/members/', 310, 231);
+                $this->deleteMemberPhoto( $old_image->photo );
+                $data['photo'] = fileUpload($request->photo, 'uploads/members', 310, 231);
             }
-            Member::find($id)->update($data);
+            $old_image->update($data);
             return response()->json([
                 'status' => 200,
                 'message' => 'Member Updated Successfully !',
@@ -96,14 +103,33 @@ class MembersController extends Controller
     public function destroy($id)
     {
         $data = Member::find($id);
-            if ($data->photo) {
-                unlink($data->photo);
-            }
+
+        if ( ! $data ) {
+            return response()->json([
+                'status'  => 404,
+                'message' => 'No Member Found',
+            ]);
+        }
+
+        $this->deleteMemberPhoto( $data->photo );
         $data->delete();
         return response()->json([
             'status' => 200,
             'message' => 'Member Deleted Successfully !',
         ]);
+    }
+
+    private function deleteMemberPhoto( ?string $photo ): void {
+        if ( ! $photo ) {
+            return;
+        }
+
+        $relativePath = ltrim( preg_replace( '#/{2,}#', '/', $photo ), '/' );
+        $fullPath     = public_path( $relativePath );
+
+        if ( File::exists( $fullPath ) ) {
+            File::delete( $fullPath );
+        }
     }
 
 }

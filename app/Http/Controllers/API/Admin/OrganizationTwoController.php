@@ -5,15 +5,11 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OrganizationTwo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
 class OrganizationTwoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         if(checkpermission('organization-two') != 1){
@@ -27,39 +23,35 @@ class OrganizationTwoController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
+            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
                 'status' => 400,
                 'errors' => $validator->messages(),
             ]);
-        }else{
-            OrganizationTwo::create($request->all());
-            return response()->json([
-                'status' => 200,
-                'message' => 'Data Inserted Successfully !',
-            ]);
         }
+
+        $data = $request->only(['title', 'description', 'icon']);
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = fileUpload($request->photo, 'uploads/organization-two', 310, 231);
+        }
+
+        OrganizationTwo::create($data);
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Inserted Successfully !',
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         $OrgTwo = OrganizationTwo::find($id);
@@ -68,55 +60,84 @@ class OrganizationTwoController extends Controller
                 'status' => 200,
                 'datas' => $OrgTwo,
             ]);
-        }else{
-            return response()->json([
-                'status' => 404,
-                'message' => 'No Organization Two Infos Found',
-            ]);
         }
+
+        return response()->json([
+            'status' => 404,
+            'message' => 'No Organization Two Infos Found',
+        ]);
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
+            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
                 'status' => 400,
                 'errors' => $validator->messages(),
             ]);
-        }else{
-            OrganizationTwo::find($id)->update($request->all());
+        }
+
+        $orgTwo = OrganizationTwo::find($id);
+
+        if ( ! $orgTwo ) {
             return response()->json([
-                'status' => 200,
-                'message' => 'Organization Two Updated Successfully !',
+                'status'  => 404,
+                'message' => 'No Organization Two Infos Found',
             ]);
         }
+
+        $data = $request->only(['title', 'description', 'icon']);
+
+        if ($request->hasFile('photo')) {
+            $this->deletePhoto($orgTwo->photo);
+            $data['photo'] = fileUpload($request->photo, 'uploads/organization-two', 310, 231);
+        }
+
+        $orgTwo->update($data);
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Organization Two Updated Successfully !',
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        OrganizationTwo::find($id)->delete();
+        $orgTwo = OrganizationTwo::find($id);
+
+        if ( ! $orgTwo ) {
+            return response()->json([
+                'status'  => 404,
+                'message' => 'No Organization Two Infos Found',
+            ]);
+        }
+
+        $this->deletePhoto($orgTwo->photo);
+        $orgTwo->delete();
+
         return response()->json([
             'status' => 200,
             'message' => 'Organization Two Deleted Successfully !',
         ]);
+    }
+
+    private function deletePhoto(?string $photo): void
+    {
+        if ( ! $photo ) {
+            return;
+        }
+
+        $relativePath = ltrim(preg_replace('#/{2,}#', '/', $photo), '/');
+        $fullPath     = public_path($relativePath);
+
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
     }
 }

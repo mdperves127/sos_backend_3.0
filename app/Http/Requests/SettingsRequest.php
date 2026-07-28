@@ -34,7 +34,7 @@ class SettingsRequest extends FormRequest
             'org_one_title'             => ['nullable'],
             'org_one_heading'           => ['nullable'],
             'org_one_photo'             => ['nullable', 'image', 'mimes:png,jpg,jpeg'],
-            'org_one_video_link'        => ['nullable', 'url'],
+            'org_one_video_link'        => ['nullable'],
             'count_one'                 => ['nullable'],
             'one_title'                 => ['nullable'],
             'count_two'                 => ['nullable'],
@@ -118,6 +118,15 @@ class SettingsRequest extends FormRequest
             'subscription_heading' => 'nullable',
             'subscription_title' => 'nullable',
             'tag_manager'=> 'nullable',
+            'f_banner_group_title_image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_banner_image_1'           => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_banner_image_2'           => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_banner_image_3'           => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_feature_image_4'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_feature_image_5'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_feature_image_6'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_feature_image_7'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'f_feature_image_8'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
         ];
     }
 

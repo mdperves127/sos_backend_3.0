@@ -125,5 +125,14 @@ class Settings extends Model {
         'withdraw_charge_status',
         'google_tag',
         'add_product_tutorial',
+        'f_banner_group_title_image',
+        'f_banner_image_1',
+        'f_banner_image_2',
+        'f_banner_image_3',
+        'f_feature_image_4',
+        'f_feature_image_5',
+        'f_feature_image_6',
+        'f_feature_image_7',
+        'f_feature_image_8',
     ];
 }
