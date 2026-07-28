@@ -13,6 +13,7 @@ use App\Models\OrderDeliveryToCourier;
 use App\Models\OrderDetails;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\CmsSetting;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\PathaoService;
@@ -369,6 +370,7 @@ class OrderController extends Controller {
 
     public function customerSelect( $id ) {
         $customer = Customer::where( 'id', $id )
+            ->where( 'vendor_id', vendorId() )
             ->with( 'orders', function ( $q ) {
                 $q->with( 'orderDetails' );
                 // ->select( 'id', 'qty', 'status', 'product_amount', 'order_id', 'customer_id', 'created_at' );
@@ -534,7 +536,7 @@ class OrderController extends Controller {
         try {
             DB::beginTransaction();
             $order                  = new Order();
-            $order->vendor_id       = Auth::id();
+            $order->vendor_id       = vendorId();
             $order->name            = $request->customer_name;
             $order->phone           = $request->phone;
             $order->email           = $request->email;
@@ -657,14 +659,27 @@ class OrderController extends Controller {
     }
 
     public function invoiceShow( $id ) {
-        $order = Order::where( 'id', $id )->where( 'order_media', 'Direct' )
+        $order = Order::where( 'id', $id )
+            ->where( 'vendor_id', vendorId() )
+            ->where( 'order_media', 'Direct' )
             ->with( ['OrderDetails:id,order_id,product_id,unit_id,color_id,size_id,sub_qty,rate,sub_total,created_at', 'pickupArea:id,address', 'deliveryArea:id,address'] )
             ->select( 'id', 'vendor_id', 'name', 'phone', 'email', 'address', 'status', 'last_status', 'order_id', 'product_amount', 'qty', 'order_media', 'shipping_date', 'created_at', 'delivery_id', 'delivery_charge', 'paid_amount', 'due_amount', 'sale_discount', 'additional_note', 'internal_note', 'pickup_area', 'delivery_area', 'reason' )
             ->first();
 
+        if ( !$order ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Order not found',
+            ], 404 );
+        }
+
+        $logo = function_exists( 'tenant' ) && tenant()
+            ? ( CmsSetting::first()?->logo ?? Settings::first()?->logo )
+            : Settings::first()?->logo;
+
         return response()->json( [
             'status' => 200,
-            'logo'   => Settings::first()->logo,
+            'logo'   => $logo,
             'order'  => $order,
         ] );
     }

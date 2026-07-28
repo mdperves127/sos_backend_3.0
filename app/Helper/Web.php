@@ -316,6 +316,10 @@ function barcode( $length = 12 ) {
 }
 
 function vendorId() {
+    if ( function_exists( 'tenant' ) && tenant() ) {
+        return tenantOwnerId();
+    }
+
     return Auth::user()->is_employee == 'yes' ? Auth::user()->vendor_id : Auth::id();
 }
 

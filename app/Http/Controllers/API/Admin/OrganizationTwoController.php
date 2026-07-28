@@ -29,7 +29,7 @@ class OrganizationTwoController extends Controller
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
-            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
+            'image'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -40,8 +40,8 @@ class OrganizationTwoController extends Controller
 
         $data = $request->only(['title', 'description', 'icon']);
 
-        if ($request->hasFile('photo')) {
-            $data['photo'] = fileUpload($request->photo, 'uploads/organization-two', 310, 231);
+        if ($request->hasFile('image')) {
+            $data['image'] = fileUpload($request->image, 'uploads/organization-two', 310, 231);
         }
 
         OrganizationTwo::create($data);
@@ -74,7 +74,7 @@ class OrganizationTwoController extends Controller
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
-            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
+            'image'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -94,9 +94,9 @@ class OrganizationTwoController extends Controller
 
         $data = $request->only(['title', 'description', 'icon']);
 
-        if ($request->hasFile('photo')) {
-            $this->deletePhoto($orgTwo->photo);
-            $data['photo'] = fileUpload($request->photo, 'uploads/organization-two', 310, 231);
+        if ($request->hasFile('image')) {
+            $this->deleteImage($orgTwo->image);
+            $data['image'] = fileUpload($request->image, 'uploads/organization-two', 310, 231);
         }
 
         $orgTwo->update($data);
@@ -118,7 +118,7 @@ class OrganizationTwoController extends Controller
             ]);
         }
 
-        $this->deletePhoto($orgTwo->photo);
+        $this->deleteImage($orgTwo->image);
         $orgTwo->delete();
 
         return response()->json([
@@ -127,13 +127,13 @@ class OrganizationTwoController extends Controller
         ]);
     }
 
-    private function deletePhoto(?string $photo): void
+    private function deleteImage(?string $image): void
     {
-        if ( ! $photo ) {
+        if ( ! $image ) {
             return;
         }
 
-        $relativePath = ltrim(preg_replace('#/{2,}#', '/', $photo), '/');
+        $relativePath = ltrim(preg_replace('#/{2,}#', '/', $image), '/');
         $fullPath     = public_path($relativePath);
 
         if (File::exists($fullPath)) {
