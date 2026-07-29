@@ -28,7 +28,7 @@ class OurServiceController extends Controller
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
-            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
+            'image'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -39,8 +39,8 @@ class OurServiceController extends Controller
 
         $data = $request->only(['title', 'description', 'icon']);
 
-        if ($request->hasFile('photo')) {
-            $data['photo'] = fileUpload($request->photo, 'uploads/our-services', 310, 231);
+        if ($request->hasFile('image')) {
+            $data['image'] = fileUpload($request->image, 'uploads/our-services', 310, 231);
         }
 
         OurService::create($data);
@@ -73,7 +73,7 @@ class OurServiceController extends Controller
             'title'       => 'required',
             'description' => 'required',
             'icon'        => 'required',
-            'photo'       => 'nullable|mimes:jpeg,png,jpg,webp',
+            'image'       => 'nullable|mimes:jpeg,png,jpg,webp',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -93,9 +93,9 @@ class OurServiceController extends Controller
 
         $data = $request->only(['title', 'description', 'icon']);
 
-        if ($request->hasFile('photo')) {
-            $this->deletePhoto($service->photo);
-            $data['photo'] = fileUpload($request->photo, 'uploads/our-services', 310, 231);
+        if ($request->hasFile('image')) {
+            $this->deleteImage($service->image);
+            $data['image'] = fileUpload($request->image, 'uploads/our-services', 310, 231);
         }
 
         $service->update($data);
@@ -116,7 +116,7 @@ class OurServiceController extends Controller
             ]);
         }
 
-        $this->deletePhoto($service->photo);
+        $this->deleteImage($service->image);
         $service->delete();
 
         return response()->json([
@@ -125,13 +125,13 @@ class OurServiceController extends Controller
         ]);
     }
 
-    private function deletePhoto(?string $photo): void
+    private function deleteImage(?string $image): void
     {
-        if ( ! $photo ) {
+        if ( ! $image ) {
             return;
         }
 
-        $relativePath = ltrim(preg_replace('#/{2,}#', '/', $photo), '/');
+        $relativePath = ltrim(preg_replace('#/{2,}#', '/', $image), '/');
         $fullPath     = public_path($relativePath);
 
         if (File::exists($fullPath)) {
