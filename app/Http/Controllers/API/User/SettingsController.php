@@ -53,7 +53,7 @@ class SettingsController extends Controller {
     }
 
     public function service() {
-        $service = DB::table( 'our_services' )->take( 3 )->where( 'deleted_at', null )->get();
+        $service = DB::table( 'our_services' )->take( 5 )->where( 'deleted_at', null )->get();
         return $this->response( $service );
     }
     public function Itservice() {
