@@ -34,7 +34,7 @@ function slugUpdate( $modelName, $slug_text, $modelId, $slugColumn = 'slug' ) {
     return $slug;
 }
 
-function fileUpload( $file, $path, $withd = 400, $height = 400, $quality = 90 ) {
+function fileUpload( $file, $path, $withd = null, $height = null, $quality = 100 ) {
     $extension  = strtolower( $file->getClientOriginalExtension() ?: 'jpg' );
     $image_name = uniqid() . '-' . time() . '.' . $extension;
     $imagePath  = $path . '/' . $image_name;
@@ -43,6 +43,11 @@ function fileUpload( $file, $path, $withd = 400, $height = 400, $quality = 90 ) 
     $directory = dirname( $fullPath );
     if ( ! is_dir( $directory ) ) {
         mkdir( $directory, 0755, true );
+    }
+
+    if ( $withd === null || $height === null ) {
+        $file->move( $directory, $image_name );
+        return $imagePath;
     }
 
     $image = Image::make( $file );
@@ -63,10 +68,10 @@ function fileUpload( $file, $path, $withd = 400, $height = 400, $quality = 90 ) 
 }
 
 function productImageUpload( $file, $path = 'uploads/product' ) {
-    return fileUpload( $file, $path, 1200, 1200, 92 );
+    return fileUpload( $file, $path, 1200, 1200, 100 );
 }
 
-function fileUploadFromUrl( $url, $path, $width = 400, $height = 400, $quality = 90 ) {
+function fileUploadFromUrl( $url, $path, $width = null, $height = null, $quality = 100 ) {
     $extension = strtolower( pathinfo( parse_url( $url, PHP_URL_PATH ) ?? '', PATHINFO_EXTENSION ) ?: 'jpg' );
     $imageName = Str::random( 10 ) . '-' . time() . '.' . $extension;
     $imagePath = $path . '/' . $imageName;
@@ -78,7 +83,12 @@ function fileUploadFromUrl( $url, $path, $width = 400, $height = 400, $quality =
     }
 
     $imageContents = file_get_contents( $url );
-    $tempPath      = sys_get_temp_dir() . '/' . $imageName;
+    if ( $width === null || $height === null ) {
+        file_put_contents( $fullPath, $imageContents );
+        return $imagePath;
+    }
+
+    $tempPath = sys_get_temp_dir() . '/' . $imageName;
 
     file_put_contents( $tempPath, $imageContents );
 
@@ -124,7 +134,7 @@ function upload_image( $filename, $width, $height, ) {
     $imagename = uniqid() . '.' . $filename->getClientOriginalExtension();
     $new_webp  = preg_replace( '"\.(jpg|jpeg|png|webp)$"', '.webp', $imagename );
 
-    Image::make( $filename )->encode( 'webp', 90 )->fit( $width, $height )->save( 'assets/images/' . $new_webp );
+    Image::make( $filename )->fit( $width, $height )->encode( 'webp', 100 )->save( 'assets/images/' . $new_webp );
     $image_upload = 'assets/images/' . $new_webp;
     return $image_upload;
 }
