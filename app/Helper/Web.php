@@ -13,7 +13,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
 use Spatie\Permission\Models\Permission;
 
 function slugCreate( $modelName, $slug_text, $slugColumn = 'slug' ) {
@@ -45,30 +44,13 @@ function fileUpload( $file, $path, $withd = null, $height = null, $quality = 100
         mkdir( $directory, 0755, true );
     }
 
-    if ( $withd === null || $height === null ) {
-        $file->move( $directory, $image_name );
-        return $imagePath;
-    }
-
-    $image = Image::make( $file );
-    $image->resize( $withd, $height, function ( $constraint ) {
-        $constraint->aspectRatio();
-        $constraint->upsize();
-    } );
-
-    if ( in_array( $extension, ['jpg', 'jpeg'], true ) ) {
-        $image->encode( 'jpg', $quality )->save( $fullPath );
-    } elseif ( $extension === 'webp' ) {
-        $image->encode( 'webp', $quality )->save( $fullPath );
-    } else {
-        $image->save( $fullPath );
-    }
+    $file->move( $directory, $image_name );
 
     return $imagePath;
 }
 
 function productImageUpload( $file, $path = 'uploads/product' ) {
-    return fileUpload( $file, $path, 1200, 1200, 100 );
+    return fileUpload( $file, $path );
 }
 
 function fileUploadFromUrl( $url, $path, $width = null, $height = null, $quality = 100 ) {
@@ -83,30 +65,7 @@ function fileUploadFromUrl( $url, $path, $width = null, $height = null, $quality
     }
 
     $imageContents = file_get_contents( $url );
-    if ( $width === null || $height === null ) {
-        file_put_contents( $fullPath, $imageContents );
-        return $imagePath;
-    }
-
-    $tempPath = sys_get_temp_dir() . '/' . $imageName;
-
-    file_put_contents( $tempPath, $imageContents );
-
-    $image = Image::make( $tempPath );
-    $image->resize( $width, $height, function ( $constraint ) {
-        $constraint->aspectRatio();
-        $constraint->upsize();
-    } );
-
-    if ( in_array( $extension, ['jpg', 'jpeg'], true ) ) {
-        $image->encode( 'jpg', $quality )->save( $fullPath );
-    } elseif ( $extension === 'webp' ) {
-        $image->encode( 'webp', $quality )->save( $fullPath );
-    } else {
-        $image->save( $fullPath );
-    }
-
-    unlink( $tempPath );
+    file_put_contents( $fullPath, $imageContents );
 
     return $imagePath;
 }
@@ -132,10 +91,14 @@ function userid() {
 
 function upload_image( $filename, $width, $height, ) {
     $imagename = uniqid() . '.' . $filename->getClientOriginalExtension();
-    $new_webp  = preg_replace( '"\.(jpg|jpeg|png|webp)$"', '.webp', $imagename );
+    $targetDir = public_path( 'assets/images' );
 
-    Image::make( $filename )->fit( $width, $height )->encode( 'webp', 100 )->save( 'assets/images/' . $new_webp );
-    $image_upload = 'assets/images/' . $new_webp;
+    if ( ! is_dir( $targetDir ) ) {
+        mkdir( $targetDir, 0755, true );
+    }
+
+    $filename->move( $targetDir, $imagename );
+    $image_upload = 'assets/images/' . $imagename;
     return $image_upload;
 }
 
