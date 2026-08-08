@@ -72,26 +72,32 @@ class SettingsController extends Controller {
     }
 
     public function campaignCategory() {
-        $categories = CampaignCategory::all();
+        $categories = CampaignCategory::where( 'status', 'active' )->get();
         return $this->response( $categories );
     }
 
     public function campaignConverstionLocation( $id ) {
 
-        $locations = ConversionLocation::where( 'campaign_category_id', $id )->get();
+        $locations = ConversionLocation::where( 'campaign_category_id', $id )
+            ->where( 'status', 'active' )
+            ->get();
 
         return $this->response( $locations );
 
     }
 
     public function campaignPerformanceGoal( $id ) {
-        $goals = PerfomanceGoal::where( 'campaign_category_id', $id )->get();
+        $goals = PerfomanceGoal::where( 'campaign_category_id', $id )
+            ->where( 'status', 'active' )
+            ->get();
 
         return $this->response( $goals );
     }
 
     public function campaignDynamicData( $colum, $categoryid = null ) {
-        $data = Placement::select( 'id', $colum )->where( $colum, '!=', '' )
+        $data = Placement::select( 'id', $colum )
+            ->where( $colum, '!=', '' )
+            ->where( 'status', 'active' )
             ->latest()
             ->when( $categoryid, function ( $query ) use ( $categoryid ) {
                 $query->where( 'campaign_category_id', $categoryid );

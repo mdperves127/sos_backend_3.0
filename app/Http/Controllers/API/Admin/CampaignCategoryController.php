@@ -27,10 +27,9 @@ class CampaignCategoryController extends Controller
      */
     public function store(CampaignCategoryRequest $request)
     {
-        CampaignCategory::create([
-            'name' => $request->name,
-            'icon' => $request->icon
-        ]);
+        CampaignCategory::create( array_merge( $request->validated(), [
+            'status' => $request->input( 'status', 'active' ),
+        ] ) );
         return $this->response('Campaign category added successfully.');
     }
 

@@ -26,8 +26,9 @@ class ConverstionLocationRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|max:50',
-            'campaign_category_id'=> 'required'
+            'name'                 => 'required|max:50',
+            'campaign_category_id' => 'required',
+            'status'               => 'nullable|in:active,inactive',
         ];
     }
 

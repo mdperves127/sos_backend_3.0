@@ -28,7 +28,9 @@ class PerformanceGoalController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store( PerformanceGoalRequest $request ) {
-        PerfomanceGoal::create( $request->validated() );
+        PerfomanceGoal::create( array_merge( $request->validated(), [
+            'status' => $request->input( 'status', 'active' ),
+        ] ) );
         return $this->response( 'Goal created successfully.' );
     }
 

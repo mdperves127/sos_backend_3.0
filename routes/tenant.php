@@ -45,6 +45,7 @@ use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrd
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Tenant\AamarpayController;
+use App\Http\Controllers\API\Admin\TenantMaterialController;
 use App\Http\Controllers\Tenant\AdvertiseController;
 use App\Http\Controllers\Tenant\BankController;
 use App\Http\Controllers\Tenant\CouponRequestController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\Tenant\TenantEmployeeController;
 use App\Http\Controllers\Tenant\ProductReviewController;
 use App\Http\Controllers\BuySubscription;
 use App\Http\Controllers\Tenant\NcategoryController;
+use App\Http\Controllers\Tenant\PageController;
 use App\Http\Controllers\Tenant\NewsController;
 use App\Http\Controllers\Tenant\ForgotPasswordController as TenantForgotPasswordController;
 use App\Http\Controllers\Tenant\ResetPasswordController as TenantResetPasswordController;
@@ -123,6 +125,8 @@ Route::middleware( [
 
 
 
+    Route::get( 'tenant-materials', [TenantMaterialController::class, 'index'] );
+
     Route::prefix('tenant-frontend')->group(function () {
         Route::get('products', [MerchantFrontendController::class, 'products']);
         Route::get('product/{slug}', [MerchantFrontendController::class, 'product']);
@@ -136,6 +140,8 @@ Route::middleware( [
         Route::get('news', [MerchantFrontendController::class, 'newsFront']);
         Route::get('news/{slug}', [MerchantFrontendController::class, 'newsDetail']);
         Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
+        Route::get('pages', [PageController::class, 'index']);
+        Route::get('page/{url}', [PageController::class, 'showByUrl'])->where('url', '.*');
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 
@@ -206,6 +212,14 @@ Route::middleware( [
             Route::get( 'edit/{id}', [NcategoryController::class, 'edit'] );
             Route::post( 'update/{id}', [NcategoryController::class, 'update'] );
             Route::delete( 'delete/{id}', [NcategoryController::class, 'destroy'] );
+        });
+
+        Route::prefix( 'tenant-page' )->group( function () {
+            Route::get( '/', [PageController::class, 'index'] );
+            Route::post( 'store', [PageController::class, 'store'] );
+            Route::get( 'edit/{id}', [PageController::class, 'edit'] );
+            Route::post( 'update/{id}', [PageController::class, 'update'] );
+            Route::delete( 'delete/{id}', [PageController::class, 'destroy'] );
         });
 
         //vendor product

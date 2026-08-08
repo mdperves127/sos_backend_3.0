@@ -30,6 +30,7 @@ class PlacementController extends Controller
     {
         $request->validate([
             'colum_name' => 'required',
+            'status'     => 'nullable|in:active,inactive',
             'campaign_category_id' => [function ($attribute, $value, $fail) {
                 if (request('colum_name') == 'add_format') {
                     $category = CampaignCategory::find(request('campaign_category_id'));
@@ -46,7 +47,8 @@ class PlacementController extends Controller
         Placement::create([
             'colum_name' => $colum,
             $colum => request($colum),
-            'campaign_category_id'=>request('campaign_category_id')
+            'campaign_category_id' => request('campaign_category_id'),
+            'status' => request('status', 'active'),
         ]);
 
         return $this->response('Added successfully.');
@@ -62,13 +64,22 @@ class PlacementController extends Controller
 
     public function update($id, $colum)
     {
-        if (!$id) {
+        $placement = Placement::find($id);
+
+        if (!$placement) {
             return responsejson('Not found !', 'fail');
         }
-        Placement::find($id)->update([
-            $colum => request($colum),
-            'campaign_category_id'=>request('campaign_category_id')
+
+        request()->validate([
+            'status' => 'nullable|in:active,inactive',
         ]);
+
+        $placement->update([
+            $colum => request($colum),
+            'campaign_category_id' => request('campaign_category_id'),
+            'status' => request('status', $placement->status ?? 'active'),
+        ]);
+
         return $this->response('Update successfull');
     }
 

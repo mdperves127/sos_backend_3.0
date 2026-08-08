@@ -26,6 +26,7 @@ class PerformanceGoalRequest extends FormRequest {
             'campaign_category_id'   => 'required',
             'conversion_location_id' => 'required',
             'name'                   => 'required|max:50',
+            'status'                 => 'nullable|in:active,inactive',
         ];
     }
 

@@ -30,7 +30,9 @@ class ConversionLocationController extends Controller
      */
     public function store(ConverstionLocationRequest $request)
     {
-        ConversionLocation::create($request->validated());
+        ConversionLocation::create( array_merge( $request->validated(), [
+            'status' => $request->input( 'status', 'active' ),
+        ] ) );
         return $this->response('Location created successfully.');
     }
 

@@ -26,8 +26,9 @@ class CampaignCategoryRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
-            'icon' => 'required'
+            'name'   => 'required',
+            'icon'   => 'required',
+            'status' => 'nullable|in:active,inactive',
         ];
     }
 

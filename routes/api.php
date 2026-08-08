@@ -11,6 +11,7 @@ Route::get( '/test-api', function () {
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
+use App\Http\Controllers\API\Admin\TenantMaterialController;
 use App\Http\Controllers\API\Admin\SupportBoxCategoryController;
 use App\Http\Controllers\API\Affiliate\BankController;
 use App\Http\Controllers\API\Affiliate\WithdrawController;
@@ -185,6 +186,7 @@ Route::get( 'front-campaign-category', [SettingsController::class, 'campaignCate
 Route::get( 'front-campaign-converstion-location/{id}', [SettingsController::class, 'campaignConverstionLocation'] );
 Route::get( 'front-campaign-performance-goal/{id}', [SettingsController::class, 'campaignPerformanceGoal'] );
 Route::get( 'front-dynamic-data/{colum}/{id?}', [SettingsController::class, 'campaignDynamicData'] );
+Route::get( 'front-tenant-materials', [TenantMaterialController::class, 'index'] );
 
 Route::get( '/subscriptions', [SubscriptionController::class, 'index'] );
 

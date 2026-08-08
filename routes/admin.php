@@ -37,6 +37,7 @@ use App\Http\Controllers\API\Admin\SubscriptionController;
 use App\Http\Controllers\API\Admin\SupportBoxCategoryController;
 use App\Http\Controllers\API\Admin\SupportBoxController;
 use App\Http\Controllers\API\Admin\SupportProblemTopicController;
+use App\Http\Controllers\API\Admin\TenantMaterialController;
 use App\Http\Controllers\API\Admin\TestimonialController;
 use App\Http\Controllers\API\Admin\TicketReplyController;
 use App\Http\Controllers\API\Admin\UserEmailSubscribeControllerList;
@@ -280,6 +281,9 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
 
         Route::get( 'doller-price', [DollerPriceController::class, 'index'] );
         Route::post( 'doller-price-store', [DollerPriceController::class, 'store'] );
+
+        Route::get( 'tenant-materials', [TenantMaterialController::class, 'index'] );
+        Route::post( 'tenant-materials/update', [TenantMaterialController::class, 'update'] );
         Route::get( 'membership-details/affiliate', [MembershipDetailsController::class, 'affiliatemembership'] );
         Route::get( 'membership-details/vendor', [MembershipDetailsController::class, 'vendormembership'] );
         Route::get( 'all-coupon-request', [CouponRequestController::class, 'allcouponrequest'] );

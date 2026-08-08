@@ -42,6 +42,7 @@ class CmsSettingSeeder extends Seeder
             'scripts_facebook_messenger' => '',
             'scripts_whatsapp_chat' => '',
             'scripts_google_tag_manager' => '',
+            'scripts_google_tag_manager_body' => '',
 
             // Footer Settings
             'footer_logo' => 'uploads/theme-one/others/footer-logo.png',
