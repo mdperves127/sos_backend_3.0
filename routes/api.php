@@ -44,6 +44,7 @@ use App\Http\Controllers\DollerRateController;
 use App\Http\Controllers\RenewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\TenantVerificationController;
 use App\Http\Controllers\Tenant\CustomDomainController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\HistoryController;
@@ -203,6 +204,11 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 } );
 
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
+Route::prefix( 'tenants/verification' )->group( function () {
+    Route::post( 'send', [TenantVerificationController::class, 'send'] );
+    Route::post( 'verify', [TenantVerificationController::class, 'verify'] );
+    Route::post( 'resend', [TenantVerificationController::class, 'resend'] );
+} );
 Route::post( '/tenants/register/validate', [TenantRegistrationController::class, 'validateRegistration'] );
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
