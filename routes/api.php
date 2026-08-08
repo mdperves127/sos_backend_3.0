@@ -203,6 +203,7 @@ Route::middleware( 'auth:sanctum' )->get( '/user', function () {
 } );
 
 // Tenant Registration API Routes (these don't need tenancy context as they manage tenants from central)
+Route::post( '/tenants/register/validate', [TenantRegistrationController::class, 'validateRegistration'] );
 Route::post( '/tenants/register', [TenantRegistrationController::class, 'register'] );
 
 Route::get( 'have/tenant/{tenant}', [TenantRegistrationController::class, 'haveTenant'] )

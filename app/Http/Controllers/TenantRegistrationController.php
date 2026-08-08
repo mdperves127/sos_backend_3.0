@@ -26,6 +26,27 @@ class TenantRegistrationController extends Controller
     }
 
     /**
+     * Validate tenant registration data without creating a tenant.
+     */
+    public function validateRegistration( TenantRegistrationRequest $request ): JsonResponse
+    {
+        $domain   = $request->input( 'domain' );
+        $tenantId = preg_replace( '/[^a-zA-Z0-9]/', '', $domain );
+
+        return response()->json( [
+            'success' => true,
+            'message' => 'Validation passed. You can proceed with registration.',
+            'data'    => [
+                'company_name' => $request->input( 'company_name' ),
+                'domain'       => $domain,
+                'tenant_id'    => $tenantId,
+                'email'        => $request->input( 'email' ),
+                'type'         => $request->input( 'type' ),
+            ],
+        ] );
+    }
+
+    /**
      * Register a new tenant
      *
      * @param TenantRegistrationRequest $request

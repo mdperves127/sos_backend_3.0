@@ -46,12 +46,7 @@ class TenantRegistrationRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $domain = $this->input('domain');
-
-            // Transform domain for validation check
-            $fullDomain = $domain;
-            if (!str_contains($domain, '.localhost') && !str_contains($domain, '.local') && !str_contains($domain, '.')) {
-                $fullDomain = $domain . '.localhost';
-            }
+            $fullDomain = $this->resolveFullDomain( $domain );
 
             // Generate tenant ID from domain
             $tenantId = preg_replace('/[^a-zA-Z0-9]/', '', $domain);
@@ -65,7 +60,29 @@ class TenantRegistrationRequest extends FormRequest
             if (\App\Models\Tenant::where('id', $tenantId)->exists()) {
                 $validator->errors()->add('domain', 'A tenant with this domain name already exists.');
             }
+
+            if ( $this->filled( 'email' ) && \App\Models\Tenant::where( 'email', $this->input( 'email' ) )->exists() ) {
+                $validator->errors()->add( 'email', 'This email is already registered.' );
+            }
         });
+    }
+
+    private function resolveFullDomain( string $domain ): string
+    {
+        if ( str_contains( $domain, '.' ) ) {
+            return $domain;
+        }
+
+        $mainDomain = env( 'MAIN_DOMAIN' );
+        if ( $mainDomain ) {
+            return $domain . '.' . $mainDomain;
+        }
+
+        if ( env( 'APP_ENV' ) === 'local' ) {
+            return $domain . '.localhost';
+        }
+
+        return $domain;
     }
 
     /**
@@ -83,6 +100,7 @@ class TenantRegistrationRequest extends FormRequest
             'domain.required' => 'Domain is required.',
             'domain.string' => 'Domain must be a string.',
             'domain.max' => 'Domain cannot exceed 255 characters.',
+            'domain.regex' => 'Domain may only contain letters, numbers, and hyphens, and cannot start or end with a hyphen.',
             'domain.unique' => 'This domain is already registered.',
 
             'email.required' => 'Email is required.',
