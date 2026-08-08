@@ -25,14 +25,14 @@ class TenantRegistrationRequest extends FormRequest
     {
         return [
             'company_name' => 'required|string|max:255',
-            'domain' => 'required|string|max:255|regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'owner_name' => 'required|string|max:255',
-            'password' => 'required|string|min:8|confirmed|max:255',
-            'type' => 'required|string|in:dropshipper,merchant',
-            'status' => 'nullable|string|in:pending,active,blocked',
+            'domain'       => 'required|string|max:255|regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/',
+            'email'        => 'required|email|max:255|unique:mysql.tenants,email',
+            'phone'        => 'nullable|string|max:20|unique:mysql.tenants,phone',
+            'address'      => 'nullable|string|max:500',
+            'owner_name'   => 'required|string|max:255',
+            'password'     => 'required|string|min:8|confirmed|max:255',
+            'type'         => 'required|string|in:dropshipper,merchant',
+            'status'       => 'nullable|string|in:pending,active,blocked',
         ];
     }
 
@@ -45,24 +45,20 @@ class TenantRegistrationRequest extends FormRequest
         public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $domain = $this->input('domain');
+            if ( $validator->errors()->isNotEmpty() ) {
+                return;
+            }
+
+            $domain     = $this->input('domain');
             $fullDomain = $this->resolveFullDomain( $domain );
+            $tenantId   = preg_replace('/[^a-zA-Z0-9]/', '', $domain);
 
-            // Generate tenant ID from domain
-            $tenantId = preg_replace('/[^a-zA-Z0-9]/', '', $domain);
-
-            // Check if the transformed domain already exists
             if (\Stancl\Tenancy\Database\Models\Domain::where('domain', $fullDomain)->exists()) {
                 $validator->errors()->add('domain', 'This domain is already registered.');
             }
 
-            // Check if tenant ID already exists
             if (\App\Models\Tenant::where('id', $tenantId)->exists()) {
                 $validator->errors()->add('domain', 'A tenant with this domain name already exists.');
-            }
-
-            if ( $this->filled( 'email' ) && \App\Models\Tenant::where( 'email', $this->input( 'email' ) )->exists() ) {
-                $validator->errors()->add( 'email', 'This email is already registered.' );
             }
         });
     }
@@ -106,9 +102,11 @@ class TenantRegistrationRequest extends FormRequest
             'email.required' => 'Email is required.',
             'email.email' => 'Please provide a valid email address.',
             'email.max' => 'Email cannot exceed 255 characters.',
+            'email.unique' => 'This email is already registered.',
 
             'phone.string' => 'Phone must be a string.',
             'phone.max' => 'Phone number cannot exceed 20 characters.',
+            'phone.unique' => 'This phone number is already registered.',
 
             'address.string' => 'Address must be a string.',
             'address.max' => 'Address cannot exceed 500 characters.',
