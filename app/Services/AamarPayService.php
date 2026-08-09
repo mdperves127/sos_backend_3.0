@@ -1,53 +1,15 @@
 <?php
 
 namespace App\Services;
-use Illuminate\Support\Facades\Auth;
 
 /**
- * Class AamarPayService.
+ * Legacy gateway entrypoint kept for existing callers.
+ * Uses EPS payment gateway under the hood.
  */
-class AamarPayService {
-    static function gateway( $price, $traxId, $type, $successUrl, $tenant_type ) {
-        $success = $successUrl;
-
-        $cancel  = url( 'api/aaparpay/cancel' );
-        $fail    = url( 'api/aaparpay/fail' );
-
-        $curl = curl_init();
-
-        curl_setopt_array( $curl, [
-            CURLOPT_URL            => config( 'app.aamarpay' ),
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => '',
-            CURLOPT_MAXREDIRS      => $price,
-            CURLOPT_TIMEOUT        => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST  => 'POST',
-            CURLOPT_POSTFIELDS     => [
-                'store_id'      => env( 'APP_ENV' ) === 'production' ? 'aamarpaytest' : 'aamarpaytest',
-                'signature_key' => env( 'APP_ENV' ) === 'production' ? 'dbb74894e82415a2f7ff0ec3a97e4183' : 'dbb74894e82415a2f7ff0ec3a97e4183',
-                'cus_name'      => Auth::user()->name,
-                'cus_email'     => 'example@gmail.com',
-                'cus_phone'     => '01870******',
-                'amount'        => $price,
-                'currency'      => 'BDT',
-                'tran_id'       => $traxId,
-                'desc'          => 'desc',
-                'success_url'   => $success,
-                'fail_url'      => $fail,
-                'cancel_url'    => $cancel,
-                'type'          => 'json',
-                'opt_a'         => $type,
-                'opt_b'         => $tenant_type,
-            ],
-        ] );
-
-        $response = curl_exec( $curl );
-
-        curl_close( $curl );
-        return json_decode( $response );
+class AamarPayService
+{
+    static function gateway( $price, $traxId, $type, $successUrl, $tenant_type )
+    {
+        return EpsPaymentService::gateway( (float) $price, (string) $traxId, (string) $type, $successUrl, (string) $tenant_type );
     }
 }

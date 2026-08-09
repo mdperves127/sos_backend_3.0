@@ -39,4 +39,14 @@ return [
         'transaction_type' => env('MIM_SMS_TRANSACTION_TYPE', 'T'),
     ],
 
+    'eps' => [
+        'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
+        'merchant_id'         => env('EPS_MERCHANT_ID'),
+        'store_id'            => env('EPS_STORE_ID'),
+        'username'            => env('EPS_USERNAME'),
+        'password'            => env('EPS_PASSWORD'),
+        'hash_key'            => env('EPS_HASH_KEY'),
+        'transaction_type_id' => env('EPS_TRANSACTION_TYPE_ID', 10),
+    ],
+
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Http\Controllers\Concerns\HandlesEpsPaymentCallback;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ServiceOrder;
@@ -22,9 +23,15 @@ use App\Helper\RedirectHelper;
 
 class AamarpayController extends Controller
 {
+    use HandlesEpsPaymentCallback;
+
     function servicesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'all-service-order?message=Payment verification failed' );
+        }
         $vendorservice = ServiceOrder::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] ?? null )->first();
 
         if ( ! $vendorservice ) {
@@ -37,7 +44,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store(
             $vendorservice->trxid,
             $vendorservice->amount,
-            'Ammarpay',
+            'EPS',
             'Service',
             '-',
             '',
@@ -57,8 +64,11 @@ class AamarpayController extends Controller
 
     function productcheckoutsuccess()
     {
+        $response = $this->verifiedEpsTransaction();
 
-        $response = request()->all();
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+        }
         $data = PaymentStore::where('trxid', $response['mer_txnid'])->first();
 
         if (!$data) {
@@ -73,7 +83,7 @@ class AamarpayController extends Controller
             $info['totalqty'],
             $info['userid'],
             $info['datas'],
-            'aamarpay',
+            'eps',
             $info['tenant_id'] ?? null,
             $info['placing_tenant_id'] ?? null,
             $info['order_media'] ?? $data->order_media ?? null
@@ -88,7 +98,11 @@ class AamarpayController extends Controller
 
     function renewsuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment verification failed' );
+        }
         $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending' ] )->first();
 
         if ( ! $data ) {
@@ -97,7 +111,7 @@ class AamarpayController extends Controller
 
         $subscriptionid   = $data['info']['package_id'];
         $trxid           = $data->trxid;
-        $payment_method  = 'Aamarpay';
+        $payment_method  = 'EPS';
         $transition_type = 'renew';
         $amount          = $response['amount_original'] ?? 0;
         $couponName      = $data['info']['coupon'] ?? '';
@@ -123,7 +137,11 @@ class AamarpayController extends Controller
     }
     function advertisesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+        }
         $adminAdvertise = AdminAdvertise::on('mysql')->where('trxid', $response['mer_txnid'])->first();
 
         $adminAdvertise->update([
@@ -134,7 +152,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store(
             $adminAdvertise->trxid,
             ( $adminAdvertise->budget_amount * $dollerRate ),
-            'Ammarpay',
+            'EPS',
             'Advertise',
             '-',
             '',
@@ -158,7 +176,11 @@ class AamarpayController extends Controller
 
     function subscriptionsuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+        }
 
         $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
         if (!$data) {
@@ -190,7 +212,7 @@ class AamarpayController extends Controller
                 $entity,
                 $amount,
                 $couponid,
-                'Aamarpay',
+                'EPS',
                 $validatedData['user_id'] ?? null
             );
         }
@@ -226,35 +248,22 @@ class AamarpayController extends Controller
 
     function rechargesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
 
-        // Debug all available data
-        // Debug Aamarpay response to find transaction ID
-        $aamarpayResponse = [
-            'all_request_data' => request()->all(),
-            'post_data' => request()->post(),
-            'query_data' => request()->query(),
-            'json_data' => request()->json()->all(),
-            'possible_txn_fields' => [
-                'mer_txnid' => $response['mer_txnid'] ?? 'NOT_FOUND',
-                'txnid' => $response['txnid'] ?? 'NOT_FOUND',
-                'transaction_id' => $response['transaction_id'] ?? 'NOT_FOUND',
-                'merchant_txnid' => $response['merchant_txnid'] ?? 'NOT_FOUND',
-                'payment_id' => $response['payment_id'] ?? 'NOT_FOUND',
-                'order_id' => $response['order_id'] ?? 'NOT_FOUND',
-                'opt_a' => $response['opt_a'] ?? 'NOT_FOUND',
-                'opt_b' => $response['opt_b'] ?? 'NOT_FOUND',
-                'opt_c' => $response['opt_c'] ?? 'NOT_FOUND',
-            ]
-        ];
-
-
+        if ( ! $response ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment verification failed' );
+        }
 
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
+
+        if ( ! $data ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
+        }
+
         PaymentHistoryService::store(
             $data->trxid,
             $data['info']['amount'],
-            'Ammarpay',
+            'EPS',
             'Recharge',
             '+',
             '',

@@ -121,7 +121,7 @@ class OrderController extends Controller {
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
             PaymentStore::create( [
-                'payment_gateway' => 'aamarpay',
+                'payment_gateway' => 'eps',
                 'trxid'           => $trx,
                 'status'          => 'pending',
                 'last_status'     => 'pending',
@@ -138,7 +138,7 @@ class OrderController extends Controller {
                     'order_media'       => 'dropshipper',
                 ],
                 ] );
-            $successurl = url( 'api/aaparpay/product-checkout-success' );
+            $successurl = url( 'api/user/aaparpay/product-checkout-success' );
             return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesEpsPaymentCallback;
 use App\Helper\RedirectHelper;
 use App\Models\AdminAdvertise;
 use App\Models\CustomerRequiremnt;
@@ -23,10 +24,15 @@ use Illuminate\Support\Facades\Notification;
 
 class AamarpayController extends Controller
 {
+    use HandlesEpsPaymentCallback;
 
     function servicesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( rtrim( config( 'app.redirecturl' ), '/' ) . '/all-service-order?message=Payment verification failed' );
+        }
         $vendorservice = ServiceOrder::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] ?? null )->first();
 
         if ( ! $vendorservice ) {
@@ -36,7 +42,7 @@ class AamarpayController extends Controller
         $vendorservice->update([
             'is_paid' => 1
         ]);
-        PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'Ammarpay', 'Service', '-', '', $vendorservice->user_id);
+        PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'EPS', 'Service', '-', '', $vendorservice->user_id);
 
         if ( ! empty( $vendorservice->tenant_id ) ) {
             $url = RedirectHelper::getTenantRedirectUrl( $vendorservice->tenant_id )
@@ -53,8 +59,11 @@ class AamarpayController extends Controller
 
     function productcheckoutsuccess()
     {
+        $response = $this->verifiedEpsTransaction();
 
-        $response = request()->all();
+        if ( ! $response ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
+        }
         $data = PaymentStore::where('trxid', $response['mer_txnid'])->first();
 
         if (!$data) {
@@ -69,7 +78,7 @@ class AamarpayController extends Controller
             $info['totalqty'],
             $info['userid'],
             $info['datas'],
-            'aamarpay',
+            'eps',
             $info['tenant_id'] ?? null,
             $info['placing_tenant_id'] ?? null,
             $info['order_media'] ?? $data->order_media ?? null
@@ -83,12 +92,16 @@ class AamarpayController extends Controller
 
     function renewsuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
+        }
         $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
         $user =  User::find($data['info']['user_id']);
         $subscriptionid =  $data['info']['package_id'];
         $trxid = $data->trxid;
-        $payment_method = 'Aamarpay';
+        $payment_method = 'EPS';
         $transition_type = 'renew';
         SubscriptionRenewService::subscriptionadd($user, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = $response['amount_original'], $couponName = $data['info']['coupon']);
 
@@ -99,7 +112,11 @@ class AamarpayController extends Controller
     }
     function advertisesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
+        }
         $adminAdvertise = AdminAdvertise::where('trxid', $response['mer_txnid'])->first();
 
         $adminAdvertise->update([
@@ -107,7 +124,7 @@ class AamarpayController extends Controller
         ]);
         $dollerRate  =  DollerRate::first()?->amount;
         // if($response['opt_b'] == 'user'){
-            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
+            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'EPS', 'Advertise', '-', '', $adminAdvertise->user_id);
         // }else{
         //     PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', tenant()->id);
         // }
@@ -119,7 +136,11 @@ class AamarpayController extends Controller
 
     function subscriptionsuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
+        }
 
         $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
         if (!$data) {
@@ -151,7 +172,7 @@ class AamarpayController extends Controller
                 $entity,
                 $amount,
                 $couponid,
-                'Aamarpay',
+                'EPS',
                 $validatedData['user_id'] ?? null
             );
         }
@@ -187,13 +208,17 @@ class AamarpayController extends Controller
 
     function rechargesuccess()
     {
-        $response = request()->all();
+        $response = $this->verifiedEpsTransaction();
+
+        if ( ! $response ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
+        }
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
 
         if($response['opt_b'] == 'user'){
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['user_id']);
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'EPS', 'Recharge', '+', '',  $data['info']['user_id']);
         }else{
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Ammarpay', 'Recharge', '+', '',  $data['info']['user_id']);
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'EPS', 'Recharge', '+', '',  $data['info']['user_id']);
         }
 
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);

@@ -141,16 +141,16 @@ Route::middleware( [
 
 Route::prefix( 'user/aaparpay' )->group( function () {
 
-    Route::post( 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
-    Route::post( 'service-success', [AamarpayController::class, 'servicesuccess'] );
-    Route::post( 'renew-success', [AamarpayController::class, 'renewsuccess'] );
-    Route::post( 'recharge-success', [AamarpayController::class, 'rechargesuccess'] );
+    Route::match( ['get', 'post'], 'advertise-success', [AamarpayController::class, 'advertisesuccess'] );
+    Route::match( ['get', 'post'], 'service-success', [AamarpayController::class, 'servicesuccess'] );
+    Route::match( ['get', 'post'], 'renew-success', [AamarpayController::class, 'renewsuccess'] );
+    Route::match( ['get', 'post'], 'recharge-success', [AamarpayController::class, 'rechargesuccess'] );
 
-    Route::post( 'subscription-success', [AamarpayController::class, 'subscriptionsuccess'] );
-    Route::post( 'product-checkout-success', [AamarpayController::class, 'productcheckoutsuccess'] );
+    Route::match( ['get', 'post'], 'subscription-success', [AamarpayController::class, 'subscriptionsuccess'] );
+    Route::match( ['get', 'post'], 'product-checkout-success', [AamarpayController::class, 'productcheckoutsuccess'] );
 
-    Route::post( 'fail', [AamarpayController::class, 'fail'] );
-    Route::get( 'cancel', [AamarpayController::class, 'cancel'] );
+    Route::match( ['get', 'post'], 'fail', [AamarpayController::class, 'fail'] );
+    Route::match( ['get', 'post'], 'cancel', [AamarpayController::class, 'cancel'] );
 } );
 
 Route::post( '/contact-store', [ContactController::class, 'store'] );

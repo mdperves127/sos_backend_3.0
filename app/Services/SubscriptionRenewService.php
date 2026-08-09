@@ -100,11 +100,11 @@ class SubscriptionRenewService {
         }
 
         if ( $validatedData['payment_method'] == 'aamarpay' ) {
-            $successurl = url( 'api/aaparpay/renew-success' );
+            $successurl = url( 'api/user/aaparpay/renew-success' );
             $validatedData['user_id'] = auth()->id();
             $validatedData['coupon'] = request( 'coupon_id' );
             PaymentStore::create( [
-                'payment_gateway' => 'aamarpay',
+                'payment_gateway' => 'eps',
                 'trxid'           => $trxid,
                 'status'          => 'pending',
                 'payment_type'    => 'renew',
@@ -190,12 +190,12 @@ class SubscriptionRenewService {
         }
 
         if ( $validatedData['payment_method'] == 'aamarpay' ) {
-            $successurl = url( 'api/aaparpay/renew-success' );
+            $successurl = url( 'api/user/aaparpay/renew-success' );
             $validatedData['user_id']    = auth()->id();
             $validatedData['tenant_id']  = $tenant->id;
             $validatedData['coupon']     = request( 'coupon_id' );
             $store = new PaymentStore( [
-                'payment_gateway' => 'aamarpay',
+                'payment_gateway' => 'eps',
                 'trxid'           => $trxid,
                 'status'          => 'pending',
                 'payment_type'    => 'renew',

@@ -31,11 +31,11 @@ class RechargeController extends Controller {
 
         $trxid      = uniqid();
         $type       = "recharge";
-        $successurl = url( 'api/aaparpay/recharge-success' );
+        $successurl = url( 'api/user/aaparpay/recharge-success' );
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
         PaymentStore::create( [
-            'payment_gateway'         => 'aamarpay',
+            'payment_gateway'         => 'eps',
             'trxid'                   => $trxid,
             'payment_type'            => 'recharge',
             'info'                    => $validateData,

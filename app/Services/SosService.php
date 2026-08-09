@@ -41,7 +41,7 @@ class SosService {
         // }
 
         $uniqueId          = uniqid();
-        $successurl        = url( 'api/aaparpay/subscription-success' );
+        $successurl        = url( 'api/user/aaparpay/subscription-success' );
         $tenant_type       = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
         $result            = AamarPayService::gateway( $price, $uniqueId, 'subscription', $successurl, $tenant_type );
         $info['user_id']   = userid();
@@ -50,7 +50,7 @@ class SosService {
         // $info['extra_charge'] = $extra_charge; //For Extra charge
 
         PaymentStore::create( [
-            'payment_gateway'         => 'aamarpay',
+            'payment_gateway'         => 'eps',
             'trxid'                   => $uniqueId,
             'payment_type'            => 'subscription',
             'info'                    => $info,
