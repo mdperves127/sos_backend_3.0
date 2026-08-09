@@ -14,7 +14,7 @@ class SmsService
         // API endpoint and credentials
         $apiUrl = 'https://api.mimsms.com/api/SmsSending/SMS';
         $username = 'shikhboami@gmail.com';
-        $apiKey = '1E7HYEO8WI7NRJ9';
+        $apiKey = '1UMXFCCCJ96KJTBT6NNL6DJEX';
         $senderId = '8809601002601';
         $receiver_number = (string) '88'. $data['number'];
         $text = (string) $data['verify_code'];
