@@ -106,10 +106,13 @@ class TenantVerificationController extends Controller
 
     private function validationErrorResponse( ValidationException $e ): JsonResponse
     {
+        $errors  = $e->errors();
+        $message = collect( $errors )->flatten()->first() ?? 'Validation failed.';
+
         return response()->json( [
             'success' => false,
-            'message' => 'Validation failed.',
-            'errors'  => $e->errors(),
+            'message' => $message,
+            'errors'  => $errors,
         ], 422 );
     }
 }
