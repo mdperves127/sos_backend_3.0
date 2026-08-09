@@ -104,7 +104,7 @@ class SubscriptionRenewService {
             $validatedData['user_id'] = auth()->id();
             $validatedData['coupon'] = request( 'coupon_id' );
             PaymentStore::create( [
-                'payment_gateway' => 'eps',
+                'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
                 'status'          => 'pending',
                 'payment_type'    => 'renew',
@@ -195,7 +195,7 @@ class SubscriptionRenewService {
             $validatedData['tenant_id']  = $tenant->id;
             $validatedData['coupon']     = request( 'coupon_id' );
             $store = new PaymentStore( [
-                'payment_gateway' => 'eps',
+                'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
                 'status'          => 'pending',
                 'payment_type'    => 'renew',

@@ -50,7 +50,7 @@ class SosService {
         // $info['extra_charge'] = $extra_charge; //For Extra charge
 
         PaymentStore::create( [
-            'payment_gateway'         => 'eps',
+            'payment_gateway'         => 'aamarpay',
             'trxid'                   => $uniqueId,
             'payment_type'            => 'subscription',
             'info'                    => $info,

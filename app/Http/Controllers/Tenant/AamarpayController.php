@@ -44,7 +44,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store(
             $vendorservice->trxid,
             $vendorservice->amount,
-            'EPS',
+            'Aamarpay',
             'Service',
             '-',
             '',
@@ -83,7 +83,7 @@ class AamarpayController extends Controller
             $info['totalqty'],
             $info['userid'],
             $info['datas'],
-            'eps',
+            'aamarpay',
             $info['tenant_id'] ?? null,
             $info['placing_tenant_id'] ?? null,
             $info['order_media'] ?? $data->order_media ?? null
@@ -111,7 +111,7 @@ class AamarpayController extends Controller
 
         $subscriptionid   = $data['info']['package_id'];
         $trxid           = $data->trxid;
-        $payment_method  = 'EPS';
+        $payment_method  = 'Aamarpay';
         $transition_type = 'renew';
         $amount          = $response['amount_original'] ?? 0;
         $couponName      = $data['info']['coupon'] ?? '';
@@ -152,7 +152,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store(
             $adminAdvertise->trxid,
             ( $adminAdvertise->budget_amount * $dollerRate ),
-            'EPS',
+            'Aamarpay',
             'Advertise',
             '-',
             '',
@@ -212,7 +212,7 @@ class AamarpayController extends Controller
                 $entity,
                 $amount,
                 $couponid,
-                'EPS',
+                'Aamarpay',
                 $validatedData['user_id'] ?? null
             );
         }
@@ -263,7 +263,7 @@ class AamarpayController extends Controller
         PaymentHistoryService::store(
             $data->trxid,
             $data['info']['amount'],
-            'EPS',
+            'Aamarpay',
             'Recharge',
             '+',
             '',

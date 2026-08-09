@@ -121,7 +121,7 @@ class OrderController extends Controller {
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
             PaymentStore::create( [
-                'payment_gateway' => 'eps',
+                'payment_gateway' => 'aamarpay',
                 'trxid'           => $trx,
                 'status'          => 'pending',
                 'last_status'     => 'pending',

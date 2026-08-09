@@ -3,8 +3,8 @@
 namespace App\Services;
 
 /**
- * Legacy gateway entrypoint kept for existing callers.
- * Uses EPS payment gateway under the hood.
+ * Public gateway name: aamarpay.
+ * Actual processor: EPS (see EpsPaymentService).
  */
 class AamarPayService
 {

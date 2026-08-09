@@ -42,7 +42,7 @@ class AamarpayController extends Controller
         $vendorservice->update([
             'is_paid' => 1
         ]);
-        PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'EPS', 'Service', '-', '', $vendorservice->user_id);
+        PaymentHistoryService::store($vendorservice->trxid, $vendorservice->amount, 'Aamarpay', 'Service', '-', '', $vendorservice->user_id);
 
         if ( ! empty( $vendorservice->tenant_id ) ) {
             $url = RedirectHelper::getTenantRedirectUrl( $vendorservice->tenant_id )
@@ -78,7 +78,7 @@ class AamarpayController extends Controller
             $info['totalqty'],
             $info['userid'],
             $info['datas'],
-            'eps',
+            'aamarpay',
             $info['tenant_id'] ?? null,
             $info['placing_tenant_id'] ?? null,
             $info['order_media'] ?? $data->order_media ?? null
@@ -101,7 +101,7 @@ class AamarpayController extends Controller
         $user =  User::find($data['info']['user_id']);
         $subscriptionid =  $data['info']['package_id'];
         $trxid = $data->trxid;
-        $payment_method = 'EPS';
+        $payment_method = 'Aamarpay';
         $transition_type = 'renew';
         SubscriptionRenewService::subscriptionadd($user, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = $response['amount_original'], $couponName = $data['info']['coupon']);
 
@@ -124,7 +124,7 @@ class AamarpayController extends Controller
         ]);
         $dollerRate  =  DollerRate::first()?->amount;
         // if($response['opt_b'] == 'user'){
-            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'EPS', 'Advertise', '-', '', $adminAdvertise->user_id);
+            PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Aamarpay', 'Advertise', '-', '', $adminAdvertise->user_id);
         // }else{
         //     PaymentHistoryService::store($adminAdvertise->trxid, ($adminAdvertise->budget_amount * $dollerRate), 'Ammarpay', 'Advertise', '-', '', tenant()->id);
         // }
@@ -172,7 +172,7 @@ class AamarpayController extends Controller
                 $entity,
                 $amount,
                 $couponid,
-                'EPS',
+                'Aamarpay',
                 $validatedData['user_id'] ?? null
             );
         }
@@ -216,9 +216,9 @@ class AamarpayController extends Controller
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
 
         if($response['opt_b'] == 'user'){
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'EPS', 'Recharge', '+', '',  $data['info']['user_id']);
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Aamarpay', 'Recharge', '+', '',  $data['info']['user_id']);
         }else{
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'EPS', 'Recharge', '+', '',  $data['info']['user_id']);
+            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Aamarpay', 'Recharge', '+', '',  $data['info']['user_id']);
         }
 
         // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);

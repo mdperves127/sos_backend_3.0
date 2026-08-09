@@ -35,7 +35,7 @@ class RechargeController extends Controller {
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
         PaymentStore::create( [
-            'payment_gateway'         => 'eps',
+            'payment_gateway'         => 'aamarpay',
             'trxid'                   => $trxid,
             'payment_type'            => 'recharge',
             'info'                    => $validateData,
