@@ -31,4 +31,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mimsms' => [
+        'url'              => env('MIM_SMS_API_URL', 'https://api.mimsms.com/api/SmsSending/SMS'),
+        'username'         => env('MIM_SMS_USERNAME'),
+        'api_key'          => env('MIM_SMS_API_KEY'),
+        'sender_name'      => env('MIM_SMS_SENDER_NAME'),
+        'transaction_type' => env('MIM_SMS_TRANSACTION_TYPE', 'T'),
+    ],
+
 ];

@@ -39,17 +39,23 @@ class TenantVerificationService
 
         $phone = $this->normalizePhone( $phone );
 
+        try {
+            SmsService::sendSms( [
+                'number'      => $phone,
+                'verify_code' => $code,
+            ] );
+        } catch ( \RuntimeException $e ) {
+            throw ValidationException::withMessages( [
+                'phone' => [$e->getMessage()],
+            ] );
+        }
+
         $verification->fill( [
             'phone'                => $phone,
             'phone_verify_code'    => $code,
             'phone_verify_code_at' => now(),
             'phone_verified_at'    => null,
         ] )->save();
-
-        SmsService::sendSms( [
-            'number'      => $phone,
-            'verify_code' => $code,
-        ] );
 
         return [
             'channel'    => 'sms',
