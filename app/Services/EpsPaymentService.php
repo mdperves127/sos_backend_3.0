@@ -15,6 +15,8 @@ class EpsPaymentService
     private static ?Carbon $cachedTokenExpiresAt = null;
     public static function gateway( float $price, string $traxId, string $type, string $successUrl, string $tenantType ): object
     {
+        self::ensureConfigured();
+
         $user = Auth::user();
         [$failUrl, $cancelUrl] = self::callbackUrlsFromSuccess( $successUrl );
 
@@ -174,12 +176,10 @@ class EpsPaymentService
             return self::$cachedToken;
         }
 
+        self::ensureConfigured();
+
         $username = config( 'services.eps.username' );
         $password = config( 'services.eps.password' );
-
-        if ( ! $username || ! $password || ! config( 'services.eps.hash_key' ) ) {
-            throw new RuntimeException( 'EPS payment gateway is not configured.' );
-        }
 
         $response = Http::timeout( 30 )
             ->withHeaders( ['x-hash' => self::generateHash( $username )] )
@@ -212,6 +212,25 @@ class EpsPaymentService
         $hashKey = config( 'services.eps.hash_key' );
 
         return base64_encode( hash_hmac( 'sha512', $value, $hashKey, true ) );
+    }
+
+    private static function ensureConfigured(): void
+    {
+        $required = [
+            'EPS_USERNAME'    => config( 'services.eps.username' ),
+            'EPS_PASSWORD'    => config( 'services.eps.password' ),
+            'EPS_HASH_KEY'    => config( 'services.eps.hash_key' ),
+            'EPS_MERCHANT_ID' => config( 'services.eps.merchant_id' ),
+            'EPS_STORE_ID'    => config( 'services.eps.store_id' ),
+        ];
+
+        $missing = array_keys( array_filter( $required, fn ( $value ) => blank( $value ) ) );
+
+        if ( $missing !== [] ) {
+            throw new RuntimeException(
+                'EPS payment gateway is not configured. Add these to .env: ' . implode( ', ', $missing )
+            );
+        }
     }
 
     private static function endpoint( string $name ): string
