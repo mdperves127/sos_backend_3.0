@@ -196,7 +196,13 @@ class EpsPaymentService
                 'response' => $data,
             ] );
 
-            throw new RuntimeException( $data['errorMessage'] ?? 'Unable to authenticate with EPS.' );
+            $message = $data['errorMessage'] ?? $data['ErrorMessage'] ?? 'Unable to authenticate with EPS.';
+
+            if ( str_contains( strtolower( $message ), 'error occured' ) ) {
+                $message .= ' Check that EPS_USERNAME, EPS_PASSWORD, EPS_HASH_KEY, EPS_MERCHANT_ID, and EPS_STORE_ID all belong to the same EPS merchant account.';
+            }
+
+            throw new RuntimeException( $message );
         }
 
         self::$cachedToken          = $data['token'];
@@ -209,7 +215,7 @@ class EpsPaymentService
 
     private static function generateHash( string $value ): string
     {
-        $hashKey = config( 'services.eps.hash_key' );
+        $hashKey = trim( (string) config( 'services.eps.hash_key' ), " \t\n\r\0\x0B\"'" );
 
         return base64_encode( hash_hmac( 'sha512', $value, $hashKey, true ) );
     }
