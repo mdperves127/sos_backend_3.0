@@ -3,13 +3,16 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Carbon\Carbon;
 
 class EpsPaymentService
 {
+    private static ?string $cachedToken = null;
+
+    private static ?Carbon $cachedTokenExpiresAt = null;
     public static function gateway( float $price, string $traxId, string $type, string $successUrl, string $tenantType ): object
     {
         $user = Auth::user();
@@ -167,36 +170,41 @@ class EpsPaymentService
 
     private static function getToken(): string
     {
-        $cacheKey = 'eps_payment_token';
+        if ( self::$cachedToken && self::$cachedTokenExpiresAt && now()->lt( self::$cachedTokenExpiresAt ) ) {
+            return self::$cachedToken;
+        }
 
-        return Cache::remember( $cacheKey, now()->addMinutes( 50 ), function () {
-            $username = config( 'services.eps.username' );
-            $password = config( 'services.eps.password' );
+        $username = config( 'services.eps.username' );
+        $password = config( 'services.eps.password' );
 
-            if ( ! $username || ! $password || ! config( 'services.eps.hash_key' ) ) {
-                throw new RuntimeException( 'EPS payment gateway is not configured.' );
-            }
+        if ( ! $username || ! $password || ! config( 'services.eps.hash_key' ) ) {
+            throw new RuntimeException( 'EPS payment gateway is not configured.' );
+        }
 
-            $response = Http::timeout( 30 )
-                ->withHeaders( ['x-hash' => self::generateHash( $username )] )
-                ->post( self::endpoint( 'token' ), [
-                    'userName' => $username,
-                    'password' => $password,
-                ] );
+        $response = Http::timeout( 30 )
+            ->withHeaders( ['x-hash' => self::generateHash( $username )] )
+            ->post( self::endpoint( 'token' ), [
+                'userName' => $username,
+                'password' => $password,
+            ] );
 
-            $data = $response->json();
+        $data = $response->json();
 
-            if ( ! $response->successful() || empty( $data['token'] ) ) {
-                Log::error( 'EPS token request failed.', [
-                    'status'   => $response->status(),
-                    'response' => $data,
-                ] );
+        if ( ! $response->successful() || empty( $data['token'] ) ) {
+            Log::error( 'EPS token request failed.', [
+                'status'   => $response->status(),
+                'response' => $data,
+            ] );
 
-                throw new RuntimeException( $data['errorMessage'] ?? 'Unable to authenticate with EPS.' );
-            }
+            throw new RuntimeException( $data['errorMessage'] ?? 'Unable to authenticate with EPS.' );
+        }
 
-            return $data['token'];
-        } );
+        self::$cachedToken          = $data['token'];
+        self::$cachedTokenExpiresAt = ! empty( $data['expireDate'] )
+            ? Carbon::parse( $data['expireDate'] )->subMinute()
+            : now()->addMinutes( 50 );
+
+        return self::$cachedToken;
     }
 
     private static function generateHash( string $value ): string
