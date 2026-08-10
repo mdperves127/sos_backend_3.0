@@ -516,8 +516,12 @@ class CustomDomainService
 
         $subdomain = $this->getTenantSubdomain( $tenantId, $domainStatus['domain'] ?? null );
 
-        if ( $subdomain ) {
-            return $scheme . '://' . $subdomain['subdomain'] . '/';
+        if ( $subdomain && ! empty( $subdomain['subdomain_name'] ) ) {
+            $frontendHost = $this->frontendMainHost();
+
+            if ( $frontendHost ) {
+                return $scheme . '://' . $subdomain['subdomain_name'] . '.' . $frontendHost . '/';
+            }
         }
 
         return rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/';
@@ -533,7 +537,13 @@ class CustomDomainService
 
         $subdomain = $this->getTenantSubdomain( $tenantId, $domainStatus['domain'] ?? null );
 
-        return $subdomain && ( $subdomain['subdomain'] === $host );
+        if ( ! $subdomain || empty( $subdomain['subdomain_name'] ) ) {
+            return false;
+        }
+
+        $frontendHost = $this->frontendMainHost();
+
+        return $frontendHost && $host === $subdomain['subdomain_name'] . '.' . $frontendHost;
     }
 
     private function frontendScheme(): string {
@@ -544,6 +554,16 @@ class CustomDomainService
         }
 
         return parse_url( $base, PHP_URL_SCHEME ) ?: 'https';
+    }
+
+    private function frontendMainHost(): ?string {
+        $base = trim( (string) ( config( 'app.maindomain' ) ?: config( 'app.redirecturl' ) ) );
+
+        if ( $base !== '' && ! preg_match( '#^https?://#i', $base ) ) {
+            $base = 'https://' . $base;
+        }
+
+        return parse_url( $base, PHP_URL_HOST ) ?: null;
     }
 
     private function verifyDnsARecord( string $domain, ?string $expectedIp ): array {
