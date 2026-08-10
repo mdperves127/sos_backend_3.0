@@ -27,7 +27,7 @@ class AamarpayController extends Controller
 
     private function frontendBase( ?array $paymentInfo = null ): string
     {
-        $tenantId = tenant()?->id ?? ( isset( $paymentInfo['tenant_id'] ) ? (int) $paymentInfo['tenant_id'] : null );
+        $tenantId = tenant()?->id ?? ( $paymentInfo['tenant_id'] ?? null );
 
         return RedirectHelper::getPaymentRedirectUrl( $tenantId, $paymentInfo['return_url'] ?? null );
     }

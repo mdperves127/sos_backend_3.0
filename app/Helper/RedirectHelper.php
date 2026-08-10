@@ -2,7 +2,6 @@
 
 namespace App\Helper;
 
-use App\Models\Tenant;
 use App\Services\CustomDomainService;
 
 class RedirectHelper
@@ -20,7 +19,7 @@ class RedirectHelper
         return rtrim( config( 'app.redirecturl' ), '/' ) . '/';
     }
 
-    public static function getTenantRedirectUrl( ?int $tenantId = null ): string
+    public static function getTenantRedirectUrl( int|string|null $tenantId = null ): string
     {
         if ( ! $tenantId && function_exists( 'tenant' ) && tenant() ) {
             $tenantId = tenant()->id;
@@ -36,7 +35,7 @@ class RedirectHelper
     /**
      * Prefer the frontend URL the user started payment from, when it belongs to the tenant.
      */
-    public static function getPaymentRedirectUrl( ?int $tenantId, ?string $storedReturnUrl = null ): string
+    public static function getPaymentRedirectUrl( int|string|null $tenantId, ?string $storedReturnUrl = null ): string
     {
         if ( $tenantId && $storedReturnUrl && self::isAllowedFrontendUrl( $tenantId, $storedReturnUrl ) ) {
             return rtrim( $storedReturnUrl, '/' ) . '/';
@@ -83,7 +82,7 @@ class RedirectHelper
         return $info;
     }
 
-    private static function isAllowedFrontendUrl( int $tenantId, string $url ): bool
+    private static function isAllowedFrontendUrl( int|string $tenantId, string $url ): bool
     {
         $host = parse_url( $url, PHP_URL_HOST );
 
