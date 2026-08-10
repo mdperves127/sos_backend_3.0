@@ -506,6 +506,46 @@ class CustomDomainService
         ];
     }
 
+    public function frontendBaseUrl( string $tenantId ): string {
+        $domainStatus = $this->getSavedDomainStatusForTenant( $tenantId );
+        $scheme       = $this->frontendScheme();
+
+        if ( ( $domainStatus['active'] ?? false ) && ! empty( $domainStatus['domain'] ) ) {
+            return $scheme . '://' . $domainStatus['domain'] . '/';
+        }
+
+        $subdomain = $this->getTenantSubdomain( $tenantId, $domainStatus['domain'] ?? null );
+
+        if ( $subdomain ) {
+            return $scheme . '://' . $subdomain['subdomain'] . '/';
+        }
+
+        return rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/';
+    }
+
+    public function isFrontendHostForTenant( string $tenantId, string $host ): bool {
+        $host         = $this->normalizeDomain( $host );
+        $domainStatus = $this->getSavedDomainStatusForTenant( $tenantId );
+
+        if ( ( $domainStatus['active'] ?? false ) && ( $domainStatus['domain'] ?? '' ) === $host ) {
+            return true;
+        }
+
+        $subdomain = $this->getTenantSubdomain( $tenantId, $domainStatus['domain'] ?? null );
+
+        return $subdomain && ( $subdomain['subdomain'] === $host );
+    }
+
+    private function frontendScheme(): string {
+        $base = trim( (string) ( config( 'app.maindomain' ) ?: config( 'app.redirecturl' ) ) );
+
+        if ( $base !== '' && ! preg_match( '#^https?://#i', $base ) ) {
+            $base = 'https://' . $base;
+        }
+
+        return parse_url( $base, PHP_URL_SCHEME ) ?: 'https';
+    }
+
     private function verifyDnsARecord( string $domain, ?string $expectedIp ): array {
         $records     = @dns_get_record( $domain, DNS_A ) ?: [];
         $resolvedIps = [];

@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AamarPayService;
 use App\Services\EpsPaymentService;
+use App\Helper\RedirectHelper;
 use App\Services\PaymentHistoryService;
 
 class RechargeController extends Controller {
@@ -17,7 +18,7 @@ class RechargeController extends Controller {
     function recharge( RechargeRequest $request ) {
         $setting = Settings::on( 'mysql' )->first();
 
-        $validateData            = $request->validated();
+        $validateData            = RedirectHelper::appendPaymentReturnUrl( $request->validated() );
         $validateData['user_id'] = auth()->id();
 
         //For extra Charge

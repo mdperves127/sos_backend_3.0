@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use App\Services\AamarPayService;
 use App\Services\EpsPaymentService;
+use App\Helper\RedirectHelper;
 use App\Services\CrossTenantQueryService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
@@ -128,7 +129,7 @@ class OrderController extends Controller {
                 'last_status'     => 'pending',
                 'order_media'     => 'dropshipper',
                 'payment_type'    => 'checkout',
-                'info'            => [
+                'info'            => RedirectHelper::appendPaymentReturnUrl( [
                     'cartid'            => $cart->id,
                     'productid'         => $product->id,
                     'totalqty'          => $totalqty,
@@ -137,7 +138,7 @@ class OrderController extends Controller {
                     'tenant_id'         => $cart->tenant_id,
                     'placing_tenant_id' => $currentTenant->id,
                     'order_media'       => 'dropshipper',
-                ],
+                ] ),
                 ] );
             $successurl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
             return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );

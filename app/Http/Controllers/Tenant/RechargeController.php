@@ -8,11 +8,12 @@ use App\Http\Requests\RechargeRequest;
 use App\Models\PaymentStore;
 use App\Services\AamarPayService;
 use App\Services\EpsPaymentService;
+use App\Helper\RedirectHelper;
 
 class RechargeController extends Controller
 {
     function recharge( RechargeRequest $request ) {
-        $validateData            = $request->validated();
+        $validateData            = RedirectHelper::appendPaymentReturnUrl( $request->validated() );
         $validateData['tenant_id'] = tenant()->id;
         $validateData['user_id'] = auth()->id();
         $total_amount = $validateData['amount'];

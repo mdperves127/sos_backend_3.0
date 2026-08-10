@@ -3,95 +3,94 @@
 namespace App\Helper;
 
 use App\Models\Tenant;
+use App\Services\CustomDomainService;
 
 class RedirectHelper
 {
     /**
-     * Get redirect URL - when in tenant context returns tenant subdomain URL dynamically.
-     *
-     * @return string Base URL for redirects (with trailing slash)
+     * Frontend base URL for the current or given tenant.
+     * Uses active custom domain first, otherwise the tenant subdomain.
      */
     public static function getRedirectUrl(): string
     {
-        if (function_exists('tenant') && tenant() && request()) {
-            return self::buildTenantBaseUrl(
-                request()->getHost(),
-                request()->secure() ? 'https' : 'http'
-            );
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            return self::getTenantRedirectUrl( tenant()->id );
         }
 
-        return rtrim(config('app.redirecturl'), '/') . '/';
+        return rtrim( config( 'app.redirecturl' ), '/' ) . '/';
+    }
+
+    public static function getTenantRedirectUrl( ?int $tenantId = null ): string
+    {
+        if ( ! $tenantId && function_exists( 'tenant' ) && tenant() ) {
+            $tenantId = tenant()->id;
+        }
+
+        if ( ! $tenantId ) {
+            return rtrim( config( 'app.redirecturl' ), '/' ) . '/';
+        }
+
+        return app( CustomDomainService::class )->frontendBaseUrl( (string) $tenantId );
     }
 
     /**
-     * Resolve a tenant frontend base URL from tenant id, current tenant context, or request host.
+     * Prefer the frontend URL the user started payment from, when it belongs to the tenant.
      */
-    public static function getTenantRedirectUrl( ?int $tenantId = null ): string {
-        if ( function_exists( 'tenant' ) && tenant() && request() ) {
-            return self::getRedirectUrl();
+    public static function getPaymentRedirectUrl( ?int $tenantId, ?string $storedReturnUrl = null ): string
+    {
+        if ( $tenantId && $storedReturnUrl && self::isAllowedFrontendUrl( $tenantId, $storedReturnUrl ) ) {
+            return rtrim( $storedReturnUrl, '/' ) . '/';
         }
 
-        if ( $tenantId ) {
-            $tenant = Tenant::on( 'mysql' )->find( $tenantId );
-            $domain = $tenant?->domains()->value( 'domain' );
+        return self::getTenantRedirectUrl( $tenantId );
+    }
 
-            if ( $domain ) {
-                $configuredScheme = parse_url( self::normalizeBaseUrl( config( 'app.redirecturl' ) ), PHP_URL_SCHEME ) ?: 'https';
+    public static function captureFrontendOrigin(): ?string
+    {
+        $candidate = request()->header( 'Origin' );
 
-                return $configuredScheme . '://' . $domain . '/';
+        if ( ! $candidate ) {
+            $referer = request()->header( 'Referer' );
+
+            if ( $referer ) {
+                $parts = parse_url( $referer );
+
+                if ( ! empty( $parts['scheme'] ) && ! empty( $parts['host'] ) ) {
+                    $candidate = $parts['scheme'] . '://' . $parts['host'];
+
+                    if ( ! empty( $parts['port'] ) ) {
+                        $candidate .= ':' . $parts['port'];
+                    }
+                }
             }
         }
 
-        return self::getRedirectUrl();
-    }
-
-    private static function buildTenantBaseUrl( string $host, ?string $fallbackScheme = null ): string {
-        $frontendBaseUrl = self::normalizeBaseUrl(
-            config( 'app.maindomain' ) ?: config( 'app.redirecturl' )
-        );
-
-        $configuredHost   = parse_url( $frontendBaseUrl, PHP_URL_HOST );
-        $configuredScheme = parse_url( $frontendBaseUrl, PHP_URL_SCHEME ) ?: ( $fallbackScheme ?: 'https' );
-        $subdomain        = self::extractSubdomain( $host );
-
-        if ( $configuredHost ) {
-            $resolvedHost = $subdomain ? ( $subdomain . '.' . $configuredHost ) : $configuredHost;
-
-            return $configuredScheme . '://' . $resolvedHost . '/';
+        if ( ! $candidate ) {
+            return null;
         }
 
-        $scheme = $fallbackScheme ?: 'https';
-
-        return $scheme . '://' . $host . '/';
+        return rtrim( $candidate, '/' ) . '/';
     }
 
-    private static function normalizeBaseUrl(?string $url): string
+    public static function appendPaymentReturnUrl( array $info ): array
     {
-        $url = trim((string) $url);
+        $origin = self::captureFrontendOrigin();
 
-        if ($url === '') {
-            return '';
+        if ( $origin ) {
+            $info['return_url'] = $origin;
         }
 
-        if (!preg_match('/^https?:\/\//i', $url)) {
-            $url = 'https://' . $url;
-        }
-
-        return rtrim($url, '/');
+        return $info;
     }
 
-    private static function extractSubdomain(string $host): ?string
+    private static function isAllowedFrontendUrl( int $tenantId, string $url ): bool
     {
-        $parts = array_values(array_filter(explode('.', $host)));
+        $host = parse_url( $url, PHP_URL_HOST );
 
-        if (count($parts) >= 3) {
-            return $parts[0];
+        if ( ! $host ) {
+            return false;
         }
 
-        if (count($parts) === 2 && $parts[1] === 'localhost') {
-            return $parts[0];
-        }
-
-        return null;
+        return app( CustomDomainService::class )->isFrontendHostForTenant( (string) $tenantId, $host );
     }
 }

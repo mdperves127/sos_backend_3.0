@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\SupportBoxTicketStatus;
 use App\Models\PaymentStore;
 use App\Models\SupportBox;
+use App\Helper\RedirectHelper;
 
 /**
  * Class SosService.
@@ -38,6 +39,7 @@ class SosService {
         $info['user_id']   = userid();
         $info['tenant_id'] = function_exists( 'tenant' ) && tenant() ? tenant()->id : null;
         $info['coupon_id'] = $coupon;
+        $info              = RedirectHelper::appendPaymentReturnUrl( $info );
 
         PaymentStore::on( 'mysql' )->create( [
             'payment_gateway'         => 'aamarpay',

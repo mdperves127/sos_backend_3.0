@@ -25,17 +25,24 @@ class AamarpayController extends Controller
 {
     use HandlesEpsPaymentCallback;
 
+    private function frontendBase( ?array $paymentInfo = null ): string
+    {
+        $tenantId = tenant()?->id ?? ( isset( $paymentInfo['tenant_id'] ) ? (int) $paymentInfo['tenant_id'] : null );
+
+        return RedirectHelper::getPaymentRedirectUrl( $tenantId, $paymentInfo['return_url'] ?? null );
+    }
+
     function servicesuccess()
     {
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'all-service-order?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . 'all-service-order?message=Payment verification failed' );
         }
         $vendorservice = ServiceOrder::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] ?? null )->first();
 
         if ( ! $vendorservice ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'all-service-order?message=Payment not found' );
+            return redirect( $this->frontendBase() . 'all-service-order?message=Payment not found' );
         }
 
         $vendorservice->update([
@@ -67,7 +74,7 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
         $data = PaymentStore::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
 
@@ -91,7 +98,7 @@ class AamarpayController extends Controller
 
         $user = User::find($info['userid']);
         $path = paymentredirect($user->role_as);
-        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Product purchase successfully';
+        $url = $this->frontendBase( $info ) . $path . '?message=Product purchase successfully';
         return redirect($url);
 
     }
@@ -101,12 +108,12 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment verification failed' );
         }
         $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending' ] )->first();
 
         if ( ! $data ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
         }
 
         $subscriptionid   = $data['info']['package_id'];
@@ -134,7 +141,7 @@ class AamarpayController extends Controller
 
         $data->update( ['status' => 'completed'] );
 
-        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Renew successfull';
+        $url = $this->frontendBase( $data['info'] ) . $path . '?message=Renew successfull';
         return redirect( $url );
     }
     function advertisesuccess()
@@ -142,7 +149,7 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
         $adminAdvertise = AdminAdvertise::on('mysql')->where('trxid', $response['mer_txnid'])->first();
 
@@ -172,7 +179,7 @@ class AamarpayController extends Controller
         );
         $user = User::find($adminAdvertise->user_id);
         $path = paymentredirect($user->role_as);
-        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Advertise payment successfull';
+        $url = $this->frontendBase() . $path . '?message=Advertise payment successfull';
         return redirect($url);
     }
 
@@ -181,12 +188,12 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
 
         $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
         if ( ! $data ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
         }
 
         $validatedData = $data['info'];
@@ -203,7 +210,7 @@ class AamarpayController extends Controller
         }
 
         if (!$subscription || !$entity) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Subscription payment could not be completed' );
+            return redirect( $this->frontendBase( $validatedData ) . 'dashboard?message=Subscription payment could not be completed' );
         }
 
         $amount = $response['amount_original'] ?? $subscription->subscription_amount;
@@ -230,7 +237,7 @@ class AamarpayController extends Controller
         }
 
         $path = ($entity instanceof User) ? paymentredirect($entity->role_as) : 'dashboard';
-        $url = RedirectHelper::getRedirectUrl() . $path . '?message=Subscription added successfull';
+        $url = $this->frontendBase( $validatedData ) . $path . '?message=Subscription added successfull';
 
         if ($entity instanceof User) {
             //For user
@@ -252,13 +259,13 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment verification failed' );
         }
 
         $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
 
         if ( ! $data ) {
-            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
         }
 
         PaymentHistoryService::store(
@@ -283,7 +290,7 @@ class AamarpayController extends Controller
             $tenant->increment('balance', $data['info']['amount']);
         }
 
-        $url = RedirectHelper::getRedirectUrl() . 'dashboard?message=Recharge successful';
+        $url = $this->frontendBase( $data['info'] ) . 'dashboard?message=Recharge successful';
         // if ($tenant) {
         //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
         // }
@@ -294,11 +301,11 @@ class AamarpayController extends Controller
 
     function fail()
     {
-        return redirect(config('app.maindomain'));
+        return redirect( RedirectHelper::getTenantRedirectUrl( tenant()?->id ) . 'dashboard?message=Payment failed' );
     }
 
     function cancel()
     {
-        return redirect(config('app.maindomain'));
+        return redirect( RedirectHelper::getTenantRedirectUrl( tenant()?->id ) . 'dashboard?message=Payment cancelled' );
     }
 }

@@ -13,6 +13,7 @@ use App\Models\UserSubscription;
 use App\Models\VendorService;
 use Carbon\Carbon;
 use App\Services\EpsPaymentService;
+use App\Helper\RedirectHelper;
 
 /**
  * Class SubscriptionRenewService.
@@ -104,6 +105,7 @@ class SubscriptionRenewService {
             $successurl = EpsPaymentService::paymentSuccessUrl( 'renew-success' );
             $validatedData['user_id'] = auth()->id();
             $validatedData['coupon'] = request( 'coupon_id' );
+            $validatedData = RedirectHelper::appendPaymentReturnUrl( $validatedData );
             PaymentStore::on( 'mysql' )->create( [
                 'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
@@ -195,6 +197,7 @@ class SubscriptionRenewService {
             $validatedData['user_id']    = auth()->id();
             $validatedData['tenant_id']  = $tenant->id;
             $validatedData['coupon']     = request( 'coupon_id' );
+            $validatedData               = RedirectHelper::appendPaymentReturnUrl( $validatedData );
             $store = new PaymentStore( [
                 'payment_gateway' => 'aamarpay',
                 'trxid'           => $trxid,
