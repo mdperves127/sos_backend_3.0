@@ -97,18 +97,24 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        $user =  User::find($data['info']['user_id']);
-        $subscriptionid =  $data['info']['package_id'];
+        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
+
+        if ( ! $data ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment not found' );
+        }
+
+        $user = User::find( $data['info']['user_id'] );
+        $subscriptionid = $data['info']['package_id'];
         $trxid = $data->trxid;
         $payment_method = 'Aamarpay';
         $transition_type = 'renew';
-        SubscriptionRenewService::subscriptionadd($user, $subscriptionid, $trxid, $payment_method, $transition_type, $totalsubscriptionamount = $response['amount_original'], $couponName = $data['info']['coupon']);
+        SubscriptionRenewService::subscriptionadd( $user, $subscriptionid, $trxid, $payment_method, $transition_type, $response['amount_original'], $data['info']['coupon'] ?? '' );
 
+        $data->update( ['status' => 'completed'] );
 
-        $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Renew successfull';
-        return redirect($url);
+        $path = paymentredirect( $user->role_as );
+        $url = config( 'app.redirecturl' ) . $path . '?message=Renew successfull';
+        return redirect( $url );
     }
     function advertisesuccess()
     {
@@ -142,9 +148,9 @@ class AamarpayController extends Controller
             return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
         }
 
-        $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        if (!$data) {
-            return false;
+        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
+        if ( ! $data ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment not found' );
         }
 
         $validatedData = $data['info'];
@@ -161,21 +167,20 @@ class AamarpayController extends Controller
         }
 
         if (!$subscription || !$entity) {
-            return false;
+            return redirect( config( 'app.redirecturl' ) . '?message=Subscription payment could not be completed' );
         }
 
-        $subscriptiondata = null;
-        if (($response['opt_a'] ?? null) == 'subscription') {
-            $amount = $response['amount_original'] ?? $subscription->subscription_amount;
-            $subscriptiondata = SubscriptionService::store(
-                $subscription,
-                $entity,
-                $amount,
-                $couponid,
-                'Aamarpay',
-                $validatedData['user_id'] ?? null
-            );
-        }
+        $amount = $response['amount_original'] ?? $subscription->subscription_amount;
+        $subscriptiondata = SubscriptionService::store(
+            $subscription,
+            $entity,
+            $amount,
+            $couponid,
+            'Aamarpay',
+            $validatedData['user_id'] ?? null
+        );
+
+        $data->update( ['status' => 'completed'] );
 
         if ($entity instanceof User && !is_object($subscriptiondata)) {
             if ($subscriptiondata == '2' || $subscriptiondata == 3) {

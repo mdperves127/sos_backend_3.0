@@ -9,6 +9,7 @@ use App\Models\Settings;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AamarPayService;
+use App\Services\EpsPaymentService;
 use App\Services\PaymentHistoryService;
 
 class RechargeController extends Controller {
@@ -31,10 +32,10 @@ class RechargeController extends Controller {
 
         $trxid      = uniqid();
         $type       = "recharge";
-        $successurl = url( 'api/user/aaparpay/recharge-success' );
+        $successurl = EpsPaymentService::paymentSuccessUrl( 'recharge-success' );
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
-        PaymentStore::create( [
+        PaymentStore::on( 'mysql' )->create( [
             'payment_gateway'         => 'aamarpay',
             'trxid'                   => $trxid,
             'payment_type'            => 'recharge',

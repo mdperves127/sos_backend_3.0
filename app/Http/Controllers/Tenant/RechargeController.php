@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\RechargeRequest;
 use App\Models\PaymentStore;
 use App\Services\AamarPayService;
+use App\Services\EpsPaymentService;
 
 class RechargeController extends Controller
 {
@@ -18,7 +19,7 @@ class RechargeController extends Controller
 
         $trxid      = uniqid();
         $type       = "recharge";
-        $successurl = url( 'api/aaparpay/recharge-success-for-us' );
+        $successurl = EpsPaymentService::paymentSuccessUrl( 'recharge-success-for-us' );
 
         // $validateData['extra_charge'] = number_format( $extra_charge, 2 ); //For extra charge
         PaymentStore::on('mysql')->create( [

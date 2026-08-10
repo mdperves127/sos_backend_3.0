@@ -143,6 +143,15 @@ class EpsPaymentService
             ?? request( 'mer_txnid' );
     }
 
+    public static function paymentSuccessUrl( string $callbackPath ): string
+    {
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            return self::tenantCallbackUrl( $callbackPath );
+        }
+
+        return self::centralCallbackUrl( $callbackPath );
+    }
+
     public static function centralCallbackUrl( string $path ): string
     {
         return url( 'api/user/aaparpay/' . ltrim( $path, '/' ) );

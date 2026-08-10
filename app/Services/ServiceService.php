@@ -100,9 +100,7 @@ class ServiceService
 
         } else {
             $isTenantContext = function_exists( 'tenant' ) && tenant();
-            $successurl      = $isTenantContext
-                ? rtrim( request()->getSchemeAndHttpHost(), '/' ) . '/api/aaparpay/service-success'
-                : url( 'api/user/aaparpay/service-success' );
+            $successurl = EpsPaymentService::paymentSuccessUrl( 'service-success' );
             $tenantType      = $isTenantContext ? 'tenant' : 'user';
 
             return AamarPayService::gateway( $package->price, $trxid, 'Service', $successurl, $tenantType );

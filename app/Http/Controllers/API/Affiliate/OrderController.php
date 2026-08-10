@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Tenant;
 use App\Services\AamarPayService;
+use App\Services\EpsPaymentService;
 use App\Services\CrossTenantQueryService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
@@ -120,7 +121,7 @@ class OrderController extends Controller {
             );
         } elseif ( request( 'payment_type' ) == 'aamarpay' ) {
             $trx = uniqid();
-            PaymentStore::create( [
+            PaymentStore::on( 'mysql' )->create( [
                 'payment_gateway' => 'aamarpay',
                 'trxid'           => $trx,
                 'status'          => 'pending',
@@ -138,7 +139,7 @@ class OrderController extends Controller {
                     'order_media'       => 'dropshipper',
                 ],
                 ] );
-            $successurl = url( 'api/user/aaparpay/product-checkout-success' );
+            $successurl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
             return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );
         }
     }

@@ -69,7 +69,7 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::where('trxid', $response['mer_txnid'])->first();
+        $data = PaymentStore::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
 
         if (!$data) {
             return false;
@@ -132,6 +132,8 @@ class AamarpayController extends Controller
             }
         }
 
+        $data->update( ['status' => 'completed'] );
+
         $url = RedirectHelper::getRedirectUrl() . $path . '?message=Renew successfull';
         return redirect( $url );
     }
@@ -182,9 +184,9 @@ class AamarpayController extends Controller
             return redirect( RedirectHelper::getRedirectUrl() . '?message=Payment verification failed' );
         }
 
-        $data = PaymentStore::where(['trxid' => $response['mer_txnid'], 'status' => 'pending'])->first();
-        if (!$data) {
-            return false;
+        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
+        if ( ! $data ) {
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Payment not found' );
         }
 
         $validatedData = $data['info'];
@@ -201,21 +203,20 @@ class AamarpayController extends Controller
         }
 
         if (!$subscription || !$entity) {
-            return false;
+            return redirect( RedirectHelper::getRedirectUrl() . 'dashboard?message=Subscription payment could not be completed' );
         }
 
-        $subscriptiondata = null;
-        if (($response['opt_a'] ?? null) == 'subscription') {
-            $amount = $response['amount_original'] ?? $subscription->subscription_amount;
-            $subscriptiondata = SubscriptionService::store(
-                $subscription,
-                $entity,
-                $amount,
-                $couponid,
-                'Aamarpay',
-                $validatedData['user_id'] ?? null
-            );
-        }
+        $amount = $response['amount_original'] ?? $subscription->subscription_amount;
+        $subscriptiondata = SubscriptionService::store(
+            $subscription,
+            $entity,
+            $amount,
+            $couponid,
+            'Aamarpay',
+            $validatedData['user_id'] ?? null
+        );
+
+        $data->update( ['status' => 'completed'] );
 
         if ($entity instanceof User && !is_object($subscriptiondata)) {
             if ($subscriptiondata == '2' || $subscriptiondata == 3) {

@@ -31,46 +31,31 @@ class SosService {
     }
 
     static function aamarpaysubscription( $price, $info, $coupon = null ) {
+        $uniqueId    = uniqid();
+        $successurl  = EpsPaymentService::paymentSuccessUrl( 'subscription-success' );
+        $tenant_type = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
 
-        //For Extra charge
-        // $setting = Settings::first();
-        // if ( $setting->extra_charge_status == "on" ) {
-        //     $extra_charge = extraCharge( $price, $setting->extra_charge );
-
-        //     $price = $price + $extra_charge;
-        // }
-
-        $uniqueId          = uniqid();
-        $successurl        = url( 'api/user/aaparpay/subscription-success' );
-        $tenant_type       = function_exists( 'tenant' ) && tenant() ? 'tenant' : 'user';
-        $result            = AamarPayService::gateway( $price, $uniqueId, 'subscription', $successurl, $tenant_type );
         $info['user_id']   = userid();
         $info['tenant_id'] = function_exists( 'tenant' ) && tenant() ? tenant()->id : null;
         $info['coupon_id'] = $coupon;
-        // $info['extra_charge'] = $extra_charge; //For Extra charge
 
-        PaymentStore::create( [
+        PaymentStore::on( 'mysql' )->create( [
             'payment_gateway'         => 'aamarpay',
             'trxid'                   => $uniqueId,
+            'status'                  => 'pending',
             'payment_type'            => 'subscription',
             'info'                    => $info,
             'customer_requirement_id' => $uniqueId,
-            ] );
+        ] );
 
-            return response()->json( $result );
+        return AamarPayService::gateway( $price, $uniqueId, 'subscription', $successurl, $tenant_type );
     }
 
     static function generateTicketNumber() {
-        // Get the current timestamp
         $timestamp = time();
-
-        // Generate a random string
         $randomString = substr( str_shuffle( "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" ), 0, 6 );
 
-        // Combine timestamp and random string to create a ticket number
-        $ticketNumber = "TICKET-" . date( "Ymd", $timestamp ) . "-" . $randomString;
-
-        return $ticketNumber;
+        return "TICKET-" . date( "Ymd", $timestamp ) . "-" . $randomString;
     }
 
 }
