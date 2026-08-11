@@ -10,7 +10,7 @@
     {
         "id": 2,
         "title": "Express Shipping",
-        "description": "Free express on orders ৳2000+",
+        "description": "Free express on orders \u09f32000+",
         "icon": "uploads/theme-one/service/2.png",
         "order": 2,
         "status": "active"

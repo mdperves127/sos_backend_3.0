@@ -32,7 +32,7 @@
 	{
 		"id": 4,
 		"category_id": 4,
-		"name": "Shirt",
+		"name": "Shirts",
 		"slug": "shirt",
 		"status": "active",
 		"created_at": "2026-04-10T12:00:00.000000Z",
