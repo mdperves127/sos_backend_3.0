@@ -1,8 +1,8 @@
 [
     {
         "id": 1,
-        "title": "",
-        "subtitle": "",
+        "title": "WOMANHOOD",
+        "subtitle": "Celebrate You",
         "image": "uploads/theme-four/banner/1.png",
         "link": "#",
         "order": 1,
@@ -10,20 +10,47 @@
     },
     {
         "id": 2,
-        "title": "",
-        "subtitle": "",
-        "image": "uploads/theme-four/banner/1.png",
+        "title": "Elegant. Modern. Effortless.",
+        "subtitle": "New Season Edit",
+        "image": "uploads/theme-four/banner/2.png",
         "link": "#",
         "order": 2,
         "status": "active"
     },
     {
         "id": 3,
-        "title": "",
-        "subtitle": "",
-        "image": "uploads/theme-four/banner/1.png",
+        "title": "Shop By Category",
+        "subtitle": "Explore Ethnic Fashion",
+        "image": "uploads/theme-four/banner/3.png",
         "link": "#",
         "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Katan Saree",
+        "subtitle": "View All",
+        "image": "uploads/theme-four/banner/4.png",
+        "link": "#",
+        "order": 4,
+        "status": "active"
+    },
+    {
+        "id": 5,
+        "title": "Bridal Collection",
+        "subtitle": "Wedding Season",
+        "image": "uploads/theme-four/banner/5.png",
+        "link": "#",
+        "order": 5,
+        "status": "active"
+    },
+    {
+        "id": 6,
+        "title": "Festive Offers",
+        "subtitle": "Limited Time",
+        "image": "uploads/theme-four/banner/6.png",
+        "link": "#",
+        "order": 6,
         "status": "active"
     }
 ]

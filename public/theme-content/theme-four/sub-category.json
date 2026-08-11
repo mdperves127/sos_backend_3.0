@@ -2,8 +2,8 @@
 	{
 		"id": 1,
 		"category_id": 1,
-		"name": "Dresses",
-		"slug": "dresses",
+		"name": "Katan Sarees",
+		"slug": "katan-sarees",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -12,8 +12,8 @@
 	{
 		"id": 2,
 		"category_id": 1,
-		"name": "Tops & Tunics",
-		"slug": "tops-tunics",
+		"name": "Silk Sarees",
+		"slug": "silk-sarees",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -22,8 +22,8 @@
 	{
 		"id": 3,
 		"category_id": 1,
-		"name": "Jeans & Trousers",
-		"slug": "jeans-trousers",
+		"name": "Cotton Sarees",
+		"slug": "cotton-sarees",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -32,8 +32,8 @@
 	{
 		"id": 4,
 		"category_id": 1,
-		"name": "Co-ord Sets",
-		"slug": "co-ord-sets",
+		"name": "Georgette Sarees",
+		"slug": "georgette-sarees",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -52,16 +52,6 @@
 	{
 		"id": 6,
 		"category_id": 2,
-		"name": "Sarees",
-		"slug": "sarees",
-		"status": "active",
-		"created_at": "2026-04-10T18:00:00.000000Z",
-		"updated_at": "2026-04-10T18:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 7,
-		"category_id": 2,
 		"name": "Salwar Kameez",
 		"slug": "salwar-kameez",
 		"status": "active",
@@ -70,10 +60,20 @@
 		"deleted_at": null
 	},
 	{
+		"id": 7,
+		"category_id": 3,
+		"name": "Bridal Sarees",
+		"slug": "bridal-sarees",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
 		"id": 8,
 		"category_id": 3,
-		"name": "Heels",
-		"slug": "heels",
+		"name": "Reception Wear",
+		"slug": "reception-wear",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -82,8 +82,8 @@
 	{
 		"id": 9,
 		"category_id": 3,
-		"name": "Flats & Sandals",
-		"slug": "flats-sandals",
+		"name": "Party Wear",
+		"slug": "party-wear",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -91,6 +91,16 @@
 	},
 	{
 		"id": 10,
+		"category_id": 4,
+		"name": "Jewelry Sets",
+		"slug": "jewelry-sets",
+		"status": "active",
+		"created_at": "2026-04-10T18:00:00.000000Z",
+		"updated_at": "2026-04-10T18:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 11,
 		"category_id": 4,
 		"name": "Handbags",
 		"slug": "handbags",
@@ -100,20 +110,10 @@
 		"deleted_at": null
 	},
 	{
-		"id": 11,
-		"category_id": 4,
-		"name": "Jewelry",
-		"slug": "jewelry",
-		"status": "active",
-		"created_at": "2026-04-10T18:00:00.000000Z",
-		"updated_at": "2026-04-10T18:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
 		"id": 12,
 		"category_id": 4,
-		"name": "Scarves & Hijabs",
-		"slug": "scarves-hijabs",
+		"name": "Footwear",
+		"slug": "footwear",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
@@ -122,8 +122,8 @@
 	{
 		"id": 13,
 		"category_id": 4,
-		"name": "Belts",
-		"slug": "belts",
+		"name": "Scarves & Dupatta",
+		"slug": "scarves-dupatta",
 		"status": "active",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",

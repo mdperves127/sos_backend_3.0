@@ -1,0 +1,34 @@
+[
+    {
+        "id": 1,
+        "title": "Premium Katan Sarees",
+        "description": "Handpicked silk and katan weaves",
+        "icon": "uploads/theme-four/service/1.png",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "Bridal Styling",
+        "description": "Curated wedding and reception looks",
+        "icon": "uploads/theme-four/service/2.png",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "Express Delivery",
+        "description": "Fast shipping for festive orders",
+        "icon": "uploads/theme-four/service/3.png",
+        "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Secure Payment",
+        "description": "Safe checkout with multiple options",
+        "icon": "uploads/theme-four/service/4.png",
+        "order": 4,
+        "status": "active"
+    }
+]

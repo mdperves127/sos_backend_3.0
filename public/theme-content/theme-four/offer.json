@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "title": "Hot Deal"
+    },
+    {
+        "id": 2,
+        "title": "Best Seller"
+    },
+    {
+        "id": 3,
+        "title": "New Arrivals"
+    },
+    {
+        "id": 4,
+        "title": "Bridal Sale"
+    },
+    {
+        "id": 5,
+        "title": "Festive Collection"
+    }
+]
