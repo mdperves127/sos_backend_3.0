@@ -73,7 +73,7 @@ class MerchantFrontendController extends Controller
      * Hide theme-import duplicate variants from storefront grids (same photo, different suffix name).
      */
     private function applyStorefrontCatalogFilter( $query ) {
-        foreach ( [ 'Special Edition', 'Limited Collection', 'Premium Drape' ] as $suffix ) {
+        foreach ( [ 'Special Edition', 'Limited Collection', 'Premium Drape', 'Premium Fit' ] as $suffix ) {
             $query->where( 'name', 'not like', '%' . $suffix );
         }
 

@@ -151,17 +151,19 @@ class ThemeImportController extends Controller
 
                             if (!$model) {
                                 $model = new $modelClass();
-                                foreach ($item as $key => $value) {
-                                    if (in_array($key, $columns)) {
-                                        if (is_array($value)) {
-                                            $model->{$key} = $model->hasCast($key) ? $value : json_encode($value);
-                                        } else {
-                                            $model->{$key} = $value;
-                                        }
+                            }
+
+                            foreach ($item as $key => $value) {
+                                if (in_array($key, $columns)) {
+                                    if (is_array($value)) {
+                                        $model->{$key} = $model->hasCast($key) ? $value : json_encode($value);
+                                    } else {
+                                        $model->{$key} = $value;
                                     }
                                 }
-                                $model->save();
                             }
+
+                            $model->save();
 
                             if ($oldId) {
                                 $idMap[$modelClass][$oldId] = $model->id;
