@@ -25,5 +25,59 @@
         "link": "#",
         "order": 3,
         "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Fresh & Limited Design",
+        "subtitle": "Headphone",
+        "image": "uploads/theme-two/banner/4.png",
+        "link": "#",
+        "order": 4,
+        "status": "active"
+    },
+    {
+        "id": 5,
+        "title": "Save up to 40% off",
+        "subtitle": "Smart TV 4K",
+        "image": "uploads/theme-two/banner/5.png",
+        "link": "#",
+        "order": 5,
+        "status": "active"
+    },
+    {
+        "id": 6,
+        "title": "Save up to 20% off",
+        "subtitle": "iPhone 15",
+        "image": "uploads/theme-two/banner/6.png",
+        "link": "#",
+        "order": 6,
+        "status": "active"
+    },
+    {
+        "id": 7,
+        "title": "Save up to 30% off",
+        "subtitle": "Digital Camera",
+        "image": "uploads/theme-two/banner/7.png",
+        "link": "#",
+        "order": 7,
+        "status": "active"
+    },
+    {
+        "id": 8,
+        "title": "Gadgets and Accessories",
+        "subtitle": "Best Price",
+        "image": "uploads/theme-two/banner/8.png",
+        "link": "#",
+        "order": 8,
+        "status": "active"
+    },
+    {
+        "id": 9,
+        "title": "UP to 80% OFF",
+        "subtitle": "iPhone 16 Pro",
+        "image": "uploads/theme-two/banner/9.png",
+        "link": "#",
+        "order": 9,
+        "status": "active"
     }
 ]

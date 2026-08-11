@@ -1,0 +1,34 @@
+[
+    {
+        "id": 1,
+        "title": "High-quality Goods",
+        "description": "Enjoy premium tech products at competitive prices",
+        "icon": "uploads/theme-two/service/1.png",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "24/7 Live Chat",
+        "description": "Get instant assistance from our support team",
+        "icon": "uploads/theme-two/service/2.png",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "Express Shipping",
+        "description": "Fast and reliable delivery across Bangladesh",
+        "icon": "uploads/theme-two/service/3.png",
+        "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Secure Payment",
+        "description": "Multiple safe payment methods supported",
+        "icon": "uploads/theme-two/service/4.png",
+        "order": 4,
+        "status": "active"
+    }
+]

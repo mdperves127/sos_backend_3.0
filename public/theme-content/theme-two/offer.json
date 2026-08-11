@@ -10,5 +10,13 @@
     {
         "id": 3,
         "title": "Top Rated Products"
+    },
+    {
+        "id": 4,
+        "title": "Flash Sale Today"
+    },
+    {
+        "id": 5,
+        "title": "Free Delivery Offer"
     }
 ]
