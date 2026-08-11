@@ -1,24 +1,24 @@
 [
     {
         "id": 1,
-        "title": "High-quality Goods",
-        "description": "Enjoy top quality items for less",
+        "title": "Premium Panjabi",
+        "description": "Embroidered festive panjabis",
         "icon": "uploads/theme-one/service/1.png",
         "order": 1,
         "status": "active"
     },
     {
         "id": 2,
-        "title": "24/7 Live chat",
-        "description": "Get instant assistance",
+        "title": "Express Shipping",
+        "description": "Free express on orders ৳2000+",
         "icon": "uploads/theme-one/service/2.png",
         "order": 2,
         "status": "active"
     },
     {
         "id": 3,
-        "title": "Express Shipping",
-        "description": "Fast & reliable delivery options",
+        "title": "Easy Returns",
+        "description": "Hassle-free exchange policy",
         "icon": "uploads/theme-one/service/3.png",
         "order": 3,
         "status": "active"
@@ -26,7 +26,7 @@
     {
         "id": 4,
         "title": "Secure Payment",
-        "description": "Multiple safe payment methods",
+        "description": "Safe checkout options",
         "icon": "uploads/theme-one/service/4.png",
         "order": 4,
         "status": "active"

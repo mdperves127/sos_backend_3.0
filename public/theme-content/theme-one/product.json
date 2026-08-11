@@ -1,27 +1,27 @@
 [
 	{
 		"id": 1,
-		"category_id": 1,
-		"subcategory_id": 1,
+		"category_id": 6,
+		"subcategory_id": 6,
 		"brand_id": 2,
 		"user_id": 1,
-		"slug": "essential-crew-neck-t-shirt",
-		"name": "Essential Crew Neck T-Shirt",
-		"short_description": "Soft cotton jersey t-shirt for daily wear and easy layering.",
-		"long_description": "<p>An easy everyday t-shirt cut from breathable cotton jersey with a clean silhouette that pairs well with jeans, joggers, and overshirts.</p>",
-		"selling_price": "890.00",
-		"original_price": "1200.00",
+		"slug": "slim-fit-black-jeans",
+		"name": "Slim Fit Black Jeans",
+		"short_description": "Classic black slim-fit jeans for everyday styling.",
+		"long_description": "<p>Comfort stretch black denim with tapered leg and clean finish.</p>",
+		"selling_price": "1890.00",
+		"original_price": "2490.00",
 		"image": "uploads/theme-one/product/1.png",
 		"status": "active",
-		"meta_title": "Essential Crew Neck T-Shirt for Men",
-		"meta_keyword": "mens t-shirt, cotton t-shirt, crew neck tee",
-		"meta_description": "Shop the Essential Crew Neck T-Shirt in soft cotton jersey for everyday comfort.",
-		"tags": "t-shirt, crew neck, casual, men",
+		"meta_title": "Slim Fit Black Jeans",
+		"meta_keyword": "slim, fit, black, jeans",
+		"meta_description": "Shop Slim Fit Black Jeans.",
+		"tags": "slim, fit, black, jeans",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "25.83",
+		"discount_rate": "24.10",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -34,16 +34,15 @@
 					"S",
 					"M",
 					"L",
-					"XL"
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Black",
-					"White",
-					"Olive"
+					"Standard"
 				]
 			}
 		],
@@ -54,43 +53,39 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "100% Cotton Jersey"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Fit",
-				"specification_ans": "Regular Fit"
-			},
-			{
-				"specification": "Neckline",
-				"specification_ans": "Ribbed Crew Neck"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-001",
-		"sku": "MSH-TS-001",
-		"distributor_price": "650.00",
-		"alert_qty": 10,
+		"uniqid": "scr-prod-001",
+		"sku": "SCR-001",
+		"distributor_price": "1738.80",
+		"alert_qty": 8,
 		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0001",
+		"barcode": "SCR0001",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "890.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "25.83",
+		"discount_percentage": "24.10",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
 			"id": 2,
@@ -99,12 +94,12 @@
 			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 1,
-			"name": "Men's Clothing"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "T-Shirts"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -122,33 +117,33 @@
 		},
 		"warehouse": {
 			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 2,
-		"category_id": 2,
-		"subcategory_id": 2,
-		"brand_id": 1,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 3,
 		"user_id": 1,
-		"slug": "slim-fit-linen-casual-shirt",
-		"name": "Slim Fit Linen Casual Shirt",
-		"short_description": "Lightweight linen blend shirt for polished casual dressing.",
-		"long_description": "<p>This slim fit casual shirt is built from a breathable linen blend that keeps the look sharp while staying comfortable through warm days and evening outings.</p>",
-		"selling_price": "1690.00",
-		"original_price": "2200.00",
+		"slug": "classic-grey-trousers",
+		"name": "Classic Grey Trousers",
+		"short_description": "Tailored grey trousers for smart casual looks.",
+		"long_description": "<p>Light grey straight-fit trousers with crease front detailing.</p>",
+		"selling_price": "2190.00",
+		"original_price": "2790.00",
 		"image": "uploads/theme-one/product/2.png",
 		"status": "active",
-		"meta_title": "Slim Fit Linen Casual Shirt for Men",
-		"meta_keyword": "linen shirt, casual shirt men, slim fit shirt",
-		"meta_description": "Buy the Slim Fit Linen Casual Shirt for a breathable smart-casual look.",
-		"tags": "casual shirt, linen, slim fit, men",
+		"meta_title": "Classic Grey Trousers",
+		"meta_keyword": "classic, grey, trousers",
+		"meta_description": "Shop Classic Grey Trousers.",
+		"tags": "classic, grey, trousers",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "23.18",
+		"discount_rate": "21.51",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -158,6 +153,7 @@
 				"id": 1,
 				"name": "Size",
 				"options": [
+					"S",
 					"M",
 					"L",
 					"XL",
@@ -168,9 +164,7 @@
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Sky Blue",
-					"Sage",
-					"Beige"
+					"Standard"
 				]
 			}
 		],
@@ -181,33 +175,29 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "Linen Cotton Blend"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Fit",
-				"specification_ans": "Slim Fit"
-			},
-			{
-				"specification": "Sleeve",
-				"specification_ans": "Full Sleeve"
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
 			}
 		],
-		"uniqid": "msh-prod-002",
-		"sku": "MSH-CS-002",
-		"distributor_price": "1250.00",
+		"uniqid": "scr-prod-002",
+		"sku": "SCR-002",
+		"distributor_price": "2014.80",
 		"alert_qty": 8,
 		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0002",
+		"barcode": "SCR0002",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1690.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "23.18",
+		"discount_percentage": "21.51",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -216,22 +206,22 @@
 		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 1,
+			"id": 3,
 			"user_id": 1,
-			"name": "Northline",
-			"slug": "northline"
+			"name": "Classic Line",
+			"slug": "classic-line"
 		},
 		"category": {
-			"id": 1,
-			"name": "Men's Clothing"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Casual Shirts"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -249,33 +239,33 @@
 		},
 		"warehouse": {
 			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 3,
-		"category_id": 1,
-		"subcategory_id": 1,
-		"brand_id": 4,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "premium-oxford-formal-shirt",
-		"name": "Premium Oxford Formal Shirt",
-		"short_description": "Tailored formal shirt in crisp oxford cotton for office and events.",
-		"long_description": "<p>A refined oxford cotton shirt with a structured collar and tailored cut, designed to work under blazers or on its own for smart weekday dressing.</p>",
+		"slug": "tapered-black-chinos",
+		"name": "Tapered Black Chinos",
+		"short_description": "Versatile black chinos for office and weekend wear.",
+		"long_description": "<p>Soft cotton chinos with modern tapered silhouette.</p>",
 		"selling_price": "1990.00",
-		"original_price": "2600.00",
+		"original_price": "2590.00",
 		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
-		"meta_title": "Premium Oxford Formal Shirt for Men",
-		"meta_keyword": "formal shirt, oxford shirt, office shirt men",
-		"meta_description": "Shop the Premium Oxford Formal Shirt for sharp office and formal looks.",
-		"tags": "formal shirt, oxford, office, men",
+		"meta_title": "Tapered Black Chinos",
+		"meta_keyword": "tapered, black, chinos",
+		"meta_description": "Shop Tapered Black Chinos.",
+		"tags": "tapered, black, chinos",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "23.46",
+		"discount_rate": "23.17",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -285,6 +275,7 @@
 				"id": 1,
 				"name": "Size",
 				"options": [
+					"S",
 					"M",
 					"L",
 					"XL",
@@ -295,9 +286,7 @@
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"White",
-					"Light Blue",
-					"Charcoal"
+					"Standard"
 				]
 			}
 		],
@@ -308,57 +297,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "Oxford Cotton"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Fit",
-				"specification_ans": "Tailored Fit"
-			},
-			{
-				"specification": "Collar",
-				"specification_ans": "Semi Cutaway Collar"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-003",
-		"sku": "MSH-FS-003",
-		"distributor_price": "1500.00",
+		"uniqid": "scr-prod-003",
+		"sku": "SCR-003",
+		"distributor_price": "1830.80",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0003",
+		"barcode": "SCR0003",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1990.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "23.46",
+		"discount_percentage": "23.17",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.7",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 4,
+			"id": 2,
 			"user_id": 1,
-			"name": "Slate Studio",
-			"slug": "slate-studio"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 1,
-			"name": "Men's Clothing"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 3,
-			"name": "Formal Shirts"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -375,34 +360,34 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Retail Stock"
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 4,
-		"category_id": 1,
-		"subcategory_id": 1,
-		"brand_id": 5,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "comfort-stretch-denim-jeans",
-		"name": "Comfort Stretch Denim Jeans",
-		"short_description": "Slim tapered denim with stretch for movement and all-day comfort.",
-		"long_description": "<p>Built from durable stretch denim, these jeans balance structure and flexibility for daily wear, commuting, and weekend styling.</p>",
-		"selling_price": "2490.00",
-		"original_price": "3200.00",
+		"slug": "geometric-print-t-shirt",
+		"name": "Geometric Print T-Shirt",
+		"short_description": "Slate tee with geometric chest band and patch pocket.",
+		"long_description": "<p>Cotton jersey tee with contrast geometric print detailing.</p>",
+		"selling_price": "990.00",
+		"original_price": "1290.00",
 		"image": "uploads/theme-one/product/4.png",
 		"status": "active",
-		"meta_title": "Comfort Stretch Denim Jeans for Men",
-		"meta_keyword": "mens jeans, stretch denim, slim tapered jeans",
-		"meta_description": "Explore the Comfort Stretch Denim Jeans made for a modern tapered fit.",
-		"tags": "jeans, denim, slim tapered, men",
+		"meta_title": "Geometric Print T-Shirt",
+		"meta_keyword": "geometric, print, t, shirt",
+		"meta_description": "Shop Geometric Print T-Shirt.",
+		"tags": "geometric, print, t, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "22.19",
+		"discount_rate": "23.26",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -410,20 +395,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Waist",
+				"name": "Size",
 				"options": [
-					"30",
-					"32",
-					"34",
-					"36"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Indigo",
-					"Washed Black"
+					"Standard"
 				]
 			}
 		],
@@ -434,57 +419,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "98% Cotton Denim, 2% Elastane"
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
 			},
 			{
-				"specification": "Fit",
-				"specification_ans": "Slim Tapered"
-			},
-			{
-				"specification": "Rise",
-				"specification_ans": "Mid Rise"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-004",
-		"sku": "MSH-DJ-004",
-		"distributor_price": "1950.00",
-		"alert_qty": 7,
-		"supplier_id": 2,
+		"uniqid": "scr-prod-004",
+		"sku": "SCR-004",
+		"distributor_price": "910.80",
+		"alert_qty": 8,
+		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0004",
+		"barcode": "SCR0004",
 		"warranty": "No Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "2490.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "22.19",
+		"discount_percentage": "23.26",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 5,
+			"id": 2,
 			"user_id": 1,
-			"name": "Denim District",
-			"slug": "denim-district"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 1,
-			"name": "Men's Clothing"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Jeans"
+			"id": 3,
+			"name": "T-Shirts"
 		},
 		"product_image": [
 			{
@@ -496,39 +477,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Bengal Textile House",
-			"business_name": "Bengal Textile House"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
 			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 5,
-		"category_id": 1,
-		"subcategory_id": 1,
-		"brand_id": 1,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "tailored-chino-trousers",
-		"name": "Tailored Chino Trousers",
-		"short_description": "Versatile cotton twill chinos with a clean slim-straight profile.",
-		"long_description": "<p>These tailored chinos are cut from durable cotton twill with light stretch, making them suitable for office wear, dinners, and smart casual outfits.</p>",
-		"selling_price": "2190.00",
-		"original_price": "2800.00",
+		"slug": "mustard-graphic-t-shirt",
+		"name": "Mustard Graphic T-Shirt",
+		"short_description": "Bold mustard tee with statement front typography.",
+		"long_description": "<p>Soft cotton graphic tee for casual street style.</p>",
+		"selling_price": "890.00",
+		"original_price": "1190.00",
 		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
-		"meta_title": "Tailored Chino Trousers for Men",
-		"meta_keyword": "chino trousers, mens chinos, cotton twill pants",
-		"meta_description": "Shop Tailored Chino Trousers designed for everyday office and smart-casual wear.",
-		"tags": "chinos, trousers, smart casual, men",
+		"meta_title": "Mustard Graphic T-Shirt",
+		"meta_keyword": "mustard, graphic, t, shirt",
+		"meta_description": "Shop Mustard Graphic T-Shirt.",
+		"tags": "mustard, graphic, t, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "21.79",
+		"discount_rate": "25.21",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -536,21 +517,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Waist",
+				"name": "Size",
 				"options": [
-					"30",
-					"32",
-					"34",
-					"36"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Khaki",
-					"Navy",
-					"Stone"
+					"Standard"
 				]
 			}
 		],
@@ -561,57 +541,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "Cotton Twill"
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
 			},
 			{
-				"specification": "Fit",
-				"specification_ans": "Slim Straight"
-			},
-			{
-				"specification": "Stretch",
-				"specification_ans": "Light Stretch"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-005",
-		"sku": "MSH-CT-005",
-		"distributor_price": "1720.00",
-		"alert_qty": 7,
-		"supplier_id": 2,
-		"warehouse_id": 2,
+		"uniqid": "scr-prod-005",
+		"sku": "SCR-005",
+		"distributor_price": "818.80",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0005",
+		"barcode": "SCR0005",
 		"warranty": "No Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "2190.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "21.79",
+		"discount_percentage": "25.21",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.4",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 1,
+			"id": 2,
 			"user_id": 1,
-			"name": "Northline",
-			"slug": "northline"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 1,
-			"name": "Men's Clothing"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Chinos & Trousers"
+			"id": 3,
+			"name": "T-Shirts"
 		},
 		"product_image": [
 			{
@@ -623,39 +599,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Bengal Textile House",
-			"business_name": "Bengal Textile House"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Retail Stock"
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 6,
-		"category_id": 2,
-		"subcategory_id": 2,
-		"brand_id": 3,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "embroidered-cotton-panjabi",
-		"name": "Embroidered Cotton Panjabi",
-		"short_description": "Festive panjabi with subtle front embroidery and premium cotton comfort.",
-		"long_description": "<p>A polished panjabi made for Eid, family gatherings, and cultural events, finished with tasteful front embroidery and a breathable premium cotton base.</p>",
-		"selling_price": "2790.00",
-		"original_price": "3500.00",
+		"slug": "oversized-logo-t-shirt",
+		"name": "Oversized Logo T-Shirt",
+		"short_description": "Relaxed-fit grey tee with tonal logo print.",
+		"long_description": "<p>Drop-shoulder oversized tee with breathable cotton fabric.</p>",
+		"selling_price": "1090.00",
+		"original_price": "1390.00",
 		"image": "uploads/theme-one/product/6.png",
 		"status": "active",
-		"meta_title": "Embroidered Cotton Panjabi for Men",
-		"meta_keyword": "panjabi men, embroidered panjabi, festive wear",
-		"meta_description": "Buy the Embroidered Cotton Panjabi for festive and cultural occasions.",
-		"tags": "panjabi, ethnic wear, festive, men",
+		"meta_title": "Oversized Logo T-Shirt",
+		"meta_keyword": "oversized, logo, t, shirt",
+		"meta_description": "Shop Oversized Logo T-Shirt.",
+		"tags": "oversized, logo, t, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "20.29",
+		"discount_rate": "21.58",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -665,6 +641,7 @@
 				"id": 1,
 				"name": "Size",
 				"options": [
+					"S",
 					"M",
 					"L",
 					"XL",
@@ -675,9 +652,7 @@
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Ivory",
-					"Maroon",
-					"Navy"
+					"Standard"
 				]
 			}
 		],
@@ -688,57 +663,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Fabric",
-				"specification_ans": "Premium Cotton"
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
 			},
 			{
-				"specification": "Work",
-				"specification_ans": "Subtle Front Embroidery"
-			},
-			{
-				"specification": "Fit",
-				"specification_ans": "Regular Fit"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-006",
-		"sku": "MSH-PJ-006",
-		"distributor_price": "2250.00",
-		"alert_qty": 6,
-		"supplier_id": 2,
+		"uniqid": "scr-prod-006",
+		"sku": "SCR-006",
+		"distributor_price": "1002.80",
+		"alert_qty": 8,
+		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0006",
+		"barcode": "SCR0006",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "2790.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "20.29",
+		"discount_percentage": "21.58",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.8",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 3,
+			"id": 2,
 			"user_id": 1,
-			"name": "Heritage Loom",
-			"slug": "heritage-loom"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 2,
-			"name": "Ethnic Wear"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 6,
-			"name": "Panjabi"
+			"id": 3,
+			"name": "T-Shirts"
 		},
 		"product_image": [
 			{
@@ -750,39 +721,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Bengal Textile House",
-			"business_name": "Bengal Textile House"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
 			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 7,
-		"category_id": 2,
-		"subcategory_id": 2,
-		"brand_id": 3,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 7,
 		"user_id": 1,
-		"slug": "festive-kurta-pajama-set",
-		"name": "Festive Kurta Pajama Set",
-		"short_description": "Complete festive set with coordinated kurta and pajama bottoms.",
-		"long_description": "<p>This kurta pajama set is designed for weddings, celebrations, and family events, combining a smooth drape with easy coordinated styling.</p>",
-		"selling_price": "3390.00",
-		"original_price": "4200.00",
+		"slug": "white-patch-pocket-tee",
+		"name": "White Patch Pocket Tee",
+		"short_description": "White tee with sage green patch pocket detail.",
+		"long_description": "<p>Premium cotton tee with architectural sketch pocket accent.</p>",
+		"selling_price": "1190.00",
+		"original_price": "1490.00",
 		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
-		"meta_title": "Festive Kurta Pajama Set for Men",
-		"meta_keyword": "kurta set men, pajama set, festive kurta",
-		"meta_description": "Shop the Festive Kurta Pajama Set for weddings and cultural celebrations.",
-		"tags": "kurta set, pajama, festive wear, men",
+		"meta_title": "White Patch Pocket Tee",
+		"meta_keyword": "white, patch, pocket, tee",
+		"meta_description": "Shop White Patch Pocket Tee.",
+		"tags": "white, patch, pocket, tee",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "19.29",
+		"discount_rate": "20.13",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -792,6 +763,7 @@
 				"id": 1,
 				"name": "Size",
 				"options": [
+					"S",
 					"M",
 					"L",
 					"XL",
@@ -802,9 +774,7 @@
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Cream",
-					"Bottle Green",
-					"Black"
+					"Standard"
 				]
 			}
 		],
@@ -815,33 +785,29 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Set Includes",
-				"specification_ans": "Kurta and Pajama"
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
 			},
 			{
-				"specification": "Fabric",
-				"specification_ans": "Viscose Cotton Blend"
-			},
-			{
-				"specification": "Occasion",
-				"specification_ans": "Festive and Wedding"
+				"specification": "Brand",
+				"specification_ans": "Sharp Fit"
 			}
 		],
-		"uniqid": "msh-prod-007",
-		"sku": "MSH-KS-007",
-		"distributor_price": "2720.00",
-		"alert_qty": 6,
-		"supplier_id": 2,
-		"warehouse_id": 3,
+		"uniqid": "scr-prod-007",
+		"sku": "SCR-007",
+		"distributor_price": "1094.80",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0007",
+		"barcode": "SCR0007",
 		"warranty": "No Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "3390.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "19.29",
+		"discount_percentage": "20.13",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -850,22 +816,22 @@
 		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 3,
+			"id": 7,
 			"user_id": 1,
-			"name": "Heritage Loom",
-			"slug": "heritage-loom"
+			"name": "Sharp Fit",
+			"slug": "sharp-fit"
 		},
 		"category": {
-			"id": 2,
-			"name": "Ethnic Wear"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 7,
-			"name": "Kurta Sets"
+			"id": 3,
+			"name": "T-Shirts"
 		},
 		"product_image": [
 			{
@@ -877,39 +843,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Bengal Textile House",
-			"business_name": "Bengal Textile House"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 3,
-			"name": "Chattogram Dispatch Hub"
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 8,
-		"category_id": 3,
-		"subcategory_id": 3,
-		"brand_id": 6,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 4,
 		"user_id": 1,
-		"slug": "white-court-sneakers",
-		"name": "White Court Sneakers",
-		"short_description": "Minimal court sneakers with cushioned comfort for everyday wear.",
-		"long_description": "<p>These clean low-top sneakers feature a smooth upper, padded interior, and durable rubber sole that make them easy to style with denim, chinos, and relaxed tailoring.</p>",
-		"selling_price": "3890.00",
-		"original_price": "4800.00",
+		"slug": "teal-pattern-koti-set",
+		"name": "Teal Pattern Koti Set",
+		"short_description": "Teal embroidered koti with navy kurta.",
+		"long_description": "<p>Festive koti waistcoat paired with navy kurta sleeves.</p>",
+		"selling_price": "3490.00",
+		"original_price": "4290.00",
 		"image": "uploads/theme-one/product/8.png",
 		"status": "active",
-		"meta_title": "White Court Sneakers for Men",
-		"meta_keyword": "white sneakers, court sneakers men, casual shoes",
-		"meta_description": "Buy White Court Sneakers with cushioned support and a clean everyday look.",
-		"tags": "sneakers, white shoes, casual footwear, men",
+		"meta_title": "Teal Pattern Koti Set",
+		"meta_keyword": "teal, pattern, koti, set",
+		"meta_description": "Shop Teal Pattern Koti Set.",
+		"tags": "teal, pattern, koti, set",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "18.96",
+		"discount_rate": "18.65",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -917,21 +883,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "EU Size",
+				"name": "Size",
 				"options": [
-					"40",
-					"41",
-					"42",
-					"43",
-					"44"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"White",
-					"White-Green"
+					"Standard"
 				]
 			}
 		],
@@ -942,57 +907,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Upper",
-				"specification_ans": "Smooth Faux Leather"
+				"specification": "Category",
+				"specification_ans": "Koti"
 			},
 			{
-				"specification": "Sole",
-				"specification_ans": "Rubber Cup Sole"
-			},
-			{
-				"specification": "Closure",
-				"specification_ans": "Lace Up"
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
 			}
 		],
-		"uniqid": "msh-prod-008",
-		"sku": "MSH-SN-008",
-		"distributor_price": "3200.00",
-		"alert_qty": 5,
-		"supplier_id": 3,
-		"warehouse_id": 1,
+		"uniqid": "scr-prod-008",
+		"sku": "SCR-008",
+		"distributor_price": "3210.80",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "MSH0008",
-		"warranty": "15 Days Sole Warranty",
+		"barcode": "SCR0008",
+		"warranty": "No Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "3890.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "18.96",
+		"discount_percentage": "18.65",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 6,
+			"id": 4,
 			"user_id": 1,
-			"name": "Monarch Step",
-			"slug": "monarch-step"
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 3,
-			"name": "Footwear"
+			"id": 1,
+			"name": "Koti"
 		},
 		"subcategory": {
-			"id": 8,
-			"name": "Sneakers"
+			"id": 1,
+			"name": "Koti"
 		},
 		"product_image": [
 			{
@@ -1004,39 +965,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "Leather Craft Supply",
-			"business_name": "Leather Craft Supply BD"
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 9,
-		"category_id": 3,
-		"subcategory_id": 3,
-		"brand_id": 6,
+		"category_id": 2,
+		"subcategory_id": 2,
+		"brand_id": 4,
 		"user_id": 1,
-		"slug": "leather-penny-loafers",
-		"name": "Leather Penny Loafers",
-		"short_description": "Genuine leather loafers for dressy office and occasion wear.",
-		"long_description": "<p>Classic penny loafers made from genuine leather with a structured profile and comfortable sole, ideal for suits, formal trousers, and smart casual outfits.</p>",
-		"selling_price": "4590.00",
-		"original_price": "5600.00",
+		"slug": "embroidered-green-panjabi",
+		"name": "Embroidered Green Panjabi",
+		"short_description": "Dark green panjabi with collar embroidery.",
+		"long_description": "<p>Premium panjabi with mandarin collar and front placket detail.</p>",
+		"selling_price": "2890.00",
+		"original_price": "3590.00",
 		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
-		"meta_title": "Leather Penny Loafers for Men",
-		"meta_keyword": "penny loafers, leather loafers men, formal shoes",
-		"meta_description": "Shop Leather Penny Loafers designed for formal and smart-casual dressing.",
-		"tags": "loafers, leather shoes, formal footwear, men",
+		"meta_title": "Embroidered Green Panjabi",
+		"meta_keyword": "embroidered, green, panjabi",
+		"meta_description": "Shop Embroidered Green Panjabi.",
+		"tags": "embroidered, green, panjabi",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "18.04",
+		"discount_rate": "19.50",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -1044,21 +1005,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "EU Size",
+				"name": "Size",
 				"options": [
-					"40",
-					"41",
-					"42",
-					"43",
-					"44"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Black",
-					"Brown"
+					"Standard"
 				]
 			}
 		],
@@ -1069,57 +1029,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Upper",
-				"specification_ans": "Genuine Leather"
+				"specification": "Category",
+				"specification_ans": "Panjabi"
 			},
 			{
-				"specification": "Sole",
-				"specification_ans": "TPR Sole"
-			},
-			{
-				"specification": "Occasion",
-				"specification_ans": "Formal and Smart Casual"
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
 			}
 		],
-		"uniqid": "msh-prod-009",
-		"sku": "MSH-LF-009",
-		"distributor_price": "3780.00",
-		"alert_qty": 5,
-		"supplier_id": 3,
+		"uniqid": "scr-prod-009",
+		"sku": "SCR-009",
+		"distributor_price": "2658.80",
+		"alert_qty": 8,
+		"supplier_id": 2,
 		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "MSH0009",
-		"warranty": "30 Days Sole Warranty",
+		"barcode": "SCR0009",
+		"warranty": "No Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "4590.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "18.04",
+		"discount_percentage": "19.50",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.8",
+		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 6,
+			"id": 4,
 			"user_id": 1,
-			"name": "Monarch Step",
-			"slug": "monarch-step"
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 3,
-			"name": "Footwear"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 9,
-			"name": "Loafers"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1131,39 +1087,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "Leather Craft Supply",
-			"business_name": "Leather Craft Supply BD"
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
 			"id": 2,
-			"name": "Banani Retail Stock"
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 10,
-		"category_id": 3,
-		"subcategory_id": 3,
-		"brand_id": 6,
+		"category_id": 4,
+		"subcategory_id": 4,
+		"brand_id": 3,
 		"user_id": 1,
-		"slug": "everyday-comfort-sandals",
-		"name": "Everyday Comfort Sandals",
-		"short_description": "Cushioned sandals with adjustable straps for daily movement.",
-		"long_description": "<p>Designed for warm weather and all-day use, these sandals combine a soft footbed with secure adjustable straps and lightweight construction.</p>",
-		"selling_price": "1990.00",
-		"original_price": "2600.00",
+		"slug": "light-blue-formal-shirt",
+		"name": "Light Blue Formal Shirt",
+		"short_description": "Light blue formal shirt with patch pocket.",
+		"long_description": "<p>Office-ready formal shirt with textured weave.</p>",
+		"selling_price": "1690.00",
+		"original_price": "2190.00",
 		"image": "uploads/theme-one/product/10.png",
 		"status": "active",
-		"meta_title": "Everyday Comfort Sandals for Men",
-		"meta_keyword": "mens sandals, comfort sandals, casual sandals",
-		"meta_description": "Buy Everyday Comfort Sandals with cushioned support and adjustable fit.",
-		"tags": "sandals, comfort footwear, casual, men",
+		"meta_title": "Light Blue Formal Shirt",
+		"meta_keyword": "light, blue, formal, shirt",
+		"meta_description": "Shop Light Blue Formal Shirt.",
+		"tags": "light, blue, formal, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "23.46",
+		"discount_rate": "22.83",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -1171,21 +1127,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "EU Size",
+				"name": "Size",
 				"options": [
-					"40",
-					"41",
-					"42",
-					"43",
-					"44"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Tan",
-					"Black"
+					"Standard"
 				]
 			}
 		],
@@ -1196,57 +1151,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Upper",
-				"specification_ans": "Synthetic Leather"
+				"specification": "Category",
+				"specification_ans": "Shirt"
 			},
 			{
-				"specification": "Footbed",
-				"specification_ans": "Cushioned EVA"
-			},
-			{
-				"specification": "Closure",
-				"specification_ans": "Adjustable Strap"
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
 			}
 		],
-		"uniqid": "msh-prod-010",
-		"sku": "MSH-SD-010",
-		"distributor_price": "1560.00",
-		"alert_qty": 6,
-		"supplier_id": 3,
-		"warehouse_id": 3,
+		"uniqid": "scr-prod-010",
+		"sku": "SCR-010",
+		"distributor_price": "1554.80",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0010",
-		"warranty": "15 Days Sole Warranty",
+		"barcode": "SCR0010",
+		"warranty": "No Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1990.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "23.46",
+		"discount_percentage": "22.83",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.3",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 6,
+			"id": 3,
 			"user_id": 1,
-			"name": "Monarch Step",
-			"slug": "monarch-step"
+			"name": "Classic Line",
+			"slug": "classic-line"
 		},
 		"category": {
-			"id": 3,
-			"name": "Footwear"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 10,
-			"name": "Sandals"
+			"id": 4,
+			"name": "Shirts"
 		},
 		"product_image": [
 			{
@@ -1258,39 +1209,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "Leather Craft Supply",
-			"business_name": "Leather Craft Supply BD"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 3,
-			"name": "Chattogram Dispatch Hub"
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 11,
-		"category_id": 4,
-		"subcategory_id": 4,
-		"brand_id": 7,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "classic-leather-belt",
-		"name": "Classic Leather Belt",
-		"short_description": "Polished leather belt with durable buckle for work and occasion wear.",
-		"long_description": "<p>A dependable leather belt that finishes formal trousers and chinos cleanly, built with a solid buckle and structured body for long-term use.</p>",
-		"selling_price": "1190.00",
-		"original_price": "1600.00",
+		"slug": "slim-fit-black-jeans-special-edition",
+		"name": "Slim Fit Black Jeans Special Edition",
+		"short_description": "Classic black slim-fit jeans for everyday styling. Limited stock.",
+		"long_description": "<p>Comfort stretch black denim with tapered leg and clean finish.</p>",
+		"selling_price": "1852.20",
+		"original_price": "2490.00",
 		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
-		"meta_title": "Classic Leather Belt for Men",
-		"meta_keyword": "leather belt, mens belt, formal belt",
-		"meta_description": "Shop the Classic Leather Belt built for formal and smart-casual looks.",
-		"tags": "belt, leather, accessories, men",
+		"meta_title": "Slim Fit Black Jeans",
+		"meta_keyword": "slim, fit, black, jeans",
+		"meta_description": "Shop Slim Fit Black Jeans.",
+		"tags": "slim, fit, black, jeans",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "25.63",
+		"discount_rate": "25.61",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -1298,20 +1249,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Length",
+				"name": "Size",
 				"options": [
-					"32",
-					"34",
-					"36",
-					"38"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
 				"name": "Color",
 				"options": [
-					"Black",
-					"Brown"
+					"Standard"
 				]
 			}
 		],
@@ -1322,33 +1273,29 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Material",
-				"specification_ans": "Split Leather"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Buckle",
-				"specification_ans": "Solid Metal Buckle"
-			},
-			{
-				"specification": "Width",
-				"specification_ans": "35 mm"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-011",
-		"sku": "MSH-BT-011",
-		"distributor_price": "920.00",
-		"alert_qty": 10,
-		"supplier_id": 3,
+		"uniqid": "scr-prod-011",
+		"sku": "SCR-011",
+		"distributor_price": "1704.02",
+		"alert_qty": 8,
+		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0011",
+		"barcode": "SCR0011",
 		"warranty": "No Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1190.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "25.63",
+		"discount_percentage": "25.61",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -1357,22 +1304,22 @@
 		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 7,
+			"id": 2,
 			"user_id": 1,
-			"name": "Oak Leather",
-			"slug": "oak-leather"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 4,
-			"name": "Accessories"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 11,
-			"name": "Belts"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -1384,39 +1331,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "Leather Craft Supply",
-			"business_name": "Leather Craft Supply BD"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
 			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 12,
-		"category_id": 4,
-		"subcategory_id": 4,
-		"brand_id": 7,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 3,
 		"user_id": 1,
-		"slug": "minimal-bifold-wallet",
-		"name": "Minimal Bifold Wallet",
-		"short_description": "Compact leather wallet with clean lines and practical storage.",
-		"long_description": "<p>This bifold wallet keeps cards and cash organized without excess bulk, making it an easy everyday carry option with a refined finish.</p>",
-		"selling_price": "1590.00",
-		"original_price": "2100.00",
+		"slug": "classic-grey-trousers-special-edition",
+		"name": "Classic Grey Trousers Special Edition",
+		"short_description": "Tailored grey trousers for smart casual looks. Limited stock.",
+		"long_description": "<p>Light grey straight-fit trousers with crease front detailing.</p>",
+		"selling_price": "2146.20",
+		"original_price": "2790.00",
 		"image": "uploads/theme-one/product/12.png",
 		"status": "active",
-		"meta_title": "Minimal Bifold Wallet for Men",
-		"meta_keyword": "mens wallet, bifold wallet, leather wallet",
-		"meta_description": "Buy the Minimal Bifold Wallet with slim storage and premium leather finish.",
-		"tags": "wallet, bifold, leather, men",
+		"meta_title": "Classic Grey Trousers",
+		"meta_keyword": "classic, grey, trousers",
+		"meta_description": "Shop Classic Grey Trousers.",
+		"tags": "classic, grey, trousers",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "24.29",
+		"discount_rate": "23.08",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -1424,19 +1371,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Color",
+				"name": "Size",
 				"options": [
-					"Black",
-					"Tan",
-					"Coffee"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
-				"name": "Finish",
+				"name": "Color",
 				"options": [
-					"Smooth",
-					"Pebble"
+					"Standard"
 				]
 			}
 		],
@@ -1447,57 +1395,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Material",
-				"specification_ans": "Genuine Leather"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Compartments",
-				"specification_ans": "2 Cash Slots, 6 Card Slots"
-			},
-			{
-				"specification": "Lining",
-				"specification_ans": "Polyester Twill"
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
 			}
 		],
-		"uniqid": "msh-prod-012",
-		"sku": "MSH-WL-012",
-		"distributor_price": "1220.00",
+		"uniqid": "scr-prod-012",
+		"sku": "SCR-012",
+		"distributor_price": "1974.50",
 		"alert_qty": 8,
-		"supplier_id": 3,
-		"warehouse_id": 2,
+		"supplier_id": 1,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0012",
+		"barcode": "SCR0012",
 		"warranty": "No Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1590.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "24.29",
+		"discount_percentage": "23.08",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 7,
+			"id": 3,
 			"user_id": 1,
-			"name": "Oak Leather",
-			"slug": "oak-leather"
+			"name": "Classic Line",
+			"slug": "classic-line"
 		},
 		"category": {
-			"id": 4,
-			"name": "Accessories"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 12,
-			"name": "Wallets"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -1509,39 +1453,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "Leather Craft Supply",
-			"business_name": "Leather Craft Supply BD"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Retail Stock"
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 13,
-		"category_id": 4,
-		"subcategory_id": 4,
-		"brand_id": 8,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "polarized-aviator-sunglasses",
-		"name": "Polarized Aviator Sunglasses",
-		"short_description": "Lightweight aviator frame with polarized UV400 lens protection.",
-		"long_description": "<p>These aviator sunglasses offer a clean metal frame, glare-reducing polarized lenses, and comfortable daily wear for driving, travel, and outdoor use.</p>",
-		"selling_price": "1790.00",
-		"original_price": "2400.00",
+		"slug": "tapered-black-chinos-special-edition",
+		"name": "Tapered Black Chinos Special Edition",
+		"short_description": "Versatile black chinos for office and weekend wear. Limited stock.",
+		"long_description": "<p>Soft cotton chinos with modern tapered silhouette.</p>",
+		"selling_price": "1950.20",
+		"original_price": "2590.00",
 		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
-		"meta_title": "Polarized Aviator Sunglasses for Men",
-		"meta_keyword": "aviator sunglasses, polarized sunglasses men, UV400 eyewear",
-		"meta_description": "Shop Polarized Aviator Sunglasses with lightweight frames and UV400 protection.",
-		"tags": "sunglasses, aviator, polarized, men",
+		"meta_title": "Tapered Black Chinos",
+		"meta_keyword": "tapered, black, chinos",
+		"meta_description": "Shop Tapered Black Chinos.",
+		"tags": "tapered, black, chinos",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "25.42",
+		"discount_rate": "24.70",
 		"rejected_details": null,
 		"created_at": "2026-04-10T13:00:00.000000Z",
 		"updated_at": "2026-04-10T13:00:00.000000Z",
@@ -1549,20 +1493,20 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Frame Color",
+				"name": "Size",
 				"options": [
-					"Black",
-					"Gunmetal",
-					"Silver"
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
 				]
 			},
 			{
 				"id": 2,
-				"name": "Lens Color",
+				"name": "Color",
 				"options": [
-					"Smoke",
-					"Brown",
-					"Green"
+					"Standard"
 				]
 			}
 		],
@@ -1573,57 +1517,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Lens",
-				"specification_ans": "UV400 Polarized Lens"
+				"specification": "Category",
+				"specification_ans": "Jeans"
 			},
 			{
-				"specification": "Frame",
-				"specification_ans": "Lightweight Metal Frame"
-			},
-			{
-				"specification": "Fit",
-				"specification_ans": "Medium Face Coverage"
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
 			}
 		],
-		"uniqid": "msh-prod-013",
-		"sku": "MSH-SG-013",
-		"distributor_price": "1360.00",
+		"uniqid": "scr-prod-013",
+		"sku": "SCR-013",
+		"distributor_price": "1794.18",
 		"alert_qty": 8,
-		"supplier_id": 4,
-		"warehouse_id": 2,
+		"supplier_id": 1,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "MSH0013",
-		"warranty": "7 Days Frame Replacement",
+		"barcode": "SCR0013",
+		"warranty": "No Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "1790.00",
+		"discount_price": null,
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "25.42",
+		"discount_percentage": "24.70",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.4",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "Menswear Hub",
-			"email": "sales@menswearhub.com"
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 8,
+			"id": 2,
 			"user_id": 1,
-			"name": "Sunward",
-			"slug": "sunward"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 4,
-			"name": "Accessories"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"subcategory": {
-			"id": 13,
-			"name": "Sunglasses"
+			"id": 6,
+			"name": "Jeans"
 		},
 		"product_image": [
 			{
@@ -1635,13 +1575,3307 @@
 		],
 		"productrating": [],
 		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 14,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "geometric-print-t-shirt-special-edition",
+		"name": "Geometric Print T-Shirt Special Edition",
+		"short_description": "Slate tee with geometric chest band and patch pocket. Limited stock.",
+		"long_description": "<p>Cotton jersey tee with contrast geometric print detailing.</p>",
+		"selling_price": "970.20",
+		"original_price": "1290.00",
+		"image": "uploads/theme-one/product/14.png",
+		"status": "active",
+		"meta_title": "Geometric Print T-Shirt",
+		"meta_keyword": "geometric, print, t, shirt",
+		"meta_description": "Shop Geometric Print T-Shirt.",
+		"tags": "geometric, print, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.79",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-014",
+		"sku": "SCR-014",
+		"distributor_price": "892.58",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0014",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.79",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 14,
+				"product_id": 14,
+				"image": "uploads/theme-one/product/14.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 15,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "mustard-graphic-t-shirt-special-edition",
+		"name": "Mustard Graphic T-Shirt Special Edition",
+		"short_description": "Bold mustard tee with statement front typography. Limited stock.",
+		"long_description": "<p>Soft cotton graphic tee for casual street style.</p>",
+		"selling_price": "872.20",
+		"original_price": "1190.00",
+		"image": "uploads/theme-one/product/15.png",
+		"status": "active",
+		"meta_title": "Mustard Graphic T-Shirt",
+		"meta_keyword": "mustard, graphic, t, shirt",
+		"meta_description": "Shop Mustard Graphic T-Shirt.",
+		"tags": "mustard, graphic, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "26.71",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-015",
+		"sku": "SCR-015",
+		"distributor_price": "802.42",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0015",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "26.71",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 15,
+				"product_id": 15,
+				"image": "uploads/theme-one/product/15.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 16,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "oversized-logo-t-shirt-special-edition",
+		"name": "Oversized Logo T-Shirt Special Edition",
+		"short_description": "Relaxed-fit grey tee with tonal logo print. Limited stock.",
+		"long_description": "<p>Drop-shoulder oversized tee with breathable cotton fabric.</p>",
+		"selling_price": "1068.20",
+		"original_price": "1390.00",
+		"image": "uploads/theme-one/product/16.png",
+		"status": "active",
+		"meta_title": "Oversized Logo T-Shirt",
+		"meta_keyword": "oversized, logo, t, shirt",
+		"meta_description": "Shop Oversized Logo T-Shirt.",
+		"tags": "oversized, logo, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.15",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-016",
+		"sku": "SCR-016",
+		"distributor_price": "982.74",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0016",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.15",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 16,
+				"product_id": 16,
+				"image": "uploads/theme-one/product/16.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 17,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "white-patch-pocket-tee-special-edition",
+		"name": "White Patch Pocket Tee Special Edition",
+		"short_description": "White tee with sage green patch pocket detail. Limited stock.",
+		"long_description": "<p>Premium cotton tee with architectural sketch pocket accent.</p>",
+		"selling_price": "1166.20",
+		"original_price": "1490.00",
+		"image": "uploads/theme-one/product/17.png",
+		"status": "active",
+		"meta_title": "White Patch Pocket Tee",
+		"meta_keyword": "white, patch, pocket, tee",
+		"meta_description": "Shop White Patch Pocket Tee.",
+		"tags": "white, patch, pocket, tee",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.73",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Sharp Fit"
+			}
+		],
+		"uniqid": "scr-prod-017",
+		"sku": "SCR-017",
+		"distributor_price": "1072.90",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0017",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.73",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Sharp Fit",
+			"slug": "sharp-fit"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 17,
+				"product_id": 17,
+				"image": "uploads/theme-one/product/17.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 18,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "teal-pattern-koti-set-special-edition",
+		"name": "Teal Pattern Koti Set Special Edition",
+		"short_description": "Teal embroidered koti with navy kurta. Limited stock.",
+		"long_description": "<p>Festive koti waistcoat paired with navy kurta sleeves.</p>",
+		"selling_price": "3420.20",
+		"original_price": "4290.00",
+		"image": "uploads/theme-one/product/18.png",
+		"status": "active",
+		"meta_title": "Teal Pattern Koti Set",
+		"meta_keyword": "teal, pattern, koti, set",
+		"meta_description": "Shop Teal Pattern Koti Set.",
+		"tags": "teal, pattern, koti, set",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.28",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Koti"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-018",
+		"sku": "SCR-018",
+		"distributor_price": "3146.58",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0018",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.28",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
 			"id": 4,
-			"supplier_name": "Urban Accessories BD",
-			"business_name": "Urban Accessories BD"
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"product_image": [
+			{
+				"id": 18,
+				"product_id": 18,
+				"image": "uploads/theme-one/product/18.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
 			"id": 2,
-			"name": "Banani Retail Stock"
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 19,
+		"category_id": 2,
+		"subcategory_id": 2,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "embroidered-green-panjabi-special-edition",
+		"name": "Embroidered Green Panjabi Special Edition",
+		"short_description": "Dark green panjabi with collar embroidery. Limited stock.",
+		"long_description": "<p>Premium panjabi with mandarin collar and front placket detail.</p>",
+		"selling_price": "2832.20",
+		"original_price": "3590.00",
+		"image": "uploads/theme-one/product/19.png",
+		"status": "active",
+		"meta_title": "Embroidered Green Panjabi",
+		"meta_keyword": "embroidered, green, panjabi",
+		"meta_description": "Shop Embroidered Green Panjabi.",
+		"tags": "embroidered, green, panjabi",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.11",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Panjabi"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-019",
+		"sku": "SCR-019",
+		"distributor_price": "2605.62",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0019",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.11",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"product_image": [
+			{
+				"id": 19,
+				"product_id": 19,
+				"image": "uploads/theme-one/product/19.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 20,
+		"category_id": 4,
+		"subcategory_id": 4,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "light-blue-formal-shirt-special-edition",
+		"name": "Light Blue Formal Shirt Special Edition",
+		"short_description": "Light blue formal shirt with patch pocket. Limited stock.",
+		"long_description": "<p>Office-ready formal shirt with textured weave.</p>",
+		"selling_price": "1656.20",
+		"original_price": "2190.00",
+		"image": "uploads/theme-one/product/20.png",
+		"status": "active",
+		"meta_title": "Light Blue Formal Shirt",
+		"meta_keyword": "light, blue, formal, shirt",
+		"meta_description": "Shop Light Blue Formal Shirt.",
+		"tags": "light, blue, formal, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.37",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
+			}
+		],
+		"uniqid": "scr-prod-020",
+		"sku": "SCR-020",
+		"distributor_price": "1523.70",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0020",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.37",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Classic Line",
+			"slug": "classic-line"
+		},
+		"category": {
+			"id": 4,
+			"name": "Shirt"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Shirts"
+		},
+		"product_image": [
+			{
+				"id": 20,
+				"product_id": 20,
+				"image": "uploads/theme-one/product/20.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 21,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "slim-fit-black-jeans-limited-collection",
+		"name": "Slim Fit Black Jeans Limited Collection",
+		"short_description": "Classic black slim-fit jeans for everyday styling. Limited stock.",
+		"long_description": "<p>Comfort stretch black denim with tapered leg and clean finish.</p>",
+		"selling_price": "1823.85",
+		"original_price": "2490.00",
+		"image": "uploads/theme-one/product/21.png",
+		"status": "active",
+		"meta_title": "Slim Fit Black Jeans",
+		"meta_keyword": "slim, fit, black, jeans",
+		"meta_description": "Shop Slim Fit Black Jeans.",
+		"tags": "slim, fit, black, jeans",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "26.75",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-021",
+		"sku": "SCR-021",
+		"distributor_price": "1677.94",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0021",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "26.75",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 21,
+				"product_id": 21,
+				"image": "uploads/theme-one/product/21.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 22,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "classic-grey-trousers-limited-collection",
+		"name": "Classic Grey Trousers Limited Collection",
+		"short_description": "Tailored grey trousers for smart casual looks. Limited stock.",
+		"long_description": "<p>Light grey straight-fit trousers with crease front detailing.</p>",
+		"selling_price": "2113.35",
+		"original_price": "2790.00",
+		"image": "uploads/theme-one/product/22.png",
+		"status": "active",
+		"meta_title": "Classic Grey Trousers",
+		"meta_keyword": "classic, grey, trousers",
+		"meta_description": "Shop Classic Grey Trousers.",
+		"tags": "classic, grey, trousers",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.25",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
+			}
+		],
+		"uniqid": "scr-prod-022",
+		"sku": "SCR-022",
+		"distributor_price": "1944.28",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0022",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.25",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Classic Line",
+			"slug": "classic-line"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 22,
+				"product_id": 22,
+				"image": "uploads/theme-one/product/22.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 23,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "tapered-black-chinos-limited-collection",
+		"name": "Tapered Black Chinos Limited Collection",
+		"short_description": "Versatile black chinos for office and weekend wear. Limited stock.",
+		"long_description": "<p>Soft cotton chinos with modern tapered silhouette.</p>",
+		"selling_price": "1920.35",
+		"original_price": "2590.00",
+		"image": "uploads/theme-one/product/23.png",
+		"status": "active",
+		"meta_title": "Tapered Black Chinos",
+		"meta_keyword": "tapered, black, chinos",
+		"meta_description": "Shop Tapered Black Chinos.",
+		"tags": "tapered, black, chinos",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.86",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-023",
+		"sku": "SCR-023",
+		"distributor_price": "1766.72",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0023",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.86",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 23,
+				"product_id": 23,
+				"image": "uploads/theme-one/product/23.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 24,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "geometric-print-t-shirt-limited-collection",
+		"name": "Geometric Print T-Shirt Limited Collection",
+		"short_description": "Slate tee with geometric chest band and patch pocket. Limited stock.",
+		"long_description": "<p>Cotton jersey tee with contrast geometric print detailing.</p>",
+		"selling_price": "955.35",
+		"original_price": "1290.00",
+		"image": "uploads/theme-one/product/24.png",
+		"status": "active",
+		"meta_title": "Geometric Print T-Shirt",
+		"meta_keyword": "geometric, print, t, shirt",
+		"meta_description": "Shop Geometric Print T-Shirt.",
+		"tags": "geometric, print, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.94",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-024",
+		"sku": "SCR-024",
+		"distributor_price": "878.92",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0024",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.94",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 24,
+				"product_id": 24,
+				"image": "uploads/theme-one/product/24.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 25,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "mustard-graphic-t-shirt-limited-collection",
+		"name": "Mustard Graphic T-Shirt Limited Collection",
+		"short_description": "Bold mustard tee with statement front typography. Limited stock.",
+		"long_description": "<p>Soft cotton graphic tee for casual street style.</p>",
+		"selling_price": "858.85",
+		"original_price": "1190.00",
+		"image": "uploads/theme-one/product/25.png",
+		"status": "active",
+		"meta_title": "Mustard Graphic T-Shirt",
+		"meta_keyword": "mustard, graphic, t, shirt",
+		"meta_description": "Shop Mustard Graphic T-Shirt.",
+		"tags": "mustard, graphic, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "27.83",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-025",
+		"sku": "SCR-025",
+		"distributor_price": "790.14",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0025",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "27.83",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 25,
+				"product_id": 25,
+				"image": "uploads/theme-one/product/25.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 26,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "oversized-logo-t-shirt-limited-collection",
+		"name": "Oversized Logo T-Shirt Limited Collection",
+		"short_description": "Relaxed-fit grey tee with tonal logo print. Limited stock.",
+		"long_description": "<p>Drop-shoulder oversized tee with breathable cotton fabric.</p>",
+		"selling_price": "1051.85",
+		"original_price": "1390.00",
+		"image": "uploads/theme-one/product/26.png",
+		"status": "active",
+		"meta_title": "Oversized Logo T-Shirt",
+		"meta_keyword": "oversized, logo, t, shirt",
+		"meta_description": "Shop Oversized Logo T-Shirt.",
+		"tags": "oversized, logo, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.33",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-026",
+		"sku": "SCR-026",
+		"distributor_price": "967.70",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0026",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.33",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 26,
+				"product_id": 26,
+				"image": "uploads/theme-one/product/26.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 27,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "white-patch-pocket-tee-limited-collection",
+		"name": "White Patch Pocket Tee Limited Collection",
+		"short_description": "White tee with sage green patch pocket detail. Limited stock.",
+		"long_description": "<p>Premium cotton tee with architectural sketch pocket accent.</p>",
+		"selling_price": "1148.35",
+		"original_price": "1490.00",
+		"image": "uploads/theme-one/product/27.png",
+		"status": "active",
+		"meta_title": "White Patch Pocket Tee",
+		"meta_keyword": "white, patch, pocket, tee",
+		"meta_description": "Shop White Patch Pocket Tee.",
+		"tags": "white, patch, pocket, tee",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.93",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Sharp Fit"
+			}
+		],
+		"uniqid": "scr-prod-027",
+		"sku": "SCR-027",
+		"distributor_price": "1056.48",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0027",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.93",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Sharp Fit",
+			"slug": "sharp-fit"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 27,
+				"product_id": 27,
+				"image": "uploads/theme-one/product/27.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 28,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "teal-pattern-koti-set-limited-collection",
+		"name": "Teal Pattern Koti Set Limited Collection",
+		"short_description": "Teal embroidered koti with navy kurta. Limited stock.",
+		"long_description": "<p>Festive koti waistcoat paired with navy kurta sleeves.</p>",
+		"selling_price": "3367.85",
+		"original_price": "4290.00",
+		"image": "uploads/theme-one/product/28.png",
+		"status": "active",
+		"meta_title": "Teal Pattern Koti Set",
+		"meta_keyword": "teal, pattern, koti, set",
+		"meta_description": "Shop Teal Pattern Koti Set.",
+		"tags": "teal, pattern, koti, set",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.50",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Koti"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-028",
+		"sku": "SCR-028",
+		"distributor_price": "3098.42",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0028",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.50",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"product_image": [
+			{
+				"id": 28,
+				"product_id": 28,
+				"image": "uploads/theme-one/product/28.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 29,
+		"category_id": 2,
+		"subcategory_id": 2,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "embroidered-green-panjabi-limited-collection",
+		"name": "Embroidered Green Panjabi Limited Collection",
+		"short_description": "Dark green panjabi with collar embroidery. Limited stock.",
+		"long_description": "<p>Premium panjabi with mandarin collar and front placket detail.</p>",
+		"selling_price": "2788.85",
+		"original_price": "3590.00",
+		"image": "uploads/theme-one/product/29.png",
+		"status": "active",
+		"meta_title": "Embroidered Green Panjabi",
+		"meta_keyword": "embroidered, green, panjabi",
+		"meta_description": "Shop Embroidered Green Panjabi.",
+		"tags": "embroidered, green, panjabi",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.32",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Panjabi"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-029",
+		"sku": "SCR-029",
+		"distributor_price": "2565.74",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0029",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.32",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"product_image": [
+			{
+				"id": 29,
+				"product_id": 29,
+				"image": "uploads/theme-one/product/29.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 30,
+		"category_id": 4,
+		"subcategory_id": 4,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "light-blue-formal-shirt-limited-collection",
+		"name": "Light Blue Formal Shirt Limited Collection",
+		"short_description": "Light blue formal shirt with patch pocket. Limited stock.",
+		"long_description": "<p>Office-ready formal shirt with textured weave.</p>",
+		"selling_price": "1630.85",
+		"original_price": "2190.00",
+		"image": "uploads/theme-one/product/30.png",
+		"status": "active",
+		"meta_title": "Light Blue Formal Shirt",
+		"meta_keyword": "light, blue, formal, shirt",
+		"meta_description": "Shop Light Blue Formal Shirt.",
+		"tags": "light, blue, formal, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.53",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
+			}
+		],
+		"uniqid": "scr-prod-030",
+		"sku": "SCR-030",
+		"distributor_price": "1500.38",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0030",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.53",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Classic Line",
+			"slug": "classic-line"
+		},
+		"category": {
+			"id": 4,
+			"name": "Shirt"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Shirts"
+		},
+		"product_image": [
+			{
+				"id": 30,
+				"product_id": 30,
+				"image": "uploads/theme-one/product/30.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 31,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "slim-fit-black-jeans-premium-fit",
+		"name": "Slim Fit Black Jeans Premium Fit",
+		"short_description": "Classic black slim-fit jeans for everyday styling. Limited stock.",
+		"long_description": "<p>Comfort stretch black denim with tapered leg and clean finish.</p>",
+		"selling_price": "1795.50",
+		"original_price": "2490.00",
+		"image": "uploads/theme-one/product/31.png",
+		"status": "active",
+		"meta_title": "Slim Fit Black Jeans",
+		"meta_keyword": "slim, fit, black, jeans",
+		"meta_description": "Shop Slim Fit Black Jeans.",
+		"tags": "slim, fit, black, jeans",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "27.89",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-031",
+		"sku": "SCR-031",
+		"distributor_price": "1651.86",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0031",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "27.89",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 31,
+				"product_id": 31,
+				"image": "uploads/theme-one/product/31.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 32,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "classic-grey-trousers-premium-fit",
+		"name": "Classic Grey Trousers Premium Fit",
+		"short_description": "Tailored grey trousers for smart casual looks. Limited stock.",
+		"long_description": "<p>Light grey straight-fit trousers with crease front detailing.</p>",
+		"selling_price": "2080.50",
+		"original_price": "2790.00",
+		"image": "uploads/theme-one/product/32.png",
+		"status": "active",
+		"meta_title": "Classic Grey Trousers",
+		"meta_keyword": "classic, grey, trousers",
+		"meta_description": "Shop Classic Grey Trousers.",
+		"tags": "classic, grey, trousers",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.43",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
+			}
+		],
+		"uniqid": "scr-prod-032",
+		"sku": "SCR-032",
+		"distributor_price": "1914.06",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0032",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.43",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Classic Line",
+			"slug": "classic-line"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 32,
+				"product_id": 32,
+				"image": "uploads/theme-one/product/32.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 33,
+		"category_id": 6,
+		"subcategory_id": 6,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "tapered-black-chinos-premium-fit",
+		"name": "Tapered Black Chinos Premium Fit",
+		"short_description": "Versatile black chinos for office and weekend wear. Limited stock.",
+		"long_description": "<p>Soft cotton chinos with modern tapered silhouette.</p>",
+		"selling_price": "1890.50",
+		"original_price": "2590.00",
+		"image": "uploads/theme-one/product/33.png",
+		"status": "active",
+		"meta_title": "Tapered Black Chinos",
+		"meta_keyword": "tapered, black, chinos",
+		"meta_description": "Shop Tapered Black Chinos.",
+		"tags": "tapered, black, chinos",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "27.01",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Jeans"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-033",
+		"sku": "SCR-033",
+		"distributor_price": "1739.26",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0033",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "27.01",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Jeans"
+		},
+		"product_image": [
+			{
+				"id": 33,
+				"product_id": 33,
+				"image": "uploads/theme-one/product/33.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 34,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "geometric-print-t-shirt-premium-fit",
+		"name": "Geometric Print T-Shirt Premium Fit",
+		"short_description": "Slate tee with geometric chest band and patch pocket. Limited stock.",
+		"long_description": "<p>Cotton jersey tee with contrast geometric print detailing.</p>",
+		"selling_price": "940.50",
+		"original_price": "1290.00",
+		"image": "uploads/theme-one/product/34.png",
+		"status": "active",
+		"meta_title": "Geometric Print T-Shirt",
+		"meta_keyword": "geometric, print, t, shirt",
+		"meta_description": "Shop Geometric Print T-Shirt.",
+		"tags": "geometric, print, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "27.09",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-034",
+		"sku": "SCR-034",
+		"distributor_price": "865.26",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0034",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "27.09",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 34,
+				"product_id": 34,
+				"image": "uploads/theme-one/product/34.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 35,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "mustard-graphic-t-shirt-premium-fit",
+		"name": "Mustard Graphic T-Shirt Premium Fit",
+		"short_description": "Bold mustard tee with statement front typography. Limited stock.",
+		"long_description": "<p>Soft cotton graphic tee for casual street style.</p>",
+		"selling_price": "845.50",
+		"original_price": "1190.00",
+		"image": "uploads/theme-one/product/35.png",
+		"status": "active",
+		"meta_title": "Mustard Graphic T-Shirt",
+		"meta_keyword": "mustard, graphic, t, shirt",
+		"meta_description": "Shop Mustard Graphic T-Shirt.",
+		"tags": "mustard, graphic, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "28.95",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-035",
+		"sku": "SCR-035",
+		"distributor_price": "777.86",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0035",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "28.95",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 35,
+				"product_id": 35,
+				"image": "uploads/theme-one/product/35.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 36,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "oversized-logo-t-shirt-premium-fit",
+		"name": "Oversized Logo T-Shirt Premium Fit",
+		"short_description": "Relaxed-fit grey tee with tonal logo print. Limited stock.",
+		"long_description": "<p>Drop-shoulder oversized tee with breathable cotton fabric.</p>",
+		"selling_price": "1035.50",
+		"original_price": "1390.00",
+		"image": "uploads/theme-one/product/36.png",
+		"status": "active",
+		"meta_title": "Oversized Logo T-Shirt",
+		"meta_keyword": "oversized, logo, t, shirt",
+		"meta_description": "Shop Oversized Logo T-Shirt.",
+		"tags": "oversized, logo, t, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "25.50",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Urban Stitch"
+			}
+		],
+		"uniqid": "scr-prod-036",
+		"sku": "SCR-036",
+		"distributor_price": "952.66",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0036",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "25.50",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 36,
+				"product_id": 36,
+				"image": "uploads/theme-one/product/36.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 37,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "white-patch-pocket-tee-premium-fit",
+		"name": "White Patch Pocket Tee Premium Fit",
+		"short_description": "White tee with sage green patch pocket detail. Limited stock.",
+		"long_description": "<p>Premium cotton tee with architectural sketch pocket accent.</p>",
+		"selling_price": "1130.50",
+		"original_price": "1490.00",
+		"image": "uploads/theme-one/product/37.png",
+		"status": "active",
+		"meta_title": "White Patch Pocket Tee",
+		"meta_keyword": "white, patch, pocket, tee",
+		"meta_description": "Shop White Patch Pocket Tee.",
+		"tags": "white, patch, pocket, tee",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "24.13",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "T-Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Sharp Fit"
+			}
+		],
+		"uniqid": "scr-prod-037",
+		"sku": "SCR-037",
+		"distributor_price": "1040.06",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0037",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "24.13",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "Sharp Fit",
+			"slug": "sharp-fit"
+		},
+		"category": {
+			"id": 3,
+			"name": "T-Shirt"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "T-Shirts"
+		},
+		"product_image": [
+			{
+				"id": 37,
+				"product_id": 37,
+				"image": "uploads/theme-one/product/37.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 38,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "teal-pattern-koti-set-premium-fit",
+		"name": "Teal Pattern Koti Set Premium Fit",
+		"short_description": "Teal embroidered koti with navy kurta. Limited stock.",
+		"long_description": "<p>Festive koti waistcoat paired with navy kurta sleeves.</p>",
+		"selling_price": "3315.50",
+		"original_price": "4290.00",
+		"image": "uploads/theme-one/product/38.png",
+		"status": "active",
+		"meta_title": "Teal Pattern Koti Set",
+		"meta_keyword": "teal, pattern, koti, set",
+		"meta_description": "Shop Teal Pattern Koti Set.",
+		"tags": "teal, pattern, koti, set",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.72",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Koti"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-038",
+		"sku": "SCR-038",
+		"distributor_price": "3050.26",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0038",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.72",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Koti"
+		},
+		"product_image": [
+			{
+				"id": 38,
+				"product_id": 38,
+				"image": "uploads/theme-one/product/38.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 39,
+		"category_id": 2,
+		"subcategory_id": 2,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "embroidered-green-panjabi-premium-fit",
+		"name": "Embroidered Green Panjabi Premium Fit",
+		"short_description": "Dark green panjabi with collar embroidery. Limited stock.",
+		"long_description": "<p>Premium panjabi with mandarin collar and front placket detail.</p>",
+		"selling_price": "2745.50",
+		"original_price": "3590.00",
+		"image": "uploads/theme-one/product/39.png",
+		"status": "active",
+		"meta_title": "Embroidered Green Panjabi",
+		"meta_keyword": "embroidered, green, panjabi",
+		"meta_description": "Shop Embroidered Green Panjabi.",
+		"tags": "embroidered, green, panjabi",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.52",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Panjabi"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			}
+		],
+		"uniqid": "scr-prod-039",
+		"sku": "SCR-039",
+		"distributor_price": "2525.86",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SCR0039",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.52",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"subcategory": {
+			"id": 2,
+			"name": "Panjabi"
+		},
+		"product_image": [
+			{
+				"id": 39,
+				"product_id": 39,
+				"image": "uploads/theme-one/product/39.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Fashion Stock"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 40,
+		"category_id": 4,
+		"subcategory_id": 4,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "light-blue-formal-shirt-premium-fit",
+		"name": "Light Blue Formal Shirt Premium Fit",
+		"short_description": "Light blue formal shirt with patch pocket. Limited stock.",
+		"long_description": "<p>Office-ready formal shirt with textured weave.</p>",
+		"selling_price": "1605.50",
+		"original_price": "2190.00",
+		"image": "uploads/theme-one/product/40.png",
+		"status": "active",
+		"meta_title": "Light Blue Formal Shirt",
+		"meta_keyword": "light, blue, formal, shirt",
+		"meta_description": "Shop Light Blue Formal Shirt.",
+		"tags": "light, blue, formal, shirt",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "26.69",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Shirt"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Classic Line"
+			}
+		],
+		"uniqid": "scr-prod-040",
+		"sku": "SCR-040",
+		"distributor_price": "1477.06",
+		"alert_qty": 8,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0040",
+		"warranty": "No Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "26.69",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "Classic Line",
+			"slug": "classic-line"
+		},
+		"category": {
+			"id": 4,
+			"name": "Shirt"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Shirts"
+		},
+		"product_image": [
+			{
+				"id": 40,
+				"product_id": 40,
+				"image": "uploads/theme-one/product/40.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Menswear Warehouse"
 		},
 		"product_variant": []
 	}

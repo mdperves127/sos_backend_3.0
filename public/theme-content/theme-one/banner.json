@@ -1,8 +1,8 @@
 [
     {
         "id": 1,
-        "title": "",
-        "subtitle": "",
+        "title": "Celebrate in Color",
+        "subtitle": "Elegance for Every Occasion",
         "image": "uploads/theme-one/banner/1.png",
         "link": "#",
         "order": 1,
@@ -10,8 +10,8 @@
     },
     {
         "id": 2,
-        "title": "",
-        "subtitle": "",
+        "title": "Festive Collection",
+        "subtitle": "For Him & Her",
         "image": "uploads/theme-one/banner/2.png",
         "link": "#",
         "order": 2,
@@ -19,11 +19,20 @@
     },
     {
         "id": 3,
-        "title": "",
-        "subtitle": "",
+        "title": "New Arrivals",
+        "subtitle": "Shop Now",
         "image": "uploads/theme-one/banner/3.png",
         "link": "#",
         "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Panjabi",
+        "subtitle": "Check All",
+        "image": "uploads/theme-one/banner/4.png",
+        "link": "#",
+        "order": 4,
         "status": "active"
     }
 ]
