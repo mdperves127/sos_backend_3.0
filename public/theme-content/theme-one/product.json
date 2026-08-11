@@ -105,7 +105,7 @@
 			{
 				"id": 1,
 				"product_id": 1,
-				"image": "uploads/theme-one/product/1.png",
+				"image": "uploads/theme-one/product/2.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -133,7 +133,7 @@
 		"long_description": "<p>Cream Gold Sherwani \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "4990.00",
 		"original_price": "6490.00",
-		"image": "uploads/theme-one/product/2.png",
+		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
 		"meta_title": "Cream Gold Sherwani",
 		"meta_keyword": "cream, gold, sherwani",
@@ -227,7 +227,7 @@
 			{
 				"id": 2,
 				"product_id": 2,
-				"image": "uploads/theme-one/product/2.png",
+				"image": "uploads/theme-one/product/4.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -255,7 +255,7 @@
 		"long_description": "<p>Mint Nehru Jacket Set \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3890.00",
 		"original_price": "4790.00",
-		"image": "uploads/theme-one/product/3.png",
+		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
 		"meta_title": "Mint Nehru Jacket Set",
 		"meta_keyword": "mint, nehru, jacket, set",
@@ -349,7 +349,7 @@
 			{
 				"id": 3,
 				"product_id": 3,
-				"image": "uploads/theme-one/product/3.png",
+				"image": "uploads/theme-one/product/6.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -377,7 +377,7 @@
 		"long_description": "<p>Sage Green Embroidered Sherwani \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "4590.00",
 		"original_price": "5690.00",
-		"image": "uploads/theme-one/product/4.png",
+		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
 		"meta_title": "Sage Green Embroidered Sherwani",
 		"meta_keyword": "sage, green, embroidered, sherwani",
@@ -471,7 +471,7 @@
 			{
 				"id": 4,
 				"product_id": 4,
-				"image": "uploads/theme-one/product/4.png",
+				"image": "uploads/theme-one/product/8.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -499,7 +499,7 @@
 		"long_description": "<p>Black Sequin Bandhgala \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "4290.00",
 		"original_price": "5290.00",
-		"image": "uploads/theme-one/product/5.png",
+		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
 		"meta_title": "Black Sequin Bandhgala",
 		"meta_keyword": "black, sequin, bandhgala",
@@ -593,7 +593,7 @@
 			{
 				"id": 5,
 				"product_id": 5,
-				"image": "uploads/theme-one/product/5.png",
+				"image": "uploads/theme-one/product/10.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -621,7 +621,7 @@
 		"long_description": "<p>Bronze Paisley Festive Panjabi \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3790.00",
 		"original_price": "4690.00",
-		"image": "uploads/theme-one/product/6.png",
+		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
 		"meta_title": "Bronze Paisley Festive Panjabi",
 		"meta_keyword": "bronze, paisley, festive, panjabi",
@@ -715,7 +715,7 @@
 			{
 				"id": 6,
 				"product_id": 6,
-				"image": "uploads/theme-one/product/6.png",
+				"image": "uploads/theme-one/product/12.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -743,7 +743,7 @@
 		"long_description": "<p>Taupe Embroidered Waistcoat Set \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3690.00",
 		"original_price": "4590.00",
-		"image": "uploads/theme-one/product/7.png",
+		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
 		"meta_title": "Taupe Embroidered Waistcoat Set",
 		"meta_keyword": "taupe, embroidered, waistcoat, set",
@@ -837,7 +837,7 @@
 			{
 				"id": 7,
 				"product_id": 7,
-				"image": "uploads/theme-one/product/7.png",
+				"image": "uploads/theme-one/product/14.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -865,7 +865,7 @@
 		"long_description": "<p>Ivory Crest Sherwani \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "5490.00",
 		"original_price": "6990.00",
-		"image": "uploads/theme-one/product/8.png",
+		"image": "uploads/theme-one/product/15.png",
 		"status": "active",
 		"meta_title": "Ivory Crest Sherwani",
 		"meta_keyword": "ivory, crest, sherwani",
@@ -959,7 +959,7 @@
 			{
 				"id": 8,
 				"product_id": 8,
-				"image": "uploads/theme-one/product/8.png",
+				"image": "uploads/theme-one/product/16.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -987,7 +987,7 @@
 		"long_description": "<p>Maroon Paisley Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "2890.00",
 		"original_price": "3590.00",
-		"image": "uploads/theme-one/product/9.png",
+		"image": "uploads/theme-one/product/17.png",
 		"status": "active",
 		"meta_title": "Maroon Paisley Kurta",
 		"meta_keyword": "maroon, paisley, kurta",
@@ -1081,7 +1081,7 @@
 			{
 				"id": 9,
 				"product_id": 9,
-				"image": "uploads/theme-one/product/9.png",
+				"image": "uploads/theme-one/product/18.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1109,7 +1109,7 @@
 		"long_description": "<p>Sage Green One Day Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "890.00",
 		"original_price": "1190.00",
-		"image": "uploads/theme-one/product/10.png",
+		"image": "uploads/theme-one/product/19.png",
 		"status": "active",
 		"meta_title": "Sage Green One Day Tee",
 		"meta_keyword": "sage, green, one, day, tee",
@@ -1203,7 +1203,7 @@
 			{
 				"id": 10,
 				"product_id": 10,
-				"image": "uploads/theme-one/product/10.png",
+				"image": "uploads/theme-one/product/20.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1231,7 +1231,7 @@
 		"long_description": "<p>Floral Embroidered Camp Shirt \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1990.00",
 		"original_price": "2590.00",
-		"image": "uploads/theme-one/product/11.png",
+		"image": "uploads/theme-one/product/21.png",
 		"status": "active",
 		"meta_title": "Floral Embroidered Camp Shirt",
 		"meta_keyword": "floral, embroidered, camp, shirt",
@@ -1325,7 +1325,7 @@
 			{
 				"id": 11,
 				"product_id": 11,
-				"image": "uploads/theme-one/product/11.png",
+				"image": "uploads/theme-one/product/22.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1353,7 +1353,7 @@
 		"long_description": "<p>Tokyo Underground Graphic Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "990.00",
 		"original_price": "1290.00",
-		"image": "uploads/theme-one/product/12.png",
+		"image": "uploads/theme-one/product/23.png",
 		"status": "active",
 		"meta_title": "Tokyo Underground Graphic Tee",
 		"meta_keyword": "tokyo, underground, graphic, tee",
@@ -1447,7 +1447,7 @@
 			{
 				"id": 12,
 				"product_id": 12,
-				"image": "uploads/theme-one/product/12.png",
+				"image": "uploads/theme-one/product/24.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1475,7 +1475,7 @@
 		"long_description": "<p>Cream Red Geometric Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3190.00",
 		"original_price": "3990.00",
-		"image": "uploads/theme-one/product/13.png",
+		"image": "uploads/theme-one/product/25.png",
 		"status": "active",
 		"meta_title": "Cream Red Geometric Kurta",
 		"meta_keyword": "cream, red, geometric, kurta",
@@ -1569,7 +1569,7 @@
 			{
 				"id": 13,
 				"product_id": 13,
-				"image": "uploads/theme-one/product/13.png",
+				"image": "uploads/theme-one/product/26.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1597,7 +1597,7 @@
 		"long_description": "<p>Monaco Grand Prix Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1090.00",
 		"original_price": "1390.00",
-		"image": "uploads/theme-one/product/14.png",
+		"image": "uploads/theme-one/product/27.png",
 		"status": "active",
 		"meta_title": "Monaco Grand Prix Tee",
 		"meta_keyword": "monaco, grand, prix, tee",
@@ -1691,7 +1691,7 @@
 			{
 				"id": 14,
 				"product_id": 14,
-				"image": "uploads/theme-one/product/14.png",
+				"image": "uploads/theme-one/product/28.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1719,7 +1719,7 @@
 		"long_description": "<p>One Day At A Time Tank \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "790.00",
 		"original_price": "990.00",
-		"image": "uploads/theme-one/product/15.png",
+		"image": "uploads/theme-one/product/29.png",
 		"status": "active",
 		"meta_title": "One Day At A Time Tank",
 		"meta_keyword": "one, day, at, a, time, tank",
@@ -1813,7 +1813,7 @@
 			{
 				"id": 15,
 				"product_id": 15,
-				"image": "uploads/theme-one/product/15.png",
+				"image": "uploads/theme-one/product/30.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1841,7 +1841,7 @@
 		"long_description": "<p>Royal Blue Geometric Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3290.00",
 		"original_price": "4090.00",
-		"image": "uploads/theme-one/product/16.png",
+		"image": "uploads/theme-one/product/31.png",
 		"status": "active",
 		"meta_title": "Royal Blue Geometric Kurta",
 		"meta_keyword": "royal, blue, geometric, kurta",
@@ -1935,7 +1935,7 @@
 			{
 				"id": 16,
 				"product_id": 16,
-				"image": "uploads/theme-one/product/16.png",
+				"image": "uploads/theme-one/product/32.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1963,7 +1963,7 @@
 		"long_description": "<p>Slim Fit Black Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1890.00",
 		"original_price": "2490.00",
-		"image": "uploads/theme-one/product/17.png",
+		"image": "uploads/theme-one/product/1.png",
 		"status": "active",
 		"meta_title": "Slim Fit Black Trousers",
 		"meta_keyword": "slim, fit, black, trousers",
@@ -2057,7 +2057,7 @@
 			{
 				"id": 17,
 				"product_id": 17,
-				"image": "uploads/theme-one/product/17.png",
+				"image": "uploads/theme-one/product/2.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2085,7 +2085,7 @@
 		"long_description": "<p>Light Grey Straight Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1790.00",
 		"original_price": "2290.00",
-		"image": "uploads/theme-one/product/18.png",
+		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
 		"meta_title": "Light Grey Straight Trousers",
 		"meta_keyword": "light, grey, straight, trousers",
@@ -2179,7 +2179,7 @@
 			{
 				"id": 18,
 				"product_id": 18,
-				"image": "uploads/theme-one/product/18.png",
+				"image": "uploads/theme-one/product/4.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2207,7 +2207,7 @@
 		"long_description": "<p>Black Tapered Chinos \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1690.00",
 		"original_price": "2190.00",
-		"image": "uploads/theme-one/product/19.png",
+		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
 		"meta_title": "Black Tapered Chinos",
 		"meta_keyword": "black, tapered, chinos",
@@ -2301,7 +2301,7 @@
 			{
 				"id": 19,
 				"product_id": 19,
-				"image": "uploads/theme-one/product/19.png",
+				"image": "uploads/theme-one/product/6.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2329,7 +2329,7 @@
 		"long_description": "<p>Wide Leg Vintage Jeans \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "2190.00",
 		"original_price": "2790.00",
-		"image": "uploads/theme-one/product/20.png",
+		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
 		"meta_title": "Wide Leg Vintage Jeans",
 		"meta_keyword": "wide, leg, vintage, jeans",
@@ -2423,7 +2423,7 @@
 			{
 				"id": 20,
 				"product_id": 20,
-				"image": "uploads/theme-one/product/20.png",
+				"image": "uploads/theme-one/product/8.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2451,7 +2451,7 @@
 		"long_description": "<p>Seafoam Embroidered Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3390.00",
 		"original_price": "4190.00",
-		"image": "uploads/theme-one/product/21.png",
+		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
 		"meta_title": "Seafoam Embroidered Kurta",
 		"meta_keyword": "seafoam, embroidered, kurta",
@@ -2545,7 +2545,7 @@
 			{
 				"id": 21,
 				"product_id": 21,
-				"image": "uploads/theme-one/product/21.png",
+				"image": "uploads/theme-one/product/10.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2573,7 +2573,7 @@
 		"long_description": "<p>Blue Bird Embroidery Shirt \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "2290.00",
 		"original_price": "2890.00",
-		"image": "uploads/theme-one/product/22.png",
+		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
 		"meta_title": "Blue Bird Embroidery Shirt",
 		"meta_keyword": "blue, bird, embroidery, shirt",
@@ -2667,7 +2667,7 @@
 			{
 				"id": 22,
 				"product_id": 22,
-				"image": "uploads/theme-one/product/22.png",
+				"image": "uploads/theme-one/product/12.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2695,7 +2695,7 @@
 		"long_description": "<p>Slate Blue Floral Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3090.00",
 		"original_price": "3890.00",
-		"image": "uploads/theme-one/product/23.png",
+		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
 		"meta_title": "Slate Blue Floral Kurta",
 		"meta_keyword": "slate, blue, floral, kurta",
@@ -2789,7 +2789,7 @@
 			{
 				"id": 23,
 				"product_id": 23,
-				"image": "uploads/theme-one/product/23.png",
+				"image": "uploads/theme-one/product/14.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2817,7 +2817,7 @@
 		"long_description": "<p>Lavender Floral Kurta \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "2990.00",
 		"original_price": "3690.00",
-		"image": "uploads/theme-one/product/24.png",
+		"image": "uploads/theme-one/product/15.png",
 		"status": "active",
 		"meta_title": "Lavender Floral Kurta",
 		"meta_keyword": "lavender, floral, kurta",
@@ -2911,7 +2911,7 @@
 			{
 				"id": 24,
 				"product_id": 24,
-				"image": "uploads/theme-one/product/24.png",
+				"image": "uploads/theme-one/product/16.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2939,7 +2939,7 @@
 		"long_description": "<p>Grey Smart Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1750.00",
 		"original_price": "2250.00",
-		"image": "uploads/theme-one/product/25.png",
+		"image": "uploads/theme-one/product/17.png",
 		"status": "active",
 		"meta_title": "Grey Smart Trousers",
 		"meta_keyword": "grey, smart, trousers",
@@ -3033,7 +3033,7 @@
 			{
 				"id": 25,
 				"product_id": 25,
-				"image": "uploads/theme-one/product/25.png",
+				"image": "uploads/theme-one/product/18.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3061,7 +3061,7 @@
 		"long_description": "<p>Slate Grey Patch Graphic Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "850.00",
 		"original_price": "1150.00",
-		"image": "uploads/theme-one/product/26.png",
+		"image": "uploads/theme-one/product/19.png",
 		"status": "active",
 		"meta_title": "Slate Grey Patch Graphic Tee",
 		"meta_keyword": "slate, grey, patch, graphic, tee",
@@ -3155,7 +3155,7 @@
 			{
 				"id": 26,
 				"product_id": 26,
-				"image": "uploads/theme-one/product/26.png",
+				"image": "uploads/theme-one/product/20.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3183,7 +3183,7 @@
 		"long_description": "<p>Oversized Grey Bern Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "790.00",
 		"original_price": "1090.00",
-		"image": "uploads/theme-one/product/27.png",
+		"image": "uploads/theme-one/product/21.png",
 		"status": "active",
 		"meta_title": "Oversized Grey Bern Tee",
 		"meta_keyword": "oversized, grey, bern, tee",
@@ -3277,7 +3277,7 @@
 			{
 				"id": 27,
 				"product_id": 27,
-				"image": "uploads/theme-one/product/27.png",
+				"image": "uploads/theme-one/product/22.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3305,7 +3305,7 @@
 		"long_description": "<p>Teal Pattern Nehru Jacket \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3590.00",
 		"original_price": "4490.00",
-		"image": "uploads/theme-one/product/28.png",
+		"image": "uploads/theme-one/product/23.png",
 		"status": "active",
 		"meta_title": "Teal Pattern Nehru Jacket",
 		"meta_keyword": "teal, pattern, nehru, jacket",
@@ -3399,7 +3399,7 @@
 			{
 				"id": 28,
 				"product_id": 28,
-				"image": "uploads/theme-one/product/28.png",
+				"image": "uploads/theme-one/product/24.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3427,7 +3427,7 @@
 		"long_description": "<p>Light Blue Formal Shirt \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1890.00",
 		"original_price": "2390.00",
-		"image": "uploads/theme-one/product/29.png",
+		"image": "uploads/theme-one/product/25.png",
 		"status": "active",
 		"meta_title": "Light Blue Formal Shirt",
 		"meta_keyword": "light, blue, formal, shirt",
@@ -3521,7 +3521,7 @@
 			{
 				"id": 29,
 				"product_id": 29,
-				"image": "uploads/theme-one/product/29.png",
+				"image": "uploads/theme-one/product/26.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3549,7 +3549,7 @@
 		"long_description": "<p>Grey Crease Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1850.00",
 		"original_price": "2350.00",
-		"image": "uploads/theme-one/product/30.png",
+		"image": "uploads/theme-one/product/27.png",
 		"status": "active",
 		"meta_title": "Grey Crease Trousers",
 		"meta_keyword": "grey, crease, trousers",
@@ -3643,7 +3643,7 @@
 			{
 				"id": 30,
 				"product_id": 30,
-				"image": "uploads/theme-one/product/30.png",
+				"image": "uploads/theme-one/product/28.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3671,7 +3671,7 @@
 		"long_description": "<p>White Line Art Graphic Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "920.00",
 		"original_price": "1220.00",
-		"image": "uploads/theme-one/product/31.png",
+		"image": "uploads/theme-one/product/29.png",
 		"status": "active",
 		"meta_title": "White Line Art Graphic Tee",
 		"meta_keyword": "white, line, art, graphic, tee",
@@ -3765,7 +3765,7 @@
 			{
 				"id": 31,
 				"product_id": 31,
-				"image": "uploads/theme-one/product/31.png",
+				"image": "uploads/theme-one/product/30.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3793,7 +3793,7 @@
 		"long_description": "<p>Dark Green Festive Panjabi \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3190.00",
 		"original_price": "3990.00",
-		"image": "uploads/theme-one/product/32.png",
+		"image": "uploads/theme-one/product/31.png",
 		"status": "active",
 		"meta_title": "Dark Green Festive Panjabi",
 		"meta_keyword": "dark, green, festive, panjabi",
@@ -3915,7 +3915,7 @@
 		"long_description": "<p>Black Pocket Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1920.00",
 		"original_price": "2520.00",
-		"image": "uploads/theme-one/product/33.png",
+		"image": "uploads/theme-one/product/1.png",
 		"status": "active",
 		"meta_title": "Black Pocket Trousers",
 		"meta_keyword": "black, pocket, trousers",
@@ -4009,7 +4009,7 @@
 			{
 				"id": 33,
 				"product_id": 33,
-				"image": "uploads/theme-one/product/33.png",
+				"image": "uploads/theme-one/product/2.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4037,7 +4037,7 @@
 		"long_description": "<p>Black Slim Dress Pants \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1980.00",
 		"original_price": "2580.00",
-		"image": "uploads/theme-one/product/34.png",
+		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
 		"meta_title": "Black Slim Dress Pants",
 		"meta_keyword": "black, slim, dress, pants",
@@ -4131,7 +4131,7 @@
 			{
 				"id": 34,
 				"product_id": 34,
-				"image": "uploads/theme-one/product/34.png",
+				"image": "uploads/theme-one/product/4.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4159,7 +4159,7 @@
 		"long_description": "<p>Mustard Oversized Graphic Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "880.00",
 		"original_price": "1180.00",
-		"image": "uploads/theme-one/product/35.png",
+		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
 		"meta_title": "Mustard Oversized Graphic Tee",
 		"meta_keyword": "mustard, oversized, graphic, tee",
@@ -4253,7 +4253,7 @@
 			{
 				"id": 35,
 				"product_id": 35,
-				"image": "uploads/theme-one/product/35.png",
+				"image": "uploads/theme-one/product/6.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4281,7 +4281,7 @@
 		"long_description": "<p>White Olive Patch Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "900.00",
 		"original_price": "1200.00",
-		"image": "uploads/theme-one/product/36.png",
+		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
 		"meta_title": "White Olive Patch Tee",
 		"meta_keyword": "white, olive, patch, tee",
@@ -4375,7 +4375,7 @@
 			{
 				"id": 36,
 				"product_id": 36,
-				"image": "uploads/theme-one/product/36.png",
+				"image": "uploads/theme-one/product/8.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4403,7 +4403,7 @@
 		"long_description": "<p>Emerald Embroidered Panjabi \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "3290.00",
 		"original_price": "4090.00",
-		"image": "uploads/theme-one/product/37.png",
+		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
 		"meta_title": "Emerald Embroidered Panjabi",
 		"meta_keyword": "emerald, embroidered, panjabi",
@@ -4497,7 +4497,7 @@
 			{
 				"id": 37,
 				"product_id": 37,
-				"image": "uploads/theme-one/product/37.png",
+				"image": "uploads/theme-one/product/10.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4525,7 +4525,7 @@
 		"long_description": "<p>Black Tech Slim Pants \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "2050.00",
 		"original_price": "2650.00",
-		"image": "uploads/theme-one/product/38.png",
+		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
 		"meta_title": "Black Tech Slim Pants",
 		"meta_keyword": "black, tech, slim, pants",
@@ -4619,7 +4619,7 @@
 			{
 				"id": 38,
 				"product_id": 38,
-				"image": "uploads/theme-one/product/38.png",
+				"image": "uploads/theme-one/product/12.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4647,7 +4647,7 @@
 		"long_description": "<p>Black Formal Trousers \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "1950.00",
 		"original_price": "2550.00",
-		"image": "uploads/theme-one/product/39.png",
+		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
 		"meta_title": "Black Formal Trousers",
 		"meta_keyword": "black, formal, trousers",
@@ -4741,7 +4741,7 @@
 			{
 				"id": 39,
 				"product_id": 39,
-				"image": "uploads/theme-one/product/39.png",
+				"image": "uploads/theme-one/product/14.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -4769,7 +4769,7 @@
 		"long_description": "<p>Mustard Street Graphic Tee \u2014 elegance for every occasion. Celebrate in color with premium menswear.</p>",
 		"selling_price": "860.00",
 		"original_price": "1160.00",
-		"image": "uploads/theme-one/product/40.png",
+		"image": "uploads/theme-one/product/15.png",
 		"status": "active",
 		"meta_title": "Mustard Street Graphic Tee",
 		"meta_keyword": "mustard, street, graphic, tee",
@@ -4863,7 +4863,7 @@
 			{
 				"id": 40,
 				"product_id": 40,
-				"image": "uploads/theme-one/product/40.png",
+				"image": "uploads/theme-one/product/16.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],

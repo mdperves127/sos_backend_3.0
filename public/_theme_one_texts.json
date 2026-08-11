@@ -1,0 +1,702 @@
+[
+  {
+    "id": "I940:11463;573:17370",
+    "name": "✌🏼 Free Express Shipping on orders $200!",
+    "text": "✌🏼 Free Express Shipping on orders $200!",
+    "x": 200.0,
+    "y": 12.0,
+    "w": 1395.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Nav-1/Topbar/Frame 2095585633"
+  },
+  {
+    "id": "I940:11463;573:11375",
+    "name": "All Categories",
+    "text": "All Categories",
+    "x": 678.0,
+    "y": 73.0,
+    "w": 93.0,
+    "h": 14.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Inputs/Frame 9"
+  },
+  {
+    "id": "I940:11463;573:11378",
+    "name": "Search for products",
+    "text": "Search for products",
+    "x": 847.0,
+    "y": 73.0,
+    "w": 129.0,
+    "h": 14.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Inputs/Frame 2095585626"
+  },
+  {
+    "id": "I940:11463;573:11411",
+    "name": "Clothes",
+    "text": "Clothes",
+    "x": 540.0,
+    "y": 142.0,
+    "w": 55.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Frame 2095585630/text"
+  },
+  {
+    "id": "I940:11463;573:11412",
+    "name": "New Arrivals",
+    "text": "New Arrivals",
+    "x": 635.0,
+    "y": 142.0,
+    "w": 91.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Frame 2095585630/text"
+  },
+  {
+    "id": "I940:11463;573:11413",
+    "name": "Best Sellers",
+    "text": "Best Sellers",
+    "x": 766.0,
+    "y": 142.0,
+    "w": 84.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Frame 2095585630/text"
+  },
+  {
+    "id": "I940:11463;573:11414",
+    "name": "Blog",
+    "text": "Blog",
+    "x": 890.0,
+    "y": 142.0,
+    "w": 34.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Nav-1/Header/Navbar/Frame 2095585630/text"
+  },
+  {
+    "id": "940:11470",
+    "name": "Trending Categories",
+    "text": "Trending Categories",
+    "x": -14.0,
+    "y": 970.0,
+    "w": 1947.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 14"
+  },
+  {
+    "id": "940:11475",
+    "name": "Koti",
+    "text": "Koti",
+    "x": 118.0,
+    "y": 1404.0,
+    "w": 48.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 4/Frame 12"
+  },
+  {
+    "id": "940:11479",
+    "name": "Punjabi",
+    "text": "Punjabi",
+    "x": 426.5,
+    "y": 1404.0,
+    "w": 85.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 10/Frame 12"
+  },
+  {
+    "id": "940:11483",
+    "name": "T-shirt",
+    "text": "T-shirt",
+    "x": 758.0,
+    "y": 1404.0,
+    "w": 76.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 11/Frame 12"
+  },
+  {
+    "id": "940:11487",
+    "name": "Shirt",
+    "text": "Shirt",
+    "x": 1094.5,
+    "y": 1404.0,
+    "w": 57.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 12/Frame 12"
+  },
+  {
+    "id": "940:11491",
+    "name": "Kurta",
+    "text": "Kurta",
+    "x": 1416.0,
+    "y": 1404.0,
+    "w": 68.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 14/Frame 12"
+  },
+  {
+    "id": "940:11495",
+    "name": "Jeans",
+    "text": "Jeans",
+    "x": 1746.0,
+    "y": 1404.0,
+    "w": 62.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 14/Frame 13/Group 13/Frame 12"
+  },
+  {
+    "id": "940:11498",
+    "name": "PANJABI",
+    "text": "PANJABI",
+    "x": 300.0,
+    "y": 1530.0,
+    "w": 154.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 21"
+  },
+  {
+    "id": "I940:11499;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1535.0,
+    "y": 1544.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11502;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 1656.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11503;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 1656.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11504;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 1656.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11505;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 1656.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "I940:11507;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 2141.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 29/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11508;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 2141.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 29/Frame 27/Frame 12"
+  },
+  {
+    "id": "I940:11509;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 2141.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 29/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11510;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 2141.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 31/Frame 30/Frame 29/Frame 26/Frame 12"
+  },
+  {
+    "id": "940:11523",
+    "name": "MEN'S FASHION",
+    "text": "MEN'S FASHION",
+    "x": 300.0,
+    "y": 3063.0,
+    "w": 284.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 21"
+  },
+  {
+    "id": "I940:11524;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1535.0,
+    "y": 3077.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11527;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 3189.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11528;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 3189.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11529;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 3189.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11530;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 3189.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "I940:11532;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 3674.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 29/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11533;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 3674.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 29/Frame 27/Frame 12"
+  },
+  {
+    "id": "I940:11534;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 3674.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 29/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11535;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 3674.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 35/Frame 30/Frame 29/Frame 26/Frame 12"
+  },
+  {
+    "id": "940:11538",
+    "name": "STYLISH PANTS",
+    "text": "STYLISH PANTS",
+    "x": 306.0,
+    "y": 4188.0,
+    "w": 273.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 21"
+  },
+  {
+    "id": "I940:11539;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1541.0,
+    "y": 4202.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11542;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 312.0,
+    "y": 4314.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11543;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 648.0,
+    "y": 4314.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11544;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 984.0,
+    "y": 4314.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11545;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1320.0,
+    "y": 4314.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 36/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "940:11548",
+    "name": "STYLISH SHIRT",
+    "text": "STYLISH SHIRT",
+    "x": 300.0,
+    "y": 5358.0,
+    "w": 258.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 21"
+  },
+  {
+    "id": "I940:11549;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1535.0,
+    "y": 5372.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11552;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 5484.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11553;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 5484.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11554;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 5484.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11555;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 5484.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 37/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "940:11558",
+    "name": "STYLISH PANTS",
+    "text": "STYLISH PANTS",
+    "x": 300.0,
+    "y": 5995.0,
+    "w": 273.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 21"
+  },
+  {
+    "id": "I940:11559;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1535.0,
+    "y": 6009.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11562;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 306.0,
+    "y": 6121.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11563;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 642.0,
+    "y": 6121.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11564;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 978.0,
+    "y": 6121.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11565;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1314.0,
+    "y": 6121.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 38/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "940:11513",
+    "name": "PANJABI",
+    "text": "PANJABI",
+    "x": 306.0,
+    "y": 6635.0,
+    "w": 154.0,
+    "h": 50.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 21"
+  },
+  {
+    "id": "I940:11514;27:768",
+    "name": "Button",
+    "text": "Check All",
+    "x": 1541.0,
+    "y": 6649.0,
+    "w": 65.0,
+    "h": 22.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 21/Buttons"
+  },
+  {
+    "id": "I940:11517;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 312.0,
+    "y": 6761.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 30/Frame 28/Frame 24/Frame 12"
+  },
+  {
+    "id": "I940:11518;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 648.0,
+    "y": 6761.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 30/Frame 28/Frame 25/Frame 12"
+  },
+  {
+    "id": "I940:11519;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 984.0,
+    "y": 6761.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 30/Frame 28/Frame 26/Frame 12"
+  },
+  {
+    "id": "I940:11520;27:2250",
+    "name": "-30%",
+    "text": "-30%",
+    "x": 1320.0,
+    "y": 6761.0,
+    "w": 32.0,
+    "h": 16.0,
+    "path": "/Fashion Home Page/Frame 39/Frame 30/Frame 28/Frame 27/Frame 12"
+  },
+  {
+    "id": "I940:11573;578:18731",
+    "name": "High-quality Goods",
+    "text": "High-quality Goods",
+    "x": 349.0,
+    "y": 7442.5,
+    "w": 214.0,
+    "h": 26.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 40/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18738",
+    "name": "24/7 Live chat",
+    "text": "24/7 Live chat",
+    "x": 656.0,
+    "y": 7442.5,
+    "w": 272.0,
+    "h": 26.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 44/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18745",
+    "name": "Express Shipping",
+    "text": "Express Shipping",
+    "x": 1043.0,
+    "y": 7442.5,
+    "w": 170.0,
+    "h": 26.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 45/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18752",
+    "name": "Secure Payment",
+    "text": "Secure Payment\r",
+    "x": 1328.0,
+    "y": 7442.5,
+    "w": 272.0,
+    "h": 26.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 46/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18732",
+    "name": "Enjoy top quality items for less",
+    "text": "Enjoy top quality items for less",
+    "x": 335.0,
+    "y": 7473.5,
+    "w": 242.0,
+    "h": 24.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 40/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18739",
+    "name": "Get instant assistance",
+    "text": "Get instant assistance ",
+    "x": 656.0,
+    "y": 7473.5,
+    "w": 272.0,
+    "h": 24.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 44/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18746",
+    "name": "Fast & reliable delivery options",
+    "text": "Fast & reliable delivery options",
+    "x": 1006.0,
+    "y": 7473.5,
+    "w": 244.0,
+    "h": 24.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 45/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18753",
+    "name": "Multiple safe payment methods",
+    "text": "Multiple safe payment methods",
+    "x": 1328.0,
+    "y": 7473.5,
+    "w": 272.0,
+    "h": 24.0,
+    "path": "/Fashion Home Page/Footer/Frame 45/Frame 46/Frame 39"
+  },
+  {
+    "id": "I940:11573;578:18697",
+    "name": "Quick Links",
+    "text": "Quick Links",
+    "x": 944.0,
+    "y": 7625.0,
+    "w": 214.0,
+    "h": 28.0,
+    "path": "/Fashion Home Page/Footer/Frame 54/Frame 56/Frame 53/Frame 50"
+  },
+  {
+    "id": "I940:11573;578:18707",
+    "name": "Contact Info",
+    "text": "Contact Info",
+    "x": 1251.0,
+    "y": 7625.0,
+    "w": 214.0,
+    "h": 28.0,
+    "path": "/Fashion Home Page/Footer/Frame 54/Frame 56/Frame 53/Frame 51"
+  },
+  {
+    "id": "I940:11573;578:18683",
+    "name": "Transform Your Shopping Experience with Sosecommerce – Step into a world of handpicked styles, cutting-edge trends, and timeless elegance. From everyday essentials to.",
+    "text": "Transform Your Shopping Experience with Sosecommerce – Step into a world of handpicked styles, cutting-edge trends, and timeless elegance. From everyday essentials to.",
+    "x": 300.0,
+    "y": 7733.5,
+    "w": 536.0,
+    "h": 72.0,
+    "path": "/Fashion Home Page/Footer/Frame 54/Frame 56/Frame 53/Frame 47"
+  },
+  {
+    "id": "I940:11573;578:18723",
+    "name": "© 2025. All rights reserved by SOSEcommerce.",
+    "text": "© 2025. All rights reserved by SOSEcommerce.",
+    "x": 300.0,
+    "y": 8002.5,
+    "w": 376.0,
+    "h": 24.0,
+    "path": "/Fashion Home Page/Footer/Frame 54/Frame 55"
+  }
+]

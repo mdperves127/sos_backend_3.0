@@ -3,7 +3,7 @@
         "app_name": "SOSComrz",
         "home_page_title": "Celebrate in Color",
         "banner_title": "Celebrate in Color",
-        "banner_description": "Elegance for Every Occasion \u2014 Discover our new festive collection for him & her.",
+        "banner_description": "Elegance for Every Occasion — Discover our new festive collection for him & her.",
         "color_primary": "#C1272D",
         "theme": "one",
         "logo": "uploads/theme-one/logo/logo.png",
@@ -63,7 +63,7 @@
         "footer_contact_address_one": "Banani, Dhaka, Bangladesh",
         "footer_contact_number_two": "+880 9612 578902",
         "footer_contact_address_two": "Mirpur, Dhaka, Bangladesh",
-        "footer_copyright_text": "\u00a9 2026 SOSComrz. All rights reserved.",
+        "footer_copyright_text": "© 2026 SOSComrz. All rights reserved.",
         "footer_payment_methods": "uploads/theme-one/others/payment-methods.png"
     }
 ]

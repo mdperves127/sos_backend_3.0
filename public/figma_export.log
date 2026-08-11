@@ -1,0 +1,293 @@
+
+=== Exporting theme-one ===
+  banner: 4 nodes
+    saved banner/1.png <- 940:11466
+    saved banner/2.png <- 940:11572
+    saved banner/3.png <- 940:11568
+    saved banner/4.png <- 940:11570
+  category: 6 nodes
+    saved category/1.png <- 940:11473
+    saved category/2.png <- 940:11477
+    saved category/3.png <- 940:11481
+    saved category/4.png <- 940:11485
+    saved category/5.png <- 940:11489
+    saved category/6.png <- 940:11493
+  product: 32 nodes
+    saved product/1.png <- I940:11502;27:2214
+    saved product/2.png <- I940:11503;27:2214
+    saved product/3.png <- I940:11504;27:2214
+    saved product/4.png <- I940:11505;27:2214
+    saved product/5.png <- I940:11507;27:2214
+    saved product/6.png <- I940:11508;27:2214
+    saved product/7.png <- I940:11509;27:2214
+    saved product/8.png <- I940:11510;27:2214
+    saved product/9.png <- I940:11517;27:2214
+    saved product/10.png <- I940:11518;27:2214
+    saved product/11.png <- I940:11519;27:2214
+    saved product/12.png <- I940:11520;27:2214
+    saved product/13.png <- I940:11527;27:2214
+    saved product/14.png <- I940:11528;27:2214
+    saved product/15.png <- I940:11529;27:2214
+    saved product/16.png <- I940:11530;27:2214
+    saved product/17.png <- I940:11532;27:2214
+    saved product/18.png <- I940:11533;27:2214
+    saved product/19.png <- I940:11534;27:2214
+    saved product/20.png <- I940:11535;27:2214
+    saved product/21.png <- I940:11542;27:2214
+    saved product/22.png <- I940:11543;27:2214
+    saved product/23.png <- I940:11544;27:2214
+    saved product/24.png <- I940:11545;27:2214
+    saved product/25.png <- I940:11552;27:2214
+    saved product/26.png <- I940:11553;27:2214
+    saved product/27.png <- I940:11554;27:2214
+    saved product/28.png <- I940:11555;27:2214
+    saved product/29.png <- I940:11562;27:2214
+    saved product/30.png <- I940:11563;27:2214
+    saved product/31.png <- I940:11564;27:2214
+    saved product/32.png <- I940:11565;27:2214
+  section-banner: 3 nodes
+Traceback (most recent call last):
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 100, in <module>
+    main()
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 94, in main
+    export_theme(token, theme, spec)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 71, in export_theme
+    urls = export_batch(token, ids)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 58, in export_batch
+    data = api_get(url, token)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 31, in api_get
+    with urllib.request.urlopen(req, timeout=180) as resp:
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 525, in open
+    response = meth(req, response)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 634, in http_response
+    response = self.parent.error(
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 563, in error
+    return self._call_chain(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 496, in _call_chain
+    result = func(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Too Many Requests
+
+=== Exporting theme-one ===
+  banner: 4 nodes
+    skip banner/1.png (exists)
+    skip banner/2.png (exists)
+    skip banner/3.png (exists)
+    skip banner/4.png (exists)
+  category: 6 nodes
+    skip category/1.png (exists)
+    skip category/2.png (exists)
+    skip category/3.png (exists)
+    skip category/4.png (exists)
+    skip category/5.png (exists)
+    skip category/6.png (exists)
+  product: 32 nodes
+    skip product/1.png (exists)
+    skip product/2.png (exists)
+    skip product/3.png (exists)
+    skip product/4.png (exists)
+    skip product/5.png (exists)
+    skip product/6.png (exists)
+    skip product/7.png (exists)
+    skip product/8.png (exists)
+    skip product/9.png (exists)
+    skip product/10.png (exists)
+    skip product/11.png (exists)
+    skip product/12.png (exists)
+    skip product/13.png (exists)
+    skip product/14.png (exists)
+    skip product/15.png (exists)
+    skip product/16.png (exists)
+    skip product/17.png (exists)
+    skip product/18.png (exists)
+    skip product/19.png (exists)
+    skip product/20.png (exists)
+    skip product/21.png (exists)
+    skip product/22.png (exists)
+    skip product/23.png (exists)
+    skip product/24.png (exists)
+    skip product/25.png (exists)
+    skip product/26.png (exists)
+    skip product/27.png (exists)
+    skip product/28.png (exists)
+    skip product/29.png (exists)
+    skip product/30.png (exists)
+    skip product/31.png (exists)
+    skip product/32.png (exists)
+  section-banner: 3 nodes
+    rate limited, waiting 30s...
+    rate limited, waiting 60s...
+    rate limited, waiting 90s...
+    rate limited, waiting 120s...
+    rate limited, waiting 150s...
+    rate limited, waiting 180s...
+    rate limited, waiting 210s...
+    rate limited, waiting 240s...
+
+=== Exporting theme-one ===
+  banner: 4 nodes
+    skip banner/1.png (exists)
+    skip banner/2.png (exists)
+    skip banner/3.png (exists)
+    skip banner/4.png (exists)
+  category: 6 nodes
+    skip category/1.png (exists)
+    skip category/2.png (exists)
+    skip category/3.png (exists)
+    skip category/4.png (exists)
+    skip category/5.png (exists)
+    skip category/6.png (exists)
+  product: 32 nodes
+    skip product/1.png (exists)
+    skip product/2.png (exists)
+    skip product/3.png (exists)
+    skip product/4.png (exists)
+    skip product/5.png (exists)
+    skip product/6.png (exists)
+    skip product/7.png (exists)
+    skip product/8.png (exists)
+    skip product/9.png (exists)
+    skip product/10.png (exists)
+    skip product/11.png (exists)
+    skip product/12.png (exists)
+    skip product/13.png (exists)
+    skip product/14.png (exists)
+    skip product/15.png (exists)
+    skip product/16.png (exists)
+    skip product/17.png (exists)
+    skip product/18.png (exists)
+    skip product/19.png (exists)
+    skip product/20.png (exists)
+    skip product/21.png (exists)
+    skip product/22.png (exists)
+    skip product/23.png (exists)
+    skip product/24.png (exists)
+    skip product/25.png (exists)
+    skip product/26.png (exists)
+    skip product/27.png (exists)
+    skip product/28.png (exists)
+    skip product/29.png (exists)
+    skip product/30.png (exists)
+    skip product/31.png (exists)
+    skip product/32.png (exists)
+  logo: 1 nodes
+    skip logo/logo.png (exists)
+  service: 4 nodes
+    skip service/1.png (exists)
+    skip service/2.png (exists)
+    skip service/3.png (exists)
+    skip service/4.png (exists)
+
+All Figma assets exported to public/uploads/
+
+=== Exporting theme-two ===
+  banner: 4 nodes
+    skip banner/1.png (exists)
+    skip banner/2.png (exists)
+    skip banner/3.png (exists)
+    skip banner/4.png (exists)
+  category: 6 nodes
+    skip category/1.png (exists)
+    skip category/2.png (exists)
+    skip category/3.png (exists)
+    skip category/4.png (exists)
+    rate limited, waiting 30s...
+    rate limited, waiting 60s...
+    rate limited, waiting 90s...
+
+=== Exporting theme-two ===
+  banner: 4 nodes
+    rate limited, waiting 30s...
+    rate limited, waiting 60s...
+    rate limited, waiting 120s...
+Traceback (most recent call last):
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 119, in <module>
+    time.sleep(1.0)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 113, in main
+    u = urls.get(nid)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 93, in export_theme
+    data = api_get(url, token)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 74, in export_batch
+    try:
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 48, in api_get
+    
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 35, in api_get
+    def copy_section_banners(theme: str):
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 525, in open
+    response = meth(req, response)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 634, in http_response
+    response = self.parent.error(
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 563, in error
+    return self._call_chain(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 496, in _call_chain
+    result = func(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Too Many Requests
+    rate limited, waiting 90s...
+    rate limited, waiting 120s...
+    rate limited, waiting 150s...
+    rate limited, waiting 150s...
+    rate limited, waiting 180s...
+    rate limited, waiting 180s...
+    rate limited, waiting 210s...
+    rate limited, waiting 210s...
+    rate limited, waiting 240s...
+    rate limited, waiting 240s...
+Traceback (most recent call last):
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 156, in <module>
+    if __name__ == "__main__":
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 132, in main
+    for theme, spec in themes:
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 112, in export_theme
+    urls = export_batch(token, [nid])
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 93, in export_batch
+    data = api_get(url, token)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 67, in api_get
+    raise last_err
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 54, in api_get
+    with urllib.request.urlopen(req, timeout=180) as resp:
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 525, in open
+    response = meth(req, response)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 634, in http_response
+    response = self.parent.error(
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 563, in error
+    return self._call_chain(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 496, in _call_chain
+    result = func(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Too Many Requests
+Traceback (most recent call last):
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 157, in <module>
+    main()
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 133, in main
+    export_theme(token, theme, spec, skip_existing=not force)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 112, in export_theme
+    urls = export_batch(token, [nid])
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 93, in export_batch
+    data = api_get(url, token)
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 67, in api_get
+    raise last_err
+  File "D:\laragon\www\sos_backend_3.0\public\figma_export_from_map.py", line 54, in api_get
+    with urllib.request.urlopen(req, timeout=180) as resp:
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 525, in open
+    response = meth(req, response)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 634, in http_response
+    response = self.parent.error(
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 563, in error
+    return self._call_chain(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 496, in _call_chain
+    result = func(*args)
+  File "D:\laragon\bin\python\python-3.10\lib\urllib\request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Too Many Requests
