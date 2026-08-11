@@ -253,19 +253,19 @@
 	},
 	{
 		"id": 3,
-		"category_id": 1,
-		"subcategory_id": 1,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "mint-embroidered-bandhgala-set",
-		"name": "Mint Embroidered Bandhgala Set",
+		"slug": "mint-embroidered-panjabi-bandhgala-set",
+		"name": "Mint Embroidered Panjabi Bandhgala Set",
 		"short_description": "Premium koti from SOSComrz — elegance for every occasion.",
 		"long_description": "<p>Mint Embroidered Bandhgala Set. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
-		"meta_title": "Mint Embroidered Bandhgala Set",
+		"meta_title": "Mint Embroidered Panjabi Bandhgala Set",
 		"meta_keyword": "mint, embroidered, bandhgala, set",
 		"meta_description": "Shop Mint Embroidered Bandhgala Set at SOSComrz.",
 		"tags": "mint, embroidered, bandhgala, set",
@@ -306,7 +306,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Koti"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -350,12 +350,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -578,7 +578,7 @@
 		"exp_date": null,
 		"barcode": "SCR0005",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -830,7 +830,7 @@
 		"exp_date": null,
 		"barcode": "SCR0007",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -1009,19 +1009,19 @@
 	},
 	{
 		"id": 9,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "magenta-paisley-print-kurta",
-		"name": "Magenta Paisley Print Kurta",
+		"slug": "magenta-paisley-print-panjabi",
+		"name": "Magenta Paisley Print Panjabi",
 		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
 		"long_description": "<p>Magenta Paisley Print Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
-		"meta_title": "Magenta Paisley Print Kurta",
+		"meta_title": "Magenta Paisley Print Panjabi",
 		"meta_keyword": "magenta, paisley, print, kurta",
 		"meta_description": "Shop Magenta Paisley Print Kurta at SOSComrz.",
 		"tags": "magenta, paisley, print, kurta",
@@ -1062,7 +1062,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1106,12 +1106,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1135,19 +1135,19 @@
 	},
 	{
 		"id": 10,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "seafoam-white-embroidered-kurta",
-		"name": "Seafoam White Embroidered Kurta",
+		"slug": "seafoam-white-embroidered-panjabi",
+		"name": "Seafoam White Embroidered Panjabi",
 		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
 		"long_description": "<p>Seafoam White Embroidered Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/10.png",
 		"status": "active",
-		"meta_title": "Seafoam White Embroidered Kurta",
+		"meta_title": "Seafoam White Embroidered Panjabi",
 		"meta_keyword": "seafoam, white, embroidered, kurta",
 		"meta_description": "Shop Seafoam White Embroidered Kurta at SOSComrz.",
 		"tags": "seafoam, white, embroidered, kurta",
@@ -1188,7 +1188,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1232,12 +1232,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1586,7 +1586,7 @@
 		"exp_date": null,
 		"barcode": "SCR0013",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -2216,7 +2216,7 @@
 		"exp_date": null,
 		"barcode": "SCR0018",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -2849,7 +2849,7 @@
 		"exp_date": null,
 		"barcode": "SCR0023",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -3228,7 +3228,7 @@
 		"exp_date": null,
 		"barcode": "SCR0026",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -3281,8 +3281,8 @@
 	},
 	{
 		"id": 27,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 5,
+		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "slate-floral-embroidered-panjabi",
@@ -3334,7 +3334,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Kurta"
 			},
 			{
 				"specification": "Brand",
@@ -3378,12 +3378,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"product_image": [
 			{
@@ -3607,7 +3607,7 @@
 		"exp_date": null,
 		"barcode": "SCR0029",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -3861,7 +3861,7 @@
 		"exp_date": null,
 		"barcode": "SCR0031",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -3988,7 +3988,7 @@
 		"exp_date": null,
 		"barcode": "SCR0032",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
