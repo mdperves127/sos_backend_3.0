@@ -1,11 +1,11 @@
 [
     {
         "id": 1,
-        "title": "Free Express Shipping"
+        "title": "Free Express Shipping on orders $200!"
     },
     {
         "id": 2,
-        "title": "Best Seller"
+        "title": "Best Sellers"
     },
     {
         "id": 3,
@@ -13,10 +13,10 @@
     },
     {
         "id": 4,
-        "title": "Festive Sale"
+        "title": "Festive Sale -30%"
     },
     {
         "id": 5,
-        "title": "Trending Now"
+        "title": "Trending Categories"
     }
 ]

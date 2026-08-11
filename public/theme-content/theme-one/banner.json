@@ -11,7 +11,7 @@
     {
         "id": 2,
         "title": "Festive Collection",
-        "subtitle": "For Him & Her",
+        "subtitle": "Discover for him & her",
         "image": "uploads/theme-one/banner/2.png",
         "link": "#",
         "order": 2,
@@ -19,8 +19,8 @@
     },
     {
         "id": 3,
-        "title": "New Arrivals",
-        "subtitle": "Shop Now",
+        "title": "Trending Categories",
+        "subtitle": "Koti · Panjabi · Kurta",
         "image": "uploads/theme-one/banner/3.png",
         "link": "#",
         "order": 3,
@@ -28,9 +28,9 @@
     },
     {
         "id": 4,
-        "title": "Panjabi",
-        "subtitle": "Check All",
-        "image": "uploads/theme-one/category/2.png",
+        "title": "Stylish New Arrivals",
+        "subtitle": "Shop Now",
+        "image": "uploads/theme-one/banner/4.png",
         "link": "#",
         "order": 4,
         "status": "active"

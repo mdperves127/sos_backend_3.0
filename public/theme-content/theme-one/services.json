@@ -1,24 +1,24 @@
 [
     {
         "id": 1,
-        "title": "Premium Panjabi",
-        "description": "Embroidered festive panjabis",
+        "title": "High-quality Goods",
+        "description": "Enjoy top quality items for less",
         "icon": "uploads/theme-one/service/1.png",
         "order": 1,
         "status": "active"
     },
     {
         "id": 2,
-        "title": "Express Shipping",
-        "description": "Free express on orders \u09f32000+",
+        "title": "24/7 Live chat",
+        "description": "Get instant assistance",
         "icon": "uploads/theme-one/service/2.png",
         "order": 2,
         "status": "active"
     },
     {
         "id": 3,
-        "title": "Easy Returns",
-        "description": "Hassle-free exchange policy",
+        "title": "Express Shipping",
+        "description": "Fast & reliable delivery options",
         "icon": "uploads/theme-one/service/3.png",
         "order": 3,
         "status": "active"
@@ -26,7 +26,7 @@
     {
         "id": 4,
         "title": "Secure Payment",
-        "description": "Safe checkout options",
+        "description": "Multiple safe payment methods",
         "icon": "uploads/theme-one/service/4.png",
         "order": 4,
         "status": "active"
