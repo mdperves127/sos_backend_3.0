@@ -70,6 +70,45 @@ class MerchantFrontendController extends Controller
     }
 
     /**
+     * Hide theme-import duplicate variants from storefront grids (same photo, different suffix name).
+     */
+    private function applyStorefrontCatalogFilter( $query ) {
+        foreach ( [ 'Special Edition', 'Limited Collection', 'Premium Drape' ] as $suffix ) {
+            $query->where( 'name', 'not like', '%' . $suffix );
+        }
+
+        return $query;
+    }
+
+    /**
+     * Keep only one product per image path so side-by-side grids stay visually unique.
+     */
+    private function dedupeProductsByImage( $products ) {
+        $seen = [];
+
+        return collect( $products )->filter( function ( $product ) use ( &$seen ) {
+            $image = $product->image ?? null;
+
+            if ( ! $image && $product->relationLoaded( 'productImage' ) ) {
+                $first = $product->productImage->first();
+                $image = $first->image ?? null;
+            }
+
+            if ( ! $image ) {
+                return true;
+            }
+
+            if ( isset( $seen[ $image ] ) ) {
+                return false;
+            }
+
+            $seen[ $image ] = true;
+
+            return true;
+        } )->values();
+    }
+
+    /**
      * Avoid duplicate price on storefront when discount_price equals selling_price.
      */
     private function normalizeProductPrices( $products ) {
@@ -890,6 +929,7 @@ class MerchantFrontendController extends Controller
                     ->where( 'subcategory_id', $filterId )
                     ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
             );
+            $query = $this->applyStorefrontCatalogFilter( $query );
 
             $listLimit = $this->requestListLimit( $request );
             if ( $listLimit !== null ) {
@@ -907,6 +947,7 @@ class MerchantFrontendController extends Controller
                             ->where( 'category_id', $subcategory->category_id )
                             ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
                     );
+                    $categoryQuery = $this->applyStorefrontCatalogFilter( $categoryQuery );
 
                     if ( $listLimit !== null ) {
                         $products = $this->applyListLimitToQuery( $categoryQuery, $request )->get();
@@ -916,6 +957,8 @@ class MerchantFrontendController extends Controller
                 }
             }
         }
+
+        $products = $this->dedupeProductsByImage( $products );
 
         $listLimit = $this->requestListLimit( $request );
         if ( tenant()->type == 'dropshipper' && $listLimit !== null ) {
