@@ -18,5 +18,25 @@
     {
         "id": 5,
         "title": "Trending Categories"
+    },
+    {
+        "id": 6,
+        "title": "New Arrivals"
+    },
+    {
+        "id": 7,
+        "title": "Best Sellers"
+    },
+    {
+        "id": 8,
+        "title": "Festive Sale -30%"
+    },
+    {
+        "id": 9,
+        "title": "Trending Categories"
+    },
+    {
+        "id": 10,
+        "title": "New Arrivals"
     }
 ]

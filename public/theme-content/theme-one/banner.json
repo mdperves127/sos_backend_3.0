@@ -12,7 +12,7 @@
         "id": 2,
         "title": "EID Specials",
         "subtitle": "Live Now",
-        "image": "uploads/theme-one/two-column-banner-1/two-column-banner-1.png",
+        "image": "uploads/theme-one/banner/1.png",
         "link": "#",
         "order": 2,
         "status": "active"
@@ -21,7 +21,7 @@
         "id": 3,
         "title": "Built to Move",
         "subtitle": "Styled to Impress",
-        "image": "uploads/theme-one/two-column-banner-2/two-column-banner-2.png",
+        "image": "uploads/theme-one/banner/1.png",
         "link": "#",
         "order": 3,
         "status": "active"
@@ -30,7 +30,7 @@
         "id": 4,
         "title": "Elevate Everyday Comfort",
         "subtitle": "Premium polo shirts for daily style",
-        "image": "uploads/theme-one/section-banner/3.png",
+        "image": "uploads/theme-one/banner/1.png",
         "link": "#",
         "order": 4,
         "status": "active"
