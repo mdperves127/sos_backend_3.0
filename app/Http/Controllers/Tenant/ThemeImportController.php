@@ -21,6 +21,38 @@ use App\Models\CmsSetting;
 
 class ThemeImportController extends Controller
 {
+    private array $cmsCategoryFields = [
+        'recomended_category_id_1',
+        'recomended_category_id_2',
+        'recomended_category_id_3',
+        'recomended_category_id_4',
+        'best_setting_category_id_1',
+        'best_setting_category_id_2',
+        'best_setting_category_id_3',
+        'best_setting_category_id_4',
+        'best_category_id',
+        'populer_section_category_id_1',
+        'populer_section_category_id_2',
+        'populer_section_category_id_3',
+        'populer_section_category_id_4',
+    ];
+
+    private array $cmsSubcategoryFields = [
+        'recomended_sub_category_id_1',
+        'recomended_sub_category_id_2',
+        'recomended_sub_category_id_3',
+        'recomended_sub_category_id_4',
+        'best_setting_sub_category_id_1',
+        'best_setting_sub_category_id_2',
+        'best_setting_sub_category_id_3',
+        'best_setting_sub_category_id_4',
+        'best_sub_category_id',
+        'populer_section_subcategory_id_1',
+        'populer_section_subcategory_id_2',
+        'populer_section_subcategory_id_3',
+        'populer_section_subcategory_id_4',
+    ];
+
     public function importThemeContent(Request $request, $theme)
     {
         $basePath = public_path("theme-content/{$theme}");
@@ -29,35 +61,7 @@ class ThemeImportController extends Controller
             return response()->json(['success' => false, 'message' => 'Theme directory not found.'], 404);
         }
 
-        // Handle cms.json specifically to update the first row of cms_settings
-        $cmsFilePath = $basePath . '/cms.json';
-        if (file_exists($cmsFilePath)) {
-            try {
-                $cmsData = file_get_contents($cmsFilePath);
-                $cmsItems = json_decode($cmsData, true);
-
-                if (is_array($cmsItems) && count($cmsItems) > 0) {
-                    $cmsItem = $cmsItems[0];
-                    $cmsSetting = CmsSetting::first();
-                    
-                    if ($cmsSetting) {
-                        $columns = Schema::getColumnListing($cmsSetting->getTable());
-                        foreach ($cmsItem as $key => $value) {
-                            if (in_array($key, $columns)) {
-                                if (is_array($value)) {
-                                    $cmsSetting->{$key} = $cmsSetting->hasCast($key) ? $value : json_encode($value);
-                                } else {
-                                    $cmsSetting->{$key} = $value;
-                                }
-                            }
-                        }
-                        $cmsSetting->save();
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('CMS Settings import failed: ' . $e->getMessage());
-            }
-        }
+        $idMap = [];
 
         $filesToModels = [
             'banner.json' => Banner::class,
@@ -92,13 +96,10 @@ class ThemeImportController extends Controller
                         foreach ($items as $item) {
                             $oldId = $item['id'] ?? null;
                             
-                            // Remove the ID so the database auto-increments and creates a NEW record 
-                            // instead of replacing the user's existing records
                             if (isset($item['id'])) {
                                 unset($item['id']);
                             }
 
-                            // Remap foreign keys for the product table so they match the newly created sub-records
                             if ($filename === 'product.json') {
                                 if (isset($item['category_id']) && isset($idMap[Category::class][$item['category_id']])) {
                                     $item['category_id'] = $idMap[Category::class][$item['category_id']];
@@ -118,17 +119,21 @@ class ThemeImportController extends Controller
                                 if (isset($item['unit_id']) && isset($idMap[Unit::class][$item['unit_id']])) {
                                     $item['unit_id'] = $idMap[Unit::class][$item['unit_id']];
                                 }
+
+                                if (
+                                    isset( $item['discount_price'], $item['selling_price'] )
+                                    && (float) $item['discount_price'] === (float) $item['selling_price']
+                                ) {
+                                    $item['discount_price'] = null;
+                                }
                             }
                             
-                            // Remap foreign key for subcategories
                             if ($filename === 'sub-category.json') {
                                 if (isset($item['category_id']) && isset($idMap[Category::class][$item['category_id']])) {
                                     $item['category_id'] = $idMap[Category::class][$item['category_id']];
                                 }
                             }
 
-                            // Try to find if we already imported this exact same string name to avoid full duplicates
-                            // (optional, but it prevents infinite duplication if they run it 10 times)
                             $existingQuery = $modelClass::query();
                             if (isset($item['sku'])) {
                                 $existingQuery->where('sku', $item['sku']);
@@ -144,7 +149,6 @@ class ThemeImportController extends Controller
                             
                             $model = $existingQuery->first();
 
-                            // If we don't have it, create it!
                             if (!$model) {
                                 $model = new $modelClass();
                                 foreach ($item as $key => $value) {
@@ -159,7 +163,6 @@ class ThemeImportController extends Controller
                                 $model->save();
                             }
 
-                            // Save the mapping from the JSON ID to the new database ID
                             if ($oldId) {
                                 $idMap[$modelClass][$oldId] = $model->id;
                             }
@@ -167,6 +170,8 @@ class ThemeImportController extends Controller
                     }
                 }
             }
+
+            $this->importCmsSettings( $basePath, $idMap );
 
             return response()->json([
                 'success' => true,
@@ -179,5 +184,74 @@ class ThemeImportController extends Controller
                 'message' => 'Failed to import theme content: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function importCmsSettings( string $basePath, array $idMap ): void
+    {
+        $cmsFilePath = $basePath . '/cms.json';
+
+        if ( ! file_exists( $cmsFilePath ) ) {
+            return;
+        }
+
+        try {
+            $cmsItems = json_decode( file_get_contents( $cmsFilePath ), true );
+
+            if ( ! is_array( $cmsItems ) || count( $cmsItems ) === 0 ) {
+                return;
+            }
+
+            $cmsItem = $this->remapCmsForeignKeys( $cmsItems[0], $idMap );
+            $cmsSetting = CmsSetting::first();
+
+            if ( ! $cmsSetting ) {
+                return;
+            }
+
+            $columns = Schema::getColumnListing( $cmsSetting->getTable() );
+
+            foreach ( $cmsItem as $key => $value ) {
+                if ( in_array( $key, $columns ) ) {
+                    if ( is_array( $value ) ) {
+                        $cmsSetting->{$key} = $cmsSetting->hasCast( $key ) ? $value : json_encode( $value );
+                    } else {
+                        $cmsSetting->{$key} = $value;
+                    }
+                }
+            }
+
+            $cmsSetting->save();
+        } catch ( \Exception $e ) {
+            Log::error( 'CMS Settings import failed: ' . $e->getMessage() );
+        }
+    }
+
+    private function remapCmsForeignKeys( array $cmsItem, array $idMap ): array
+    {
+        foreach ( $this->cmsCategoryFields as $field ) {
+            if ( empty( $cmsItem[ $field ] ) ) {
+                continue;
+            }
+
+            $oldId = (int) $cmsItem[ $field ];
+
+            if ( isset( $idMap[ Category::class ][ $oldId ] ) ) {
+                $cmsItem[ $field ] = (string) $idMap[ Category::class ][ $oldId ];
+            }
+        }
+
+        foreach ( $this->cmsSubcategoryFields as $field ) {
+            if ( empty( $cmsItem[ $field ] ) ) {
+                continue;
+            }
+
+            $oldId = (int) $cmsItem[ $field ];
+
+            if ( isset( $idMap[ Subcategory::class ][ $oldId ] ) ) {
+                $cmsItem[ $field ] = (string) $idMap[ Subcategory::class ][ $oldId ];
+            }
+        }
+
+        return $cmsItem;
     }
 }

@@ -69,7 +69,28 @@ class MerchantFrontendController extends Controller
         return $query->shownOnWebsite();
     }
 
+    /**
+     * Avoid duplicate price on storefront when discount_price equals selling_price.
+     */
+    private function normalizeProductPrices( $products ) {
+        return collect( $products )->map( function ( $product ) {
+            if (
+                $product->discount_price !== null
+                && (float) $product->discount_price === (float) $product->selling_price
+            ) {
+                $product->setAttribute( 'discount_price', null );
+            }
+
+            return $product;
+        } )->values();
+    }
+
+    private function jsonProducts( $products ) {
+        return response()->json( $this->normalizeProductPrices( $products ) );
+    }
+
     private function paginateProductCollection( Request $request, $products, int $defaultPerPage = 10 ): array {
+        $products = $this->normalizeProductPrices( $products );
         $page    = max( 1, (int) $request->get( 'page', 1 ) );
         $perPage = $this->requestPerPage( $request, $defaultPerPage );
         $offset  = ( $page - 1 ) * $perPage;
@@ -876,6 +897,24 @@ class MerchantFrontendController extends Controller
             } else {
                 $products = $query->get();
             }
+
+            if ( $products->isEmpty() ) {
+                $subcategory = Subcategory::find( $filterId );
+
+                if ( $subcategory ) {
+                    $categoryQuery = $this->applyWebsiteVisibleProductFilter(
+                        Product::where( 'status', 'active' )
+                            ->where( 'category_id', $subcategory->category_id )
+                            ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
+                    );
+
+                    if ( $listLimit !== null ) {
+                        $products = $this->applyListLimitToQuery( $categoryQuery, $request )->get();
+                    } else {
+                        $products = $categoryQuery->limit( 8 )->get();
+                    }
+                }
+            }
         }
 
         $listLimit = $this->requestListLimit( $request );
@@ -887,7 +926,7 @@ class MerchantFrontendController extends Controller
             return response()->json( $this->paginateProductCollection( $request, $products ) );
         }
 
-        return response()->json( $products );
+        return $this->jsonProducts( $products );
     }
 
     public function searchItem( Request $request, $search, $category_id = null ) {
@@ -906,7 +945,7 @@ class MerchantFrontendController extends Controller
 
         $listLimit = $this->requestListLimit( $request );
         if ( $listLimit !== null ) {
-            return response()->json( $this->applyListLimitToQuery( $query, $request )->get() );
+            return $this->jsonProducts( $this->applyListLimitToQuery( $query, $request )->get() );
         }
 
         $products = $query->get();
@@ -914,7 +953,7 @@ class MerchantFrontendController extends Controller
             return response()->json( $this->paginateProductCollection( $request, $products ) );
         }
 
-        return response()->json( $products );
+        return $this->jsonProducts( $products );
     }
 
     public function orders() {
