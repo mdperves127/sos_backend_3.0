@@ -5,18 +5,18 @@
 		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-100-cotton-panjabi-navy-blue",
-		"name": "Premium 100% Cotton Panjabi - Navy Blue",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium 100% Cotton Panjabi - Navy Blue from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "charcoal-floral-embroidered-panjabi",
+		"name": "Charcoal Floral Embroidered Panjabi",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Charcoal Floral Embroidered Panjabi. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/1.png",
 		"status": "active",
-		"meta_title": "Premium 100% Cotton Panjabi - Navy Blue",
-		"meta_keyword": "premium, cotton, panjabi, navy, blue",
-		"meta_description": "Shop Premium 100% Cotton Panjabi - Navy Blue at SOSComrz.",
-		"tags": "premium, cotton, panjabi, navy, blue",
+		"meta_title": "Charcoal Floral Embroidered Panjabi",
+		"meta_keyword": "charcoal, floral, embroidered, panjabi",
+		"meta_description": "Shop Charcoal Floral Embroidered Panjabi at SOSComrz.",
+		"tags": "charcoal, floral, embroidered, panjabi",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -70,7 +70,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0001",
 		"warranty": "No Warranty",
@@ -109,7 +109,7 @@
 			{
 				"id": 1,
 				"product_id": 1,
-				"image": "uploads/theme-one/product/2.png",
+				"image": "uploads/theme-one/product/27.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -120,8 +120,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -131,18 +131,18 @@
 		"subcategory_id": 2,
 		"brand_id": 8,
 		"user_id": 1,
-		"slug": "premium-ivory-gold-embroidered-sherwani",
-		"name": "Premium Ivory Gold Embroidered Sherwani",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Ivory Gold Embroidered Sherwani from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "ivory-gold-embroidered-sherwani",
+		"name": "Ivory Gold Embroidered Sherwani",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Ivory Gold Embroidered Sherwani. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/2.png",
 		"status": "active",
-		"meta_title": "Premium Ivory Gold Embroidered Sherwani",
-		"meta_keyword": "premium, ivory, gold, embroidered, sherwani",
-		"meta_description": "Shop Premium Ivory Gold Embroidered Sherwani at SOSComrz.",
-		"tags": "premium, ivory, gold, embroidered, sherwani",
+		"meta_title": "Ivory Gold Embroidered Sherwani",
+		"meta_keyword": "ivory, gold, embroidered, sherwani",
+		"meta_description": "Shop Ivory Gold Embroidered Sherwani at SOSComrz.",
+		"tags": "ivory, gold, embroidered, sherwani",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -253,22 +253,22 @@
 	},
 	{
 		"id": 3,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 1,
+		"subcategory_id": 1,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-mint-embroidered-bandhgala-set",
-		"name": "Premium Mint Embroidered Bandhgala Set",
-		"short_description": "Premium koti crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Mint Embroidered Bandhgala Set from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "mint-embroidered-bandhgala-set",
+		"name": "Mint Embroidered Bandhgala Set",
+		"short_description": "Premium koti from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Mint Embroidered Bandhgala Set. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/3.png",
 		"status": "active",
-		"meta_title": "Premium Mint Embroidered Bandhgala Set",
-		"meta_keyword": "premium, mint, embroidered, bandhgala, set",
-		"meta_description": "Shop Premium Mint Embroidered Bandhgala Set at SOSComrz.",
-		"tags": "premium, mint, embroidered, bandhgala, set",
+		"meta_title": "Mint Embroidered Bandhgala Set",
+		"meta_keyword": "mint, embroidered, bandhgala, set",
+		"meta_description": "Shop Mint Embroidered Bandhgala Set at SOSComrz.",
+		"tags": "mint, embroidered, bandhgala, set",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -306,7 +306,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Koti"
 			},
 			{
 				"specification": "Brand",
@@ -322,7 +322,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0003",
 		"warranty": "No Warranty",
@@ -350,12 +350,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"product_image": [
 			{
@@ -372,8 +372,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -383,18 +383,18 @@
 		"subcategory_id": 2,
 		"brand_id": 8,
 		"user_id": 1,
-		"slug": "premium-sage-embroidered-sherwani-set",
-		"name": "Premium Sage Embroidered Sherwani Set",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Sage Embroidered Sherwani Set from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "sage-green-embroidered-sherwani-set",
+		"name": "Sage Green Embroidered Sherwani Set",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Sage Green Embroidered Sherwani Set. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/4.png",
 		"status": "active",
-		"meta_title": "Premium Sage Embroidered Sherwani Set",
-		"meta_keyword": "premium, sage, embroidered, sherwani, set",
-		"meta_description": "Shop Premium Sage Embroidered Sherwani Set at SOSComrz.",
-		"tags": "premium, sage, embroidered, sherwani, set",
+		"meta_title": "Sage Green Embroidered Sherwani Set",
+		"meta_keyword": "sage, green, embroidered, sherwani, set",
+		"meta_description": "Shop Sage Green Embroidered Sherwani Set at SOSComrz.",
+		"tags": "sage, green, embroidered, sherwani, set",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -448,7 +448,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0004",
 		"warranty": "No Warranty",
@@ -498,29 +498,29 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 5,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 1,
+		"subcategory_id": 1,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-black-sequin-nehru-jacket",
-		"name": "Premium Black Sequin Nehru Jacket",
-		"short_description": "Premium koti crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Black Sequin Nehru Jacket from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "black-sequin-nehru-jacket",
+		"name": "Black Sequin Nehru Jacket",
+		"short_description": "Premium koti from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Black Sequin Nehru Jacket. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/5.png",
 		"status": "active",
-		"meta_title": "Premium Black Sequin Nehru Jacket",
-		"meta_keyword": "premium, black, sequin, nehru, jacket",
-		"meta_description": "Shop Premium Black Sequin Nehru Jacket at SOSComrz.",
-		"tags": "premium, black, sequin, nehru, jacket",
+		"meta_title": "Black Sequin Nehru Jacket",
+		"meta_keyword": "black, sequin, nehru, jacket",
+		"meta_description": "Shop Black Sequin Nehru Jacket at SOSComrz.",
+		"tags": "black, sequin, nehru, jacket",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -558,7 +558,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Koti"
 			},
 			{
 				"specification": "Brand",
@@ -574,7 +574,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 1,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0005",
 		"warranty": "No Warranty",
@@ -602,18 +602,18 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"product_image": [
 			{
 				"id": 1,
 				"product_id": 5,
-				"image": "uploads/theme-one/product/6.png",
+				"image": "uploads/theme-one/product/7.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -624,8 +624,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
@@ -635,18 +635,18 @@
 		"subcategory_id": 2,
 		"brand_id": 8,
 		"user_id": 1,
-		"slug": "premium-bronze-paisley-festive-panjabi",
-		"name": "Premium Bronze Paisley Festive Panjabi",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Bronze Paisley Festive Panjabi from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "bronze-paisley-festive-panjabi",
+		"name": "Bronze Paisley Festive Panjabi",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Bronze Paisley Festive Panjabi. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/6.png",
 		"status": "active",
-		"meta_title": "Premium Bronze Paisley Festive Panjabi",
-		"meta_keyword": "premium, bronze, paisley, festive, panjabi",
-		"meta_description": "Shop Premium Bronze Paisley Festive Panjabi at SOSComrz.",
-		"tags": "premium, bronze, paisley, festive, panjabi",
+		"meta_title": "Bronze Paisley Festive Panjabi",
+		"meta_keyword": "bronze, paisley, festive, panjabi",
+		"meta_description": "Shop Bronze Paisley Festive Panjabi at SOSComrz.",
+		"tags": "bronze, paisley, festive, panjabi",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -757,22 +757,22 @@
 	},
 	{
 		"id": 7,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 1,
+		"subcategory_id": 1,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-taupe-embroidered-waistcoat-set",
-		"name": "Premium Taupe Embroidered Waistcoat Set",
-		"short_description": "Premium koti crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Taupe Embroidered Waistcoat Set from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "taupe-embroidered-waistcoat-set",
+		"name": "Taupe Embroidered Waistcoat Set",
+		"short_description": "Premium koti from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Taupe Embroidered Waistcoat Set. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/7.png",
 		"status": "active",
-		"meta_title": "Premium Taupe Embroidered Waistcoat Set",
-		"meta_keyword": "premium, taupe, embroidered, waistcoat, set",
-		"meta_description": "Shop Premium Taupe Embroidered Waistcoat Set at SOSComrz.",
-		"tags": "premium, taupe, embroidered, waistcoat, set",
+		"meta_title": "Taupe Embroidered Waistcoat Set",
+		"meta_keyword": "taupe, embroidered, waistcoat, set",
+		"meta_description": "Shop Taupe Embroidered Waistcoat Set at SOSComrz.",
+		"tags": "taupe, embroidered, waistcoat, set",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -810,7 +810,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Koti"
 			},
 			{
 				"specification": "Brand",
@@ -826,7 +826,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0007",
 		"warranty": "No Warranty",
@@ -854,18 +854,18 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 1,
+			"name": "Koti"
 		},
 		"product_image": [
 			{
 				"id": 1,
 				"product_id": 7,
-				"image": "uploads/theme-one/product/8.png",
+				"image": "uploads/theme-one/product/5.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -876,8 +876,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -887,18 +887,18 @@
 		"subcategory_id": 2,
 		"brand_id": 8,
 		"user_id": 1,
-		"slug": "premium-ivory-crest-sherwani",
-		"name": "Premium Ivory Crest Sherwani",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Ivory Crest Sherwani from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "ivory-crest-sherwani-with-shawl",
+		"name": "Ivory Crest Sherwani with Shawl",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Ivory Crest Sherwani with Shawl. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/8.png",
 		"status": "active",
-		"meta_title": "Premium Ivory Crest Sherwani",
-		"meta_keyword": "premium, ivory, crest, sherwani",
-		"meta_description": "Shop Premium Ivory Crest Sherwani at SOSComrz.",
-		"tags": "premium, ivory, crest, sherwani",
+		"meta_title": "Ivory Crest Sherwani with Shawl",
+		"meta_keyword": "ivory, crest, sherwani, with, shawl",
+		"meta_description": "Shop Ivory Crest Sherwani with Shawl at SOSComrz.",
+		"tags": "ivory, crest, sherwani, with, shawl",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -952,7 +952,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0008",
 		"warranty": "No Warranty",
@@ -1002,29 +1002,29 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 9,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 5,
+		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-maroon-paisley-kurta",
-		"name": "Premium Maroon Paisley Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Maroon Paisley Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "magenta-paisley-print-kurta",
+		"name": "Magenta Paisley Print Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Magenta Paisley Print Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/9.png",
 		"status": "active",
-		"meta_title": "Premium Maroon Paisley Kurta",
-		"meta_keyword": "premium, maroon, paisley, kurta",
-		"meta_description": "Shop Premium Maroon Paisley Kurta at SOSComrz.",
-		"tags": "premium, maroon, paisley, kurta",
+		"meta_title": "Magenta Paisley Print Kurta",
+		"meta_keyword": "magenta, paisley, print, kurta",
+		"meta_description": "Shop Magenta Paisley Print Kurta at SOSComrz.",
+		"tags": "magenta, paisley, print, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1062,7 +1062,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Kurta"
 			},
 			{
 				"specification": "Brand",
@@ -1078,7 +1078,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0009",
 		"warranty": "No Warranty",
@@ -1106,18 +1106,18 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"product_image": [
 			{
 				"id": 1,
 				"product_id": 9,
-				"image": "uploads/theme-one/product/10.png",
+				"image": "uploads/theme-one/product/13.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -1128,29 +1128,29 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 10,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 5,
+		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-seafoam-embroidered-kurta",
-		"name": "Premium Seafoam Embroidered Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Seafoam Embroidered Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "seafoam-white-embroidered-kurta",
+		"name": "Seafoam White Embroidered Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Seafoam White Embroidered Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/10.png",
 		"status": "active",
-		"meta_title": "Premium Seafoam Embroidered Kurta",
-		"meta_keyword": "premium, seafoam, embroidered, kurta",
-		"meta_description": "Shop Premium Seafoam Embroidered Kurta at SOSComrz.",
-		"tags": "premium, seafoam, embroidered, kurta",
+		"meta_title": "Seafoam White Embroidered Kurta",
+		"meta_keyword": "seafoam, white, embroidered, kurta",
+		"meta_description": "Shop Seafoam White Embroidered Kurta at SOSComrz.",
+		"tags": "seafoam, white, embroidered, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1188,7 +1188,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Kurta"
 			},
 			{
 				"specification": "Brand",
@@ -1204,7 +1204,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 1,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0010",
 		"warranty": "No Warranty",
@@ -1232,12 +1232,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"product_image": [
 			{
@@ -1254,29 +1254,29 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 11,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 4,
+		"subcategory_id": 4,
 		"brand_id": 3,
 		"user_id": 1,
-		"slug": "premium-royal-blue-geometric-shirt",
-		"name": "Premium Royal Blue Geometric Shirt",
-		"short_description": "Premium shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Royal Blue Geometric Shirt from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "royal-blue-geometric-embroidered-shirt",
+		"name": "Royal Blue Geometric Embroidered Shirt",
+		"short_description": "Premium shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Royal Blue Geometric Embroidered Shirt. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/11.png",
 		"status": "active",
-		"meta_title": "Premium Royal Blue Geometric Shirt",
-		"meta_keyword": "premium, royal, blue, geometric, shirt",
-		"meta_description": "Shop Premium Royal Blue Geometric Shirt at SOSComrz.",
-		"tags": "premium, royal, blue, geometric, shirt",
+		"meta_title": "Royal Blue Geometric Embroidered Shirt",
+		"meta_keyword": "royal, blue, geometric, embroidered, shirt",
+		"meta_description": "Shop Royal Blue Geometric Embroidered Shirt at SOSComrz.",
+		"tags": "royal, blue, geometric, embroidered, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1314,7 +1314,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Shirt"
 			},
 			{
 				"specification": "Brand",
@@ -1334,7 +1334,7 @@
 		"exp_date": null,
 		"barcode": "SCR0011",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -1358,12 +1358,12 @@
 			"slug": "classic-line"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"product_image": [
 			{
@@ -1387,22 +1387,22 @@
 	},
 	{
 		"id": 12,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 3,
+		"subcategory_id": 3,
 		"brand_id": 2,
 		"user_id": 1,
-		"slug": "tokyo-underground-graphic-tee",
-		"name": "Tokyo Underground Graphic Tee",
-		"short_description": "Premium t-shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Tokyo Underground Graphic Tee from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "tokyo-underground-graphic-tee-white",
+		"name": "Tokyo Underground Graphic Tee - White",
+		"short_description": "Premium t-shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Tokyo Underground Graphic Tee - White. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/12.png",
 		"status": "active",
-		"meta_title": "Tokyo Underground Graphic Tee",
-		"meta_keyword": "tokyo, underground, graphic, tee",
-		"meta_description": "Shop Tokyo Underground Graphic Tee at SOSComrz.",
-		"tags": "tokyo, underground, graphic, tee",
+		"meta_title": "Tokyo Underground Graphic Tee - White",
+		"meta_keyword": "tokyo, underground, graphic, tee, white",
+		"meta_description": "Shop Tokyo Underground Graphic Tee - White at SOSComrz.",
+		"tags": "tokyo, underground, graphic, tee, white",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1440,7 +1440,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "T-Shirt"
 			},
 			{
 				"specification": "Brand",
@@ -1456,7 +1456,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0012",
 		"warranty": "No Warranty",
@@ -1484,12 +1484,12 @@
 			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"product_image": [
 			{
@@ -1506,8 +1506,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
@@ -1517,18 +1517,18 @@
 		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-plum-paisley-print-kurta",
-		"name": "Premium Plum Paisley Print Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Plum Paisley Print Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "deep-magenta-paisley-kurta",
+		"name": "Deep Magenta Paisley Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Deep Magenta Paisley Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/13.png",
 		"status": "active",
-		"meta_title": "Premium Plum Paisley Print Kurta",
-		"meta_keyword": "premium, plum, paisley, print, kurta",
-		"meta_description": "Shop Premium Plum Paisley Print Kurta at SOSComrz.",
-		"tags": "premium, plum, paisley, print, kurta",
+		"meta_title": "Deep Magenta Paisley Kurta",
+		"meta_keyword": "deep, magenta, paisley, kurta",
+		"meta_description": "Shop Deep Magenta Paisley Kurta at SOSComrz.",
+		"tags": "deep, magenta, paisley, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1582,11 +1582,11 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0013",
 		"warranty": "No Warranty",
-		"is_feature": 1,
+		"is_feature": 0,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -1632,8 +1632,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -1645,8 +1645,8 @@
 		"user_id": 1,
 		"slug": "one-day-at-a-time-oversized-tee-sage",
 		"name": "One Day At A Time Oversized Tee - Sage",
-		"short_description": "Premium t-shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>One Day At A Time Oversized Tee - Sage from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"short_description": "Premium t-shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>One Day At A Time Oversized Tee - Sage. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/14.png",
@@ -1708,11 +1708,11 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0014",
 		"warranty": "No Warranty",
-		"is_feature": 0,
+		"is_feature": 1,
 		"is_affiliate": 0,
 		"discount_price": null,
 		"vendor_id": 1,
@@ -1758,29 +1758,29 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 15,
-		"category_id": 2,
-		"subcategory_id": 2,
-		"brand_id": 8,
+		"category_id": 4,
+		"subcategory_id": 4,
+		"brand_id": 3,
 		"user_id": 1,
-		"slug": "premium-cream-festive-panjabi",
-		"name": "Premium Cream Festive Panjabi",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Cream Festive Panjabi from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "cream-floral-embroidered-camp-shirt",
+		"name": "Cream Floral Embroidered Camp Shirt",
+		"short_description": "Premium shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Cream Floral Embroidered Camp Shirt. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/15.png",
 		"status": "active",
-		"meta_title": "Premium Cream Festive Panjabi",
-		"meta_keyword": "premium, cream, festive, panjabi",
-		"meta_description": "Shop Premium Cream Festive Panjabi at SOSComrz.",
-		"tags": "premium, cream, festive, panjabi",
+		"meta_title": "Cream Floral Embroidered Camp Shirt",
+		"meta_keyword": "cream, floral, embroidered, camp, shirt",
+		"meta_description": "Shop Cream Floral Embroidered Camp Shirt at SOSComrz.",
+		"tags": "cream, floral, embroidered, camp, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1818,11 +1818,11 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Shirt"
 			},
 			{
 				"specification": "Brand",
-				"specification_ans": "Festive Wear"
+				"specification_ans": "Classic Line"
 			},
 			{
 				"specification": "Fabric",
@@ -1833,8 +1833,8 @@
 		"sku": "SCR-015",
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
-		"supplier_id": 2,
-		"warehouse_id": 2,
+		"supplier_id": 1,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0015",
 		"warranty": "No Warranty",
@@ -1856,36 +1856,36 @@
 			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 8,
+			"id": 3,
 			"user_id": 1,
-			"name": "Festive Wear",
-			"slug": "festive-wear"
+			"name": "Classic Line",
+			"slug": "classic-line"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"product_image": [
 			{
 				"id": 1,
 				"product_id": 15,
-				"image": "uploads/theme-one/product/8.png",
+				"image": "uploads/theme-one/product/26.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Ethnic Wear Supply BD",
-			"business_name": "Ethnic Wear Supply BD"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
@@ -1895,18 +1895,18 @@
 		"subcategory_id": 3,
 		"brand_id": 2,
 		"user_id": 1,
-		"slug": "tokyo-underground-graphic-tee-white",
-		"name": "Tokyo Underground Graphic Tee - White",
-		"short_description": "Premium t-shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Tokyo Underground Graphic Tee - White from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "tokyo-underground-graphic-tee-back-print",
+		"name": "Tokyo Underground Graphic Tee - Back Print",
+		"short_description": "Premium t-shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Tokyo Underground Graphic Tee - Back Print. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/16.png",
 		"status": "active",
-		"meta_title": "Tokyo Underground Graphic Tee - White",
-		"meta_keyword": "tokyo, underground, graphic, tee, white",
-		"meta_description": "Shop Tokyo Underground Graphic Tee - White at SOSComrz.",
-		"tags": "tokyo, underground, graphic, tee, white",
+		"meta_title": "Tokyo Underground Graphic Tee - Back Print",
+		"meta_keyword": "tokyo, underground, graphic, tee, back, print",
+		"meta_description": "Shop Tokyo Underground Graphic Tee - Back Print at SOSComrz.",
+		"tags": "tokyo, underground, graphic, tee, back, print",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1960,7 +1960,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 3,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0016",
 		"warranty": "No Warranty",
@@ -2010,8 +2010,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 3,
-			"name": "Chattogram Dispatch Hub"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
@@ -2021,18 +2021,18 @@
 		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-cream-red-geometric-kurta",
-		"name": "Premium Cream Red Geometric Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Cream Red Geometric Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "cream-red-geometric-embroidered-kurta",
+		"name": "Cream Red Geometric Embroidered Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Cream Red Geometric Embroidered Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/17.png",
 		"status": "active",
-		"meta_title": "Premium Cream Red Geometric Kurta",
-		"meta_keyword": "premium, cream, red, geometric, kurta",
-		"meta_description": "Shop Premium Cream Red Geometric Kurta at SOSComrz.",
-		"tags": "premium, cream, red, geometric, kurta",
+		"meta_title": "Cream Red Geometric Embroidered Kurta",
+		"meta_keyword": "cream, red, geometric, embroidered, kurta",
+		"meta_description": "Shop Cream Red Geometric Embroidered Kurta at SOSComrz.",
+		"tags": "cream, red, geometric, embroidered, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2125,7 +2125,7 @@
 			{
 				"id": 1,
 				"product_id": 17,
-				"image": "uploads/theme-one/product/18.png",
+				"image": "uploads/theme-one/product/28.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -2143,22 +2143,22 @@
 	},
 	{
 		"id": 18,
-		"category_id": 1,
-		"subcategory_id": 1,
-		"brand_id": 4,
+		"category_id": 3,
+		"subcategory_id": 3,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "premium-teal-pattern-nehru-jacket",
-		"name": "Premium Teal Pattern Nehru Jacket",
-		"short_description": "Premium koti crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Teal Pattern Nehru Jacket from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "monaco-grand-prix-graphic-tee",
+		"name": "Monaco Grand Prix Graphic Tee",
+		"short_description": "Premium t-shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Monaco Grand Prix Graphic Tee. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/18.png",
 		"status": "active",
-		"meta_title": "Premium Teal Pattern Nehru Jacket",
-		"meta_keyword": "premium, teal, pattern, nehru, jacket",
-		"meta_description": "Shop Premium Teal Pattern Nehru Jacket at SOSComrz.",
-		"tags": "premium, teal, pattern, nehru, jacket",
+		"meta_title": "Monaco Grand Prix Graphic Tee",
+		"meta_keyword": "monaco, grand, prix, graphic, tee",
+		"meta_description": "Shop Monaco Grand Prix Graphic Tee at SOSComrz.",
+		"tags": "monaco, grand, prix, graphic, tee",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2196,11 +2196,11 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Koti"
+				"specification_ans": "T-Shirt"
 			},
 			{
 				"specification": "Brand",
-				"specification_ans": "Heritage Ethnic"
+				"specification_ans": "Urban Stitch"
 			},
 			{
 				"specification": "Fabric",
@@ -2211,7 +2211,7 @@
 		"sku": "SCR-018",
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
-		"supplier_id": 2,
+		"supplier_id": 1,
 		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0018",
@@ -2234,32 +2234,32 @@
 			"email": "hello@soscomrz.com"
 		},
 		"brand": {
-			"id": 4,
+			"id": 2,
 			"user_id": 1,
-			"name": "Heritage Ethnic",
-			"slug": "heritage-ethnic"
+			"name": "Urban Stitch",
+			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 1,
-			"name": "Koti"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "Koti"
+			"id": 3,
+			"name": "T-Shirt"
 		},
 		"product_image": [
 			{
 				"id": 1,
 				"product_id": 18,
-				"image": "uploads/theme-one/product/5.png",
+				"image": "uploads/theme-one/product/14.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "Ethnic Wear Supply BD",
-			"business_name": "Ethnic Wear Supply BD"
+			"id": 1,
+			"supplier_name": "Dhaka Apparel Sourcing",
+			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
 			"id": 2,
@@ -2275,8 +2275,8 @@
 		"user_id": 1,
 		"slug": "one-day-at-a-time-tank-cream",
 		"name": "One Day At A Time Tank - Cream",
-		"short_description": "Premium t-shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>One Day At A Time Tank - Cream from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"short_description": "Premium t-shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>One Day At A Time Tank - Cream. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/19.png",
@@ -2399,18 +2399,18 @@
 		"subcategory_id": 4,
 		"brand_id": 3,
 		"user_id": 1,
-		"slug": "premium-navy-geometric-embroidered-shirt",
-		"name": "Premium Navy Geometric Embroidered Shirt",
-		"short_description": "Premium shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Navy Geometric Embroidered Shirt from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "navy-blue-geometric-embroidered-shirt",
+		"name": "Navy Blue Geometric Embroidered Shirt",
+		"short_description": "Premium shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Navy Blue Geometric Embroidered Shirt. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/20.png",
 		"status": "active",
-		"meta_title": "Premium Navy Geometric Embroidered Shirt",
-		"meta_keyword": "premium, navy, geometric, embroidered, shirt",
-		"meta_description": "Shop Premium Navy Geometric Embroidered Shirt at SOSComrz.",
-		"tags": "premium, navy, geometric, embroidered, shirt",
+		"meta_title": "Navy Blue Geometric Embroidered Shirt",
+		"meta_keyword": "navy, blue, geometric, embroidered, shirt",
+		"meta_description": "Shop Navy Blue Geometric Embroidered Shirt at SOSComrz.",
+		"tags": "navy, blue, geometric, embroidered, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2464,7 +2464,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 2,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0020",
 		"warranty": "No Warranty",
@@ -2514,8 +2514,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
@@ -2525,18 +2525,18 @@
 		"subcategory_id": 6,
 		"brand_id": 7,
 		"user_id": 1,
-		"slug": "premium-slim-fit-black-trousers",
-		"name": "Premium Slim Fit Black Trousers",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Slim Fit Black Trousers from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "slim-fit-black-trousers",
+		"name": "Slim Fit Black Trousers",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Slim Fit Black Trousers. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/21.png",
 		"status": "active",
-		"meta_title": "Premium Slim Fit Black Trousers",
-		"meta_keyword": "premium, slim, fit, black, trousers",
-		"meta_description": "Shop Premium Slim Fit Black Trousers at SOSComrz.",
-		"tags": "premium, slim, fit, black, trousers",
+		"meta_title": "Slim Fit Black Trousers",
+		"meta_keyword": "slim, fit, black, trousers",
+		"meta_description": "Shop Slim Fit Black Trousers at SOSComrz.",
+		"tags": "slim, fit, black, trousers",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2652,18 +2652,18 @@
 		"subcategory_id": 6,
 		"brand_id": 7,
 		"user_id": 1,
-		"slug": "premium-light-grey-straight-trousers",
-		"name": "Premium Light Grey Straight Trousers",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Light Grey Straight Trousers from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "light-grey-straight-crease-trousers",
+		"name": "Light Grey Straight Crease Trousers",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Light Grey Straight Crease Trousers. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/22.png",
 		"status": "active",
-		"meta_title": "Premium Light Grey Straight Trousers",
-		"meta_keyword": "premium, light, grey, straight, trousers",
-		"meta_description": "Shop Premium Light Grey Straight Trousers at SOSComrz.",
-		"tags": "premium, light, grey, straight, trousers",
+		"meta_title": "Light Grey Straight Crease Trousers",
+		"meta_keyword": "light, grey, straight, crease, trousers",
+		"meta_description": "Shop Light Grey Straight Crease Trousers at SOSComrz.",
+		"tags": "light, grey, straight, crease, trousers",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2718,7 +2718,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0022",
 		"warranty": "No Warranty",
@@ -2768,8 +2768,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
@@ -2779,18 +2779,18 @@
 		"subcategory_id": 6,
 		"brand_id": 5,
 		"user_id": 1,
-		"slug": "premium-black-tapered-chinos",
-		"name": "Premium Black Tapered Chinos",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Black Tapered Chinos from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "black-tapered-chinos",
+		"name": "Black Tapered Chinos",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Black Tapered Chinos. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/23.png",
 		"status": "active",
-		"meta_title": "Premium Black Tapered Chinos",
-		"meta_keyword": "premium, black, tapered, chinos",
-		"meta_description": "Shop Premium Black Tapered Chinos at SOSComrz.",
-		"tags": "premium, black, tapered, chinos",
+		"meta_title": "Black Tapered Chinos",
+		"meta_keyword": "black, tapered, chinos",
+		"meta_description": "Shop Black Tapered Chinos at SOSComrz.",
+		"tags": "black, tapered, chinos",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2845,7 +2845,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 3,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0023",
 		"warranty": "No Warranty",
@@ -2895,8 +2895,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 3,
-			"name": "Chattogram Dispatch Hub"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -2906,18 +2906,18 @@
 		"subcategory_id": 6,
 		"brand_id": 5,
 		"user_id": 1,
-		"slug": "premium-wide-leg-vintage-jeans",
-		"name": "Premium Wide Leg Vintage Jeans",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Wide Leg Vintage Jeans from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "wide-leg-vintage-blue-jeans",
+		"name": "Wide Leg Vintage Blue Jeans",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Wide Leg Vintage Blue Jeans. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/24.png",
 		"status": "active",
-		"meta_title": "Premium Wide Leg Vintage Jeans",
-		"meta_keyword": "premium, wide, leg, vintage, jeans",
-		"meta_description": "Shop Premium Wide Leg Vintage Jeans at SOSComrz.",
-		"tags": "premium, wide, leg, vintage, jeans",
+		"meta_title": "Wide Leg Vintage Blue Jeans",
+		"meta_keyword": "wide, leg, vintage, blue, jeans",
+		"meta_description": "Shop Wide Leg Vintage Blue Jeans at SOSComrz.",
+		"tags": "wide, leg, vintage, blue, jeans",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -2972,7 +2972,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0024",
 		"warranty": "No Warranty",
@@ -3022,29 +3022,29 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 25,
-		"category_id": 4,
-		"subcategory_id": 4,
+		"category_id": 5,
+		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-seafoam-chikan-embroidery-kurta",
-		"name": "Premium Seafoam Chikan Embroidery Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Seafoam Chikan Embroidery Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "aqua-chikan-embroidered-kurta",
+		"name": "Aqua Chikan Embroidered Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Aqua Chikan Embroidered Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/25.png",
 		"status": "active",
-		"meta_title": "Premium Seafoam Chikan Embroidery Kurta",
-		"meta_keyword": "premium, seafoam, chikan, embroidery, kurta",
-		"meta_description": "Shop Premium Seafoam Chikan Embroidery Kurta at SOSComrz.",
-		"tags": "premium, seafoam, chikan, embroidery, kurta",
+		"meta_title": "Aqua Chikan Embroidered Kurta",
+		"meta_keyword": "aqua, chikan, embroidered, kurta",
+		"meta_description": "Shop Aqua Chikan Embroidered Kurta at SOSComrz.",
+		"tags": "aqua, chikan, embroidered, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3082,7 +3082,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Shirt"
+				"specification_ans": "Kurta"
 			},
 			{
 				"specification": "Brand",
@@ -3098,7 +3098,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 2,
-		"warehouse_id": 2,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0025",
 		"warranty": "No Warranty",
@@ -3126,12 +3126,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"product_image": [
 			{
@@ -3148,8 +3148,8 @@
 			"business_name": "Ethnic Wear Supply BD"
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
@@ -3159,18 +3159,18 @@
 		"subcategory_id": 4,
 		"brand_id": 3,
 		"user_id": 1,
-		"slug": "premium-blue-bird-embroidery-shirt",
-		"name": "Premium Blue Bird Embroidery Shirt",
-		"short_description": "Premium shirt crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Blue Bird Embroidery Shirt from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "sky-blue-bird-embroidery-shirt",
+		"name": "Sky Blue Bird Embroidery Shirt",
+		"short_description": "Premium shirt from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Sky Blue Bird Embroidery Shirt. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/26.png",
 		"status": "active",
-		"meta_title": "Premium Blue Bird Embroidery Shirt",
-		"meta_keyword": "premium, blue, bird, embroidery, shirt",
-		"meta_description": "Shop Premium Blue Bird Embroidery Shirt at SOSComrz.",
-		"tags": "premium, blue, bird, embroidery, shirt",
+		"meta_title": "Sky Blue Bird Embroidery Shirt",
+		"meta_keyword": "sky, blue, bird, embroidery, shirt",
+		"meta_description": "Shop Sky Blue Bird Embroidery Shirt at SOSComrz.",
+		"tags": "sky, blue, bird, embroidery, shirt",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3263,7 +3263,7 @@
 			{
 				"id": 1,
 				"product_id": 26,
-				"image": "uploads/theme-one/product/20.png",
+				"image": "uploads/theme-one/product/15.png",
 				"created_at": "2026-04-10T13:00:00.000000Z"
 			}
 		],
@@ -3281,22 +3281,22 @@
 	},
 	{
 		"id": 27,
-		"category_id": 4,
-		"subcategory_id": 4,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-charcoal-floral-embroidered-panjabi",
-		"name": "Premium Charcoal Floral Embroidered Panjabi",
-		"short_description": "Premium panjabi crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Charcoal Floral Embroidered Panjabi from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "slate-floral-embroidered-panjabi",
+		"name": "Slate Floral Embroidered Panjabi",
+		"short_description": "Premium panjabi from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Slate Floral Embroidered Panjabi. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/27.png",
 		"status": "active",
-		"meta_title": "Premium Charcoal Floral Embroidered Panjabi",
-		"meta_keyword": "premium, charcoal, floral, embroidered, panjabi",
-		"meta_description": "Shop Premium Charcoal Floral Embroidered Panjabi at SOSComrz.",
-		"tags": "premium, charcoal, floral, embroidered, panjabi",
+		"meta_title": "Slate Floral Embroidered Panjabi",
+		"meta_keyword": "slate, floral, embroidered, panjabi",
+		"meta_description": "Shop Slate Floral Embroidered Panjabi at SOSComrz.",
+		"tags": "slate, floral, embroidered, panjabi",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3334,7 +3334,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Shirt"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -3378,12 +3378,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -3407,22 +3407,22 @@
 	},
 	{
 		"id": 28,
-		"category_id": 4,
-		"subcategory_id": 4,
+		"category_id": 5,
+		"subcategory_id": 5,
 		"brand_id": 4,
 		"user_id": 1,
-		"slug": "premium-lavender-floral-embroidered-kurta",
-		"name": "Premium Lavender Floral Embroidered Kurta",
-		"short_description": "Premium kurta crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Lavender Floral Embroidered Kurta from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "lavender-floral-embroidered-kurta",
+		"name": "Lavender Floral Embroidered Kurta",
+		"short_description": "Premium kurta from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Lavender Floral Embroidered Kurta. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/28.png",
 		"status": "active",
-		"meta_title": "Premium Lavender Floral Embroidered Kurta",
-		"meta_keyword": "premium, lavender, floral, embroidered, kurta",
-		"meta_description": "Shop Premium Lavender Floral Embroidered Kurta at SOSComrz.",
-		"tags": "premium, lavender, floral, embroidered, kurta",
+		"meta_title": "Lavender Floral Embroidered Kurta",
+		"meta_keyword": "lavender, floral, embroidered, kurta",
+		"meta_description": "Shop Lavender Floral Embroidered Kurta at SOSComrz.",
+		"tags": "lavender, floral, embroidered, kurta",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3460,7 +3460,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Shirt"
+				"specification_ans": "Kurta"
 			},
 			{
 				"specification": "Brand",
@@ -3504,12 +3504,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 5,
+			"name": "Kurta"
 		},
 		"product_image": [
 			{
@@ -3537,18 +3537,18 @@
 		"subcategory_id": 6,
 		"brand_id": 7,
 		"user_id": 1,
-		"slug": "premium-slim-fit-black-pants",
-		"name": "Premium Slim Fit Black Pants",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Slim Fit Black Pants from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "slim-fit-black-tech-pants",
+		"name": "Slim Fit Black Tech Pants",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Slim Fit Black Tech Pants. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/29.png",
 		"status": "active",
-		"meta_title": "Premium Slim Fit Black Pants",
-		"meta_keyword": "premium, slim, fit, black, pants",
-		"meta_description": "Shop Premium Slim Fit Black Pants at SOSComrz.",
-		"tags": "premium, slim, fit, black, pants",
+		"meta_title": "Slim Fit Black Tech Pants",
+		"meta_keyword": "slim, fit, black, tech, pants",
+		"meta_description": "Shop Slim Fit Black Tech Pants at SOSComrz.",
+		"tags": "slim, fit, black, tech, pants",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3664,18 +3664,18 @@
 		"subcategory_id": 6,
 		"brand_id": 7,
 		"user_id": 1,
-		"slug": "premium-grey-crease-casual-trousers",
-		"name": "Premium Grey Crease Casual Trousers",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Grey Crease Casual Trousers from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "grey-elastic-waist-crease-trousers",
+		"name": "Grey Elastic Waist Crease Trousers",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Grey Elastic Waist Crease Trousers. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/30.png",
 		"status": "active",
-		"meta_title": "Premium Grey Crease Casual Trousers",
-		"meta_keyword": "premium, grey, crease, casual, trousers",
-		"meta_description": "Shop Premium Grey Crease Casual Trousers at SOSComrz.",
-		"tags": "premium, grey, crease, casual, trousers",
+		"meta_title": "Grey Elastic Waist Crease Trousers",
+		"meta_keyword": "grey, elastic, waist, crease, trousers",
+		"meta_description": "Shop Grey Elastic Waist Crease Trousers at SOSComrz.",
+		"tags": "grey, elastic, waist, crease, trousers",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3730,7 +3730,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 2,
+		"warehouse_id": 3,
 		"exp_date": null,
 		"barcode": "SCR0030",
 		"warranty": "No Warranty",
@@ -3780,8 +3780,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Fashion Stock"
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
 		},
 		"product_variant": []
 	},
@@ -3791,18 +3791,18 @@
 		"subcategory_id": 6,
 		"brand_id": 5,
 		"user_id": 1,
-		"slug": "premium-black-pocket-trousers",
-		"name": "Premium Black Pocket Trousers",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Black Pocket Trousers from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "classic-black-slim-dress-pants",
+		"name": "Classic Black Slim Dress Pants",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Classic Black Slim Dress Pants. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/31.png",
 		"status": "active",
-		"meta_title": "Premium Black Pocket Trousers",
-		"meta_keyword": "premium, black, pocket, trousers",
-		"meta_description": "Shop Premium Black Pocket Trousers at SOSComrz.",
-		"tags": "premium, black, pocket, trousers",
+		"meta_title": "Classic Black Slim Dress Pants",
+		"meta_keyword": "classic, black, slim, dress, pants",
+		"meta_description": "Shop Classic Black Slim Dress Pants at SOSComrz.",
+		"tags": "classic, black, slim, dress, pants",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3857,7 +3857,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 3,
+		"warehouse_id": 1,
 		"exp_date": null,
 		"barcode": "SCR0031",
 		"warranty": "No Warranty",
@@ -3907,8 +3907,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 3,
-			"name": "Chattogram Dispatch Hub"
+			"id": 1,
+			"name": "Central Fashion Warehouse"
 		},
 		"product_variant": []
 	},
@@ -3918,18 +3918,18 @@
 		"subcategory_id": 6,
 		"brand_id": 5,
 		"user_id": 1,
-		"slug": "premium-black-tech-slim-pants",
-		"name": "Premium Black Tech Slim Pants",
-		"short_description": "Premium jeans crafted for SOSComrz — elegance for every occasion.",
-		"long_description": "<p>Premium Black Tech Slim Pants from our festive Design One collection. Celebrate in color with premium menswear for him &amp; her.</p>",
+		"slug": "baggy-light-wash-wide-jeans",
+		"name": "Baggy Light Wash Wide Jeans",
+		"short_description": "Premium jeans from SOSComrz — elegance for every occasion.",
+		"long_description": "<p>Baggy Light Wash Wide Jeans. Celebrate in color with premium menswear from our Design One collection.</p>",
 		"selling_price": "1242.00",
 		"original_price": "1774.29",
 		"image": "uploads/theme-one/product/32.png",
 		"status": "active",
-		"meta_title": "Premium Black Tech Slim Pants",
-		"meta_keyword": "premium, black, tech, slim, pants",
-		"meta_description": "Shop Premium Black Tech Slim Pants at SOSComrz.",
-		"tags": "premium, black, tech, slim, pants",
+		"meta_title": "Baggy Light Wash Wide Jeans",
+		"meta_keyword": "baggy, light, wash, wide, jeans",
+		"meta_description": "Shop Baggy Light Wash Wide Jeans at SOSComrz.",
+		"tags": "baggy, light, wash, wide, jeans",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -3984,7 +3984,7 @@
 		"distributor_price": "1142.64",
 		"alert_qty": 8,
 		"supplier_id": 1,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
 		"barcode": "SCR0032",
 		"warranty": "No Warranty",
@@ -4034,8 +4034,8 @@
 			"business_name": "Dhaka Apparel Sourcing Ltd."
 		},
 		"warehouse": {
-			"id": 1,
-			"name": "Central Fashion Warehouse"
+			"id": 2,
+			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
 	}
