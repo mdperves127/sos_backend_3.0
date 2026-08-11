@@ -21,6 +21,36 @@
 	},
 	{
 		"id": 3,
+		"category_id": 2,
+		"name": "Bluetooth Headphones",
+		"slug": "bluetooth-headphones",
+		"status": "active",
+		"created_at": "2026-04-10T14:00:00.000000Z",
+		"updated_at": "2026-04-10T14:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 4,
+		"category_id": 2,
+		"name": "Bluetooth Speakers",
+		"slug": "bluetooth-speakers",
+		"status": "active",
+		"created_at": "2026-04-10T14:00:00.000000Z",
+		"updated_at": "2026-04-10T14:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 5,
+		"category_id": 2,
+		"name": "Portable Speakers",
+		"slug": "portable-speakers",
+		"status": "active",
+		"created_at": "2026-04-10T14:00:00.000000Z",
+		"updated_at": "2026-04-10T14:00:00.000000Z",
+		"deleted_at": null
+	},
+	{
+		"id": 6,
 		"category_id": 3,
 		"name": "Smartwatches",
 		"slug": "smartwatches",
@@ -30,40 +60,10 @@
 		"deleted_at": null
 	},
 	{
-		"id": 4,
-		"category_id": 2,
-		"name": "Laptops",
-		"slug": "laptops",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 5,
-		"category_id": 2,
-		"name": "Monitors",
-		"slug": "monitors",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 6,
-		"category_id": 2,
-		"name": "Keyboards",
-		"slug": "keyboards",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
 		"id": 7,
 		"category_id": 3,
-		"name": "TWS Earbuds",
-		"slug": "tws-earbuds",
+		"name": "Fitness Wearables",
+		"slug": "fitness-wearables",
 		"status": "active",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
@@ -71,9 +71,9 @@
 	},
 	{
 		"id": 8,
-		"category_id": 3,
-		"name": "Headphones",
-		"slug": "headphones",
+		"category_id": 4,
+		"name": "Smart TV & Streaming",
+		"slug": "smart-tv-streaming",
 		"status": "active",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
@@ -81,9 +81,9 @@
 	},
 	{
 		"id": 9,
-		"category_id": 3,
-		"name": "Bluetooth Speakers",
-		"slug": "bluetooth-speakers",
+		"category_id": 4,
+		"name": "Cameras & Photography",
+		"slug": "cameras-photography",
 		"status": "active",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",
@@ -92,38 +92,8 @@
 	{
 		"id": 10,
 		"category_id": 4,
-		"name": "Power Banks",
-		"slug": "power-banks",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 11,
-		"category_id": 4,
-		"name": "Chargers & Cables",
-		"slug": "chargers-cables",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 12,
-		"category_id": 4,
-		"name": "Routers",
-		"slug": "routers",
-		"status": "active",
-		"created_at": "2026-04-10T14:00:00.000000Z",
-		"updated_at": "2026-04-10T14:00:00.000000Z",
-		"deleted_at": null
-	},
-	{
-		"id": 13,
-		"category_id": 4,
-		"name": "Storage Devices",
-		"slug": "storage-devices",
+		"name": "Travel Bags",
+		"slug": "travel-bags",
 		"status": "active",
 		"created_at": "2026-04-10T14:00:00.000000Z",
 		"updated_at": "2026-04-10T14:00:00.000000Z",

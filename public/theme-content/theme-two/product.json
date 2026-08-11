@@ -3,25 +3,25 @@
 		"id": 1,
 		"category_id": 1,
 		"subcategory_id": 1,
-		"brand_id": 1,
+		"brand_id": 6,
 		"user_id": 1,
-		"slug": "samsung-galaxy-a55-5g",
-		"name": "Samsung Galaxy A55 5G",
-		"short_description": "Balanced mid-range smartphone with AMOLED display, 5G, and long battery life.",
-		"long_description": "<p>The Galaxy A55 5G delivers a smooth daily smartphone experience with a vivid display, capable camera system, and dependable all-day battery for work and entertainment.</p>",
-		"selling_price": "47999.00",
-		"original_price": "52999.00",
+		"slug": "iphone-17-pro-max",
+		"name": "iPhone 17 Pro Max",
+		"short_description": "Flagship smartphone with titanium design and pro camera system.",
+		"long_description": "<p>Premium iPhone with vivid display, triple-camera setup, and all-day battery.</p>",
+		"selling_price": "149999.00",
+		"original_price": "169999.00",
 		"image": "uploads/theme-two/product/1.png",
 		"status": "active",
-		"meta_title": "Samsung Galaxy A55 5G Smartphone",
-		"meta_keyword": "samsung smartphone, galaxy a55 5g, android phone",
-		"meta_description": "Buy Samsung Galaxy A55 5G with AMOLED display and 5000mAh battery.",
-		"tags": "smartphone, samsung, 5g, android",
+		"meta_title": "iPhone 17 Pro Max",
+		"meta_keyword": "iphone 17 pro max",
+		"meta_description": "Shop iPhone 17 Pro Max.",
+		"tags": "iphone, smartphone, apple",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "9.43",
+		"discount_rate": "11.76",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -29,19 +29,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Storage",
-				"options": [
-					"128GB",
-					"256GB"
-				]
-			},
-			{
-				"id": 2,
 				"name": "Color",
 				"options": [
-					"Awesome Iceblue",
-					"Awesome Navy",
-					"Awesome Lilac"
+					"Standard"
 				]
 			}
 		],
@@ -52,53 +42,49 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Display",
-				"specification_ans": "6.6-inch Super AMOLED FHD+"
+				"specification": "Category",
+				"specification_ans": "Smartphones"
 			},
 			{
-				"specification": "Processor",
-				"specification_ans": "Exynos 1480"
-			},
-			{
-				"specification": "Battery",
-				"specification_ans": "5000mAh"
+				"specification": "Brand",
+				"specification_ans": "Apple"
 			}
 		],
-		"uniqid": "elc-prod-001",
-		"sku": "ELC-SP-001",
-		"distributor_price": "44500.00",
-		"alert_qty": 4,
+		"uniqid": "sos-prod-001",
+		"sku": "SOS-001",
+		"distributor_price": "137999.08",
+		"alert_qty": 5,
 		"supplier_id": 1,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "ELC0001",
+		"barcode": "SOS0001",
 		"warranty": "1 Year Official Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "47999.00",
+		"discount_price": "149999.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "9.43",
+		"discount_percentage": "11.76",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.7",
+		"productrating_avg_rating": "4.9",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 1,
+			"id": 6,
 			"user_id": 1,
-			"name": "Samsung",
-			"slug": "samsung"
+			"name": "Apple",
+			"slug": "apple"
 		},
 		"category": {
 			"id": 1,
-			"name": "Mobile & Tablets"
+			"name": "Smartphones & Tablets"
 		},
 		"subcategory": {
 			"id": 1,
@@ -126,27 +112,27 @@
 	},
 	{
 		"id": 2,
-		"category_id": 1,
-		"subcategory_id": 2,
-		"brand_id": 2,
+		"category_id": 3,
+		"subcategory_id": 6,
+		"brand_id": 6,
 		"user_id": 1,
-		"slug": "apple-ipad-10th-gen-wifi-64gb",
-		"name": "Apple iPad 10th Gen Wi-Fi 64GB",
-		"short_description": "Modern iPad with large display, USB-C, and smooth everyday performance.",
-		"long_description": "<p>The 10th generation iPad offers strong tablet performance for study, entertainment, browsing, and light productivity with a bright display and dependable battery life.</p>",
-		"selling_price": "58990.00",
-		"original_price": "64990.00",
+		"slug": "apple-watch-series-10",
+		"name": "Apple Watch Series 10",
+		"short_description": "Advanced smartwatch with health tracking and dual strap styling.",
+		"long_description": "<p>Stay connected with fitness tracking, notifications, and refined design.</p>",
+		"selling_price": "52990.00",
+		"original_price": "58990.00",
 		"image": "uploads/theme-two/product/2.png",
 		"status": "active",
-		"meta_title": "Apple iPad 10th Gen Wi-Fi 64GB",
-		"meta_keyword": "ipad 10th gen, apple tablet, wifi tablet",
-		"meta_description": "Shop Apple iPad 10th Gen Wi-Fi 64GB with A14 Bionic and 10.9-inch display.",
-		"tags": "tablet, ipad, apple, wifi",
+		"meta_title": "Apple Watch Series 10",
+		"meta_keyword": "apple watch series 10",
+		"meta_description": "Buy Apple Watch Series 10.",
+		"tags": "apple watch, smartwatch",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "9.23",
+		"discount_rate": "10.17",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -154,19 +140,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Storage",
-				"options": [
-					"64GB",
-					"256GB"
-				]
-			},
-			{
-				"id": 2,
 				"name": "Color",
 				"options": [
-					"Blue",
-					"Silver",
-					"Pink"
+					"Standard"
 				]
 			}
 		],
@@ -177,33 +153,29 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Display",
-				"specification_ans": "10.9-inch Liquid Retina"
+				"specification": "Category",
+				"specification_ans": "Smartwatches"
 			},
 			{
-				"specification": "Chip",
-				"specification_ans": "Apple A14 Bionic"
-			},
-			{
-				"specification": "Connectivity",
-				"specification_ans": "Wi-Fi 6 and USB-C"
+				"specification": "Brand",
+				"specification_ans": "Apple"
 			}
 		],
-		"uniqid": "elc-prod-002",
-		"sku": "ELC-TB-002",
-		"distributor_price": "55500.00",
-		"alert_qty": 3,
+		"uniqid": "sos-prod-002",
+		"sku": "SOS-002",
+		"distributor_price": "48750.80",
+		"alert_qty": 5,
 		"supplier_id": 1,
 		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "ELC0002",
-		"warranty": "1 Year International Warranty",
+		"barcode": "SOS0002",
+		"warranty": "1 Year Official Warranty",
 		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "58990.00",
+		"discount_price": "52990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "9.23",
+		"discount_percentage": "10.17",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -212,22 +184,22 @@
 		"productrating_avg_rating": "4.8",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 2,
+			"id": 6,
 			"user_id": 1,
 			"name": "Apple",
 			"slug": "apple"
 		},
 		"category": {
-			"id": 1,
-			"name": "Mobile & Tablets"
+			"id": 3,
+			"name": "Wearables & Smart Tech"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Tablets"
+			"id": 6,
+			"name": "Smartwatches"
 		},
 		"product_image": [
 			{
@@ -251,27 +223,27 @@
 	},
 	{
 		"id": 3,
-		"category_id": 3,
-		"subcategory_id": 3,
-		"brand_id": 3,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 6,
 		"user_id": 1,
-		"slug": "xiaomi-redmi-watch-4",
-		"name": "Xiaomi Redmi Watch 4",
-		"short_description": "Slim smartwatch with AMOLED display, health tracking, and long battery backup.",
-		"long_description": "<p>The Redmi Watch 4 is a lightweight wearable built for notifications, daily activity tracking, and sleep monitoring with a bright display and practical battery life.</p>",
-		"selling_price": "10990.00",
-		"original_price": "12990.00",
+		"slug": "iphone-17-pro-max-colors",
+		"name": "iPhone 17 Pro Max Color Collection",
+		"short_description": "Four premium finishes: Cosmic Orange, Silver, White, and Navy.",
+		"long_description": "<p>Same flagship iPhone performance in multiple color options.</p>",
+		"selling_price": "154999.00",
+		"original_price": "169999.00",
 		"image": "uploads/theme-two/product/3.png",
 		"status": "active",
-		"meta_title": "Xiaomi Redmi Watch 4 Smartwatch",
-		"meta_keyword": "xiaomi smartwatch, redmi watch 4, wearable device",
-		"meta_description": "Buy Xiaomi Redmi Watch 4 with AMOLED display and health monitoring features.",
-		"tags": "smartwatch, xiaomi, wearable, amoled",
+		"meta_title": "iPhone 17 Pro Max Colors",
+		"meta_keyword": "iphone colors",
+		"meta_description": "Explore iPhone color options.",
+		"tags": "iphone, colors, apple",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "15.40",
+		"discount_rate": "8.82",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -279,19 +251,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Strap Color",
+				"name": "Color",
 				"options": [
-					"Black",
-					"Silver Gray",
-					"Lavender Purple"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Case Finish",
-				"options": [
-					"Midnight Black",
-					"Silver"
+					"Standard"
 				]
 			}
 		],
@@ -302,57 +264,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Display",
-				"specification_ans": "1.97-inch AMOLED"
+				"specification": "Category",
+				"specification_ans": "Smartphones"
 			},
 			{
-				"specification": "Battery Life",
-				"specification_ans": "Up to 20 Days"
-			},
-			{
-				"specification": "Sensors",
-				"specification_ans": "Heart Rate, SpO2, Sleep Tracking"
+				"specification": "Brand",
+				"specification_ans": "Apple"
 			}
 		],
-		"uniqid": "elc-prod-003",
-		"sku": "ELC-SW-003",
-		"distributor_price": "9200.00",
+		"uniqid": "sos-prod-003",
+		"sku": "SOS-003",
+		"distributor_price": "142599.08",
 		"alert_qty": 5,
 		"supplier_id": 1,
-		"warehouse_id": 2,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "ELC0003",
-		"warranty": "6 Months Service Warranty",
-		"is_feature": 0,
+		"barcode": "SOS0003",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "10990.00",
+		"discount_price": "154999.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "15.40",
+		"discount_percentage": "8.82",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.5",
+		"productrating_avg_rating": "4.9",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 3,
+			"id": 6,
 			"user_id": 1,
-			"name": "Xiaomi",
-			"slug": "xiaomi"
+			"name": "Apple",
+			"slug": "apple"
 		},
 		"category": {
-			"id": 3,
-			"name": "Audio & Wearables"
+			"id": 1,
+			"name": "Smartphones & Tablets"
 		},
 		"subcategory": {
-			"id": 3,
-			"name": "Smartwatches"
+			"id": 1,
+			"name": "Smartphones"
 		},
 		"product_image": [
 			{
@@ -369,34 +327,34 @@
 			"business_name": "TechSource Distribution Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Experience Center"
+			"id": 1,
+			"name": "Central Electronics Warehouse"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 4,
-		"category_id": 2,
-		"subcategory_id": 4,
-		"brand_id": 4,
+		"category_id": 4,
+		"subcategory_id": 5,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "lenovo-ideapad-slim-3-core-i5",
-		"name": "Lenovo IdeaPad Slim 3 Core i5 Laptop",
-		"short_description": "Thin-and-light laptop for office work, classes, and everyday multitasking.",
-		"long_description": "<p>The Lenovo IdeaPad Slim 3 combines practical performance, fast SSD storage, and a modern display for users who need a dependable laptop for productivity and study.</p>",
-		"selling_price": "84990.00",
-		"original_price": "89990.00",
+		"slug": "portable-usb-desktop-speaker",
+		"name": "Portable USB Desktop Speaker",
+		"short_description": "Plug-and-play USB speaker for laptops and desktops.",
+		"long_description": "<p>Wide compatibility desktop speaker with no driver install required.</p>",
+		"selling_price": "2490.00",
+		"original_price": "3290.00",
 		"image": "uploads/theme-two/product/4.png",
 		"status": "active",
-		"meta_title": "Lenovo IdeaPad Slim 3 Core i5 Laptop",
-		"meta_keyword": "lenovo laptop, ideapad slim 3, core i5 notebook",
-		"meta_description": "Shop Lenovo IdeaPad Slim 3 with Core i5 processor, SSD storage, and 15.6-inch display.",
-		"tags": "laptop, lenovo, core i5, notebook",
+		"meta_title": "Portable USB Desktop Speaker",
+		"meta_keyword": "usb speaker",
+		"meta_description": "USB desktop speaker.",
+		"tags": "usb speaker, desktop",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "5.56",
+		"discount_rate": "24.32",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -404,17 +362,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "RAM",
+				"name": "Color",
 				"options": [
-					"8GB",
-					"16GB"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Storage",
-				"options": [
-					"512GB SSD"
+					"Standard"
 				]
 			}
 		],
@@ -425,57 +375,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Processor",
-				"specification_ans": "Intel Core i5 13th Gen"
+				"specification": "Category",
+				"specification_ans": "Portable Speakers"
 			},
 			{
-				"specification": "Display",
-				"specification_ans": "15.6-inch FHD"
-			},
-			{
-				"specification": "Storage",
-				"specification_ans": "512GB NVMe SSD"
+				"specification": "Brand",
+				"specification_ans": "Beats"
 			}
 		],
-		"uniqid": "elc-prod-004",
-		"sku": "ELC-LT-004",
-		"distributor_price": "81200.00",
-		"alert_qty": 2,
-		"supplier_id": 2,
+		"uniqid": "sos-prod-004",
+		"sku": "SOS-004",
+		"distributor_price": "2290.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "ELC0004",
-		"warranty": "2 Years Brand Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0004",
+		"warranty": "6 Months Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "84990.00",
+		"discount_price": "2490.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "5.56",
+		"discount_percentage": "24.32",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 4,
+			"id": 2,
 			"user_id": 1,
-			"name": "Lenovo",
-			"slug": "lenovo"
+			"name": "Beats",
+			"slug": "beats"
 		},
 		"category": {
-			"id": 2,
-			"name": "Computing"
+			"id": 4,
+			"name": "Gadgets & Accessories"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Laptops"
+			"id": 5,
+			"name": "Portable Speakers"
 		},
 		"product_image": [
 			{
@@ -487,9 +433,9 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "ComputeCore Solutions",
-			"business_name": "ComputeCore Solutions BD"
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
 		},
 		"warehouse": {
 			"id": 1,
@@ -500,26 +446,26 @@
 	{
 		"id": 5,
 		"category_id": 2,
-		"subcategory_id": 5,
-		"brand_id": 5,
+		"subcategory_id": 4,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "asus-proart-pa248qv-monitor",
-		"name": "ASUS ProArt PA248QV Monitor",
-		"short_description": "Color-accurate professional monitor for design, office, and creative work.",
-		"long_description": "<p>The ASUS ProArt PA248QV is built for creators and professionals who need reliable color reproduction, flexible connectivity, and ergonomic adjustments on a crisp panel.</p>",
-		"selling_price": "42990.00",
-		"original_price": "46990.00",
+		"slug": "mini-bluetooth-speaker-duo",
+		"name": "Mini Bluetooth Speaker Duo",
+		"short_description": "Compact wireless speaker with red mesh grille.",
+		"long_description": "<p>Portable Bluetooth speaker with carry strap and top controls.</p>",
+		"selling_price": "3990.00",
+		"original_price": "4990.00",
 		"image": "uploads/theme-two/product/5.png",
 		"status": "active",
-		"meta_title": "ASUS ProArt PA248QV Monitor",
-		"meta_keyword": "asus monitor, proart display, professional monitor",
-		"meta_description": "Buy ASUS ProArt PA248QV professional monitor with ergonomic stand and factory calibration.",
-		"tags": "monitor, asus, proart, display",
+		"meta_title": "Mini Bluetooth Speaker Duo",
+		"meta_keyword": "mini speaker",
+		"meta_description": "Compact Bluetooth speaker.",
+		"tags": "bluetooth speaker",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "8.51",
+		"discount_rate": "20.04",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -527,16 +473,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Size",
+				"name": "Color",
 				"options": [
-					"24.1-inch"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Refresh Rate",
-				"options": [
-					"75Hz"
+					"Standard"
 				]
 			}
 		],
@@ -547,57 +486,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Panel",
-				"specification_ans": "24.1-inch IPS"
+				"specification": "Category",
+				"specification_ans": "Bluetooth Speakers"
 			},
 			{
-				"specification": "Resolution",
-				"specification_ans": "1920 x 1200"
-			},
-			{
-				"specification": "Color Accuracy",
-				"specification_ans": "100% sRGB and Rec.709"
+				"specification": "Brand",
+				"specification_ans": "Beats"
 			}
 		],
-		"uniqid": "elc-prod-005",
-		"sku": "ELC-MN-005",
-		"distributor_price": "39800.00",
-		"alert_qty": 2,
-		"supplier_id": 2,
+		"uniqid": "sos-prod-005",
+		"sku": "SOS-005",
+		"distributor_price": "3670.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
 		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "ELC0005",
-		"warranty": "3 Years Brand Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0005",
+		"warranty": "6 Months Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "42990.00",
+		"discount_price": "3990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "8.51",
+		"discount_percentage": "20.04",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.7",
+		"productrating_avg_rating": "4.6",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 5,
+			"id": 2,
 			"user_id": 1,
-			"name": "ASUS",
-			"slug": "asus"
+			"name": "Beats",
+			"slug": "beats"
 		},
 		"category": {
 			"id": 2,
-			"name": "Computing"
+			"name": "Audio & Music"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Monitors"
+			"id": 4,
+			"name": "Bluetooth Speakers"
 		},
 		"product_image": [
 			{
@@ -609,9 +544,9 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "ComputeCore Solutions",
-			"business_name": "ComputeCore Solutions BD"
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
 		},
 		"warehouse": {
 			"id": 2,
@@ -621,27 +556,27 @@
 	},
 	{
 		"id": 6,
-		"category_id": 2,
+		"category_id": 3,
 		"subcategory_id": 6,
-		"brand_id": 5,
+		"brand_id": 6,
 		"user_id": 1,
-		"slug": "asus-marshmallow-kw100-keyboard",
-		"name": "ASUS Marshmallow KW100 Keyboard",
-		"short_description": "Compact wireless keyboard designed for quiet typing and multi-device pairing.",
-		"long_description": "<p>The ASUS Marshmallow KW100 is a slim wireless keyboard with low-profile keys, Bluetooth pairing, and a compact footprint for clean desk setups and portable use.</p>",
-		"selling_price": "4990.00",
-		"original_price": "5990.00",
+		"slug": "apple-watch-se",
+		"name": "Apple Watch SE",
+		"short_description": "Essential Apple Watch with sport band and custom faces.",
+		"long_description": "<p>Core smartwatch features in a lightweight everyday design.</p>",
+		"selling_price": "35990.00",
+		"original_price": "39990.00",
 		"image": "uploads/theme-two/product/6.png",
 		"status": "active",
-		"meta_title": "ASUS Marshmallow KW100 Wireless Keyboard",
-		"meta_keyword": "asus keyboard, wireless keyboard, bluetooth keyboard",
-		"meta_description": "Shop ASUS Marshmallow KW100 compact wireless keyboard with Bluetooth connectivity.",
-		"tags": "keyboard, asus, wireless, bluetooth",
+		"meta_title": "Apple Watch SE",
+		"meta_keyword": "apple watch se",
+		"meta_description": "Apple Watch SE.",
+		"tags": "apple watch se",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "16.69",
+		"discount_rate": "10.00",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -651,15 +586,7 @@
 				"id": 1,
 				"name": "Color",
 				"options": [
-					"Oat Milk",
-					"Green Tea Latte"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Layout",
-				"options": [
-					"78-Key Compact"
+					"Standard"
 				]
 			}
 		],
@@ -670,57 +597,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Connection",
-				"specification_ans": "Bluetooth 5.0"
+				"specification": "Category",
+				"specification_ans": "Smartwatches"
 			},
 			{
-				"specification": "Layout",
-				"specification_ans": "Compact 78-Key"
-			},
-			{
-				"specification": "Battery",
-				"specification_ans": "Up to 2 Years"
+				"specification": "Brand",
+				"specification_ans": "Apple"
 			}
 		],
-		"uniqid": "elc-prod-006",
-		"sku": "ELC-KB-006",
-		"distributor_price": "4300.00",
-		"alert_qty": 6,
-		"supplier_id": 2,
+		"uniqid": "sos-prod-006",
+		"sku": "SOS-006",
+		"distributor_price": "33110.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
 		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "ELC0006",
-		"warranty": "1 Year Service Warranty",
-		"is_feature": 0,
+		"barcode": "SOS0006",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
 		"is_affiliate": 0,
-		"discount_price": "4990.00",
+		"discount_price": "35990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "16.69",
+		"discount_percentage": "10.00",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.4",
+		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 5,
+			"id": 6,
 			"user_id": 1,
-			"name": "ASUS",
-			"slug": "asus"
+			"name": "Apple",
+			"slug": "apple"
 		},
 		"category": {
-			"id": 2,
-			"name": "Computing"
+			"id": 3,
+			"name": "Wearables & Smart Tech"
 		},
 		"subcategory": {
 			"id": 6,
-			"name": "Keyboards"
+			"name": "Smartwatches"
 		},
 		"product_image": [
 			{
@@ -732,9 +655,9 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 2,
-			"supplier_name": "ComputeCore Solutions",
-			"business_name": "ComputeCore Solutions BD"
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
 		},
 		"warehouse": {
 			"id": 2,
@@ -744,27 +667,27 @@
 	},
 	{
 		"id": 7,
-		"category_id": 3,
-		"subcategory_id": 7,
-		"brand_id": 6,
+		"category_id": 2,
+		"subcategory_id": 4,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "sony-wf-c700n-earbuds",
-		"name": "Sony WF-C700N Earbuds",
-		"short_description": "Compact noise-canceling earbuds with comfortable fit and balanced sound.",
-		"long_description": "<p>The Sony WF-C700N delivers wireless freedom, active noise canceling, and all-day listening comfort for commuting, calls, and music playback.</p>",
-		"selling_price": "12990.00",
-		"original_price": "14990.00",
+		"slug": "portable-mini-bluetooth-speaker",
+		"name": "Portable Mini Bluetooth Speaker",
+		"short_description": "Handheld speaker with red mesh front and carry loop.",
+		"long_description": "<p>Take music anywhere with this compact red Bluetooth speaker.</p>",
+		"selling_price": "2790.00",
+		"original_price": "3490.00",
 		"image": "uploads/theme-two/product/7.png",
 		"status": "active",
-		"meta_title": "Sony WF-C700N Noise Canceling Earbuds",
-		"meta_keyword": "sony earbuds, wf-c700n, tws earbuds",
-		"meta_description": "Buy Sony WF-C700N noise canceling earbuds with Bluetooth and all-day battery.",
-		"tags": "earbuds, sony, tws, noise canceling",
+		"meta_title": "Portable Mini Bluetooth Speaker",
+		"meta_keyword": "portable speaker",
+		"meta_description": "Red portable Bluetooth speaker.",
+		"tags": "bluetooth speaker, portable",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "13.34",
+		"discount_rate": "20.06",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -774,16 +697,7 @@
 				"id": 1,
 				"name": "Color",
 				"options": [
-					"Black",
-					"White",
-					"Lavender"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Case Finish",
-				"options": [
-					"Matte"
+					"Standard"
 				]
 			}
 		],
@@ -794,57 +708,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Noise Control",
-				"specification_ans": "Active Noise Canceling"
+				"specification": "Category",
+				"specification_ans": "Bluetooth Speakers"
 			},
 			{
-				"specification": "Battery",
-				"specification_ans": "Up to 15 Hours with Case"
-			},
-			{
-				"specification": "Connectivity",
-				"specification_ans": "Bluetooth 5.2"
+				"specification": "Brand",
+				"specification_ans": "Beats"
 			}
 		],
-		"uniqid": "elc-prod-007",
-		"sku": "ELC-EB-007",
-		"distributor_price": "11600.00",
+		"uniqid": "sos-prod-007",
+		"sku": "SOS-007",
+		"distributor_price": "2566.80",
 		"alert_qty": 5,
 		"supplier_id": 3,
 		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "ELC0007",
-		"warranty": "6 Months Brand Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0007",
+		"warranty": "6 Months Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "12990.00",
+		"discount_price": "2790.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "13.34",
+		"discount_percentage": "20.06",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
+		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 6,
+			"id": 2,
 			"user_id": 1,
-			"name": "Sony",
-			"slug": "sony"
+			"name": "Beats",
+			"slug": "beats"
 		},
 		"category": {
-			"id": 3,
-			"name": "Audio & Wearables"
+			"id": 2,
+			"name": "Audio & Music"
 		},
 		"subcategory": {
-			"id": 7,
-			"name": "TWS Earbuds"
+			"id": 4,
+			"name": "Bluetooth Speakers"
 		},
 		"product_image": [
 			{
@@ -869,26 +779,26 @@
 	{
 		"id": 8,
 		"category_id": 3,
-		"subcategory_id": 8,
-		"brand_id": 6,
+		"subcategory_id": 7,
+		"brand_id": 5,
 		"user_id": 1,
-		"slug": "sony-wh-ch720n-headphones",
-		"name": "Sony WH-CH720N Headphones",
-		"short_description": "Wireless over-ear headphones with noise canceling and clear call quality.",
-		"long_description": "<p>The Sony WH-CH720N offers long battery life, effective noise canceling, and a lightweight build for work, travel, and everyday listening.</p>",
-		"selling_price": "17990.00",
-		"original_price": "19990.00",
+		"slug": "smart-fitness-watch-12gb",
+		"name": "Smart Fitness Watch 12GB",
+		"short_description": "Fitness smartwatch with activity tracking display.",
+		"long_description": "<p>Health monitoring with silicone strap and daily activity insights.</p>",
+		"selling_price": "8990.00",
+		"original_price": "10990.00",
 		"image": "uploads/theme-two/product/8.png",
 		"status": "active",
-		"meta_title": "Sony WH-CH720N Wireless Headphones",
-		"meta_keyword": "sony headphones, wh-ch720n, wireless headphones",
-		"meta_description": "Shop Sony WH-CH720N wireless headphones with long battery and noise canceling.",
-		"tags": "headphones, sony, wireless, anc",
+		"meta_title": "Smart Fitness Watch 12GB",
+		"meta_keyword": "fitness watch",
+		"meta_description": "Smart fitness watch.",
+		"tags": "fitness watch",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "10.01",
+		"discount_rate": "18.20",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -898,17 +808,7 @@
 				"id": 1,
 				"name": "Color",
 				"options": [
-					"Black",
-					"Blue",
-					"White"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Connection",
-				"options": [
-					"Bluetooth",
-					"3.5mm Wired"
+					"Standard"
 				]
 			}
 		],
@@ -919,57 +819,53 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Noise Control",
-				"specification_ans": "Dual Noise Sensor ANC"
+				"specification": "Category",
+				"specification_ans": "Fitness Wearables"
 			},
 			{
-				"specification": "Battery",
-				"specification_ans": "Up to 35 Hours"
-			},
-			{
-				"specification": "Weight",
-				"specification_ans": "192g"
+				"specification": "Brand",
+				"specification_ans": "Huawei"
 			}
 		],
-		"uniqid": "elc-prod-008",
-		"sku": "ELC-HP-008",
-		"distributor_price": "16500.00",
-		"alert_qty": 4,
-		"supplier_id": 3,
-		"warehouse_id": 2,
+		"uniqid": "sos-prod-008",
+		"sku": "SOS-008",
+		"distributor_price": "8270.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 3,
 		"exp_date": null,
-		"barcode": "ELC0008",
-		"warranty": "6 Months Brand Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0008",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "17990.00",
+		"discount_price": "8990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "10.01",
+		"discount_percentage": "18.20",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.7",
+		"productrating_avg_rating": "4.4",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 6,
+			"id": 5,
 			"user_id": 1,
-			"name": "Sony",
-			"slug": "sony"
+			"name": "Huawei",
+			"slug": "huawei"
 		},
 		"category": {
 			"id": 3,
-			"name": "Audio & Wearables"
+			"name": "Wearables & Smart Tech"
 		},
 		"subcategory": {
-			"id": 8,
-			"name": "Headphones"
+			"id": 7,
+			"name": "Fitness Wearables"
 		},
 		"product_image": [
 			{
@@ -981,39 +877,39 @@
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 3,
-			"supplier_name": "SoundWave Imports",
-			"business_name": "SoundWave Imports"
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
 		},
 		"warehouse": {
-			"id": 2,
-			"name": "Banani Experience Center"
+			"id": 3,
+			"name": "Chattogram Tech Hub"
 		},
 		"product_variant": []
 	},
 	{
 		"id": 9,
-		"category_id": 3,
-		"subcategory_id": 9,
+		"category_id": 1,
+		"subcategory_id": 1,
 		"brand_id": 7,
 		"user_id": 1,
-		"slug": "jbl-flip-6-speaker",
-		"name": "JBL Flip 6 Speaker",
-		"short_description": "Portable Bluetooth speaker with strong bass, waterproof body, and outdoor-ready design.",
-		"long_description": "<p>The JBL Flip 6 brings punchy sound, rugged portability, and IP67 protection for trips, parties, and everyday wireless playback.</p>",
-		"selling_price": "13990.00",
-		"original_price": "15990.00",
+		"slug": "oneplus-7-pro-nebula-blue",
+		"name": "OnePlus 7 Pro Nebula Blue",
+		"short_description": "Curved AMOLED flagship in Nebula Blue finish.",
+		"long_description": "<p>Fluid display, pop-up camera, and gradient glass design.</p>",
+		"selling_price": "64990.00",
+		"original_price": "74990.00",
 		"image": "uploads/theme-two/product/9.png",
 		"status": "active",
-		"meta_title": "JBL Flip 6 Bluetooth Speaker",
-		"meta_keyword": "jbl speaker, flip 6, portable bluetooth speaker",
-		"meta_description": "Buy JBL Flip 6 Bluetooth speaker with IP67 protection and bold portable sound.",
-		"tags": "speaker, jbl, bluetooth, portable",
+		"meta_title": "OnePlus 7 Pro Nebula Blue",
+		"meta_keyword": "oneplus 7 pro",
+		"meta_description": "OnePlus 7 Pro Nebula Blue.",
+		"tags": "oneplus, smartphone",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "12.51",
+		"discount_rate": "13.34",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -1023,16 +919,7 @@
 				"id": 1,
 				"name": "Color",
 				"options": [
-					"Black",
-					"Blue",
-					"Red"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Finish",
-				"options": [
-					"Fabric Mesh"
+					"Standard"
 				]
 			}
 		],
@@ -1043,33 +930,29 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Output",
-				"specification_ans": "30W RMS"
+				"specification": "Category",
+				"specification_ans": "Smartphones"
 			},
 			{
-				"specification": "Protection",
-				"specification_ans": "IP67 Water and Dust Resistant"
-			},
-			{
-				"specification": "Battery",
-				"specification_ans": "Up to 12 Hours"
+				"specification": "Brand",
+				"specification_ans": "OnePlus"
 			}
 		],
-		"uniqid": "elc-prod-009",
-		"sku": "ELC-SPK-009",
-		"distributor_price": "12600.00",
+		"uniqid": "sos-prod-009",
+		"sku": "SOS-009",
+		"distributor_price": "59790.80",
 		"alert_qty": 5,
-		"supplier_id": 3,
-		"warehouse_id": 1,
+		"supplier_id": 1,
+		"warehouse_id": 3,
 		"exp_date": null,
-		"barcode": "ELC0009",
-		"warranty": "6 Months Brand Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0009",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "13990.00",
+		"discount_price": "64990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "12.51",
+		"discount_percentage": "13.34",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -1078,28 +961,916 @@
 		"productrating_avg_rating": "4.7",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
 			"id": 7,
 			"user_id": 1,
-			"name": "JBL",
-			"slug": "jbl"
+			"name": "OnePlus",
+			"slug": "oneplus"
 		},
 		"category": {
-			"id": 3,
-			"name": "Audio & Wearables"
+			"id": 1,
+			"name": "Smartphones & Tablets"
 		},
 		"subcategory": {
-			"id": 9,
-			"name": "Bluetooth Speakers"
+			"id": 1,
+			"name": "Smartphones"
 		},
 		"product_image": [
 			{
 				"id": 9,
 				"product_id": 9,
 				"image": "uploads/theme-two/product/9.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Tech Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 10,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 7,
+		"user_id": 1,
+		"slug": "oneplus-8-glacial-green",
+		"name": "OnePlus 8 Glacial Green",
+		"short_description": "Slim flagship in Glacial Green with triple camera.",
+		"long_description": "<p>Premium build with smooth performance and mint-green finish.</p>",
+		"selling_price": "54990.00",
+		"original_price": "62990.00",
+		"image": "uploads/theme-two/product/10.png",
+		"status": "active",
+		"meta_title": "OnePlus 8 Glacial Green",
+		"meta_keyword": "oneplus 8",
+		"meta_description": "OnePlus 8 Glacial Green.",
+		"tags": "oneplus 8",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.70",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "OnePlus"
+			}
+		],
+		"uniqid": "sos-prod-010",
+		"sku": "SOS-010",
+		"distributor_price": "50590.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0010",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "54990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.70",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 7,
+			"user_id": 1,
+			"name": "OnePlus",
+			"slug": "oneplus"
+		},
+		"category": {
+			"id": 1,
+			"name": "Smartphones & Tablets"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Smartphones"
+		},
+		"product_image": [
+			{
+				"id": 10,
+				"product_id": 10,
+				"image": "uploads/theme-two/product/10.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 11,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "flagship-smartphone-duo-pack",
+		"name": "Flagship Smartphone Duo Pack",
+		"short_description": "Samsung Galaxy Ultra and iPhone Pro duo collection.",
+		"long_description": "<p>Premium duo for users who want top flagships from both ecosystems.</p>",
+		"selling_price": "189999.00",
+		"original_price": "209999.00",
+		"image": "uploads/theme-two/product/11.png",
+		"status": "active",
+		"meta_title": "Flagship Smartphone Duo",
+		"meta_keyword": "samsung iphone bundle",
+		"meta_description": "Flagship smartphone duo.",
+		"tags": "flagship, bundle",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "9.52",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Samsung"
+			}
+		],
+		"uniqid": "sos-prod-011",
+		"sku": "SOS-011",
+		"distributor_price": "174799.08",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0011",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "189999.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "9.52",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Samsung",
+			"slug": "samsung"
+		},
+		"category": {
+			"id": 1,
+			"name": "Smartphones & Tablets"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Smartphones"
+		},
+		"product_image": [
+			{
+				"id": 11,
+				"product_id": 11,
+				"image": "uploads/theme-two/product/11.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 12,
+		"category_id": 1,
+		"subcategory_id": 1,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "premium-flagship-trio-collection",
+		"name": "Premium Flagship Trio Collection",
+		"short_description": "Samsung, Pixel, and iPhone flagship showcase.",
+		"long_description": "<p>Three leading flagships in one premium collection.</p>",
+		"selling_price": "249999.00",
+		"original_price": "279999.00",
+		"image": "uploads/theme-two/product/12.png",
+		"status": "active",
+		"meta_title": "Premium Flagship Trio",
+		"meta_keyword": "smartphone trio",
+		"meta_description": "Premium flagship trio.",
+		"tags": "flagship trio",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "10.71",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Samsung"
+			}
+		],
+		"uniqid": "sos-prod-012",
+		"sku": "SOS-012",
+		"distributor_price": "229999.08",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0012",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "249999.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "10.71",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Samsung",
+			"slug": "samsung"
+		},
+		"category": {
+			"id": 1,
+			"name": "Smartphones & Tablets"
+		},
+		"subcategory": {
+			"id": 1,
+			"name": "Smartphones"
+		},
+		"product_image": [
+			{
+				"id": 12,
+				"product_id": 12,
+				"image": "uploads/theme-two/product/12.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 13,
+		"category_id": 3,
+		"subcategory_id": 6,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "apple-watch-ultra-ocean-band",
+		"name": "Apple Watch Ultra Ocean Band",
+		"short_description": "Rugged Apple Watch Ultra with orange Ocean Band.",
+		"long_description": "<p>Titanium case built for outdoor adventures and active lifestyles.</p>",
+		"selling_price": "89990.00",
+		"original_price": "99990.00",
+		"image": "uploads/theme-two/product/13.png",
+		"status": "active",
+		"meta_title": "Apple Watch Ultra",
+		"meta_keyword": "apple watch ultra",
+		"meta_description": "Apple Watch Ultra Ocean Band.",
+		"tags": "apple watch ultra",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "10.00",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartwatches"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-013",
+		"sku": "SOS-013",
+		"distributor_price": "82790.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0013",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "89990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "10.00",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 3,
+			"name": "Wearables & Smart Tech"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Smartwatches"
+		},
+		"product_image": [
+			{
+				"id": 13,
+				"product_id": 13,
+				"image": "uploads/theme-two/product/13.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 14,
+		"category_id": 3,
+		"subcategory_id": 6,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "apple-watch-gps-45mm",
+		"name": "Apple Watch GPS 45mm",
+		"short_description": "GPS smartwatch with activity rings and heart rate tracking.",
+		"long_description": "<p>All-day fitness tracking with a sleek black sport band.</p>",
+		"selling_price": "42990.00",
+		"original_price": "47990.00",
+		"image": "uploads/theme-two/product/14.png",
+		"status": "active",
+		"meta_title": "Apple Watch GPS 45mm",
+		"meta_keyword": "apple watch gps",
+		"meta_description": "Apple Watch GPS 45mm.",
+		"tags": "apple watch gps",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "10.42",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartwatches"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-014",
+		"sku": "SOS-014",
+		"distributor_price": "39550.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0014",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "42990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "10.42",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 3,
+			"name": "Wearables & Smart Tech"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Smartwatches"
+		},
+		"product_image": [
+			{
+				"id": 14,
+				"product_id": 14,
+				"image": "uploads/theme-two/product/14.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 15,
+		"category_id": 3,
+		"subcategory_id": 6,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "galaxy-watch-smart-remote",
+		"name": "Galaxy Watch Smart Remote",
+		"short_description": "Round smartwatch with TV remote and streaming controls.",
+		"long_description": "<p>Control your Samsung TV and apps directly from your wrist.</p>",
+		"selling_price": "38990.00",
+		"original_price": "44990.00",
+		"image": "uploads/theme-two/product/15.png",
+		"status": "active",
+		"meta_title": "Galaxy Watch Smart Remote",
+		"meta_keyword": "galaxy watch",
+		"meta_description": "Galaxy Watch with smart remote.",
+		"tags": "galaxy watch, smart remote",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.34",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Smartwatches"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Samsung"
+			}
+		],
+		"uniqid": "sos-prod-015",
+		"sku": "SOS-015",
+		"distributor_price": "35870.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0015",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "38990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.34",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Samsung",
+			"slug": "samsung"
+		},
+		"category": {
+			"id": 3,
+			"name": "Wearables & Smart Tech"
+		},
+		"subcategory": {
+			"id": 6,
+			"name": "Smartwatches"
+		},
+		"product_image": [
+			{
+				"id": 15,
+				"product_id": 15,
+				"image": "uploads/theme-two/product/15.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 16,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "ticktalk-kids-smartwatch",
+		"name": "TickTalk Kids Smartwatch",
+		"short_description": "Rugged kids smartwatch with camera and safety features.",
+		"long_description": "<p>Durable TickTalk watch designed for children with easy controls.</p>",
+		"selling_price": "12990.00",
+		"original_price": "14990.00",
+		"image": "uploads/theme-two/product/16.png",
+		"status": "active",
+		"meta_title": "TickTalk Kids Smartwatch",
+		"meta_keyword": "kids smartwatch",
+		"meta_description": "TickTalk kids smartwatch.",
+		"tags": "kids watch, ticktalk",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.34",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Fitness Wearables"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Huawei"
+			}
+		],
+		"uniqid": "sos-prod-016",
+		"sku": "SOS-016",
+		"distributor_price": "11950.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SOS0016",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "12990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.34",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Huawei",
+			"slug": "huawei"
+		},
+		"category": {
+			"id": 3,
+			"name": "Wearables & Smart Tech"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Fitness Wearables"
+		},
+		"product_image": [
+			{
+				"id": 16,
+				"product_id": 16,
+				"image": "uploads/theme-two/product/16.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Tech Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 17,
+		"category_id": 2,
+		"subcategory_id": 4,
+		"brand_id": 9,
+		"user_id": 1,
+		"slug": "jbl-flip-6-portable-speaker",
+		"name": "JBL Flip 6 Portable Speaker",
+		"short_description": "Waterproof portable Bluetooth speaker with bold JBL sound.",
+		"long_description": "<p>Party-ready JBL Flip 6 with deep bass and 12 hours of playtime.</p>",
+		"selling_price": "8990.00",
+		"original_price": "10990.00",
+		"image": "uploads/theme-two/product/17.png",
+		"status": "active",
+		"meta_title": "JBL Flip 6",
+		"meta_keyword": "jbl flip 6",
+		"meta_description": "JBL Flip 6 portable speaker.",
+		"tags": "jbl, bluetooth speaker",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "18.20",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Speakers"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "JBL"
+			}
+		],
+		"uniqid": "sos-prod-017",
+		"sku": "SOS-017",
+		"distributor_price": "8270.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0017",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "8990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "18.20",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 9,
+			"user_id": 1,
+			"name": "JBL",
+			"slug": "jbl"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Bluetooth Speakers"
+		},
+		"product_image": [
+			{
+				"id": 17,
+				"product_id": 17,
+				"image": "uploads/theme-two/product/17.png",
 				"created_at": "2026-04-10T15:00:00.000000Z"
 			}
 		],
@@ -1116,23 +1887,356 @@
 		"product_variant": []
 	},
 	{
-		"id": 10,
+		"id": 18,
+		"category_id": 2,
+		"subcategory_id": 4,
+		"brand_id": 9,
+		"user_id": 1,
+		"slug": "jbl-flip-6-lifestyle-edition",
+		"name": "JBL Flip 6 Lifestyle Edition",
+		"short_description": "Portable JBL speaker for outdoor music on the go.",
+		"long_description": "<p>Take JBL signature sound anywhere with this compact Flip speaker.</p>",
+		"selling_price": "9490.00",
+		"original_price": "11490.00",
+		"image": "uploads/theme-two/product/18.png",
+		"status": "active",
+		"meta_title": "JBL Flip 6 Lifestyle",
+		"meta_keyword": "jbl speaker",
+		"meta_description": "JBL Flip 6 lifestyle edition.",
+		"tags": "jbl speaker, outdoor",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.41",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Speakers"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "JBL"
+			}
+		],
+		"uniqid": "sos-prod-018",
+		"sku": "SOS-018",
+		"distributor_price": "8730.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0018",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "9490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.41",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 9,
+			"user_id": 1,
+			"name": "JBL",
+			"slug": "jbl"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Bluetooth Speakers"
+		},
+		"product_image": [
+			{
+				"id": 18,
+				"product_id": 18,
+				"image": "uploads/theme-two/product/18.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 19,
+		"category_id": 2,
+		"subcategory_id": 4,
+		"brand_id": 9,
+		"user_id": 1,
+		"slug": "jbl-go-4-portable-speaker",
+		"name": "JBL Go 4 Portable Speaker",
+		"short_description": "Ultra-compact JBL speaker with bold logo and carry loop.",
+		"long_description": "<p>Pocket-sized JBL Go 4 with USB-C charging and wireless playback.</p>",
+		"selling_price": "4990.00",
+		"original_price": "6490.00",
+		"image": "uploads/theme-two/product/19.png",
+		"status": "active",
+		"meta_title": "JBL Go 4",
+		"meta_keyword": "jbl go 4",
+		"meta_description": "JBL Go 4 portable speaker.",
+		"tags": "jbl go 4",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.11",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Speakers"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "JBL"
+			}
+		],
+		"uniqid": "sos-prod-019",
+		"sku": "SOS-019",
+		"distributor_price": "4590.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0019",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "4990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.11",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 9,
+			"user_id": 1,
+			"name": "JBL",
+			"slug": "jbl"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 4,
+			"name": "Bluetooth Speakers"
+		},
+		"product_image": [
+			{
+				"id": 19,
+				"product_id": 19,
+				"image": "uploads/theme-two/product/19.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 20,
 		"category_id": 4,
 		"subcategory_id": 10,
-		"brand_id": 8,
+		"brand_id": 3,
 		"user_id": 1,
-		"slug": "anker-powercore-20000-power-bank",
-		"name": "Anker PowerCore 20000 Power Bank",
-		"short_description": "High-capacity portable charger with fast output for phones and tablets.",
-		"long_description": "<p>The Anker PowerCore 20000 is designed for users who need reliable backup power on travel days, long commutes, or heavy phone usage with safe fast charging support.</p>",
+		"slug": "travel-duffel-shoulder-bag",
+		"name": "Travel Duffel Shoulder Bag",
+		"short_description": "Water-resistant travel bag with adjustable shoulder straps.",
+		"long_description": "<p>Spacious duffel for weekend trips, gym, and daily carry.</p>",
+		"selling_price": "3490.00",
+		"original_price": "4490.00",
+		"image": "uploads/theme-two/product/20.png",
+		"status": "active",
+		"meta_title": "Travel Duffel Shoulder Bag",
+		"meta_keyword": "duffel bag",
+		"meta_description": "Travel duffel shoulder bag.",
+		"tags": "travel bag, duffel",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.27",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Travel Bags"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "LG"
+			}
+		],
+		"uniqid": "sos-prod-020",
+		"sku": "SOS-020",
+		"distributor_price": "3210.80",
+		"alert_qty": 5,
+		"supplier_id": 4,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0020",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "3490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.27",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "LG",
+			"slug": "lg"
+		},
+		"category": {
+			"id": 4,
+			"name": "Gadgets & Accessories"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Travel Bags"
+		},
+		"product_image": [
+			{
+				"id": 20,
+				"product_id": 20,
+				"image": "uploads/theme-two/product/20.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 21,
+		"category_id": 4,
+		"subcategory_id": 10,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "canvas-weekender-duffel-bag",
+		"name": "Canvas Weekender Duffel Bag",
+		"short_description": "Classic canvas weekender with reinforced straps.",
+		"long_description": "<p>Durable canvas duffel for short trips and everyday adventure.</p>",
 		"selling_price": "3990.00",
 		"original_price": "4990.00",
-		"image": "uploads/theme-two/product/10.png",
+		"image": "uploads/theme-two/product/21.png",
 		"status": "active",
-		"meta_title": "Anker PowerCore 20000 Power Bank",
-		"meta_keyword": "anker power bank, 20000mah power bank, portable charger",
-		"meta_description": "Buy Anker PowerCore 20000 power bank with fast charging and dependable battery backup.",
-		"tags": "power bank, anker, portable charger, battery",
+		"meta_title": "Canvas Weekender Duffel",
+		"meta_keyword": "weekender bag",
+		"meta_description": "Canvas weekender duffel.",
+		"tags": "weekender bag, canvas",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
@@ -1145,17 +2249,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Capacity",
-				"options": [
-					"20000mAh"
-				]
-			},
-			{
-				"id": 2,
 				"name": "Color",
 				"options": [
-					"Black",
-					"White"
+					"Standard"
 				]
 			}
 		],
@@ -1166,27 +2262,23 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Capacity",
-				"specification_ans": "20000mAh"
+				"specification": "Category",
+				"specification_ans": "Travel Bags"
 			},
 			{
-				"specification": "Output",
-				"specification_ans": "22.5W Fast Charge"
-			},
-			{
-				"specification": "Ports",
-				"specification_ans": "USB-C and Dual USB-A"
+				"specification": "Brand",
+				"specification_ans": "LG"
 			}
 		],
-		"uniqid": "elc-prod-010",
-		"sku": "ELC-PB-010",
-		"distributor_price": "3380.00",
-		"alert_qty": 8,
+		"uniqid": "sos-prod-021",
+		"sku": "SOS-021",
+		"distributor_price": "3670.80",
+		"alert_qty": 5,
 		"supplier_id": 4,
-		"warehouse_id": 1,
+		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "ELC0010",
-		"warranty": "6 Months Service Warranty",
+		"barcode": "SOS0021",
+		"warranty": "1 Year Official Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
 		"discount_price": "3990.00",
@@ -1201,152 +2293,28 @@
 		"productrating_avg_rating": "4.5",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 8,
+			"id": 3,
 			"user_id": 1,
-			"name": "Anker",
-			"slug": "anker"
+			"name": "LG",
+			"slug": "lg"
 		},
 		"category": {
 			"id": 4,
-			"name": "Accessories & Networking"
+			"name": "Gadgets & Accessories"
 		},
 		"subcategory": {
 			"id": 10,
-			"name": "Power Banks"
+			"name": "Travel Bags"
 		},
 		"product_image": [
 			{
-				"id": 10,
-				"product_id": 10,
-				"image": "uploads/theme-two/product/10.png",
-				"created_at": "2026-04-10T15:00:00.000000Z"
-			}
-		],
-		"productrating": [],
-		"supplier": {
-			"id": 4,
-			"supplier_name": "PowerLink Accessories",
-			"business_name": "PowerLink Accessories BD"
-		},
-		"warehouse": {
-			"id": 1,
-			"name": "Central Electronics Warehouse"
-		},
-		"product_variant": []
-	},
-	{
-		"id": 11,
-		"category_id": 4,
-		"subcategory_id": 11,
-		"brand_id": 8,
-		"user_id": 1,
-		"slug": "anker-67w-gan-fast-charger",
-		"name": "Anker 67W GaN Fast Charger",
-		"short_description": "Compact multi-device wall charger with high-speed USB-C power delivery.",
-		"long_description": "<p>The Anker 67W GaN charger offers efficient, travel-friendly charging for phones, tablets, and lightweight laptops through a compact body and modern GaN design.</p>",
-		"selling_price": "3490.00",
-		"original_price": "4290.00",
-		"image": "uploads/theme-two/product/11.png",
-		"status": "active",
-		"meta_title": "Anker 67W GaN Fast Charger",
-		"meta_keyword": "anker charger, gan charger, usb c fast charger",
-		"meta_description": "Shop Anker 67W GaN fast charger for phones, tablets, and laptops.",
-		"tags": "charger, anker, gan, usb-c",
-		"commision_type": null,
-		"request": null,
-		"user_type": null,
-		"discount_type": "percentage",
-		"discount_rate": "18.65",
-		"rejected_details": null,
-		"created_at": "2026-04-10T15:00:00.000000Z",
-		"updated_at": "2026-04-10T15:00:00.000000Z",
-		"deleted_at": null,
-		"variants": [
-			{
-				"id": 1,
-				"name": "Plug Type",
-				"options": [
-					"UK",
-					"EU"
-				]
-			},
-			{
-				"id": 2,
-				"name": "Color",
-				"options": [
-					"White",
-					"Black"
-				]
-			}
-		],
-		"selling_type": "retail",
-		"selling_details": null,
-		"advance_payment": null,
-		"single_advance_payment_type": null,
-		"is_connect_bulk_single": "1",
-		"specifications": [
-			{
-				"specification": "Output",
-				"specification_ans": "67W USB-C PD"
-			},
-			{
-				"specification": "Technology",
-				"specification_ans": "GaN"
-			},
-			{
-				"specification": "Ports",
-				"specification_ans": "2 x USB-C, 1 x USB-A"
-			}
-		],
-		"uniqid": "elc-prod-011",
-		"sku": "ELC-CH-011",
-		"distributor_price": "3010.00",
-		"alert_qty": 8,
-		"supplier_id": 4,
-		"warehouse_id": 2,
-		"exp_date": null,
-		"barcode": "ELC0011",
-		"warranty": "6 Months Service Warranty",
-		"is_feature": 0,
-		"is_affiliate": 0,
-		"discount_price": "3490.00",
-		"vendor_id": 1,
-		"pre_order": "0",
-		"discount_percentage": "18.65",
-		"product_type": "system",
-		"wc_product_id": null,
-		"market_place_brand_id": null,
-		"market_place_category_id": null,
-		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.6",
-		"vendor": {
-			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
-		},
-		"brand": {
-			"id": 8,
-			"user_id": 1,
-			"name": "Anker",
-			"slug": "anker"
-		},
-		"category": {
-			"id": 4,
-			"name": "Accessories & Networking"
-		},
-		"subcategory": {
-			"id": 11,
-			"name": "Chargers & Cables"
-		},
-		"product_image": [
-			{
-				"id": 11,
-				"product_id": 11,
-				"image": "uploads/theme-two/product/11.png",
+				"id": 21,
+				"product_id": 21,
+				"image": "uploads/theme-two/product/21.png",
 				"created_at": "2026-04-10T15:00:00.000000Z"
 			}
 		],
@@ -1363,28 +2331,28 @@
 		"product_variant": []
 	},
 	{
-		"id": 12,
+		"id": 22,
 		"category_id": 4,
-		"subcategory_id": 12,
+		"subcategory_id": 10,
 		"brand_id": 3,
 		"user_id": 1,
-		"slug": "xiaomi-ax3000-wifi-6-router",
-		"name": "Xiaomi AX3000 Wi-Fi 6 Router",
-		"short_description": "Dual-band Wi-Fi 6 router built for stable high-speed home connectivity.",
-		"long_description": "<p>The Xiaomi AX3000 is a modern router designed for busy households with multiple connected devices, offering strong coverage, gigabit ports, and efficient Wi-Fi 6 performance.</p>",
-		"selling_price": "6990.00",
-		"original_price": "7990.00",
-		"image": "uploads/theme-two/product/12.png",
+		"slug": "two-tone-sports-duffel-bag",
+		"name": "Two-Tone Sports Duffel Bag",
+		"short_description": "Sports duffel with dual-tone design and front pocket.",
+		"long_description": "<p>Roomy gym and travel bag with multiple carry handles.</p>",
+		"selling_price": "3290.00",
+		"original_price": "4290.00",
+		"image": "uploads/theme-two/product/22.png",
 		"status": "active",
-		"meta_title": "Xiaomi AX3000 Wi-Fi 6 Router",
-		"meta_keyword": "xiaomi router, ax3000, wifi 6 router",
-		"meta_description": "Buy Xiaomi AX3000 Wi-Fi 6 router with dual-band connectivity and gigabit ports.",
-		"tags": "router, xiaomi, wifi 6, networking",
+		"meta_title": "Two-Tone Sports Duffel",
+		"meta_keyword": "sports duffel",
+		"meta_description": "Two-tone sports duffel bag.",
+		"tags": "sports bag, duffel",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "12.52",
+		"discount_rate": "23.31",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -1392,17 +2360,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Plug Type",
-				"options": [
-					"UK",
-					"EU"
-				]
-			},
-			{
-				"id": 2,
 				"name": "Color",
 				"options": [
-					"White"
+					"Standard"
 				]
 			}
 		],
@@ -1413,63 +2373,170 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Wireless Standard",
-				"specification_ans": "Wi-Fi 6"
+				"specification": "Category",
+				"specification_ans": "Travel Bags"
 			},
 			{
-				"specification": "Bands",
-				"specification_ans": "Dual Band 2.4GHz and 5GHz"
-			},
-			{
-				"specification": "Ports",
-				"specification_ans": "Gigabit Ethernet Ports"
+				"specification": "Brand",
+				"specification_ans": "LG"
 			}
 		],
-		"uniqid": "elc-prod-012",
-		"sku": "ELC-RT-012",
-		"distributor_price": "6300.00",
+		"uniqid": "sos-prod-022",
+		"sku": "SOS-022",
+		"distributor_price": "3026.80",
 		"alert_qty": 5,
 		"supplier_id": 4,
-		"warehouse_id": 3,
+		"warehouse_id": 2,
 		"exp_date": null,
-		"barcode": "ELC0012",
-		"warranty": "1 Year Service Warranty",
+		"barcode": "SOS0022",
+		"warranty": "1 Year Official Warranty",
 		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "6990.00",
+		"discount_price": "3290.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "12.52",
+		"discount_percentage": "23.31",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
 		"market_place_category_id": null,
 		"market_place_subcategory_id": null,
-		"productrating_avg_rating": "4.5",
+		"productrating_avg_rating": "4.4",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
 			"id": 3,
 			"user_id": 1,
-			"name": "Xiaomi",
-			"slug": "xiaomi"
+			"name": "LG",
+			"slug": "lg"
 		},
 		"category": {
 			"id": 4,
-			"name": "Accessories & Networking"
+			"name": "Gadgets & Accessories"
 		},
 		"subcategory": {
-			"id": 12,
-			"name": "Routers"
+			"id": 10,
+			"name": "Travel Bags"
 		},
 		"product_image": [
 			{
-				"id": 12,
-				"product_id": 12,
-				"image": "uploads/theme-two/product/12.png",
+				"id": 22,
+				"product_id": 22,
+				"image": "uploads/theme-two/product/22.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "PowerLink Accessories",
+			"business_name": "PowerLink Accessories BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 23,
+		"category_id": 4,
+		"subcategory_id": 10,
+		"brand_id": 3,
+		"user_id": 1,
+		"slug": "adventure-travel-organizer-bag",
+		"name": "Adventure Travel Organizer Bag",
+		"short_description": "Multi-compartment travel bag with accessory pouches.",
+		"long_description": "<p>Organized travel kit with space for camera gear and essentials.</p>",
+		"selling_price": "5990.00",
+		"original_price": "7490.00",
+		"image": "uploads/theme-two/product/23.png",
+		"status": "active",
+		"meta_title": "Adventure Travel Organizer",
+		"meta_keyword": "travel organizer",
+		"meta_description": "Adventure travel organizer bag.",
+		"tags": "travel organizer, bag",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "20.03",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Travel Bags"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "LG"
+			}
+		],
+		"uniqid": "sos-prod-023",
+		"sku": "SOS-023",
+		"distributor_price": "5510.80",
+		"alert_qty": 5,
+		"supplier_id": 4,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SOS0023",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "5990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "20.03",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 3,
+			"user_id": 1,
+			"name": "LG",
+			"slug": "lg"
+		},
+		"category": {
+			"id": 4,
+			"name": "Gadgets & Accessories"
+		},
+		"subcategory": {
+			"id": 10,
+			"name": "Travel Bags"
+		},
+		"product_image": [
+			{
+				"id": 23,
+				"product_id": 23,
+				"image": "uploads/theme-two/product/23.png",
 				"created_at": "2026-04-10T15:00:00.000000Z"
 			}
 		],
@@ -1486,28 +2553,28 @@
 		"product_variant": []
 	},
 	{
-		"id": 13,
-		"category_id": 4,
-		"subcategory_id": 13,
-		"brand_id": 1,
+		"id": 24,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 2,
 		"user_id": 1,
-		"slug": "samsung-t7-shield-1tb-ssd",
-		"name": "Samsung T7 Shield 1TB SSD",
-		"short_description": "Rugged portable SSD with fast transfer speed and compact build.",
-		"long_description": "<p>The Samsung T7 Shield 1TB is a durable portable SSD made for fast file transfers, mobile workflows, and secure backup on the move with a shock-resistant body.</p>",
-		"selling_price": "15990.00",
-		"original_price": "17990.00",
-		"image": "uploads/theme-two/product/13.png",
+		"slug": "wireless-over-ear-headphones",
+		"name": "Wireless Over-Ear Headphones",
+		"short_description": "Comfortable wireless headphones with touch controls.",
+		"long_description": "<p>Immersive sound with padded ear cushions and all-day comfort.</p>",
+		"selling_price": "5990.00",
+		"original_price": "7990.00",
+		"image": "uploads/theme-two/product/24.png",
 		"status": "active",
-		"meta_title": "Samsung T7 Shield 1TB Portable SSD",
-		"meta_keyword": "samsung ssd, t7 shield, portable ssd 1tb",
-		"meta_description": "Shop Samsung T7 Shield 1TB portable SSD with fast USB 3.2 transfer speeds.",
-		"tags": "ssd, samsung, portable storage, usb-c",
+		"meta_title": "Wireless Over-Ear Headphones",
+		"meta_keyword": "wireless headphones",
+		"meta_description": "Wireless over-ear headphones.",
+		"tags": "wireless headphones",
 		"commision_type": null,
 		"request": null,
 		"user_type": null,
 		"discount_type": "percentage",
-		"discount_rate": "11.12",
+		"discount_rate": "25.03",
 		"rejected_details": null,
 		"created_at": "2026-04-10T15:00:00.000000Z",
 		"updated_at": "2026-04-10T15:00:00.000000Z",
@@ -1515,19 +2582,9 @@
 		"variants": [
 			{
 				"id": 1,
-				"name": "Capacity",
-				"options": [
-					"1TB",
-					"2TB"
-				]
-			},
-			{
-				"id": 2,
 				"name": "Color",
 				"options": [
-					"Black",
-					"Blue",
-					"Beige"
+					"Standard"
 				]
 			}
 		],
@@ -1538,33 +2595,362 @@
 		"is_connect_bulk_single": "1",
 		"specifications": [
 			{
-				"specification": "Speed",
-				"specification_ans": "Up to 1050MB/s Read"
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
 			},
 			{
-				"specification": "Interface",
-				"specification_ans": "USB 3.2 Gen 2 Type-C"
-			},
-			{
-				"specification": "Protection",
-				"specification_ans": "IP65 and Shock Resistant"
+				"specification": "Brand",
+				"specification_ans": "Beats"
 			}
 		],
-		"uniqid": "elc-prod-013",
-		"sku": "ELC-SSD-013",
-		"distributor_price": "14600.00",
-		"alert_qty": 4,
-		"supplier_id": 4,
-		"warehouse_id": 2,
+		"uniqid": "sos-prod-024",
+		"sku": "SOS-024",
+		"distributor_price": "5510.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
 		"exp_date": null,
-		"barcode": "ELC0013",
-		"warranty": "3 Years Limited Warranty",
-		"is_feature": 1,
+		"barcode": "SOS0024",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
 		"is_affiliate": 0,
-		"discount_price": "15990.00",
+		"discount_price": "5990.00",
 		"vendor_id": 1,
 		"pre_order": "0",
-		"discount_percentage": "11.12",
+		"discount_percentage": "25.03",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Beats",
+			"slug": "beats"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 24,
+				"product_id": 24,
+				"image": "uploads/theme-two/product/24.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 25,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 5,
+		"user_id": 1,
+		"slug": "smart-fitness-watch-pro",
+		"name": "Smart Fitness Watch Pro",
+		"short_description": "Advanced fitness watch with health metrics display.",
+		"long_description": "<p>Track workouts, steps, and daily health from your wrist.</p>",
+		"selling_price": "9990.00",
+		"original_price": "11990.00",
+		"image": "uploads/theme-two/product/25.png",
+		"status": "active",
+		"meta_title": "Smart Fitness Watch Pro",
+		"meta_keyword": "fitness watch",
+		"meta_description": "Smart fitness watch pro.",
+		"tags": "fitness watch pro",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.68",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Fitness Wearables"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Huawei"
+			}
+		],
+		"uniqid": "sos-prod-025",
+		"sku": "SOS-025",
+		"distributor_price": "9190.80",
+		"alert_qty": 5,
+		"supplier_id": 1,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SOS0025",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "9990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.68",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 5,
+			"user_id": 1,
+			"name": "Huawei",
+			"slug": "huawei"
+		},
+		"category": {
+			"id": 3,
+			"name": "Wearables & Smart Tech"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Fitness Wearables"
+		},
+		"product_image": [
+			{
+				"id": 25,
+				"product_id": 25,
+				"image": "uploads/theme-two/product/25.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 1,
+			"supplier_name": "TechSource Distribution",
+			"business_name": "TechSource Distribution Ltd."
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Tech Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 26,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "matte-black-wireless-headphones",
+		"name": "Matte Black Wireless Headphones",
+		"short_description": "Studio-style matte black headphones with physical controls.",
+		"long_description": "<p>Premium over-ear sound with breathable mesh and USB-C charging.</p>",
+		"selling_price": "7490.00",
+		"original_price": "9490.00",
+		"image": "uploads/theme-two/product/26.png",
+		"status": "active",
+		"meta_title": "Matte Black Wireless Headphones",
+		"meta_keyword": "black headphones",
+		"meta_description": "Matte black wireless headphones.",
+		"tags": "black headphones",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.07",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Beats"
+			}
+		],
+		"uniqid": "sos-prod-026",
+		"sku": "SOS-026",
+		"distributor_price": "6890.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0026",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "7490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.07",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Beats",
+			"slug": "beats"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 26,
+				"product_id": 26,
+				"image": "uploads/theme-two/product/26.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 27,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "premium-blue-over-ear-headphones",
+		"name": "Premium Blue Over-Ear Headphones",
+		"short_description": "Premium blue over-ear headphones with mesh canopy.",
+		"long_description": "<p>High-fidelity wireless audio with a modern premium design.</p>",
+		"selling_price": "12990.00",
+		"original_price": "14990.00",
+		"image": "uploads/theme-two/product/27.png",
+		"status": "active",
+		"meta_title": "Premium Blue Headphones",
+		"meta_keyword": "premium headphones",
+		"meta_description": "Premium blue over-ear headphones.",
+		"tags": "blue headphones, premium",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.34",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-027",
+		"sku": "SOS-027",
+		"distributor_price": "11950.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0027",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "12990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.34",
 		"product_type": "system",
 		"wc_product_id": null,
 		"market_place_brand_id": null,
@@ -1573,36 +2959,924 @@
 		"productrating_avg_rating": "4.8",
 		"vendor": {
 			"id": 1,
-			"name": "ElectroMart BD",
-			"email": "sales@electromartbd.com"
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
 		},
 		"brand": {
-			"id": 1,
+			"id": 6,
 			"user_id": 1,
-			"name": "Samsung",
-			"slug": "samsung"
+			"name": "Apple",
+			"slug": "apple"
 		},
 		"category": {
-			"id": 4,
-			"name": "Accessories & Networking"
+			"id": 2,
+			"name": "Audio & Music"
 		},
 		"subcategory": {
-			"id": 13,
-			"name": "Storage Devices"
+			"id": 3,
+			"name": "Bluetooth Headphones"
 		},
 		"product_image": [
 			{
-				"id": 13,
-				"product_id": 13,
-				"image": "uploads/theme-two/product/13.png",
+				"id": 27,
+				"product_id": 27,
+				"image": "uploads/theme-two/product/27.png",
 				"created_at": "2026-04-10T15:00:00.000000Z"
 			}
 		],
 		"productrating": [],
 		"supplier": {
-			"id": 4,
-			"supplier_name": "PowerLink Accessories",
-			"business_name": "PowerLink Accessories BD"
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 28,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "silver-premium-over-ear-headphones",
+		"name": "Silver Premium Over-Ear Headphones",
+		"short_description": "Silver over-ear headphones with mesh headband comfort.",
+		"long_description": "<p>Luxury listening experience with refined metallic finish.</p>",
+		"selling_price": "13990.00",
+		"original_price": "15990.00",
+		"image": "uploads/theme-two/product/28.png",
+		"status": "active",
+		"meta_title": "Silver Premium Headphones",
+		"meta_keyword": "silver headphones",
+		"meta_description": "Silver premium over-ear headphones.",
+		"tags": "silver headphones",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.51",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-028",
+		"sku": "SOS-028",
+		"distributor_price": "12870.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0028",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "13990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.51",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.8",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 28,
+				"product_id": 28,
+				"image": "uploads/theme-two/product/28.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 29,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "silver-headphones-with-stand",
+		"name": "Silver Headphones with Stand",
+		"short_description": "Premium silver headphones displayed on wooden stand.",
+		"long_description": "<p>Elegant desk-ready headphones with premium build quality.</p>",
+		"selling_price": "14490.00",
+		"original_price": "16490.00",
+		"image": "uploads/theme-two/product/29.png",
+		"status": "active",
+		"meta_title": "Silver Headphones with Stand",
+		"meta_keyword": "headphones stand",
+		"meta_description": "Silver headphones with stand.",
+		"tags": "headphones stand",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.13",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-029",
+		"sku": "SOS-029",
+		"distributor_price": "13330.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0029",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "14490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.13",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 29,
+				"product_id": 29,
+				"image": "uploads/theme-two/product/29.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 30,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "airpods-max-style-headphones",
+		"name": "AirPods Max Style Headphones",
+		"short_description": "Premium over-ear headphones with mesh comfort band.",
+		"long_description": "<p>Flagship-style wireless headphones for immersive daily listening.</p>",
+		"selling_price": "14990.00",
+		"original_price": "16990.00",
+		"image": "uploads/theme-two/product/30.png",
+		"status": "active",
+		"meta_title": "AirPods Max Style Headphones",
+		"meta_keyword": "premium headphones",
+		"meta_description": "AirPods Max style headphones.",
+		"tags": "airpods max style",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "11.77",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-030",
+		"sku": "SOS-030",
+		"distributor_price": "13790.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0030",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "14990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "11.77",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 30,
+				"product_id": 30,
+				"image": "uploads/theme-two/product/30.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 31,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "touch-control-wireless-headphones",
+		"name": "Touch Control Wireless Headphones",
+		"short_description": "Wireless headphones with circular touch control panel.",
+		"long_description": "<p>Easy touch controls for calls, volume, and playback on the go.</p>",
+		"selling_price": "6490.00",
+		"original_price": "8490.00",
+		"image": "uploads/theme-two/product/31.png",
+		"status": "active",
+		"meta_title": "Touch Control Headphones",
+		"meta_keyword": "touch headphones",
+		"meta_description": "Touch control wireless headphones.",
+		"tags": "touch control headphones",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "23.56",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Beats"
+			}
+		],
+		"uniqid": "sos-prod-031",
+		"sku": "SOS-031",
+		"distributor_price": "5970.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0031",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "6490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "23.56",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.5",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Beats",
+			"slug": "beats"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 31,
+				"product_id": 31,
+				"image": "uploads/theme-two/product/31.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 32,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 6,
+		"user_id": 1,
+		"slug": "silver-mesh-over-ear-headphones",
+		"name": "Silver Mesh Over-Ear Headphones",
+		"short_description": "Silver and white mesh headphones with premium drivers.",
+		"long_description": "<p>Balanced sound and comfort for long listening sessions.</p>",
+		"selling_price": "13490.00",
+		"original_price": "15490.00",
+		"image": "uploads/theme-two/product/32.png",
+		"status": "active",
+		"meta_title": "Silver Mesh Headphones",
+		"meta_keyword": "mesh headphones",
+		"meta_description": "Silver mesh over-ear headphones.",
+		"tags": "silver mesh headphones",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "12.91",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Apple"
+			}
+		],
+		"uniqid": "sos-prod-032",
+		"sku": "SOS-032",
+		"distributor_price": "12410.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0032",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "13490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "12.91",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.7",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 6,
+			"user_id": 1,
+			"name": "Apple",
+			"slug": "apple"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 32,
+				"product_id": 32,
+				"image": "uploads/theme-two/product/32.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 33,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "minimalist-gray-wireless-headphones",
+		"name": "Minimalist Gray Wireless Headphones",
+		"short_description": "Light gray minimalist wireless over-ear headphones.",
+		"long_description": "<p>Clean design with comfortable padding for everyday use.</p>",
+		"selling_price": "5490.00",
+		"original_price": "6990.00",
+		"image": "uploads/theme-two/product/33.png",
+		"status": "active",
+		"meta_title": "Minimalist Gray Headphones",
+		"meta_keyword": "minimalist headphones",
+		"meta_description": "Minimalist gray wireless headphones.",
+		"tags": "gray headphones, minimalist",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "21.46",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Beats"
+			}
+		],
+		"uniqid": "sos-prod-033",
+		"sku": "SOS-033",
+		"distributor_price": "5050.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SOS0033",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "5490.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "21.46",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.4",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Beats",
+			"slug": "beats"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 33,
+				"product_id": 33,
+				"image": "uploads/theme-two/product/33.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Electronics Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 34,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "studio-black-over-ear-headphones",
+		"name": "Studio Black Over-Ear Headphones",
+		"short_description": "Matte black studio headphones with mesh ear cushions.",
+		"long_description": "<p>Neutral studio sound profile with foldable comfort design.</p>",
+		"selling_price": "6990.00",
+		"original_price": "8990.00",
+		"image": "uploads/theme-two/product/34.png",
+		"status": "active",
+		"meta_title": "Studio Black Headphones",
+		"meta_keyword": "studio headphones",
+		"meta_description": "Studio black over-ear headphones.",
+		"tags": "studio headphones, black",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "22.25",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Beats"
+			}
+		],
+		"uniqid": "sos-prod-034",
+		"sku": "SOS-034",
+		"distributor_price": "6430.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0034",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 0,
+		"is_affiliate": 0,
+		"discount_price": "6990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "22.25",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Beats",
+			"slug": "beats"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 34,
+				"product_id": 34,
+				"image": "uploads/theme-two/product/34.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Experience Center"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 35,
+		"category_id": 2,
+		"subcategory_id": 3,
+		"brand_id": 10,
+		"user_id": 1,
+		"slug": "bang-olufsen-beoplay-headphones",
+		"name": "Bang & Olufsen Beoplay Headphones",
+		"short_description": "Luxury tan leather headphones with brushed aluminum cups.",
+		"long_description": "<p>Premium Bang & Olufsen craftsmanship for refined audio lovers.</p>",
+		"selling_price": "24990.00",
+		"original_price": "28990.00",
+		"image": "uploads/theme-two/product/35.png",
+		"status": "active",
+		"meta_title": "Bang & Olufsen Beoplay",
+		"meta_keyword": "luxury headphones",
+		"meta_description": "Bang & Olufsen Beoplay headphones.",
+		"tags": "bang olufsen, luxury headphones",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "13.80",
+		"rejected_details": null,
+		"created_at": "2026-04-10T15:00:00.000000Z",
+		"updated_at": "2026-04-10T15:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bluetooth Headphones"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Bang & Olufsen"
+			}
+		],
+		"uniqid": "sos-prod-035",
+		"sku": "SOS-035",
+		"distributor_price": "22990.80",
+		"alert_qty": 5,
+		"supplier_id": 3,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "SOS0035",
+		"warranty": "1 Year Official Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": "24990.00",
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "13.80",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "SOS Tech Store",
+			"email": "sales@sostechstore.com"
+		},
+		"brand": {
+			"id": 10,
+			"user_id": 1,
+			"name": "Bang & Olufsen",
+			"slug": "bang-olufsen"
+		},
+		"category": {
+			"id": 2,
+			"name": "Audio & Music"
+		},
+		"subcategory": {
+			"id": 3,
+			"name": "Bluetooth Headphones"
+		},
+		"product_image": [
+			{
+				"id": 35,
+				"product_id": 35,
+				"image": "uploads/theme-two/product/35.png",
+				"created_at": "2026-04-10T15:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 3,
+			"supplier_name": "SoundWave Imports",
+			"business_name": "SoundWave Imports"
 		},
 		"warehouse": {
 			"id": 2,

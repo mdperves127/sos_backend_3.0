@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "title": "Save Up To 20% Off",
+        "subtitle": "17 Pro Max",
+        "image": "uploads/theme-two/banner/1.png",
+        "link": "#",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "Music Collection",
+        "subtitle": "Bluetooth Speaker",
+        "image": "uploads/theme-two/banner/2.png",
+        "link": "#",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "Music Collection",
+        "subtitle": "Bluetooth Headphone",
+        "image": "uploads/theme-two/banner/3.png",
+        "link": "#",
+        "order": 3,
+        "status": "active"
+    }
+]
