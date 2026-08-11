@@ -10,27 +10,27 @@
     },
     {
         "id": 2,
-        "title": "Festive Collection",
-        "subtitle": "Discover for him & her",
-        "image": "uploads/theme-one/banner/2.png",
+        "title": "EID Specials",
+        "subtitle": "Live Now",
+        "image": "uploads/theme-one/two-column-banner-1/two-column-banner-1.png",
         "link": "#",
         "order": 2,
         "status": "active"
     },
     {
         "id": 3,
-        "title": "Trending Categories",
-        "subtitle": "Koti · Panjabi · Kurta",
-        "image": "uploads/theme-one/banner/3.png",
+        "title": "Built to Move",
+        "subtitle": "Styled to Impress",
+        "image": "uploads/theme-one/two-column-banner-2/two-column-banner-2.png",
         "link": "#",
         "order": 3,
         "status": "active"
     },
     {
         "id": 4,
-        "title": "Stylish New Arrivals",
-        "subtitle": "Shop Now",
-        "image": "uploads/theme-one/banner/4.png",
+        "title": "Elevate Everyday Comfort",
+        "subtitle": "Premium polo shirts for daily style",
+        "image": "uploads/theme-one/section-banner/3.png",
         "link": "#",
         "order": 4,
         "status": "active"

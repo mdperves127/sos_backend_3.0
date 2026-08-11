@@ -253,8 +253,8 @@
 	},
 	{
 		"id": 3,
-		"category_id": 1,
-		"subcategory_id": 1,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-mint-embroidered-bandhgala-set",
@@ -306,7 +306,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Koti"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -350,12 +350,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -505,8 +505,8 @@
 	},
 	{
 		"id": 5,
-		"category_id": 1,
-		"subcategory_id": 1,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-black-sequin-nehru-jacket",
@@ -558,7 +558,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Koti"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -602,12 +602,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -757,8 +757,8 @@
 	},
 	{
 		"id": 7,
-		"category_id": 1,
-		"subcategory_id": 1,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-taupe-embroidered-waistcoat-set",
@@ -810,7 +810,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Koti"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -854,12 +854,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 1,
-			"name": "Koti"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1009,8 +1009,8 @@
 	},
 	{
 		"id": 9,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-maroon-paisley-kurta",
@@ -1062,7 +1062,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1106,12 +1106,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1135,8 +1135,8 @@
 	},
 	{
 		"id": 10,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-seafoam-embroidered-kurta",
@@ -1188,7 +1188,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1232,12 +1232,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1261,8 +1261,8 @@
 	},
 	{
 		"id": 11,
-		"category_id": 4,
-		"subcategory_id": 4,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 3,
 		"user_id": 1,
 		"slug": "premium-royal-blue-geometric-shirt",
@@ -1314,7 +1314,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Shirt"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1358,12 +1358,12 @@
 			"slug": "classic-line"
 		},
 		"category": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 4,
-			"name": "Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -1387,8 +1387,8 @@
 	},
 	{
 		"id": 12,
-		"category_id": 3,
-		"subcategory_id": 3,
+		"category_id": 2,
+		"subcategory_id": 2,
 		"brand_id": 2,
 		"user_id": 1,
 		"slug": "tokyo-underground-graphic-tee",
@@ -1440,7 +1440,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "T-Shirt"
+				"specification_ans": "Panjabi"
 			},
 			{
 				"specification": "Brand",
@@ -1484,12 +1484,12 @@
 			"slug": "urban-stitch"
 		},
 		"category": {
-			"id": 3,
-			"name": "T-Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"subcategory": {
-			"id": 3,
-			"name": "T-Shirt"
+			"id": 2,
+			"name": "Panjabi"
 		},
 		"product_image": [
 			{
@@ -3029,8 +3029,8 @@
 	},
 	{
 		"id": 25,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 4,
+		"subcategory_id": 4,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-seafoam-chikan-embroidery-kurta",
@@ -3082,7 +3082,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Shirt"
 			},
 			{
 				"specification": "Brand",
@@ -3126,12 +3126,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"product_image": [
 			{
@@ -3281,8 +3281,8 @@
 	},
 	{
 		"id": 27,
-		"category_id": 2,
-		"subcategory_id": 2,
+		"category_id": 4,
+		"subcategory_id": 4,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-charcoal-floral-embroidered-panjabi",
@@ -3334,7 +3334,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Panjabi"
+				"specification_ans": "Shirt"
 			},
 			{
 				"specification": "Brand",
@@ -3378,12 +3378,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 2,
-			"name": "Panjabi"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"product_image": [
 			{
@@ -3407,8 +3407,8 @@
 	},
 	{
 		"id": 28,
-		"category_id": 5,
-		"subcategory_id": 5,
+		"category_id": 4,
+		"subcategory_id": 4,
 		"brand_id": 4,
 		"user_id": 1,
 		"slug": "premium-lavender-floral-embroidered-kurta",
@@ -3460,7 +3460,7 @@
 		"specifications": [
 			{
 				"specification": "Category",
-				"specification_ans": "Kurta"
+				"specification_ans": "Shirt"
 			},
 			{
 				"specification": "Brand",
@@ -3504,12 +3504,12 @@
 			"slug": "heritage-ethnic"
 		},
 		"category": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"subcategory": {
-			"id": 5,
-			"name": "Kurta"
+			"id": 4,
+			"name": "Shirt"
 		},
 		"product_image": [
 			{
