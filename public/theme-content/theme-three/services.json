@@ -1,0 +1,34 @@
+[
+    {
+        "id": 1,
+        "title": "Premium Quality Sarees",
+        "description": "Handpicked fabrics and elegant finishing",
+        "icon": "uploads/theme-three/service/1.png",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "Bridal Styling Support",
+        "description": "Guidance for wedding and reception looks",
+        "icon": "uploads/theme-three/service/2.png",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "Express Delivery",
+        "description": "Fast shipping for festive and wedding orders",
+        "icon": "uploads/theme-three/service/3.png",
+        "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Secure Payment",
+        "description": "Safe checkout with multiple payment options",
+        "icon": "uploads/theme-three/service/4.png",
+        "order": 4,
+        "status": "active"
+    }
+]

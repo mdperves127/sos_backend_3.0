@@ -1,0 +1,38 @@
+[
+    {
+        "id": 1,
+        "title": "Designs That Express Your Stories",
+        "subtitle": "Trendy Saree Collection",
+        "image": "uploads/theme-three/banner/1.png",
+        "link": "#",
+        "order": 1,
+        "status": "active"
+    },
+    {
+        "id": 2,
+        "title": "Min 65% OFF",
+        "subtitle": "Draped in Emotions, Adorned in Elegance",
+        "image": "uploads/theme-three/banner/2.png",
+        "link": "#",
+        "order": 2,
+        "status": "active"
+    },
+    {
+        "id": 3,
+        "title": "Our Trendy Saree",
+        "subtitle": "New Season Edit",
+        "image": "uploads/theme-three/gallery/1.png",
+        "link": "#",
+        "order": 3,
+        "status": "active"
+    },
+    {
+        "id": 4,
+        "title": "Women's Wedding Wear",
+        "subtitle": "Bridal Collection",
+        "image": "uploads/theme-three/gallery/2.png",
+        "link": "#",
+        "order": 4,
+        "status": "active"
+    }
+]

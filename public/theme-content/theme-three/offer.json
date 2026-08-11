@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "title": "Best Offer of the Week"
+    },
+    {
+        "id": 2,
+        "title": "New Arrivals"
+    },
+    {
+        "id": 3,
+        "title": "Top Rated Products"
+    },
+    {
+        "id": 4,
+        "title": "Bridal Sale"
+    },
+    {
+        "id": 5,
+        "title": "Festive Collection"
+    }
+]
