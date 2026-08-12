@@ -14,8 +14,13 @@ return new class extends Migration
     public function up()
     {
         Schema::table('payment_stores', function (Blueprint $table) {
-            $table->string('last_status')->nullable();
-            $table->string('order_media')->nullable();
+            if ( ! Schema::hasColumn( 'payment_stores', 'last_status' ) ) {
+                $table->string('last_status')->nullable();
+            }
+
+            if ( ! Schema::hasColumn( 'payment_stores', 'order_media' ) ) {
+                $table->string('order_media')->nullable();
+            }
         });
     }
 
@@ -27,8 +32,13 @@ return new class extends Migration
     public function down()
     {
         Schema::table('payment_stores', function (Blueprint $table) {
-            $table->dropColumn('last_status');
-            $table->dropColumn('order_media');
+            if ( Schema::hasColumn( 'payment_stores', 'order_media' ) ) {
+                $table->dropColumn('order_media');
+            }
+
+            if ( Schema::hasColumn( 'payment_stores', 'last_status' ) ) {
+                $table->dropColumn('last_status');
+            }
         });
     }
 };

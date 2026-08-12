@@ -76,7 +76,7 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
+        $data = PaymentStore::where( 'trxid', $response['mer_txnid'] )->first();
 
         if (!$data) {
             return false;
@@ -95,6 +95,8 @@ class AamarpayController extends Controller
             $info['placing_tenant_id'] ?? null,
             $info['order_media'] ?? $data->order_media ?? null
         );
+
+        $data->update( ['status' => 'completed', 'last_status' => 'completed'] );
 
         $user = User::find($info['userid']);
         $path = paymentredirect($user->role_as);
