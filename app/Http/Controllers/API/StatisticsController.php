@@ -68,14 +68,10 @@ class StatisticsController extends Controller
 
         $totaleditedproduct = $productsWithPending->count();
 
-        // Affiliate products live in dropshipper tenant DBs as product_details
-        $allAffiliateProducts = CrossTenantQueryService::queryAllDropshipperTenants(
-            ProductDetails::class,
-            function ( $query ) {
-                // Count all affiliate product records
-            }
-        );
-        $totalaffiliateproduct = $allAffiliateProducts->count();
+        // Products marked for affiliate (is_affiliate = 1)
+        $totalaffiliateproduct = $allProducts->filter( function ( $product ) {
+            return (int) ( $product->is_affiliate ?? 0 ) === 1;
+        } )->count();
 
         return $this->response([
             'totalproduct' => $totalproduct,
