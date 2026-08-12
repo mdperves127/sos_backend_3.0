@@ -32,7 +32,7 @@ class OrderController extends Controller {
         // return auth()->user()->id;
         $orders = Order::searchProduct()
             ->where( 'vendor_id', auth()->user()->id )
-            ->with( ['affiliator:id,name,email,image', 'vendor:id,name', 'product:id,name', 'orderDetails'] )
+            ->with( ['affiliator:id,name,email', 'vendor:id,name', 'product:id,name', 'orderDetails'] )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
@@ -225,7 +225,7 @@ class OrderController extends Controller {
 
     function orderView( $id ) {
         $allData = Order::where( 'id', $id )
-            ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid,name,email,image', 'productrating' => function ( $query ) {
+            ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid,name,email', 'productrating' => function ( $query ) {
                 $query->with( 'affiliate:id,name' );
             }] )
             ->first();
