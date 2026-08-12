@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderDeliveryToCourier;
 use App\Models\PendingBalance;
 use App\Models\Product;
+use App\Models\ProductDetails;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Tenant;
@@ -99,6 +100,15 @@ class ProductCheckoutService {
 
                 $afi_amount = $totalqty * $cart->amount;
 
+                // Dropshipper affiliator profit (from product_details.profit_amount on placing tenant)
+                $unitProfitAmount = self::resolveDropshipperProfitAmount(
+                    $orderMedia,
+                    $resolvedPlacingTenantId,
+                    $merchantTenantId,
+                    $productid
+                );
+                $profit_amount = $unitProfitAmount * $totalqty;
+
                 // Check if vendor balance exists and has balance property
                 $vendorBalanceValue = ($vendor_balance && property_exists($vendor_balance, 'balance'))
                     ? $vendor_balance->balance
@@ -157,6 +167,7 @@ class ProductCheckoutService {
                 $order->address             = $data['address'];
                 $order->variants            = $variants;
                 $order->afi_amount          = $afi_amount;
+                $order->profit_amount       = $profit_amount;
                 $order->product_amount      = $totalAmount;
                 $order->due_amount          = $totalDue;
                 $order->status              = $status;
@@ -533,5 +544,51 @@ class ProductCheckoutService {
                 ] );
             }
         }
+    }
+
+    /**
+     * Unit profit set by the dropshipper on their product_details profile.
+     */
+    private static function resolveDropshipperProfitAmount(
+        ?string $orderMedia,
+        string|int|null $placingTenantId,
+        string|int|null $merchantTenantId,
+        $productId
+    ): float {
+        if ( ! in_array( $orderMedia, ['dropshipper', 'Affiliator'], true ) ) {
+            return 0.0;
+        }
+
+        // Prefer current tenant product_details when checkout runs inside dropshipper context
+        if ( function_exists( 'tenant' ) && tenant() && ( tenant()->type ?? null ) === 'dropshipper' ) {
+            $detail = ProductDetails::query()
+                ->where( 'product_id', $productId )
+                ->where( 'status', 1 )
+                ->when( $merchantTenantId, fn ( $q ) => $q->where( 'tenant_id', $merchantTenantId ) )
+                ->first();
+
+            if ( $detail ) {
+                return (float) ( $detail->profit_amount ?? 0 );
+            }
+        }
+
+        if ( ! $placingTenantId ) {
+            return 0.0;
+        }
+
+        $detail = CrossTenantQueryService::getSingleRecordFromTenant(
+            $placingTenantId,
+            ProductDetails::class,
+            function ( $query ) use ( $productId, $merchantTenantId ) {
+                $query->where( 'product_id', $productId )
+                    ->where( 'status', 1 );
+
+                if ( $merchantTenantId ) {
+                    $query->where( 'tenant_id', $merchantTenantId );
+                }
+            }
+        );
+
+        return (float) ( $detail->profit_amount ?? 0 );
     }
 }

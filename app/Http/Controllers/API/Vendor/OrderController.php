@@ -32,13 +32,18 @@ class OrderController extends Controller {
         // return auth()->user()->id;
         $orders = Order::searchProduct()
             ->where( 'vendor_id', auth()->user()->id )
-            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name', 'orderDetails'] )
+            ->with( ['affiliator:id,name,email,phone,image', 'vendor:id,name', 'product:id,name', 'orderDetails'] )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
 
-        $orders->map( function ( $order ) {
+        $orders->getCollection()->transform( function ( $order ) {
             $order->variants = Order::normalizeVariants( $order->variants );
+            $order->profit_amount = (float) ( $order->profit_amount ?? 0 );
+            $order->afi_amount = (float) ( $order->afi_amount ?? 0 );
+            if ( $order->affiliator ) {
+                $order->affiliator->profit_amount = $order->profit_amount;
+            }
             return $order;
         } );
 
@@ -220,7 +225,7 @@ class OrderController extends Controller {
 
     function orderView( $id ) {
         $allData = Order::where( 'id', $id )
-            ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid', 'productrating' => function ( $query ) {
+            ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid,name,email,phone,image', 'productrating' => function ( $query ) {
                 $query->with( 'affiliate:id,name' );
             }] )
             ->first();
@@ -228,6 +233,11 @@ class OrderController extends Controller {
         if ( $allData ) {
 
             $allData->variants = Order::normalizeVariants( $allData->variants );
+            $allData->profit_amount = (float) ( $allData->profit_amount ?? 0 );
+            $allData->afi_amount = (float) ( $allData->afi_amount ?? 0 );
+            if ( $allData->affiliator ) {
+                $allData->affiliator->profit_amount = $allData->profit_amount;
+            }
             if ( $allData->status == 'pending' || $allData->status == 'hold' || $allData->status == 'cancel' ) {
                 $allData->phone = substr( $allData->phone, 0, 4 ) . '.....';
                 $allData->email = substr( $allData->email, 0, 3 ) . '....';

@@ -344,11 +344,25 @@ class CartController extends Controller {
                 'cartDetails' => $cartItem->cartDetails,
                 'product_price' => $cartItem->product_price,
                 'totalproductprice' => $cartItem->totalproductprice,
+                'amount' => $cartItem->amount,
                 'total_affiliate_commission' => $cartItem->total_affiliate_commission,
                 'purchase_type' => $cartItem->purchase_type,
                 'advancepayment' => $cartItem->advancepayment,
                 'totaladvancepayment' => $cartItem->totaladvancepayment,
+                'tenant_id' => $cartItem->tenant_id,
             ];
+        }
+
+        // Load dropshipper profit amounts for cart products (from current tenant product_details)
+        $profitByKey = [];
+        $productDetails = ProductDetails::query()
+            ->whereIn( 'product_id', $cartitems->pluck( 'product_id' )->unique()->filter()->values() )
+            ->where( 'status', 1 )
+            ->get( ['id', 'product_id', 'tenant_id', 'profit_amount', 'uniqid'] );
+
+        foreach ( $productDetails as $detail ) {
+            $detailKey = $detail->tenant_id . '_' . $detail->product_id;
+            $profitByKey[$detailKey] = $detail;
         }
 
         // Step 5: Get all products from all tenants and combine with cart data
@@ -397,23 +411,36 @@ class CartController extends Controller {
 
                 // Find matching cart item(s) for this product
                 $key = $tenant->id . '_' . $product->id;
+                $productDetail = $profitByKey[$key] ?? null;
+                $unitProfit = (float) ( $productDetail->profit_amount ?? 0 );
+
                 if ( isset( $cartMap[$key] ) && !empty( $cartMap[$key] ) ) {
                     // If there's a cart item, add cart_id and cart data with quantity
                     $cartItem = $cartMap[$key][0]; // Get first matching cart item
+                    $qty = (int) ( $cartItem['product_qty'] ?? 0 );
                     $product->cart_id = $cartItem['id'];
-                    $product->cart_qty = $cartItem['product_qty'] ?? 0; // Add quantity from cart
+                    $product->cart_qty = $qty;
                     $product->cart_data = $cartItem;
 
                     // If cartDetails exist, also attach them
                     if ( isset( $cartItem['cartDetails'] ) && $cartItem['cartDetails'] ) {
                         $product->cart_details = $cartItem['cartDetails'];
                     }
+
+                    $product->profit_amount = $unitProfit;
+                    $product->total_profit_amount = $unitProfit * $qty;
+                    $product->dropshipper_product_detail_id = $productDetail->id ?? null;
+                    $product->dropshipper_uniqid = $productDetail->uniqid ?? null;
                 } else {
                     // If no cart item found, set cart_id to null
                     $product->cart_id = null;
                     $product->cart_qty = 0;
                     $product->cart_data = null;
                     $product->cart_details = null;
+                    $product->profit_amount = $unitProfit;
+                    $product->total_profit_amount = 0;
+                    $product->dropshipper_product_detail_id = $productDetail->id ?? null;
+                    $product->dropshipper_uniqid = $productDetail->uniqid ?? null;
                 }
 
                 // Add to unified products array
@@ -640,16 +667,15 @@ class CartController extends Controller {
                 }
             }
 
-            // Get profit_amount from ProductDetails in the product tenant's database
-            $productDetails = CrossTenantQueryService::getSingleFromTenant(
-                tenant()->id,
-                ProductDetails::class,
-                function ( $query ) use ( $cart ) {
-                    $query->where( 'product_id', $cart->product_id );
-                }
-            );
-            $profit_amount = $productDetails ? $productDetails->profit_amount : null;
+            // Get profit_amount from ProductDetails in the current dropshipper tenant database
+            $productDetails = ProductDetails::query()
+                ->where( 'product_id', $cart->product_id )
+                ->where( 'status', 1 )
+                ->when( $cart->tenant_id, fn ( $q ) => $q->where( 'tenant_id', $cart->tenant_id ) )
+                ->first();
 
+            $unitProfit = (float) ( $productDetails->profit_amount ?? 0 );
+            $qty = (int) ( $cart->product_qty ?? 0 );
 
             return response()->json( [
                 "data"            => $cart,
@@ -658,7 +684,10 @@ class CartController extends Controller {
                 "cities"          => $cities,
                 'default_courier' => $default,
                 'areas'           => $areas,
-                'profit_amount'   => $profit_amount,
+                'profit_amount'   => $unitProfit,
+                'total_profit_amount' => $unitProfit * $qty,
+                'dropshipper_product_detail_id' => $productDetails->id ?? null,
+                'dropshipper_uniqid' => $productDetails->uniqid ?? null,
             ] );
 
         } catch ( \Exception $e ) {
