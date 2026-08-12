@@ -146,27 +146,6 @@ class MerchantFrontendController extends Controller
             return $path . '?' . http_build_query( $queryParams );
         };
 
-        $links   = [];
-        $links[] = [
-            'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'label'  => '&laquo; Previous',
-            'active' => false,
-        ];
-
-        for ( $i = 1; $i <= $lastPage; $i++ ) {
-            $links[] = [
-                'url'    => $buildUrl( $i ),
-                'label'  => (string) $i,
-                'active' => $i == $page,
-            ];
-        }
-
-        $links[] = [
-            'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-            'label'  => 'Next &raquo;',
-            'active' => false,
-        ];
-
         return [
             'data'             => $paginatedProducts->values(),
             'current_page'     => $page,
@@ -181,7 +160,7 @@ class MerchantFrontendController extends Controller
             'last_page_url'    => $buildUrl( $lastPage ),
             'prev_page_url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
             'next_page_url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-            'links'            => $links,
+            'links'            => paginationLinks( $page, $lastPage, $buildUrl ),
         ];
     }
 

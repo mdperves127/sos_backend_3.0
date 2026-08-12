@@ -413,3 +413,89 @@ if ( !function_exists( 'courierCredential' ) ) {
         return CourierCredential::where( 'vendor_id', $vendorId )->where( 'courier_name', $courierName )->first();
     }
 }
+
+/**
+ * Build Laravel-style truncated pagination links (e.g. 1 … 108 109 110 … 112).
+ *
+ * @param  callable(int): string  $buildUrl
+ * @return array<int, array{url: ?string, label: string, active: bool}>
+ */
+if ( ! function_exists( 'paginationLinks' ) ) {
+    function paginationLinks( int $currentPage, int $lastPage, callable $buildUrl, int $onEachSide = 2 ): array {
+        $currentPage = max( 1, $currentPage );
+        $lastPage    = max( 0, $lastPage );
+
+        $links   = [];
+        $links[] = [
+            'url'    => $currentPage > 1 ? $buildUrl( $currentPage - 1 ) : null,
+            'label'  => '&laquo; Previous',
+            'active' => false,
+        ];
+
+        if ( $lastPage > 0 ) {
+            foreach ( paginationPageWindow( $currentPage, $lastPage, $onEachSide ) as $page ) {
+                if ( $page === '...' ) {
+                    $links[] = [
+                        'url'    => null,
+                        'label'  => '...',
+                        'active' => false,
+                    ];
+                    continue;
+                }
+
+                $links[] = [
+                    'url'    => $buildUrl( $page ),
+                    'label'  => (string) $page,
+                    'active' => $page === $currentPage,
+                ];
+            }
+        }
+
+        $links[] = [
+            'url'    => $currentPage < $lastPage ? $buildUrl( $currentPage + 1 ) : null,
+            'label'  => 'Next &raquo;',
+            'active' => false,
+        ];
+
+        return $links;
+    }
+}
+
+/**
+ * Page numbers / ellipsis for a truncated window (mirrors Laravel UrlWindow).
+ *
+ * @return array<int, int|string>
+ */
+if ( ! function_exists( 'paginationPageWindow' ) ) {
+    function paginationPageWindow( int $currentPage, int $lastPage, int $onEachSide = 2 ): array {
+        if ( $lastPage <= ( $onEachSide * 2 ) + 8 ) {
+            return range( 1, $lastPage );
+        }
+
+        $window = $onEachSide + 4;
+
+        if ( $currentPage <= $window ) {
+            return array_merge(
+                range( 1, $window + $onEachSide ),
+                ['...'],
+                range( $lastPage - 1, $lastPage )
+            );
+        }
+
+        if ( $currentPage > ( $lastPage - $window ) ) {
+            return array_merge(
+                range( 1, 2 ),
+                ['...'],
+                range( $lastPage - ( $window + ( $onEachSide - 1 ) ), $lastPage )
+            );
+        }
+
+        return array_merge(
+            range( 1, 2 ),
+            ['...'],
+            range( $currentPage - $onEachSide, $currentPage + $onEachSide ),
+            ['...'],
+            range( $lastPage - 1, $lastPage )
+        );
+    }
+}

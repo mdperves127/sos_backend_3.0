@@ -359,27 +359,6 @@ class CrossTenantQueryService
             return $path . '?' . http_build_query( $queryParams );
         };
 
-        $links   = [];
-        $links[] = [
-            'url'    => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'label'  => '&laquo; Previous',
-            'active' => false,
-        ];
-
-        for ( $i = 1; $i <= $lastPage; $i++ ) {
-            $links[] = [
-                'url'    => $buildUrl( $i ),
-                'label'  => (string) $i,
-                'active' => $i === $page,
-            ];
-        }
-
-        $links[] = [
-            'url'    => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-            'label'  => 'Next &raquo;',
-            'active' => false,
-        ];
-
         return [
             'current_page'    => $page,
             'data'            => $pageItems->values(),
@@ -387,7 +366,7 @@ class CrossTenantQueryService
             'from'            => $total > 0 ? $offset + 1 : null,
             'last_page'       => $lastPage,
             'last_page_url'   => $buildUrl( max( 1, $lastPage ) ),
-            'links'           => $links,
+            'links'           => paginationLinks( $page, $lastPage, $buildUrl ),
             'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
             'path'            => $path,
             'per_page'        => $perPage,

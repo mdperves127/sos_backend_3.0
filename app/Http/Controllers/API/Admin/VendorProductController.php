@@ -91,28 +91,6 @@ class VendorProductController extends Controller
             return $path . '?' . http_build_query( $queryParams );
         };
 
-        // Build links array
-        $links = [];
-        $links[] = [
-            'url' => $page > 1 ? $buildUrl( $page - 1 ) : null,
-            'label' => '&laquo; Previous',
-            'active' => false
-        ];
-
-        for ( $i = 1; $i <= $lastPage; $i++ ) {
-            $links[] = [
-                'url' => $buildUrl( $i ),
-                'label' => (string) $i,
-                'active' => $i == $page
-            ];
-        }
-
-        $links[] = [
-            'url' => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-            'label' => 'Next &raquo;',
-            'active' => false
-        ];
-
         return response()->json( [
             'status'  => 200,
             'product' => [
@@ -128,7 +106,7 @@ class VendorProductController extends Controller
                 'last_page_url'   => $buildUrl( max( 1, $lastPage ) ),
                 'prev_page_url'   => $page > 1 ? $buildUrl( $page - 1 ) : null,
                 'next_page_url'   => $page < $lastPage ? $buildUrl( $page + 1 ) : null,
-                'links'           => $links,
+                'links'           => paginationLinks( (int) $page, (int) $lastPage, $buildUrl ),
             ],
         ] );
     }
