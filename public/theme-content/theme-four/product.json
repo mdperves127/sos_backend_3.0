@@ -10862,5 +10862,511 @@
 			"name": "Central Women Fashion Warehouse"
 		},
 		"product_variant": []
+	},
+	{
+		"id": 89,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "crimson-gold-zari-bridal-saree",
+		"name": "Crimson Gold Zari Bridal Saree",
+		"short_description": "Crimson bridal saree with heavy gold zari border and rich pallu.",
+		"long_description": "<p>Crimson bridal saree with heavy gold zari border and rich pallu. Perfect for bridal ceremonies and reception styling.</p>",
+		"selling_price": "13490.00",
+		"original_price": "15990.00",
+		"image": "uploads/theme-four/product/5.png",
+		"status": "active",
+		"meta_title": "Crimson Gold Zari Bridal Saree",
+		"meta_keyword": "crimson, gold, zari, bridal, saree",
+		"meta_description": "Shop Crimson Gold Zari Bridal Saree.",
+		"tags": "crimson, gold, zari, bridal, saree",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "15.63",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Light Blue",
+					"Purple",
+					"Pink"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bridal Sarees"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Aarohi Ethnic"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Wedding / Bridal"
+			}
+		],
+		"uniqid": "whd-prod-089",
+		"sku": "WHD-089",
+		"distributor_price": "12410.80",
+		"alert_qty": 5,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WHD0089",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "15.63",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "Womanhood Fashion",
+			"email": "hello@womanhoodfashion.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Aarohi Ethnic",
+			"slug": "aarohi-ethnic"
+		},
+		"category": {
+			"id": 3,
+			"name": "Bridal & Wedding"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Bridal Sarees"
+		},
+		"product_image": [
+			{
+				"id": 89,
+				"product_id": 89,
+				"image": "uploads/theme-four/product/5.png",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Ethnic Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 90,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 2,
+		"user_id": 1,
+		"slug": "royal-maroon-embroidered-bridal-saree",
+		"name": "Royal Maroon Embroidered Bridal Saree",
+		"short_description": "Royal maroon bridal saree with intricate embroidery for wedding ceremonies.",
+		"long_description": "<p>Royal maroon bridal saree with intricate embroidery for wedding ceremonies. Perfect for bridal ceremonies and reception styling.</p>",
+		"selling_price": "12490.00",
+		"original_price": "14990.00",
+		"image": "uploads/theme-four/product/8.png",
+		"status": "active",
+		"meta_title": "Royal Maroon Embroidered Bridal Saree",
+		"meta_keyword": "maroon, embroidered, bridal, saree",
+		"meta_description": "Shop Royal Maroon Embroidered Bridal Saree.",
+		"tags": "maroon, embroidered, bridal, saree",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "16.68",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Light Blue",
+					"Purple",
+					"Pink"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bridal Sarees"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Katan Heritage"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Wedding / Bridal"
+			}
+		],
+		"uniqid": "whd-prod-090",
+		"sku": "WHD-090",
+		"distributor_price": "11490.80",
+		"alert_qty": 5,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WHD0090",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "16.68",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "Womanhood Fashion",
+			"email": "hello@womanhoodfashion.com"
+		},
+		"brand": {
+			"id": 2,
+			"user_id": 1,
+			"name": "Katan Heritage",
+			"slug": "katan-heritage"
+		},
+		"category": {
+			"id": 3,
+			"name": "Bridal & Wedding"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Bridal Sarees"
+		},
+		"product_image": [
+			{
+				"id": 90,
+				"product_id": 90,
+				"image": "uploads/theme-four/product/8.png",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Ethnic Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 91,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "classic-red-banarasi-bridal-saree",
+		"name": "Classic Red Banarasi Bridal Saree",
+		"short_description": "Classic red Banarasi bridal saree with traditional woven motifs.",
+		"long_description": "<p>Classic red Banarasi bridal saree with traditional woven motifs. Perfect for bridal ceremonies and reception styling.</p>",
+		"selling_price": "13990.00",
+		"original_price": "16990.00",
+		"image": "uploads/theme-four/product/11.png",
+		"status": "active",
+		"meta_title": "Classic Red Banarasi Bridal Saree",
+		"meta_keyword": "red, banarasi, bridal, saree",
+		"meta_description": "Shop Classic Red Banarasi Bridal Saree.",
+		"tags": "red, banarasi, bridal, saree",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.66",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Light Blue",
+					"Purple",
+					"Pink"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bridal Sarees"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Aarohi Ethnic"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Wedding / Bridal"
+			}
+		],
+		"uniqid": "whd-prod-091",
+		"sku": "WHD-091",
+		"distributor_price": "12870.80",
+		"alert_qty": 5,
+		"supplier_id": 2,
+		"warehouse_id": 2,
+		"exp_date": null,
+		"barcode": "WHD0091",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.66",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "Womanhood Fashion",
+			"email": "hello@womanhoodfashion.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Aarohi Ethnic",
+			"slug": "aarohi-ethnic"
+		},
+		"category": {
+			"id": 3,
+			"name": "Bridal & Wedding"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Bridal Sarees"
+		},
+		"product_image": [
+			{
+				"id": 91,
+				"product_id": 91,
+				"image": "uploads/theme-four/product/11.png",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Loom BD",
+			"business_name": "Ethnic Loom BD"
+		},
+		"warehouse": {
+			"id": 2,
+			"name": "Banani Ethnic Hub"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 92,
+		"category_id": 3,
+		"subcategory_id": 7,
+		"brand_id": 8,
+		"user_id": 1,
+		"slug": "wine-velvet-border-bridal-saree",
+		"name": "Wine Velvet Border Bridal Saree",
+		"short_description": "Wine-toned bridal saree with velvet-touch border and gold accents.",
+		"long_description": "<p>Wine-toned bridal saree with velvet-touch border and gold accents. Perfect for bridal ceremonies and reception styling.</p>",
+		"selling_price": "11990.00",
+		"original_price": "14490.00",
+		"image": "uploads/theme-four/product/1.png",
+		"status": "active",
+		"meta_title": "Wine Velvet Border Bridal Saree",
+		"meta_keyword": "wine, velvet, bridal, saree",
+		"meta_description": "Shop Wine Velvet Border Bridal Saree.",
+		"tags": "wine, velvet, bridal, saree",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "17.25",
+		"rejected_details": null,
+		"created_at": "2026-04-10T19:00:00.000000Z",
+		"updated_at": "2026-04-10T19:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Size",
+				"options": [
+					"Free Size"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Bridal Sarees"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Zaria Loom"
+			},
+			{
+				"specification": "Occasion",
+				"specification_ans": "Wedding / Bridal"
+			}
+		],
+		"uniqid": "whd-prod-092",
+		"sku": "WHD-092",
+		"distributor_price": "11030.80",
+		"alert_qty": 5,
+		"supplier_id": 4,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "WHD0092",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "17.25",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.9",
+		"vendor": {
+			"id": 1,
+			"name": "Womanhood Fashion",
+			"email": "hello@womanhoodfashion.com"
+		},
+		"brand": {
+			"id": 8,
+			"user_id": 1,
+			"name": "Zaria Loom",
+			"slug": "zaria-loom"
+		},
+		"category": {
+			"id": 3,
+			"name": "Bridal & Wedding"
+		},
+		"subcategory": {
+			"id": 7,
+			"name": "Bridal Sarees"
+		},
+		"product_image": [
+			{
+				"id": 92,
+				"product_id": 92,
+				"image": "uploads/theme-four/product/1.png",
+				"created_at": "2026-04-10T19:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 4,
+			"supplier_name": "Women's Accessories House",
+			"business_name": "Women's Accessories House"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Women Fashion Warehouse"
+		},
+		"product_variant": []
 	}
 ]
