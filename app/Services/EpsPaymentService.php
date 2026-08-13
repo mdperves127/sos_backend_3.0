@@ -45,44 +45,39 @@ class EpsPaymentService
     {
         $merchantTransactionId = self::normalizeTransactionId( (string) $params['merchant_transaction_id'] );
         $token                 = self::getToken();
-        $productName           = (string) ( $params['product_name'] ?? 'Payment' );
-        $totalAmount           = (float) $params['total_amount'];
-        $productList           = $params['product_list'] ?? [];
+        $productName           = self::sanitizeText( (string) ( $params['product_name'] ?? 'Payment' ), 100 );
+        $totalAmount           = round( (float) $params['total_amount'], 2 );
+        $productList           = $params['product_list'] ?? null;
 
-        if ( $productList === [] ) {
-            $productList = [[
-                'ProductName'     => $productName,
-                'NoOfItem'        => 1,
-                'ProductPrice'    => $totalAmount,
-                'ProductProfile'  => 'general',
-                'ProductCategory' => 'general',
-            ]];
+        // Live EPS is strict: empty list is accepted by their API model; malformed items cause HTTP 400.
+        if ( ! is_array( $productList ) ) {
+            $productList = [];
         }
 
         $body = [
-            'merchantId'            => config( 'services.eps.merchant_id' ),
-            'storeId'               => config( 'services.eps.store_id' ),
-            'CustomerOrderId'       => (string) ( $params['customer_order_id'] ?? $merchantTransactionId ),
+            'merchantId'            => trim( (string) config( 'services.eps.merchant_id' ) ),
+            'storeId'               => trim( (string) config( 'services.eps.store_id' ) ),
+            'CustomerOrderId'       => self::normalizeTransactionId( (string) ( $params['customer_order_id'] ?? $merchantTransactionId ) ),
             'merchantTransactionId' => $merchantTransactionId,
             // EPS: 1=Web, 2=Android, 3=iOS
             'transactionTypeId'     => (int) config( 'services.eps.transaction_type_id', 1 ),
             'financialEntityId'     => 0,
             'transitionStatusId'    => 0,
             'totalAmount'           => $totalAmount,
-            'ipAddress'             => request()->ip() ?? '0.0.0.0',
+            'ipAddress'             => self::clientIpAddress(),
             'version'               => '1',
-            'successUrl'            => $params['success_url'],
-            'failUrl'               => $params['fail_url'],
-            'cancelUrl'             => $params['cancel_url'],
-            'customerName'          => $params['customer_name'] ?? 'Customer',
-            'customerEmail'         => $params['customer_email'] ?? 'customer@example.com',
-            'CustomerAddress'       => $params['customer_address'] ?? 'Dhaka',
+            'successUrl'            => (string) $params['success_url'],
+            'failUrl'               => (string) $params['fail_url'],
+            'cancelUrl'             => (string) $params['cancel_url'],
+            'customerName'          => self::sanitizeText( (string) ( $params['customer_name'] ?? 'Customer' ), 100 ),
+            'customerEmail'         => self::sanitizeEmail( (string) ( $params['customer_email'] ?? 'customer@example.com' ) ),
+            'CustomerAddress'       => self::sanitizeText( (string) ( $params['customer_address'] ?? 'Dhaka' ), 200 ),
             'CustomerAddress2'      => '',
-            'CustomerCity'          => $params['customer_city'] ?? 'Dhaka',
-            'CustomerState'         => $params['customer_state'] ?? 'Dhaka',
-            'CustomerPostcode'      => $params['customer_postcode'] ?? '1200',
-            'CustomerCountry'       => $params['customer_country'] ?? 'BD',
-            'CustomerPhone'         => $params['customer_phone'] ?? '01700000000',
+            'CustomerCity'          => self::sanitizeText( (string) ( $params['customer_city'] ?? 'Dhaka' ), 100 ),
+            'CustomerState'         => self::sanitizeText( (string) ( $params['customer_state'] ?? 'Dhaka' ), 100 ),
+            'CustomerPostcode'      => self::sanitizeText( (string) ( $params['customer_postcode'] ?? '1200' ), 20 ),
+            'CustomerCountry'       => 'BD',
+            'CustomerPhone'         => self::sanitizeBdPhone( (string) ( $params['customer_phone'] ?? '01700000000' ) ),
             'ShipmentName'          => '',
             'ShipmentAddress'       => '',
             'ShipmentAddress2'      => '',
@@ -90,12 +85,12 @@ class EpsPaymentService
             'ShipmentState'         => '',
             'ShipmentPostcode'      => '',
             'ShipmentCountry'       => '',
-            'ValueA'                => (string) ( $params['value_a'] ?? '' ),
-            'ValueB'                => (string) ( $params['value_b'] ?? '' ),
-            'ValueC'                => (string) ( $params['value_c'] ?? '' ),
-            'ValueD'                => (string) ( $params['value_d'] ?? '' ),
+            'ValueA'                => self::sanitizeText( (string) ( $params['value_a'] ?? '' ), 100, true ),
+            'ValueB'                => self::sanitizeText( (string) ( $params['value_b'] ?? '' ), 100, true ),
+            'ValueC'                => self::sanitizeText( (string) ( $params['value_c'] ?? '' ), 100, true ),
+            'ValueD'                => self::sanitizeText( (string) ( $params['value_d'] ?? '' ), 100, true ),
             'ShippingMethod'        => 'NO',
-            'NoOfItem'              => (string) max( 1, count( $productList ) ),
+            'NoOfItem'              => '1',
             'ProductName'           => $productName,
             'ProductProfile'        => 'general',
             'ProductCategory'       => 'general',
@@ -103,6 +98,8 @@ class EpsPaymentService
         ];
 
         $response = Http::timeout( 30 )
+            ->acceptJson()
+            ->asJson()
             ->withToken( $token )
             ->withHeaders( ['x-hash' => self::generateHash( $merchantTransactionId )] )
             ->post( self::endpoint( 'initialize' ), $body );
@@ -114,6 +111,7 @@ class EpsPaymentService
                 'status'   => $response->status(),
                 'sandbox'  => (bool) config( 'services.eps.sandbox' ),
                 'endpoint' => self::endpoint( 'initialize' ),
+                'payload'  => collect( $body )->except( [] )->all(),
                 'response' => $data,
                 'body'     => $response->body(),
             ] );
@@ -259,14 +257,63 @@ class EpsPaymentService
 
     private static function normalizeTransactionId( string $transactionId ): string
     {
-        $transactionId = trim( $transactionId );
+        $transactionId = preg_replace( '/[^A-Za-z0-9\-]/', '', trim( $transactionId ) ) ?: '';
 
         // EPS requires merchantTransactionId length >= 10
         if ( strlen( $transactionId ) < 10 ) {
             $transactionId = str_pad( $transactionId, 10, '0', STR_PAD_LEFT );
         }
 
-        return $transactionId;
+        return substr( $transactionId, 0, 50 );
+    }
+
+    private static function sanitizeBdPhone( string $phone ): string
+    {
+        $digits = preg_replace( '/\D+/', '', $phone ) ?: '';
+
+        if ( str_starts_with( $digits, '880' ) && strlen( $digits ) >= 13 ) {
+            $digits = substr( $digits, 2 );
+        }
+
+        if ( strlen( $digits ) === 10 && str_starts_with( $digits, '1' ) ) {
+            $digits = '0' . $digits;
+        }
+
+        if ( ! preg_match( '/^01\d{9}$/', $digits ) ) {
+            return '01700000000';
+        }
+
+        return $digits;
+    }
+
+    private static function sanitizeEmail( string $email ): string
+    {
+        $email = trim( $email );
+
+        return filter_var( $email, FILTER_VALIDATE_EMAIL ) ? $email : 'customer@example.com';
+    }
+
+    private static function sanitizeText( string $value, int $max = 100, bool $allowEmpty = false ): string
+    {
+        $value = trim( preg_replace( '/\s+/', ' ', $value ) ?? '' );
+
+        if ( $value === '' ) {
+            return $allowEmpty ? '' : 'N/A';
+        }
+
+        return mb_substr( $value, 0, $max );
+    }
+
+    private static function clientIpAddress(): string
+    {
+        $ip = request()->ip() ?: '127.0.0.1';
+
+        // Live EPS validation often rejects IPv6 / invalid IP formats.
+        if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+            return '127.0.0.1';
+        }
+
+        return $ip;
     }
 
     private static function formatEpsError( mixed $data, int $status, ?string $rawBody, string $fallback ): string
@@ -274,25 +321,36 @@ class EpsPaymentService
         $message = null;
 
         if ( is_array( $data ) ) {
-            $message = $data['ErrorMessage']
-                ?? $data['errorMessage']
-                ?? $data['Message']
-                ?? $data['message']
-                ?? $data['title']
-                ?? null;
+            // Prefer ASP.NET ProblemDetails.errors over generic title.
+            if ( ! empty( $data['errors'] ) && is_array( $data['errors'] ) ) {
+                $parts = [];
+                foreach ( $data['errors'] as $field => $messages ) {
+                    $text = is_array( $messages ) ? implode( ', ', $messages ) : (string) $messages;
+                    $parts[] = is_string( $field ) ? "{$field}: {$text}" : $text;
+                }
+                $message = implode( ' | ', array_filter( $parts ) );
+            }
+
+            if ( blank( $message ) ) {
+                $message = $data['ErrorMessage']
+                    ?? $data['errorMessage']
+                    ?? $data['Message']
+                    ?? $data['message']
+                    ?? null;
+            }
 
             if ( blank( $message ) && ! empty( $data['ErrorCode'] ) ) {
                 $message = 'EPS error code: ' . $data['ErrorCode'];
             }
 
-            if ( blank( $message ) && ! empty( $data['errors'] ) && is_array( $data['errors'] ) ) {
-                $message = collect( $data['errors'] )->flatten()->filter()->implode( '; ' );
+            if ( blank( $message ) && ! empty( $data['title'] ) ) {
+                $message = (string) $data['title'];
             }
         }
 
         if ( blank( $message ) && filled( $rawBody ) ) {
             $trimmed = trim( $rawBody );
-            $message = strlen( $trimmed ) > 300 ? ( substr( $trimmed, 0, 300 ) . '...' ) : $trimmed;
+            $message = strlen( $trimmed ) > 400 ? ( substr( $trimmed, 0, 400 ) . '...' ) : $trimmed;
         }
 
         $message = filled( $message ) ? (string) $message : $fallback;
@@ -322,8 +380,9 @@ class EpsPaymentService
 
     private static function endpoint( string $name ): string
     {
+        // Official/community SDKs use sandbox-pgapi (hyphen) for sandbox.
         $base = config( 'services.eps.sandbox' )
-            ? 'https://sandboxpgapi.eps.com.bd/v1'
+            ? 'https://sandbox-pgapi.eps.com.bd/v1'
             : 'https://pgapi.eps.com.bd/v1';
 
         return match ( $name ) {
