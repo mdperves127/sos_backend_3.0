@@ -46,7 +46,7 @@ return [
         'username'            => env('EPS_USERNAME'),
         'password'            => env('EPS_PASSWORD'),
         'hash_key'            => env('EPS_HASH_KEY'),
-        'transaction_type_id' => env('EPS_TRANSACTION_TYPE_ID', 10),
+        'transaction_type_id' => (int) env( 'EPS_TRANSACTION_TYPE_ID', 1 ),
     ],
 
 ];

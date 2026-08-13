@@ -43,17 +43,32 @@ class EpsPaymentService
 
     public static function initializePayment( array $params ): array
     {
-        $merchantTransactionId = (string) $params['merchant_transaction_id'];
+        $merchantTransactionId = self::normalizeTransactionId( (string) $params['merchant_transaction_id'] );
         $token                 = self::getToken();
-        $body                  = [
+        $productName           = (string) ( $params['product_name'] ?? 'Payment' );
+        $totalAmount           = (float) $params['total_amount'];
+        $productList           = $params['product_list'] ?? [];
+
+        if ( $productList === [] ) {
+            $productList = [[
+                'ProductName'     => $productName,
+                'NoOfItem'        => 1,
+                'ProductPrice'    => $totalAmount,
+                'ProductProfile'  => 'general',
+                'ProductCategory' => 'general',
+            ]];
+        }
+
+        $body = [
             'merchantId'            => config( 'services.eps.merchant_id' ),
             'storeId'               => config( 'services.eps.store_id' ),
             'CustomerOrderId'       => (string) ( $params['customer_order_id'] ?? $merchantTransactionId ),
             'merchantTransactionId' => $merchantTransactionId,
-            'transactionTypeId'     => (int) config( 'services.eps.transaction_type_id', 10 ),
+            // EPS: 1=Web, 2=Android, 3=iOS
+            'transactionTypeId'     => (int) config( 'services.eps.transaction_type_id', 1 ),
             'financialEntityId'     => 0,
             'transitionStatusId'    => 0,
-            'totalAmount'           => (float) $params['total_amount'],
+            'totalAmount'           => $totalAmount,
             'ipAddress'             => request()->ip() ?? '0.0.0.0',
             'version'               => '1',
             'successUrl'            => $params['success_url'],
@@ -80,11 +95,11 @@ class EpsPaymentService
             'ValueC'                => (string) ( $params['value_c'] ?? '' ),
             'ValueD'                => (string) ( $params['value_d'] ?? '' ),
             'ShippingMethod'        => 'NO',
-            'NoOfItem'              => '1',
-            'ProductName'           => $params['product_name'] ?? 'Payment',
+            'NoOfItem'              => (string) max( 1, count( $productList ) ),
+            'ProductName'           => $productName,
             'ProductProfile'        => 'general',
             'ProductCategory'       => 'general',
-            'ProductList'           => $params['product_list'] ?? [],
+            'ProductList'           => $productList,
         ];
 
         $response = Http::timeout( 30 )
@@ -97,10 +112,18 @@ class EpsPaymentService
         if ( ! $response->successful() || ! empty( $data['ErrorMessage'] ) || empty( $data['RedirectURL'] ) ) {
             Log::error( 'EPS initialize failed.', [
                 'status'   => $response->status(),
+                'sandbox'  => (bool) config( 'services.eps.sandbox' ),
+                'endpoint' => self::endpoint( 'initialize' ),
                 'response' => $data,
+                'body'     => $response->body(),
             ] );
 
-            throw new RuntimeException( $data['ErrorMessage'] ?? 'EPS payment initialization failed.' );
+            throw new RuntimeException( self::formatEpsError(
+                $data,
+                $response->status(),
+                $response->body(),
+                'EPS payment initialization failed.'
+            ) );
         }
 
         return $data;
@@ -205,10 +228,15 @@ class EpsPaymentService
                 'response' => $data,
             ] );
 
-            $message = $data['errorMessage'] ?? $data['ErrorMessage'] ?? 'Unable to authenticate with EPS.';
+            $message = self::formatEpsError(
+                $data,
+                $response->status(),
+                $response->body(),
+                'Unable to authenticate with EPS.'
+            );
 
             if ( str_contains( strtolower( $message ), 'error occured' ) ) {
-                $message .= ' Check that EPS_USERNAME, EPS_PASSWORD, EPS_HASH_KEY, EPS_MERCHANT_ID, and EPS_STORE_ID all belong to the same EPS merchant account.';
+                $message .= ' Check that EPS_USERNAME, EPS_PASSWORD, EPS_HASH_KEY, EPS_MERCHANT_ID, and EPS_STORE_ID all belong to the same EPS merchant account, and EPS_SANDBOX matches live/sandbox credentials.';
             }
 
             throw new RuntimeException( $message );
@@ -227,6 +255,50 @@ class EpsPaymentService
         $hashKey = trim( (string) config( 'services.eps.hash_key' ), " \t\n\r\0\x0B\"'" );
 
         return base64_encode( hash_hmac( 'sha512', $value, $hashKey, true ) );
+    }
+
+    private static function normalizeTransactionId( string $transactionId ): string
+    {
+        $transactionId = trim( $transactionId );
+
+        // EPS requires merchantTransactionId length >= 10
+        if ( strlen( $transactionId ) < 10 ) {
+            $transactionId = str_pad( $transactionId, 10, '0', STR_PAD_LEFT );
+        }
+
+        return $transactionId;
+    }
+
+    private static function formatEpsError( mixed $data, int $status, ?string $rawBody, string $fallback ): string
+    {
+        $message = null;
+
+        if ( is_array( $data ) ) {
+            $message = $data['ErrorMessage']
+                ?? $data['errorMessage']
+                ?? $data['Message']
+                ?? $data['message']
+                ?? $data['title']
+                ?? null;
+
+            if ( blank( $message ) && ! empty( $data['ErrorCode'] ) ) {
+                $message = 'EPS error code: ' . $data['ErrorCode'];
+            }
+
+            if ( blank( $message ) && ! empty( $data['errors'] ) && is_array( $data['errors'] ) ) {
+                $message = collect( $data['errors'] )->flatten()->filter()->implode( '; ' );
+            }
+        }
+
+        if ( blank( $message ) && filled( $rawBody ) ) {
+            $trimmed = trim( $rawBody );
+            $message = strlen( $trimmed ) > 300 ? ( substr( $trimmed, 0, 300 ) . '...' ) : $trimmed;
+        }
+
+        $message = filled( $message ) ? (string) $message : $fallback;
+        $mode    = config( 'services.eps.sandbox' ) ? 'sandbox' : 'live';
+
+        return $message . " [EPS {$mode}, HTTP {$status}]";
     }
 
     private static function ensureConfigured(): void
