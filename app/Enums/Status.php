@@ -17,4 +17,5 @@ case Success    = 'success';
 case Deactivate = "deactivate";
 case Completed  = "completed";
 case Return     = "return";
+case WaitingForDropshipperApproval = "waiting_for_dropshipper_approval";
 }

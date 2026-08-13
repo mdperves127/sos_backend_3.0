@@ -127,6 +127,16 @@ class ProductCheckoutService {
                     $status = Status::Pending->value;
                 }
 
+                // Dropshipper storefront only — merchant website/guest stays pending/hold
+                if (
+                    in_array( $orderMedia, ['website', 'website-guest'], true )
+                    && function_exists( 'tenant' )
+                    && tenant()
+                    && ( tenant()->type ?? null ) === 'dropshipper'
+                ) {
+                    $status = Status::WaitingForDropshipperApproval->value;
+                }
+
                 $totalAmount         = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
                 $totaladvancepayment = $cart->advancepayment * $totalqty;
 
