@@ -38,7 +38,7 @@
 		"slug": "accessories",
 		"description": "Jewelry, handbags, footwear, and saree styling essentials.",
 		"status": "active",
-		"image": "uploads/theme-four/category/4.png",
+		"image": "uploads/theme-four/category/1.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
@@ -49,7 +49,7 @@
 		"slug": "festive-collection",
 		"description": "Seasonal festive sarees and ethnic looks for celebrations.",
 		"status": "active",
-		"image": "uploads/theme-four/category/5.png",
+		"image": "uploads/theme-four/category/2.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
@@ -60,7 +60,7 @@
 		"slug": "designer-edit",
 		"description": "Curated designer sarees and premium ethnic silhouettes.",
 		"status": "active",
-		"image": "uploads/theme-four/category/6.png",
+		"image": "uploads/theme-four/category/3.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
@@ -71,7 +71,7 @@
 		"slug": "daily-wear",
 		"description": "Comfortable cotton and chiffon sarees for everyday elegance.",
 		"status": "active",
-		"image": "uploads/theme-four/category/7.png",
+		"image": "uploads/theme-four/category/1.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
@@ -82,7 +82,7 @@
 		"slug": "party-wear",
 		"description": "Sequin, net, and embellished sarees for parties and events.",
 		"status": "active",
-		"image": "uploads/theme-four/category/8.png",
+		"image": "uploads/theme-four/category/2.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null
@@ -93,7 +93,7 @@
 		"slug": "new-arrivals",
 		"description": "Latest saree and ethnic wear additions from Womanhood.",
 		"status": "active",
-		"image": "uploads/theme-four/category/9.png",
+		"image": "uploads/theme-four/category/3.png",
 		"created_at": "2026-04-10T18:00:00.000000Z",
 		"updated_at": "2026-04-10T18:00:00.000000Z",
 		"deleted_at": null

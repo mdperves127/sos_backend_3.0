@@ -4038,5 +4038,383 @@
 			"name": "Banani Fashion Stock"
 		},
 		"product_variant": []
+	},
+	{
+		"id": 33,
+		"category_id": 5,
+		"subcategory_id": 5,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "ivory-threadwork-festive-kurta",
+		"name": "Ivory Threadwork Festive Kurta",
+		"short_description": "Elegant ivory kurta with fine threadwork for festive occasions.",
+		"long_description": "<p>Elegant ivory kurta with fine threadwork for festive occasions. Crafted for comfort and celebration with SOSComrz quality stitching.</p>",
+		"selling_price": "1342.00",
+		"original_price": "1917.14",
+		"image": "uploads/theme-one/product/33.png",
+		"status": "active",
+		"meta_title": "Ivory Threadwork Festive Kurta",
+		"meta_keyword": "ivory, threadwork, festive, kurta",
+		"meta_description": "Shop Ivory Threadwork Festive Kurta at SOSComrz.",
+		"tags": "ivory, threadwork, festive, kurta",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "30.00",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Kurta"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			},
+			{
+				"specification": "Fabric",
+				"specification_ans": "Premium cotton blend"
+			}
+		],
+		"uniqid": "scr-prod-033",
+		"sku": "SCR-033",
+		"distributor_price": "1234.64",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0033",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "30.00",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"product_image": [
+			{
+				"id": 33,
+				"product_id": 33,
+				"image": "uploads/theme-one/product/33.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 34,
+		"category_id": 5,
+		"subcategory_id": 5,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "navy-embroidered-classic-kurta",
+		"name": "Navy Embroidered Classic Kurta",
+		"short_description": "Classic navy kurta with subtle embroidery and a modern fit.",
+		"long_description": "<p>Classic navy kurta with subtle embroidery and a modern fit. Crafted for comfort and celebration with SOSComrz quality stitching.</p>",
+		"selling_price": "1292.00",
+		"original_price": "1845.71",
+		"image": "uploads/theme-one/product/34.png",
+		"status": "active",
+		"meta_title": "Navy Embroidered Classic Kurta",
+		"meta_keyword": "navy, embroidered, classic, kurta",
+		"meta_description": "Shop Navy Embroidered Classic Kurta at SOSComrz.",
+		"tags": "navy, embroidered, classic, kurta",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "30.00",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Kurta"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			},
+			{
+				"specification": "Fabric",
+				"specification_ans": "Premium cotton blend"
+			}
+		],
+		"uniqid": "scr-prod-034",
+		"sku": "SCR-034",
+		"distributor_price": "1188.64",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 1,
+		"exp_date": null,
+		"barcode": "SCR0034",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "30.00",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"product_image": [
+			{
+				"id": 34,
+				"product_id": 34,
+				"image": "uploads/theme-one/product/34.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 1,
+			"name": "Central Fashion Warehouse"
+		},
+		"product_variant": []
+	},
+	{
+		"id": 35,
+		"category_id": 5,
+		"subcategory_id": 5,
+		"brand_id": 4,
+		"user_id": 1,
+		"slug": "olive-green-printed-panjabi-kurta",
+		"name": "Olive Green Printed Panjabi Kurta",
+		"short_description": "Olive printed kurta inspired by traditional panjabi motifs.",
+		"long_description": "<p>Olive printed kurta inspired by traditional panjabi motifs. Crafted for comfort and celebration with SOSComrz quality stitching.</p>",
+		"selling_price": "1192.00",
+		"original_price": "1702.86",
+		"image": "uploads/theme-one/product/35.png",
+		"status": "active",
+		"meta_title": "Olive Green Printed Panjabi Kurta",
+		"meta_keyword": "olive, printed, panjabi, kurta",
+		"meta_description": "Shop Olive Green Printed Panjabi Kurta at SOSComrz.",
+		"tags": "olive, printed, panjabi, kurta",
+		"commision_type": null,
+		"request": null,
+		"user_type": null,
+		"discount_type": "percentage",
+		"discount_rate": "30.00",
+		"rejected_details": null,
+		"created_at": "2026-04-10T13:00:00.000000Z",
+		"updated_at": "2026-04-10T13:00:00.000000Z",
+		"deleted_at": null,
+		"variants": [
+			{
+				"id": 1,
+				"name": "Size",
+				"options": [
+					"S",
+					"M",
+					"L",
+					"XL",
+					"XXL"
+				]
+			},
+			{
+				"id": 2,
+				"name": "Color",
+				"options": [
+					"Standard"
+				]
+			}
+		],
+		"selling_type": "retail",
+		"selling_details": null,
+		"advance_payment": null,
+		"single_advance_payment_type": null,
+		"is_connect_bulk_single": "1",
+		"specifications": [
+			{
+				"specification": "Category",
+				"specification_ans": "Kurta"
+			},
+			{
+				"specification": "Brand",
+				"specification_ans": "Heritage Ethnic"
+			},
+			{
+				"specification": "Fabric",
+				"specification_ans": "Premium cotton blend"
+			}
+		],
+		"uniqid": "scr-prod-035",
+		"sku": "SCR-035",
+		"distributor_price": "1096.64",
+		"alert_qty": 8,
+		"supplier_id": 2,
+		"warehouse_id": 3,
+		"exp_date": null,
+		"barcode": "SCR0035",
+		"warranty": "No Warranty",
+		"is_feature": 1,
+		"is_affiliate": 0,
+		"discount_price": null,
+		"vendor_id": 1,
+		"pre_order": "0",
+		"discount_percentage": "30.00",
+		"product_type": "system",
+		"wc_product_id": null,
+		"market_place_brand_id": null,
+		"market_place_category_id": null,
+		"market_place_subcategory_id": null,
+		"productrating_avg_rating": "4.6",
+		"vendor": {
+			"id": 1,
+			"name": "SOSComrz",
+			"email": "hello@soscomrz.com"
+		},
+		"brand": {
+			"id": 4,
+			"user_id": 1,
+			"name": "Heritage Ethnic",
+			"slug": "heritage-ethnic"
+		},
+		"category": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"subcategory": {
+			"id": 5,
+			"name": "Kurta"
+		},
+		"product_image": [
+			{
+				"id": 35,
+				"product_id": 35,
+				"image": "uploads/theme-one/product/35.png",
+				"created_at": "2026-04-10T13:00:00.000000Z"
+			}
+		],
+		"productrating": [],
+		"supplier": {
+			"id": 2,
+			"supplier_name": "Ethnic Wear Supply BD",
+			"business_name": "Ethnic Wear Supply BD"
+		},
+		"warehouse": {
+			"id": 3,
+			"name": "Chattogram Dispatch Hub"
+		},
+		"product_variant": []
 	}
 ]

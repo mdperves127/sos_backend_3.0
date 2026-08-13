@@ -334,7 +334,7 @@
 	},
 	{
 		"id": 4,
-		"category_id": 4,
+		"category_id": 2,
 		"subcategory_id": 5,
 		"brand_id": 2,
 		"user_id": 1,
@@ -416,12 +416,15 @@
 			"slug": "beats"
 		},
 		"category": {
-			"id": 4,
-			"name": "Gadgets & Accessories"
+			"id": 2,
+			"name": "Audio & Music",
+			"slug": "audio-music"
 		},
 		"subcategory": {
 			"id": 5,
-			"name": "Portable Speakers"
+			"category_id": 2,
+			"name": "Portable Speakers",
+			"slug": "portable-speakers"
 		},
 		"product_image": [
 			{
@@ -4219,7 +4222,7 @@
 	},
 	{
 		"id": 39,
-		"category_id": 4,
+		"category_id": 2,
 		"subcategory_id": 5,
 		"brand_id": 2,
 		"user_id": 1,
@@ -4301,12 +4304,15 @@
 			"slug": "beats"
 		},
 		"category": {
-			"id": 4,
-			"name": "Gadgets & Accessories"
+			"id": 2,
+			"name": "Audio & Music",
+			"slug": "audio-music"
 		},
 		"subcategory": {
 			"id": 5,
-			"name": "Portable Speakers"
+			"category_id": 2,
+			"name": "Portable Speakers",
+			"slug": "portable-speakers"
 		},
 		"product_image": [
 			{
@@ -8104,7 +8110,7 @@
 	},
 	{
 		"id": 74,
-		"category_id": 4,
+		"category_id": 2,
 		"subcategory_id": 5,
 		"brand_id": 2,
 		"user_id": 1,
@@ -8186,12 +8192,15 @@
 			"slug": "beats"
 		},
 		"category": {
-			"id": 4,
-			"name": "Gadgets & Accessories"
+			"id": 2,
+			"name": "Audio & Music",
+			"slug": "audio-music"
 		},
 		"subcategory": {
 			"id": 5,
-			"name": "Portable Speakers"
+			"category_id": 2,
+			"name": "Portable Speakers",
+			"slug": "portable-speakers"
 		},
 		"product_image": [
 			{
