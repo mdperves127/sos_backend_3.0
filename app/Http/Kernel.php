@@ -76,6 +76,7 @@ class Kernel extends HttpKernel
         'tenantAuth' => \App\Http\Middleware\TenantMiddleware::class,
         'preventCentralAccess' => \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
         'initializeTenancy' => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+        'initializeTenancyFromRoute' => \App\Http\Middleware\InitializeTenancyFromRoute::class,
         'preventTenancyOnAdmin' => \App\Http\Middleware\PreventTenancyOnAdminRoutes::class,
         'adminDatabase' => \App\Http\Middleware\ForceAdminBaseDatabase::class,
         'adminAuth' => \App\Http\Middleware\SimpleSanctumMiddleware::class,

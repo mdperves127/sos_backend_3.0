@@ -41,6 +41,8 @@ return [
 
     'eps' => [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
+        // Must match the BaseUrl registered in the EPS merchant portal (e.g. https://affsell.com)
+        'base_url'            => env( 'EPS_BASE_URL', env( 'MAIN_FRONTEND_DOMAIN_URL', 'https://affsell.com' ) ),
         'merchant_id'         => env('EPS_MERCHANT_ID'),
         'store_id'            => env('EPS_STORE_ID'),
         'username'            => env('EPS_USERNAME'),

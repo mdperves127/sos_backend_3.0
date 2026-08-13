@@ -66,9 +66,9 @@ class EpsPaymentService
             'totalAmount'           => $totalAmount,
             'ipAddress'             => self::clientIpAddress(),
             'version'               => '1',
-            'successUrl'            => (string) $params['success_url'],
-            'failUrl'               => (string) $params['fail_url'],
-            'cancelUrl'             => (string) $params['cancel_url'],
+            'successUrl'            => self::ensureEpsCompatibleCallbackUrl( (string) $params['success_url'] ),
+            'failUrl'               => self::ensureEpsCompatibleCallbackUrl( (string) $params['fail_url'] ),
+            'cancelUrl'             => self::ensureEpsCompatibleCallbackUrl( (string) $params['cancel_url'] ),
             'customerName'          => self::sanitizeText( (string) ( $params['customer_name'] ?? 'Customer' ), 100 ),
             'customerEmail'         => self::sanitizeEmail( (string) ( $params['customer_email'] ?? 'customer@example.com' ) ),
             'CustomerAddress'       => self::sanitizeText( (string) ( $params['customer_address'] ?? 'Dhaka' ), 200 ),
@@ -175,12 +175,24 @@ class EpsPaymentService
 
     public static function centralCallbackUrl( string $path ): string
     {
-        return url( 'api/user/aaparpay/' . ltrim( $path, '/' ) );
+        return self::epsCallbackBaseUrl() . '/api/user/aaparpay/' . ltrim( $path, '/' );
     }
 
     public static function tenantCallbackUrl( string $path ): string
     {
-        return rtrim( request()->getSchemeAndHttpHost(), '/' ) . '/api/aaparpay/' . ltrim( $path, '/' );
+        $tenantId = function_exists( 'tenant' ) ? tenant( 'id' ) : null;
+
+        // EPS merchant BaseUrl is the apex domain only — tenant hosts/custom domains are rejected.
+        // Route through central /api/eps/{tenant}/... so tenancy still initializes.
+        if ( $tenantId ) {
+            return self::epsCallbackBaseUrl()
+                . '/api/eps/' . rawurlencode( (string) $tenantId )
+                . '/aaparpay/' . ltrim( $path, '/' );
+        }
+
+        return self::ensureEpsCompatibleCallbackUrl(
+            rtrim( request()->getSchemeAndHttpHost(), '/' ) . '/api/aaparpay/' . ltrim( $path, '/' )
+        );
     }
 
     private static function callbackUrlsFromSuccess( string $successUrl ): array
@@ -192,12 +204,78 @@ class EpsPaymentService
             ];
         }
 
+        if ( preg_match( '#/api/eps/([^/]+)/aaparpay/#', $successUrl, $matches ) ) {
+            $base = self::epsCallbackBaseUrl() . '/api/eps/' . $matches[1] . '/aaparpay';
+
+            return [
+                $base . '/fail',
+                $base . '/cancel',
+            ];
+        }
+
         $base = preg_replace( '#/[^/]+$#', '', $successUrl );
 
         return [
-            $base . '/fail',
-            $base . '/cancel',
+            self::ensureEpsCompatibleCallbackUrl( $base . '/fail' ),
+            self::ensureEpsCompatibleCallbackUrl( $base . '/cancel' ),
         ];
+    }
+
+    /**
+     * Host registered with EPS (e.g. https://affsell.com). Callbacks must use this domain.
+     */
+    private static function epsCallbackBaseUrl(): string
+    {
+        $configured = trim( (string) config( 'services.eps.base_url' ) );
+
+        if ( $configured === '' ) {
+            $configured = trim( (string) ( config( 'app.maindomain' ) ?: config( 'app.url' ) ) );
+        }
+
+        // Allow domain-only values from EPS portal copy/paste (affsell.com)
+        if ( $configured !== '' && ! preg_match( '#^https?://#i', $configured ) ) {
+            $configured = 'https://' . ltrim( $configured, '/' );
+        }
+
+        return rtrim( $configured, '/' );
+    }
+
+    /**
+     * Rewrite callback host to the EPS-registered BaseUrl; keep tenant path when needed.
+     */
+    private static function ensureEpsCompatibleCallbackUrl( string $url ): string
+    {
+        $url = trim( $url );
+
+        if ( $url === '' ) {
+            return $url;
+        }
+
+        // Tenant context still using old host-based /api/aaparpay paths → convert.
+        if (
+            function_exists( 'tenant' )
+            && tenant( 'id' )
+            && preg_match( '#/api/aaparpay/([^?\s]+)#', $url, $matches )
+            && ! str_contains( $url, '/api/eps/' )
+        ) {
+            return self::tenantCallbackUrl( $matches[1] );
+        }
+
+        $base      = self::epsCallbackBaseUrl();
+        $baseParts = parse_url( $base ) ?: [];
+        $parts     = parse_url( $url ) ?: [];
+
+        $scheme = $baseParts['scheme'] ?? 'https';
+        $host   = $baseParts['host'] ?? null;
+
+        if ( ! $host ) {
+            return $url;
+        }
+
+        $path  = $parts['path'] ?? '/';
+        $query = isset( $parts['query'] ) && $parts['query'] !== '' ? '?' . $parts['query'] : '';
+
+        return $scheme . '://' . $host . $path . $query;
     }
 
     private static function getToken(): string

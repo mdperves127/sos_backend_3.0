@@ -9,6 +9,7 @@ Route::get( '/test-api', function () {
 } );
 
 use App\Http\Controllers\AamarpayController;
+use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
 use App\Http\Controllers\API\Admin\TenantMaterialController;
@@ -151,6 +152,21 @@ Route::prefix( 'user/aaparpay' )->group( function () {
 
     Route::match( ['get', 'post'], 'fail', [AamarpayController::class, 'fail'] );
     Route::match( ['get', 'post'], 'cancel', [AamarpayController::class, 'cancel'] );
+} );
+
+// EPS live only allows callbacks on the merchant BaseUrl (affsell.com). Tenant
+// payments therefore hit central routes that initialize tenancy by path.
+Route::prefix( 'eps/{tenant}' )->middleware( 'initializeTenancyFromRoute' )->group( function () {
+    Route::prefix( 'aaparpay' )->group( function () {
+        Route::match( ['get', 'post'], 'advertise-success', [TenantAamarpayController::class, 'advertisesuccess'] );
+        Route::match( ['get', 'post'], 'service-success', [TenantAamarpayController::class, 'servicesuccess'] );
+        Route::match( ['get', 'post'], 'renew-success', [TenantAamarpayController::class, 'renewsuccess'] );
+        Route::match( ['get', 'post'], 'recharge-success-for-us', [TenantAamarpayController::class, 'rechargesuccess'] );
+        Route::match( ['get', 'post'], 'subscription-success', [TenantAamarpayController::class, 'subscriptionsuccess'] );
+        Route::match( ['get', 'post'], 'product-checkout-success', [TenantAamarpayController::class, 'productcheckoutsuccess'] );
+        Route::match( ['get', 'post'], 'fail', [TenantAamarpayController::class, 'fail'] );
+        Route::match( ['get', 'post'], 'cancel', [TenantAamarpayController::class, 'cancel'] );
+    } );
 } );
 
 Route::post( '/contact-store', [ContactController::class, 'store'] );
