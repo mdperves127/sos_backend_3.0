@@ -41,17 +41,14 @@ return [
 
     'eps' => [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
-        // MUST match EPS merchant portal BaseUrl exactly (affsell.com)
+        // Must match EPS merchant portal BaseUrl (affsell.com). Tenant callbacks use *.affsell.com
         'base_url'            => env( 'EPS_BASE_URL', 'https://affsell.com' ),
-        // Static file on FRONTEND host. Upload public/eps-return.html to affsell.com root.
-        'return_url'          => env( 'EPS_RETURN_URL', 'https://affsell.com/eps-return.html' ),
-        // Laravel API origin (no /api suffix), e.g. https://mdperves.info
         'api_url'             => env( 'EPS_API_URL', env( 'APP_URL' ) ),
-        'merchant_id'         => env('EPS_MERCHANT_ID'),
-        'store_id'            => env('EPS_STORE_ID'),
-        'username'            => env('EPS_USERNAME'),
-        'password'            => env('EPS_PASSWORD'),
-        'hash_key'            => env('EPS_HASH_KEY'),
+        'merchant_id'         => env( 'EPS_MERCHANT_ID' ),
+        'store_id'            => env( 'EPS_STORE_ID' ),
+        'username'            => env( 'EPS_USERNAME' ),
+        'password'            => env( 'EPS_PASSWORD' ),
+        'hash_key'            => env( 'EPS_HASH_KEY' ),
         'transaction_type_id' => (int) env( 'EPS_TRANSACTION_TYPE_ID', 1 ),
     ],
 

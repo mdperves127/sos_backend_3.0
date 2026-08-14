@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Concerns\HandlesEpsPaymentCallback;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ServiceOrder;
 use App\Models\User;
 use App\Models\PaymentStore;
@@ -14,6 +13,7 @@ use App\Services\PaymentHistoryService;
 use App\Services\SubscriptionRenewService;
 use App\Services\SubscriptionService;
 use App\Services\ProductCheckoutService;
+use App\Services\EpsPaymentCompletionService;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\RechargeNotification;
 use App\Notifications\SubscriptionNotification;
@@ -45,9 +45,9 @@ class AamarpayController extends Controller
             return redirect( $this->frontendBase() . 'all-service-order?message=Payment not found' );
         }
 
-        $vendorservice->update([
-            'is_paid' => 1
-        ]);
+        $vendorservice->update( [
+            'is_paid' => 1,
+        ] );
         PaymentHistoryService::store(
             $vendorservice->trxid,
             $vendorservice->amount,
@@ -78,12 +78,11 @@ class AamarpayController extends Controller
         }
         $data = PaymentStore::where( 'trxid', $response['mer_txnid'] )->first();
 
-        if (!$data) {
-            return false;
+        if ( ! $data ) {
+            return redirect( $this->frontendBase() . '?message=Payment not found' );
         }
         $info = $data->info;
 
-        // PaymentHistoryService::store($data->trxid, $response['amount'], 'Ammarpay', 'Payment Checkout', '-', '', $info['userid']);
         ProductCheckoutService::store(
             $info['cartid'],
             $info['productid'],
@@ -98,11 +97,11 @@ class AamarpayController extends Controller
 
         $data->update( ['status' => 'completed', 'last_status' => 'completed'] );
 
-        $user = User::find($info['userid']);
-        $path = paymentredirect($user->role_as);
-        $url = $this->frontendBase( $info ) . $path . '?message=Product purchase successfully';
-        return redirect($url);
+        $user = User::find( $info['userid'] );
+        $path = paymentredirect( $user->role_as );
+        $url  = $this->frontendBase( $info ) . $path . '?message=Product purchase successfully';
 
+        return redirect( $url );
     }
 
     function renewsuccess()
@@ -112,40 +111,17 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( $this->frontendBase() . 'dashboard?message=Payment verification failed' );
         }
-        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending' ] )->first();
 
-        if ( ! $data ) {
-            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
+        try {
+            $url = app( EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'renew' );
+        } catch ( \Throwable $e ) {
+            return redirect( $this->frontendBase() . 'dashboard?message=' . urlencode( $e->getMessage() ) );
         }
 
-        $subscriptionid   = $data['info']['package_id'];
-        $trxid           = $data->trxid;
-        $payment_method  = 'Aamarpay';
-        $transition_type = 'renew';
-        $amount          = $response['amount_original'] ?? 0;
-        $couponName      = $data['info']['coupon'] ?? '';
-
-        if ( ! empty( $data['info']['tenant_id'] ) ) {
-            $entity = Tenant::on( 'mysql' )->find( $data['info']['tenant_id'] );
-            if ( $entity ) {
-                SubscriptionRenewService::subscriptionadd( $entity, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
-            }
-            $path = 'dashboard';
-        } else {
-            $user = User::on( 'mysql' )->find( $data['info']['user_id'] ?? 0 );
-            if ( $user ) {
-                SubscriptionRenewService::subscriptionadd( $user, $subscriptionid, $trxid, $payment_method, $transition_type, $amount, $couponName );
-                $path = paymentredirect( $user->role_as );
-            } else {
-                $path = 'dashboard';
-            }
-        }
-
-        $data->update( ['status' => 'completed'] );
-
-        $url = $this->frontendBase( $data['info'] ) . $path . '?message=Renew successfull';
         return redirect( $url );
     }
+
     function advertisesuccess()
     {
         $response = $this->verifiedEpsTransaction();
@@ -153,12 +129,12 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
-        $adminAdvertise = AdminAdvertise::on('mysql')->where('trxid', $response['mer_txnid'])->first();
+        $adminAdvertise = AdminAdvertise::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
 
-        $adminAdvertise->update([
-            'is_paid' => 1
-        ]);
-        $dollerRate  =  DollerRate::first()?->amount;
+        $adminAdvertise->update( [
+            'is_paid' => 1,
+        ] );
+        $dollerRate = DollerRate::first()?->amount;
 
         PaymentHistoryService::store(
             $adminAdvertise->trxid,
@@ -179,10 +155,11 @@ class AamarpayController extends Controller
                     'user_id'     => $adminAdvertise->user_id,
                 ]
         );
-        $user = User::find($adminAdvertise->user_id);
-        $path = paymentredirect($user->role_as);
-        $url = $this->frontendBase() . $path . '?message=Advertise payment successfull';
-        return redirect($url);
+        $user = User::find( $adminAdvertise->user_id );
+        $path = paymentredirect( $user->role_as );
+        $url  = $this->frontendBase() . $path . '?message=Advertise payment successfull';
+
+        return redirect( $url );
     }
 
     function subscriptionsuccess()
@@ -190,11 +167,11 @@ class AamarpayController extends Controller
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
-            return redirect( $this->frontendBase() . '?message=Payment verification failed' );
+            return redirect( $this->frontendBase() . 'dashboard?message=Payment verification failed' );
         }
 
         try {
-            $url = app( \App\Services\EpsPaymentCompletionService::class )
+            $url = app( EpsPaymentCompletionService::class )
                 ->completeByTransactionId( $response['mer_txnid'], 'subscription' );
         } catch ( \Throwable $e ) {
             return redirect( $this->frontendBase() . 'dashboard?message=' . urlencode( $e->getMessage() ) );
@@ -212,7 +189,7 @@ class AamarpayController extends Controller
         }
 
         try {
-            $url = app( \App\Services\EpsPaymentCompletionService::class )
+            $url = app( EpsPaymentCompletionService::class )
                 ->completeByTransactionId( $response['mer_txnid'], 'recharge' );
         } catch ( \Throwable $e ) {
             return redirect( $this->frontendBase() . 'dashboard?message=' . urlencode( $e->getMessage() ) );
@@ -220,8 +197,6 @@ class AamarpayController extends Controller
 
         return redirect( $url );
     }
-
-
 
     function fail()
     {
