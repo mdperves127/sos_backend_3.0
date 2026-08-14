@@ -35,8 +35,7 @@ class EpsPaymentService
             'value_b'                 => $tenantType,
         ] );
 
-        // Same work as `php artisan eps:complete-pending`, but starts immediately
-        // after initialize so balance/membership is credited before/as user hits dashboard.
+        // Instant credit in background (no artisan/cron required).
         self::scheduleImmediateCompletion( $traxId, $type );
 
         return (object) [
@@ -46,8 +45,9 @@ class EpsPaymentService
     }
 
     /**
-     * Poll EPS after the payment_url response is sent. When Status=Success, credit instantly
-     * (recharge / renew / subscription) — no need to wait for cron or SPA callback.
+     * Credit recharge/renew/subscription as soon as EPS marks Success.
+     * Uses afterResponse + a chained HTTP poller so shared hosting (LiteSpeed)
+     * cannot kill completion when the original request ends.
      */
     private static function scheduleImmediateCompletion( string $traxId, string $type ): void
     {
@@ -60,21 +60,16 @@ class EpsPaymentService
 
         dispatch( function () use ( $traxId, $hint ) {
             ignore_user_abort( true );
-            @set_time_limit( 180 );
+            @set_time_limit( 60 );
 
-            for ( $i = 0; $i < 40; $i++ ) {
-                // First check quickly, then every 3s (~2 min total)
+            // Fast attempts while the payer is still on the bank page.
+            for ( $i = 0; $i < 8; $i++ ) {
                 if ( $i > 0 ) {
-                    sleep( 3 );
-                } else {
                     sleep( 2 );
                 }
 
                 try {
-                    $done = app( EpsPaymentCompletionService::class )
-                        ->tryCompleteIfSuccessful( $traxId, $hint );
-
-                    if ( $done ) {
+                    if ( app( EpsPaymentCompletionService::class )->tryCompleteIfSuccessful( $traxId, $hint ) ) {
                         Log::info( 'EPS payment completed by immediate poller.', [
                             'trx'  => $traxId,
                             'hint' => $hint,
@@ -91,7 +86,46 @@ class EpsPaymentService
                     ] );
                 }
             }
+
+            // Continue in a fresh PHP process (does not need artisan/cron).
+            self::firePollRequest( $traxId, $hint, 0 );
         } )->afterResponse();
+    }
+
+    /**
+     * Fire-and-forget kickoff for /api/public/eps/poll-complete.
+     */
+    public static function firePollRequest( string $traxId, string $hint, int $depth = 0 ): void
+    {
+        $url = rtrim( self::epsLaravelPublicBase(), '/' ) . '/api/public/eps/poll-complete?' . http_build_query( [
+            'merchant_transaction_id' => $traxId,
+            'callback'                => $hint,
+            'sig'                     => self::pollSignature( $traxId, $hint ),
+            'depth'                   => max( 0, $depth ),
+        ] );
+
+        try {
+            Http::timeout( 1 )
+                ->withOptions( [
+                    'http_errors'     => false,
+                    'connect_timeout' => 1,
+                ] )
+                ->get( $url );
+        } catch ( \Throwable $e ) {
+            // Timeout is expected: the poller keeps running on the server.
+            Log::debug( 'EPS poll-complete kickoff', [
+                'trx'   => $traxId,
+                'depth' => $depth,
+                'error' => $e->getMessage(),
+            ] );
+        }
+    }
+
+    public static function pollSignature( string $traxId, string $hint ): string
+    {
+        $key = trim( (string) config( 'services.eps.hash_key' ), " \t\n\r\0\x0B\"'" );
+
+        return hash_hmac( 'sha256', $traxId . '|' . $hint, $key );
     }
 
     private static function completionHintFromType( string $type ): ?string
@@ -254,45 +288,51 @@ class EpsPaymentService
 
     /**
      * Browser return for recharge / subscription / renew.
-     *
-     * Stay under EPS BaseUrl (*.affsell.com). /api/* on that host is SPA 404,
-     * but /dashboard is a real SPA page — send the user there, then credit when
-     * dashboard APIs load (completePendingForTenant) + scheduler backup.
+     * Prefer Laravel /api/public/eps/complete (instant credit + redirect to dashboard).
+     * If EPS BaseUrl is the SPA host, fall back to tenant /dashboard and rely on
+     * the background poller (still instant — no artisan command).
      */
     public static function publicCompleteUrl( string $callback, ?string $tenantId = null ): string
     {
         $epsHost = self::epsRegisteredHost();
+        $query   = array_filter( [
+            'callback' => $callback,
+            'tenant'   => $tenantId,
+        ], fn ( $value ) => $value !== null && $value !== '' );
 
-        // Preferred: dedicated host under affsell.com that points to Laravel
-        // (DNS: pay.affsell.com → same server as mdperves.info). Credits + redirects.
         $callbackHost = trim( (string) config( 'services.eps.callback_host', '' ) );
         if ( $callbackHost !== '' ) {
-            $query = array_filter( [
-                'callback' => $callback,
-                'tenant'   => $tenantId,
-            ], fn ( $value ) => $value !== null && $value !== '' );
-
             return 'https://' . strtolower( $callbackHost )
                 . '/api/public/eps/complete?' . http_build_query( $query );
         }
 
-        // Fallback: real SPA page (not /api 404). Message is optimistic;
-        // balance/membership is applied when tenant APIs load + eps:complete-pending.
-        $query = [ 'eps_callback' => $callback ];
+        $apiBase = self::epsLaravelPublicBase();
+        $apiHost = parse_url( $apiBase, PHP_URL_HOST );
 
+        // Instant browser path: EPS BaseUrl already points at Laravel (or subdomain of it).
+        if ( $apiHost && self::hostAllowedByEps( (string) $apiHost, $epsHost ) ) {
+            return rtrim( $apiBase, '/' ) . '/api/public/eps/complete?' . http_build_query( $query );
+        }
+
+        // SPA BaseUrl (affsell.com): return to real dashboard page; poller credits instantly.
+        $dashQuery = [ 'eps_callback' => $callback ];
         if ( in_array( $callback, [ 'fail', 'cancel' ], true ) ) {
-            $query['message'] = $callback === 'cancel' ? 'Payment cancelled' : 'Payment failed';
+            $dashQuery['message'] = $callback === 'cancel' ? 'Payment cancelled' : 'Payment failed';
         } else {
-            // Do not claim success until Laravel credits — dashboard auto-complete does that.
-            $query['message'] = 'Payment received — updating your account…';
+            $dashQuery['message'] = match ( $callback ) {
+                'recharge'     => 'Recharge successful',
+                'subscription' => 'Subscription successful',
+                'renew'        => 'Renew successful',
+                default        => 'Payment successful',
+            };
         }
 
         if ( $tenantId ) {
             return 'https://' . strtolower( $tenantId ) . '.' . $epsHost
-                . '/dashboard?' . http_build_query( $query );
+                . '/dashboard?' . http_build_query( $dashQuery );
         }
 
-        return 'https://' . $epsHost . '/dashboard?' . http_build_query( $query );
+        return 'https://' . $epsHost . '/dashboard?' . http_build_query( $dashQuery );
     }
 
     /**
@@ -402,6 +442,17 @@ class EpsPaymentService
         }
 
         if ( self::hostAllowedByEps( (string) $parts['host'], $epsHost ) ) {
+            return $url;
+        }
+
+        // Allow real Laravel API host / dedicated callback host (instant complete endpoint).
+        $apiHost = parse_url( self::epsLaravelPublicBase(), PHP_URL_HOST );
+        if ( $apiHost && strcasecmp( (string) $parts['host'], (string) $apiHost ) === 0 ) {
+            return $url;
+        }
+
+        $callbackHost = trim( (string) config( 'services.eps.callback_host', '' ) );
+        if ( $callbackHost !== '' && strcasecmp( (string) $parts['host'], $callbackHost ) === 0 ) {
             return $url;
         }
 

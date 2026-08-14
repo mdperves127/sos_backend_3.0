@@ -105,6 +105,7 @@ class SubscriptionRenewService {
             $successurl = EpsPaymentService::paymentSuccessUrl( 'renew-success' );
             $validatedData['user_id'] = auth()->id();
             $validatedData['coupon'] = request( 'coupon_id' );
+            $validatedData['amount'] = $totalprice;
             $validatedData = RedirectHelper::appendPaymentReturnUrl( $validatedData );
             PaymentStore::on( 'mysql' )->create( [
                 'payment_gateway' => 'aamarpay',
@@ -197,6 +198,7 @@ class SubscriptionRenewService {
             $validatedData['user_id']    = auth()->id();
             $validatedData['tenant_id']  = $tenant->id;
             $validatedData['coupon']     = request( 'coupon_id' );
+            $validatedData['amount']     = $totalprice;
             $validatedData               = RedirectHelper::appendPaymentReturnUrl( $validatedData );
             $store = new PaymentStore( [
                 'payment_gateway' => 'aamarpay',

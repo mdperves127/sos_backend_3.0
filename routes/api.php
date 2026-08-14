@@ -51,8 +51,10 @@ use App\Http\Controllers\Tenant\CustomDomainController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\HistoryController;
 
-// Public EPS return completer (no auth) — called by frontend eps-return.html after bank redirect
+// Public EPS return completer (no auth) — credits then redirects to tenant dashboard
 Route::match( ['get', 'post'], 'public/eps/complete', [PublicEpsController::class, 'complete'] );
+// Background poller — completes payment instantly without artisan/cron
+Route::match( ['get', 'post'], 'public/eps/poll-complete', [PublicEpsController::class, 'pollComplete'] );
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );

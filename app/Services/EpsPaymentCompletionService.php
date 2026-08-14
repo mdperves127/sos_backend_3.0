@@ -363,42 +363,58 @@ class EpsPaymentCompletionService
     private function completeRenew( PaymentStore $payment, array $verification ): string
     {
         $info = is_array( $payment->info ) ? $payment->info : [];
-        $user = User::on( 'mysql' )->find( $info['user_id'] ?? null );
+        $packageId = $info['package_id'] ?? null;
 
-        if ( ! $user ) {
-            // Tenant renew may store tenant context in info
-            if ( ! empty( $info['tenant_id'] ) ) {
-                $tenant = Tenant::on( 'mysql' )->find( $info['tenant_id'] );
-                if ( $tenant ) {
-                    $amount = $verification['TotalAmount'] ?? $verification['StoreAmount'] ?? 0;
-                    SubscriptionRenewService::subscriptionadd(
-                        $tenant,
-                        $info['package_id'],
-                        $payment->trxid,
-                        'Aamarpay',
-                        'renew',
-                        $amount,
-                        $info['coupon'] ?? ''
-                    );
-                    $payment->update( ['status' => 'completed'] );
+        if ( ! $packageId ) {
+            throw new RuntimeException( 'Renew payment is missing package_id.' );
+        }
 
-                    return RedirectHelper::getPaymentRedirectUrl( $tenant->id, $info['return_url'] ?? null )
-                        . 'dashboard?message=' . urlencode( 'Renew successfull' );
-                }
+        $amount = (float) ( $verification['TotalAmount']
+            ?? $verification['StoreAmount']
+            ?? $info['amount']
+            ?? 0 );
+
+        // Tenant renew stores tenant_id + tenant-DB user_id. Never treat that user_id
+        // as a central mysql user (IDs collide and renew wrongly fails / updates wrong account).
+        if ( ! empty( $info['tenant_id'] ) ) {
+            $tenant = Tenant::on( 'mysql' )->find( $info['tenant_id'] );
+            if ( ! $tenant ) {
+                throw new RuntimeException( 'Tenant not found for renew.' );
             }
 
+            $this->assertRenewResult(
+                SubscriptionRenewService::subscriptionadd(
+                    $tenant,
+                    $packageId,
+                    $payment->trxid,
+                    'Aamarpay',
+                    'Renew',
+                    $amount > 0 ? $amount : null,
+                    $info['coupon'] ?? ''
+                )
+            );
+
+            $payment->update( ['status' => 'completed'] );
+
+            return RedirectHelper::getPaymentRedirectUrl( $tenant->id, $info['return_url'] ?? null )
+                . 'dashboard?message=' . urlencode( 'Renew successful' );
+        }
+
+        $user = User::on( 'mysql' )->find( $info['user_id'] ?? null );
+        if ( ! $user ) {
             throw new RuntimeException( 'Renew payment user/tenant not found.' );
         }
 
-        $amount = $verification['TotalAmount'] ?? $verification['StoreAmount'] ?? 0;
-        SubscriptionRenewService::subscriptionadd(
-            $user,
-            $info['package_id'],
-            $payment->trxid,
-            'Aamarpay',
-            'renew',
-            $amount,
-            $info['coupon'] ?? ''
+        $this->assertRenewResult(
+            SubscriptionRenewService::subscriptionadd(
+                $user,
+                $packageId,
+                $payment->trxid,
+                'Aamarpay',
+                'Renew',
+                $amount > 0 ? $amount : null,
+                $info['coupon'] ?? ''
+            )
         );
 
         $payment->update( ['status' => 'completed'] );
@@ -406,7 +422,22 @@ class EpsPaymentCompletionService
         $path = paymentredirect( $user->role_as );
 
         return rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/' . ltrim( $path, '/' )
-            . '?message=' . urlencode( 'Renew successfull' );
+            . '?message=' . urlencode( 'Renew successful' );
+    }
+
+    /**
+     * subscriptionadd() returns JsonResponse; fail must not mark PaymentStore completed.
+     */
+    private function assertRenewResult( mixed $result ): void
+    {
+        if ( ! $result instanceof \Illuminate\Http\JsonResponse ) {
+            return;
+        }
+
+        $payload = $result->getData( true );
+        if ( ( $payload['data'] ?? null ) === 'fail' ) {
+            throw new RuntimeException( (string) ( $payload['message'] ?? 'Renew failed' ) );
+        }
     }
 
     private function redirectForPayment( PaymentStore $payment, string $message ): string

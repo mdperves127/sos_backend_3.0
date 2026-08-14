@@ -66,6 +66,57 @@ class PublicEpsController extends Controller
         return $this->respond( $request, true, 'Payment completed successfully.', $redirectUrl );
     }
 
+    /**
+     * Background poller (no auth). Kicked after payment initialize.
+     * Completes recharge/renew/subscription as soon as EPS reports Success.
+     */
+    public function pollComplete( Request $request )
+    {
+        $merchantTransactionId = (string) (
+            $request->query( 'merchant_transaction_id' )
+            ?: $request->input( 'merchant_transaction_id' )
+            ?: ''
+        );
+        $callback = (string) ( $request->query( 'callback', $request->input( 'callback', 'recharge' ) ) );
+        $sig      = (string) ( $request->query( 'sig', $request->input( 'sig', '' ) ) );
+        $depth    = (int) $request->query( 'depth', $request->input( 'depth', 0 ) );
+
+        if ( $merchantTransactionId === ''
+            || ! hash_equals( EpsPaymentService::pollSignature( $merchantTransactionId, $callback ), $sig ) ) {
+            return response( 'forbidden', 403 );
+        }
+
+        ignore_user_abort( true );
+        @set_time_limit( 130 );
+
+        for ( $i = 0; $i < 20; $i++ ) {
+            if ( $i > 0 ) {
+                sleep( 3 );
+            }
+
+            try {
+                if ( app( EpsPaymentCompletionService::class )
+                    ->tryCompleteIfSuccessful( $merchantTransactionId, $callback ) ) {
+                    return response( 'completed', 200 );
+                }
+            } catch ( Throwable $e ) {
+                Log::debug( 'EPS poll-complete attempt', [
+                    'trx'   => $merchantTransactionId,
+                    'try'   => $i,
+                    'depth' => $depth,
+                    'error' => $e->getMessage(),
+                ] );
+            }
+        }
+
+        // Still pending — chain another process (covers slow bank confirmations).
+        if ( $depth < 4 ) {
+            EpsPaymentService::firePollRequest( $merchantTransactionId, $callback, $depth + 1 );
+        }
+
+        return response( 'pending', 200 );
+    }
+
     private function respond( Request $request, bool $ok, string $message, ?string $redirectUrl, int $status = 200 )
     {
         $wantsJson = $request->query( 'format' ) === 'json'
