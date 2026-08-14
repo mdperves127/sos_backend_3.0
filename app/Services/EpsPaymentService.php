@@ -66,9 +66,9 @@ class EpsPaymentService
             'totalAmount'           => $totalAmount,
             'ipAddress'             => self::clientIpAddress(),
             'version'               => '1',
-            'successUrl'            => (string) $params['success_url'],
-            'failUrl'               => (string) $params['fail_url'],
-            'cancelUrl'             => (string) $params['cancel_url'],
+            'successUrl'            => self::ensureEpsCompatibleCallbackUrl( (string) $params['success_url'] ),
+            'failUrl'               => self::ensureEpsCompatibleCallbackUrl( (string) $params['fail_url'] ),
+            'cancelUrl'             => self::ensureEpsCompatibleCallbackUrl( (string) $params['cancel_url'] ),
             'customerName'          => self::sanitizeText( (string) ( $params['customer_name'] ?? 'Customer' ), 100 ),
             'customerEmail'         => self::sanitizeEmail( (string) ( $params['customer_email'] ?? 'customer@example.com' ) ),
             'CustomerAddress'       => self::sanitizeText( (string) ( $params['customer_address'] ?? 'Dhaka' ), 200 ),
@@ -188,11 +188,11 @@ class EpsPaymentService
     }
 
     /**
-     * Always return to the real Laravel API (EPS_API_URL / APP_URL).
-     * Never use *.affsell.com — that host is the Next.js SPA and returns 404,
-     * so balance is never credited.
+     * Browser return URL for recharge / subscription / renew.
      *
-     * EPS merchant portal BaseUrl MUST match this host (e.g. mdperves.info).
+     * Host MUST be under EPS merchant BaseUrl (affsell.com) or initialize returns
+     * "Domain mismatch". Path is Laravel's public completer so a frontend /api
+     * proxy (or eps:complete-pending) can credit the balance.
      */
     public static function publicCompleteUrl( string $callback, ?string $tenantId = null ): string
     {
@@ -201,12 +201,12 @@ class EpsPaymentService
             'tenant'   => $tenantId,
         ], fn ( $value ) => $value !== null && $value !== '' );
 
-        return rtrim( self::epsLaravelPublicBase(), '/' )
+        return 'https://' . self::epsRegisteredHost()
             . '/api/public/eps/complete?' . http_build_query( $query );
     }
 
     /**
-     * Central (non-tenant) callbacks on Laravel API host.
+     * Central (non-tenant) callbacks — always on EPS BaseUrl host.
      */
     public static function centralCallbackUrl( string $path ): string
     {
@@ -220,12 +220,13 @@ class EpsPaymentService
             return self::publicCompleteUrl( $mapped[$path] );
         }
 
-        return rtrim( self::epsLaravelPublicBase(), '/' ) . '/api/user/aaparpay/' . ltrim( $path, '/' );
+        return 'https://' . self::epsRegisteredHost()
+            . '/api/user/aaparpay/' . ltrim( $path, '/' );
     }
 
     /**
-     * Tenant callbacks that need tenant DB (e.g. product checkout).
-     * Uses Laravel API host + /api/eps/{tenant}/... so SPA hosts are never used.
+     * Tenant callbacks — EPS BaseUrl host + /api/eps/{tenant}/aaparpay/...
+     * (works when SPA proxies /api/* to Laravel; otherwise cron credits PaymentStore flows).
      */
     public static function tenantCallbackUrl( string $path ): string
     {
@@ -246,7 +247,7 @@ class EpsPaymentService
             return self::centralCallbackUrl( $path );
         }
 
-        return rtrim( self::epsLaravelPublicBase(), '/' )
+        return 'https://' . self::epsRegisteredHost()
             . '/api/eps/' . rawurlencode( $tenantId )
             . '/aaparpay/' . ltrim( $path, '/' );
     }
@@ -275,7 +276,7 @@ class EpsPaymentService
         }
 
         if ( preg_match( '#(/api/eps/[^/]+/aaparpay)/#', $successUrl, $m ) ) {
-            $base = self::epsLaravelPublicBase() . $m[1];
+            $base = 'https://' . self::epsRegisteredHost() . $m[1];
 
             return [ $base . '/fail', $base . '/cancel' ];
         }
@@ -286,7 +287,53 @@ class EpsPaymentService
     }
 
     /**
-     * Real Laravel API origin (mdperves.info), never the SPA host.
+     * Force callback host under EPS BaseUrl (affsell.com). Prevents Domain mismatch.
+     */
+    private static function ensureEpsCompatibleCallbackUrl( string $url ): string
+    {
+        $epsHost = self::epsRegisteredHost();
+        $parts   = parse_url( $url );
+
+        if ( ! is_array( $parts ) || empty( $parts['host'] ) ) {
+            return $url;
+        }
+
+        if ( self::hostAllowedByEps( (string) $parts['host'], $epsHost ) ) {
+            return $url;
+        }
+
+        $path  = $parts['path'] ?? '/';
+        $query = isset( $parts['query'] ) ? '?' . $parts['query'] : '';
+
+        Log::warning( 'EPS callback host rewritten to BaseUrl host.', [
+            'from' => $parts['host'],
+            'to'   => $epsHost,
+            'url'  => $url,
+        ] );
+
+        return 'https://' . $epsHost . $path . $query;
+    }
+
+    private static function epsRegisteredHost(): string
+    {
+        $base = trim( (string) config( 'services.eps.base_url', 'https://affsell.com' ) );
+        if ( $base !== '' && ! preg_match( '#^https?://#i', $base ) ) {
+            $base = 'https://' . ltrim( $base, '/' );
+        }
+
+        return strtolower( (string) ( parse_url( $base, PHP_URL_HOST ) ?: 'affsell.com' ) );
+    }
+
+    private static function hostAllowedByEps( string $host, string $epsBaseHost ): bool
+    {
+        $host        = strtolower( $host );
+        $epsBaseHost = strtolower( $epsBaseHost );
+
+        return $host === $epsBaseHost || str_ends_with( $host, '.' . $epsBaseHost );
+    }
+
+    /**
+     * Real Laravel API origin (mdperves.info) — used by recovery / docs, not browser EPS return.
      */
     private static function epsLaravelPublicBase(): string
     {

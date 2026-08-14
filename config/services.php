@@ -41,10 +41,10 @@ return [
 
     'eps' => [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
-        // MUST match EPS merchant portal BaseUrl AND be the Laravel host (not the SPA).
-        // Production: https://mdperves.info  — NOT https://affsell.com (Next.js SPA).
-        'base_url'            => env( 'EPS_BASE_URL', 'https://mdperves.info' ),
-        // Laravel API origin used for success/fail/cancel callback URLs.
+        // MUST match EPS merchant portal BaseUrl exactly (currently affsell.com).
+        'base_url'            => env( 'EPS_BASE_URL', 'https://affsell.com' ),
+        // Real Laravel API (used by admin recovery / auto-complete). Not used as EPS return host
+        // unless it is under base_url (e.g. api.affsell.com).
         'api_url'             => env( 'EPS_API_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
         'merchant_id'         => env( 'EPS_MERCHANT_ID' ),
         'store_id'            => env( 'EPS_STORE_ID' ),
