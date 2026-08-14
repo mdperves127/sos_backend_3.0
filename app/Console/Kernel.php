@@ -16,7 +16,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('command:low-stock')->everyMinute();
+        $schedule->command( 'command:low-stock' )->everyMinute();
+        // Credit EPS payments even if the browser return URL hit the SPA 404.
+        $schedule->command( 'eps:complete-pending' )->everyMinute()->withoutOverlapping();
     }
 
     /**

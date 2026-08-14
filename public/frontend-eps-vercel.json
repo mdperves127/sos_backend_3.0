@@ -1,14 +1,20 @@
 {
-  "redirects": [
+  "rewrites": [
+    {
+      "source": "/api/public/eps/:path*",
+      "destination": "https://mdperves.info/api/public/eps/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://mdperves.info/api/:path*"
+    },
     {
       "source": "/eps-return.html",
-      "destination": "https://mdperves.info/api/public/eps/complete",
-      "permanent": false
+      "destination": "https://mdperves.info/api/public/eps/complete"
     },
     {
       "source": "/eps-return",
-      "destination": "https://mdperves.info/api/public/eps/complete",
-      "permanent": false
+      "destination": "https://mdperves.info/api/public/eps/complete"
     }
   ]
 }

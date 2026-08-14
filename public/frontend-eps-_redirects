@@ -1,4 +1,6 @@
-# Drop this file into the FRONTEND site root (affsell.com) as `_redirects`
-# Netlify / Cloudflare Pages style — preserves query string (?Status=Success&MerchantTransactionId=...)
-/eps-return.html  https://mdperves.info/api/public/eps/complete  302
-/eps-return       https://mdperves.info/api/public/eps/complete  302
+# Drop into FRONTEND site root (affsell.com) as `_redirects`
+# Netlify / Cloudflare Pages — query string is preserved
+/api/public/eps/*  https://mdperves.info/api/public/eps/:splat  200
+/api/*             https://mdperves.info/api/:splat  200
+/eps-return.html   https://mdperves.info/api/public/eps/complete  302
+/eps-return        https://mdperves.info/api/public/eps/complete  302

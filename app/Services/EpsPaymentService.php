@@ -166,6 +166,20 @@ class EpsPaymentService
 
     public static function paymentSuccessUrl( string $callbackPath ): string
     {
+        // Central PaymentStore flows — complete on Laravel API host, then redirect to tenant dashboard.
+        $centralStoreCallbacks = [
+            'recharge-success-for-us' => 'recharge',
+            'recharge-success'        => 'recharge',
+            'subscription-success'    => 'subscription',
+            'renew-success'           => 'renew',
+        ];
+
+        if ( isset( $centralStoreCallbacks[$callbackPath] ) ) {
+            $tenantId = ( function_exists( 'tenant' ) && tenant() ) ? (string) tenant( 'id' ) : null;
+
+            return self::publicCompleteUrl( $centralStoreCallbacks[$callbackPath], $tenantId );
+        }
+
         if ( function_exists( 'tenant' ) && tenant() ) {
             return self::tenantCallbackUrl( $callbackPath );
         }
@@ -174,33 +188,85 @@ class EpsPaymentService
     }
 
     /**
-     * Central (non-tenant) callbacks — Laravel API host.
-     * Prefer a host under the EPS BaseUrl (*.affsell.com) when configured.
+     * Always return to the real Laravel API (EPS_API_URL / APP_URL).
+     * Never use *.affsell.com — that host is the Next.js SPA and returns 404,
+     * so balance is never credited.
+     *
+     * EPS merchant portal BaseUrl MUST match this host (e.g. mdperves.info).
      */
-    public static function centralCallbackUrl( string $path ): string
+    public static function publicCompleteUrl( string $callback, ?string $tenantId = null ): string
     {
-        $base = self::epsLaravelPublicBase();
+        $query = array_filter( [
+            'callback' => $callback,
+            'tenant'   => $tenantId,
+        ], fn ( $value ) => $value !== null && $value !== '' );
 
-        return rtrim( $base, '/' ) . '/api/user/aaparpay/' . ltrim( $path, '/' );
+        return rtrim( self::epsLaravelPublicBase(), '/' )
+            . '/api/public/eps/complete?' . http_build_query( $query );
     }
 
     /**
-     * Tenant callbacks — same pattern as the original working flow:
-     * https://{tenant-domain}/api/aaparpay/{path}
-     *
-     * Uses the tenant's affsell.com subdomain (or custom domain only if it
-     * ends with the EPS BaseUrl host) so EPS domain check passes and Laravel
-     * tenancy initializes by domain.
+     * Central (non-tenant) callbacks on Laravel API host.
+     */
+    public static function centralCallbackUrl( string $path ): string
+    {
+        $mapped = [
+            'recharge-success'     => 'recharge',
+            'subscription-success' => 'subscription',
+            'renew-success'        => 'renew',
+        ];
+
+        if ( isset( $mapped[$path] ) ) {
+            return self::publicCompleteUrl( $mapped[$path] );
+        }
+
+        return rtrim( self::epsLaravelPublicBase(), '/' ) . '/api/user/aaparpay/' . ltrim( $path, '/' );
+    }
+
+    /**
+     * Tenant callbacks that need tenant DB (e.g. product checkout).
+     * Uses Laravel API host + /api/eps/{tenant}/... so SPA hosts are never used.
      */
     public static function tenantCallbackUrl( string $path ): string
     {
-        $host = self::tenantCallbackHost();
+        $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant( 'id' ) : null;
 
-        return 'https://' . $host . '/api/aaparpay/' . ltrim( $path, '/' );
+        $mapped = [
+            'recharge-success-for-us' => 'recharge',
+            'recharge-success'        => 'recharge',
+            'subscription-success'    => 'subscription',
+            'renew-success'           => 'renew',
+        ];
+
+        if ( isset( $mapped[$path] ) ) {
+            return self::publicCompleteUrl( $mapped[$path], $tenantId );
+        }
+
+        if ( ! $tenantId ) {
+            return self::centralCallbackUrl( $path );
+        }
+
+        return rtrim( self::epsLaravelPublicBase(), '/' )
+            . '/api/eps/' . rawurlencode( $tenantId )
+            . '/aaparpay/' . ltrim( $path, '/' );
     }
 
     private static function callbackUrlsFromSuccess( string $successUrl ): array
     {
+        $tenantId = null;
+        if ( preg_match( '#[?&]tenant=([^&]+)#', $successUrl, $m ) ) {
+            $tenantId = urldecode( $m[1] );
+        } elseif ( preg_match( '#/api/eps/([^/]+)/aaparpay/#', $successUrl, $m ) ) {
+            $tenantId = urldecode( $m[1] );
+        }
+
+        if ( str_contains( $successUrl, '/api/public/eps/complete' ) ) {
+            return [
+                self::publicCompleteUrl( 'fail', $tenantId ),
+                self::publicCompleteUrl( 'cancel', $tenantId ),
+            ];
+        }
+
         if ( str_contains( $successUrl, '/api/user/aaparpay/' ) ) {
             return [
                 self::centralCallbackUrl( 'fail' ),
@@ -208,64 +274,19 @@ class EpsPaymentService
             ];
         }
 
+        if ( preg_match( '#(/api/eps/[^/]+/aaparpay)/#', $successUrl, $m ) ) {
+            $base = self::epsLaravelPublicBase() . $m[1];
+
+            return [ $base . '/fail', $base . '/cancel' ];
+        }
+
         $base = preg_replace( '#/[^/]+$#', '', $successUrl );
 
-        return [
-            $base . '/fail',
-            $base . '/cancel',
-        ];
+        return [ $base . '/fail', $base . '/cancel' ];
     }
 
     /**
-     * Resolve the host Laravel should receive EPS redirects on for this tenant.
-     */
-    private static function tenantCallbackHost(): string
-    {
-        $epsBaseHost = self::epsRegisteredHost(); // affsell.com
-        $tenant      = function_exists( 'tenant' ) ? tenant() : null;
-
-        if ( $tenant ) {
-            $domain = $tenant->domains()->orderBy( 'id' )->value( 'domain' );
-
-            // Prefer *.affsell.com subdomain so EPS BaseUrl check passes.
-            if ( $domain && self::hostAllowedByEps( $domain, $epsBaseHost ) ) {
-                return $domain;
-            }
-
-            // Custom domain not under affsell.com → force tenantId.affsell.com
-            $tenantKey = (string) $tenant->getTenantKey();
-
-            return $tenantKey . '.' . $epsBaseHost;
-        }
-
-        $requestHost = request()->getHost();
-        if ( $requestHost && self::hostAllowedByEps( $requestHost, $epsBaseHost ) ) {
-            return $requestHost;
-        }
-
-        return $epsBaseHost;
-    }
-
-    private static function epsRegisteredHost(): string
-    {
-        $base = trim( (string) config( 'services.eps.base_url', 'https://affsell.com' ) );
-        if ( $base !== '' && ! preg_match( '#^https?://#i', $base ) ) {
-            $base = 'https://' . ltrim( $base, '/' );
-        }
-
-        return parse_url( $base, PHP_URL_HOST ) ?: 'affsell.com';
-    }
-
-    private static function hostAllowedByEps( string $host, string $epsBaseHost ): bool
-    {
-        $host        = strtolower( $host );
-        $epsBaseHost = strtolower( $epsBaseHost );
-
-        return $host === $epsBaseHost || str_ends_with( $host, '.' . $epsBaseHost );
-    }
-
-    /**
-     * Public Laravel base for central callbacks.
+     * Real Laravel API origin (mdperves.info), never the SPA host.
      */
     private static function epsLaravelPublicBase(): string
     {
@@ -277,18 +298,7 @@ class EpsPaymentService
             $api = 'https://' . ltrim( $api, '/' );
         }
 
-        $host = parse_url( $api, PHP_URL_HOST );
-        $eps  = self::epsRegisteredHost();
-
-        // If APP_URL is mdperves.info, EPS will reject it — use apex affsell.com only when
-        // that host actually serves Laravel. Prefer keeping API host and requiring EPS BaseUrl
-        // update; for tenant flows we already use *.affsell.com.
-        if ( $host && self::hostAllowedByEps( $host, $eps ) ) {
-            return $api;
-        }
-
-        // Fallback: APP_URL as-is (central payments on API host).
-        return $api !== '' ? $api : ( 'https://' . $eps );
+        return $api !== '' ? $api : 'https://mdperves.info';
     }
 
     private static function getToken(): string
