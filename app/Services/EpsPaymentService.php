@@ -166,8 +166,7 @@ class EpsPaymentService
 
     public static function paymentSuccessUrl( string $callbackPath ): string
     {
-        // Prefer physical /eps-callback.php so frontend SPA catch-alls cannot 404 the return URL.
-        // Recharge / subscription / renew PaymentStore rows live on central DB.
+        // Browser returns to frontend static page (affsell.com), which calls Laravel API to credit.
         $centralMapped = match ( $callbackPath ) {
             'recharge-success-for-us', 'recharge-success' => 'recharge',
             'subscription-success'                       => 'subscription',
@@ -178,7 +177,7 @@ class EpsPaymentService
         if ( $centralMapped !== null ) {
             $tenantId = ( function_exists( 'tenant' ) && tenant() ) ? tenant( 'id' ) : null;
 
-            return self::epsPhysicalCallbackUrl( $centralMapped, $tenantId );
+            return self::epsFrontendReturnUrl( $centralMapped, $tenantId ? (string) $tenantId : null );
         }
 
         if ( function_exists( 'tenant' ) && tenant() ) {
@@ -189,29 +188,49 @@ class EpsPaymentService
     }
 
     /**
-     * Physical file callback on the EPS-registered domain (bypasses SPA routers).
+     * Frontend return page on the EPS-registered domain.
+     * Must be a real static file on the SPA host (public/eps-return.html).
      */
-    public static function epsPhysicalCallbackUrl( string $callback, ?string $tenantId = null ): string
+    public static function epsFrontendReturnUrl( string $callback, ?string $tenantId = null ): string
     {
+        $returnUrl = trim( (string) config( 'services.eps.return_url', 'https://affsell.com/eps-return.html' ) );
+        if ( $returnUrl === '' ) {
+            $returnUrl = self::epsCallbackBaseUrl() . '/eps-return.html';
+        }
+        if ( ! preg_match( '#^https?://#i', $returnUrl ) ) {
+            $returnUrl = 'https://' . ltrim( $returnUrl, '/' );
+        }
+
+        $apiUrl = rtrim( (string) ( config( 'services.eps.api_url' ) ?: config( 'app.url' ) ), '/' );
+
         $query = array_filter( [
             'callback' => $callback,
             'tenant'   => $tenantId,
+            'api'      => $apiUrl,
         ], fn ( $value ) => $value !== null && $value !== '' );
 
-        return self::epsCallbackBaseUrl() . '/eps-callback.php?' . http_build_query( $query );
+        $separator = str_contains( $returnUrl, '?' ) ? '&' : '?';
+
+        return $returnUrl . $separator . http_build_query( $query );
+    }
+
+    /** @deprecated use epsFrontendReturnUrl */
+    public static function epsPhysicalCallbackUrl( string $callback, ?string $tenantId = null ): string
+    {
+        return self::epsFrontendReturnUrl( $callback, $tenantId );
     }
 
     public static function centralCallbackUrl( string $path ): string
     {
-        // Keep API routes as fallback; primary live callbacks use eps-callback.php
-        if ( in_array( $path, ['recharge-success', 'subscription-success', 'renew-success'], true ) ) {
+        if ( in_array( $path, ['recharge-success', 'subscription-success', 'renew-success', 'fail', 'cancel'], true ) ) {
             $mapped = match ( $path ) {
                 'recharge-success'     => 'recharge',
                 'subscription-success' => 'subscription',
                 'renew-success'        => 'renew',
+                default                => $path,
             };
 
-            return self::epsPhysicalCallbackUrl( $mapped );
+            return self::epsFrontendReturnUrl( $mapped );
         }
 
         return self::epsCallbackBaseUrl() . '/api/user/aaparpay/' . ltrim( $path, '/' );
@@ -225,18 +244,18 @@ class EpsPaymentService
             'recharge-success-for-us', 'recharge-success' => 'recharge',
             'subscription-success'                       => 'subscription',
             'renew-success'                              => 'renew',
+            'fail', 'cancel'                             => $path,
             default                                      => null,
         };
 
         if ( $centralMapped !== null ) {
-            return self::epsPhysicalCallbackUrl( $centralMapped, $tenantId ? (string) $tenantId : null );
+            return self::epsFrontendReturnUrl( $centralMapped, $tenantId ? (string) $tenantId : null );
         }
 
-        // Product checkout etc. still need tenant DB context via path tenancy.
+        // Product checkout etc. — also use frontend return + public API when possible.
+        // Keep path tenancy API as secondary.
         if ( $tenantId ) {
-            return self::epsCallbackBaseUrl()
-                . '/api/eps/' . rawurlencode( (string) $tenantId )
-                . '/aaparpay/' . ltrim( $path, '/' );
+            return self::epsFrontendReturnUrl( $path, (string) $tenantId );
         }
 
         return self::ensureEpsCompatibleCallbackUrl(
@@ -246,14 +265,15 @@ class EpsPaymentService
 
     private static function callbackUrlsFromSuccess( string $successUrl ): array
     {
-        if ( str_contains( $successUrl, 'eps-callback.php' ) ) {
+        $tenantId = null;
+        if ( str_contains( $successUrl, 'eps-return.html' ) || str_contains( $successUrl, 'eps-callback.php' ) ) {
             $parts = parse_url( $successUrl );
             parse_str( $parts['query'] ?? '', $query );
             $tenantId = $query['tenant'] ?? null;
 
             return [
-                self::epsPhysicalCallbackUrl( 'fail', $tenantId ),
-                self::epsPhysicalCallbackUrl( 'cancel', $tenantId ),
+                self::epsFrontendReturnUrl( 'fail', $tenantId ),
+                self::epsFrontendReturnUrl( 'cancel', $tenantId ),
             ];
         }
 

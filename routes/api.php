@@ -9,6 +9,7 @@ Route::get( '/test-api', function () {
 } );
 
 use App\Http\Controllers\AamarpayController;
+use App\Http\Controllers\PublicEpsController;
 use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
@@ -49,6 +50,9 @@ use App\Http\Controllers\TenantVerificationController;
 use App\Http\Controllers\Tenant\CustomDomainController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\HistoryController;
+
+// Public EPS return completer (no auth) — called by frontend eps-return.html after bank redirect
+Route::match( ['get', 'post'], 'public/eps/complete', [PublicEpsController::class, 'complete'] );
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );

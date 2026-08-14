@@ -43,6 +43,10 @@ return [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
         // Must match the BaseUrl registered in the EPS merchant portal (e.g. https://affsell.com)
         'base_url'            => env( 'EPS_BASE_URL', env( 'MAIN_FRONTEND_DOMAIN_URL', 'https://affsell.com' ) ),
+        // Static HTML on the FRONTEND host (affsell.com). Upload public/eps-return.html there.
+        'return_url'          => env( 'EPS_RETURN_URL', 'https://affsell.com/eps-return.html' ),
+        // Laravel API origin used by eps-return.html (usually APP_URL)
+        'api_url'             => env( 'EPS_API_URL', env( 'APP_URL' ) ),
         'merchant_id'         => env('EPS_MERCHANT_ID'),
         'store_id'            => env('EPS_STORE_ID'),
         'username'            => env('EPS_USERNAME'),
