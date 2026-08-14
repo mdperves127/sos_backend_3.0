@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserRegisterChartController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
 use App\Http\Controllers\API\Admin\AssignController;
 use App\Http\Controllers\API\Admin\BankController;
+use App\Http\Controllers\API\Admin\BackupController;
 use App\Http\Controllers\API\Admin\CampaignCategoryController;
 use App\Http\Controllers\API\Admin\CompanionController;
 use App\Http\Controllers\API\Admin\ContactController;
@@ -375,6 +376,9 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'vendor/advertise/{vendor_id}', [AdminNoteController::class, 'vendorAdvertise'] );
         Route::get( 'vendor/service/order/{vendor_id}', [AdminNoteController::class, 'vendorServiceOrder'] );
         Route::get( 'vendor/payment/history/{vendor_id}', [AdminNoteController::class, 'vendorPaymentHistory'] );
+
+        // Full tenant DB + assets backup — streams zip download (not stored)
+        Route::match( ['get', 'post'], 'backup', [BackupController::class, 'download'] );
     } );
 
 }); // End of admin middleware group
