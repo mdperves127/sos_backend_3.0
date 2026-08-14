@@ -26,6 +26,10 @@
       var callback = params.get('callback') || params.get('type') || '';
       var tenant = params.get('tenant') || '';
       var apiBase = (params.get('api') || '').replace(/\/$/, '');
+      // If api already ends with /api, don't append another /api
+      if (/\/api$/i.test(apiBase)) {
+        apiBase = apiBase.replace(/\/api$/i, '');
+      }
       var txn = params.get('MerchantTransactionId')
         || params.get('merchantTransactionId')
         || params.get('mer_txnid')
@@ -62,7 +66,7 @@
       }
 
       if (!apiBase) {
-        fail('Missing API base URL.');
+        fail('Missing API base URL. Set EPS_API_URL=https://mdperves.info in backend .env');
         return;
       }
 
@@ -71,7 +75,8 @@
         callback: callback,
         tenant: tenant,
         Status: params.get('Status') || params.get('status') || 'Success',
-        EPSTransactionId: params.get('EPSTransactionId') || ''
+        EPSTransactionId: params.get('EPSTransactionId') || '',
+        format: 'json'
       }).toString();
 
       fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
