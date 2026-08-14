@@ -68,6 +68,14 @@ class TenantMiddleware
         // ✅ 9️⃣ Set the user in Auth facade so Auth::user() works
         Auth::setUser($user);
 
+        // Credit EPS recharge/renew that returned to SPA dashboard (message only, no Laravel hit).
+        try {
+            app( \App\Services\EpsPaymentCompletionService::class )
+                ->completePendingForTenant( (string) tenant( 'id' ) );
+        } catch ( \Throwable $e ) {
+            // Never block authenticated tenant APIs.
+        }
+
         return $next($request);
     }
 }

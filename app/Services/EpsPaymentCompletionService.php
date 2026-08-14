@@ -52,26 +52,43 @@ class EpsPaymentCompletionService
 
     /**
      * Credit any successful pending EPS payments for this tenant.
-     * Safe to call on dashboard/profile requests (locked + short TTL).
+     * Prefer MerchantTransactionId from the current request or Referer
+     * (EPS appends it to the dashboard return URL).
      */
     public function completePendingForTenant( ?string $tenantId, int $hours = 12 ): int
     {
+        $completed = 0;
+        $trxFromBrowser = $this->resolveIncomingTransactionId();
+
+        if ( $trxFromBrowser ) {
+            try {
+                $hint = request( 'eps_callback' )
+                    ?: request( 'callback' )
+                    ?: $this->callbackHintFromReferer();
+
+                $this->completeByTransactionId( (string) $trxFromBrowser, $hint );
+                $completed++;
+            } catch ( Throwable $e ) {
+                Log::warning( 'EPS referer/request complete failed', [
+                    'trx'    => $trxFromBrowser,
+                    'tenant' => $tenantId,
+                    'error'  => $e->getMessage(),
+                ] );
+            }
+        }
+
         if ( ! $tenantId ) {
-            return 0;
+            return $completed;
         }
 
         $cacheKey = 'eps-pending-tenant-' . $tenantId;
         if ( cache()->get( $cacheKey ) ) {
-            return 0;
+            return $completed;
         }
-        cache()->put( $cacheKey, 1, now()->addSeconds( 20 ) );
+        cache()->put( $cacheKey, 1, now()->addSeconds( 15 ) );
 
         $payments = PaymentStore::on( 'mysql' )
             ->where( 'status', 'pending' )
-            ->where( function ( $q ) {
-                $q->where( 'payment_gateway', 'aamarpay' )
-                    ->orWhereNull( 'payment_gateway' );
-            } )
             ->whereIn( 'payment_type', [
                 'recharge',
                 'subscription',
@@ -83,6 +100,7 @@ class EpsPaymentCompletionService
             ] )
             ->where( 'created_at', '>=', now()->subHours( max( 1, $hours ) ) )
             ->orderBy( 'id' )
+            ->limit( 20 )
             ->get()
             ->filter( function ( PaymentStore $payment ) use ( $tenantId ) {
                 $info = is_array( $payment->info ) ? $payment->info : [];
@@ -90,9 +108,11 @@ class EpsPaymentCompletionService
                 return (string) ( $info['tenant_id'] ?? '' ) === (string) $tenantId;
             } );
 
-        $completed = 0;
-
         foreach ( $payments as $payment ) {
+            if ( $trxFromBrowser && (string) $payment->trxid === (string) $trxFromBrowser ) {
+                continue;
+            }
+
             try {
                 $verification = EpsPaymentService::verifyTransaction( (string) $payment->trxid );
                 if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
@@ -106,14 +126,64 @@ class EpsPaymentCompletionService
                 $completed++;
             } catch ( Throwable $e ) {
                 Log::warning( 'EPS pending tenant complete skipped', [
-                    'trx'      => $payment->trxid,
-                    'tenant'   => $tenantId,
-                    'error'    => $e->getMessage(),
+                    'trx'    => $payment->trxid,
+                    'tenant' => $tenantId,
+                    'error'  => $e->getMessage(),
                 ] );
             }
         }
 
         return $completed;
+    }
+
+    private function resolveIncomingTransactionId(): ?string
+    {
+        $direct = EpsPaymentService::resolveTransactionId()
+            ?: request( 'merchant_transaction_id' );
+
+        if ( $direct ) {
+            return (string) $direct;
+        }
+
+        $referer = (string) ( request()->headers->get( 'Referer' )
+            ?: request()->headers->get( 'Referrer' )
+            ?: '' );
+
+        if ( $referer === '' ) {
+            return null;
+        }
+
+        $query = parse_url( $referer, PHP_URL_QUERY );
+        if ( ! is_string( $query ) || $query === '' ) {
+            return null;
+        }
+
+        parse_str( $query, $params );
+
+        return $params['MerchantTransactionId']
+            ?? $params['merchantTransactionId']
+            ?? $params['mer_txnid']
+            ?? null;
+    }
+
+    private function callbackHintFromReferer(): ?string
+    {
+        $referer = (string) ( request()->headers->get( 'Referer' )
+            ?: request()->headers->get( 'Referrer' )
+            ?: '' );
+
+        if ( $referer === '' ) {
+            return null;
+        }
+
+        $query = parse_url( $referer, PHP_URL_QUERY );
+        if ( ! is_string( $query ) || $query === '' ) {
+            return null;
+        }
+
+        parse_str( $query, $params );
+
+        return $params['eps_callback'] ?? $params['callback'] ?? null;
     }
 
     private function completeRecharge( PaymentStore $payment, array $verification ): string

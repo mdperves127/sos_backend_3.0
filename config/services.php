@@ -43,9 +43,11 @@ return [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
         // MUST match EPS merchant portal BaseUrl exactly (currently affsell.com).
         'base_url'            => env( 'EPS_BASE_URL', 'https://affsell.com' ),
-        // Real Laravel API (used by admin recovery / auto-complete). Not used as EPS return host
-        // unless it is under base_url (e.g. api.affsell.com).
+        // Real Laravel API (auto-complete / recovery).
         'api_url'             => env( 'EPS_API_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
+        // Optional: host under affsell.com that points to Laravel, e.g. pay.affsell.com
+        // If set, recharge/renew return here and credit immediately.
+        'callback_host'       => env( 'EPS_CALLBACK_HOST', '' ),
         'merchant_id'         => env( 'EPS_MERCHANT_ID' ),
         'store_id'            => env( 'EPS_STORE_ID' ),
         'username'            => env( 'EPS_USERNAME' ),

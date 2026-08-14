@@ -197,17 +197,29 @@ class EpsPaymentService
     public static function publicCompleteUrl( string $callback, ?string $tenantId = null ): string
     {
         $epsHost = self::epsRegisteredHost();
-        $query   = [ 'eps_callback' => $callback ];
+
+        // Preferred: dedicated host under affsell.com that points to Laravel
+        // (DNS: pay.affsell.com → same server as mdperves.info). Credits + redirects.
+        $callbackHost = trim( (string) config( 'services.eps.callback_host', '' ) );
+        if ( $callbackHost !== '' ) {
+            $query = array_filter( [
+                'callback' => $callback,
+                'tenant'   => $tenantId,
+            ], fn ( $value ) => $value !== null && $value !== '' );
+
+            return 'https://' . strtolower( $callbackHost )
+                . '/api/public/eps/complete?' . http_build_query( $query );
+        }
+
+        // Fallback: real SPA page (not /api 404). Message is optimistic;
+        // balance/membership is applied when tenant APIs load + eps:complete-pending.
+        $query = [ 'eps_callback' => $callback ];
 
         if ( in_array( $callback, [ 'fail', 'cancel' ], true ) ) {
             $query['message'] = $callback === 'cancel' ? 'Payment cancelled' : 'Payment failed';
         } else {
-            $query['message'] = match ( $callback ) {
-                'recharge'     => 'Recharge successful',
-                'subscription' => 'Subscription added successful',
-                'renew'        => 'Renew successful',
-                default        => 'Payment successful',
-            };
+            // Do not claim success until Laravel credits — dashboard auto-complete does that.
+            $query['message'] = 'Payment received — updating your account…';
         }
 
         if ( $tenantId ) {
