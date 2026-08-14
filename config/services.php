@@ -41,11 +41,11 @@ return [
 
     'eps' => [
         'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
-        // Must match the BaseUrl registered in the EPS merchant portal (e.g. https://affsell.com)
-        'base_url'            => env( 'EPS_BASE_URL', env( 'MAIN_FRONTEND_DOMAIN_URL', 'https://affsell.com' ) ),
-        // Static HTML on the FRONTEND host (affsell.com). Upload public/eps-return.html there.
-        'return_url'          => env( 'EPS_RETURN_URL', 'https://affsell.com/eps-return.html' ),
-        // Laravel API origin used by eps-return.html (usually APP_URL)
+        // MUST match the BaseUrl in EPS merchant portal AND be the Laravel API host
+        // Example for this project: https://mdperves.info  (NOT the SPA affsell.com)
+        'base_url'            => env( 'EPS_BASE_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
+        // Leave empty to send EPS redirects straight to Laravel /api/public/eps/complete
+        'return_url'          => env( 'EPS_RETURN_URL', '' ),
         'api_url'             => env( 'EPS_API_URL', env( 'APP_URL' ) ),
         'merchant_id'         => env('EPS_MERCHANT_ID'),
         'store_id'            => env('EPS_STORE_ID'),

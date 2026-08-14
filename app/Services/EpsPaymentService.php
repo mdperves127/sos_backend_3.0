@@ -166,153 +166,114 @@ class EpsPaymentService
 
     public static function paymentSuccessUrl( string $callbackPath ): string
     {
-        // Browser returns to frontend static page (affsell.com), which calls Laravel API to credit.
-        $centralMapped = match ( $callbackPath ) {
+        $mapped = match ( $callbackPath ) {
             'recharge-success-for-us', 'recharge-success' => 'recharge',
             'subscription-success'                       => 'subscription',
             'renew-success'                              => 'renew',
-            default                                      => null,
+            default                                      => $callbackPath,
         };
 
-        if ( $centralMapped !== null ) {
-            $tenantId = ( function_exists( 'tenant' ) && tenant() ) ? tenant( 'id' ) : null;
+        $tenantId = ( function_exists( 'tenant' ) && tenant() ) ? (string) tenant( 'id' ) : null;
 
-            return self::epsFrontendReturnUrl( $centralMapped, $tenantId ? (string) $tenantId : null );
-        }
-
-        if ( function_exists( 'tenant' ) && tenant() ) {
-            return self::tenantCallbackUrl( $callbackPath );
-        }
-
-        return self::centralCallbackUrl( $callbackPath );
+        return self::epsApiCompleteUrl( $mapped, $tenantId );
     }
 
     /**
-     * Frontend return page on the EPS-registered domain.
-     * Must be a real static file on the SPA host (public/eps-return.html).
+     * Laravel API origin without a trailing /api suffix.
      */
-    public static function epsFrontendReturnUrl( string $callback, ?string $tenantId = null ): string
+    public static function epsApiOrigin(): string
     {
-        $returnUrl = trim( (string) config( 'services.eps.return_url', 'https://affsell.com/eps-return.html' ) );
-        if ( $returnUrl === '' ) {
-            $returnUrl = self::epsCallbackBaseUrl() . '/eps-return.html';
-        }
-        if ( ! preg_match( '#^https?://#i', $returnUrl ) ) {
-            $returnUrl = 'https://' . ltrim( $returnUrl, '/' );
+        $origin = trim( (string) ( config( 'services.eps.api_url' ) ?: config( 'app.url' ) ?: '' ) );
+        if ( $origin === '' ) {
+            $origin = self::epsCallbackBaseUrl();
         }
 
-        $apiUrl = rtrim( (string) ( config( 'services.eps.api_url' ) ?: config( 'app.url' ) ), '/' );
+        $origin = rtrim( $origin, '/' );
+        $origin = preg_replace( '#/api$#i', '', $origin ) ?: $origin;
 
+        if ( $origin !== '' && ! preg_match( '#^https?://#i', $origin ) ) {
+            $origin = 'https://' . ltrim( $origin, '/' );
+        }
+
+        return rtrim( $origin, '/' );
+    }
+
+    /**
+     * Browser lands on Laravel, payment is credited, then user is redirected to dashboard.
+     * EPS merchant BaseUrl MUST be this API host (e.g. mdperves.info), not the SPA (affsell.com).
+     */
+    public static function epsApiCompleteUrl( string $callback, ?string $tenantId = null ): string
+    {
         $query = array_filter( [
             'callback' => $callback,
             'tenant'   => $tenantId,
-            'api'      => $apiUrl,
         ], fn ( $value ) => $value !== null && $value !== '' );
 
-        $separator = str_contains( $returnUrl, '?' ) ? '&' : '?';
-
-        return $returnUrl . $separator . http_build_query( $query );
+        return self::epsApiOrigin() . '/api/public/eps/complete?' . http_build_query( $query );
     }
 
-    /** @deprecated use epsFrontendReturnUrl */
+    public static function epsFrontendReturnUrl( string $callback, ?string $tenantId = null ): string
+    {
+        return self::epsApiCompleteUrl( $callback, $tenantId );
+    }
+
     public static function epsPhysicalCallbackUrl( string $callback, ?string $tenantId = null ): string
     {
-        return self::epsFrontendReturnUrl( $callback, $tenantId );
+        return self::epsApiCompleteUrl( $callback, $tenantId );
     }
 
     public static function centralCallbackUrl( string $path ): string
     {
-        if ( in_array( $path, ['recharge-success', 'subscription-success', 'renew-success', 'fail', 'cancel'], true ) ) {
-            $mapped = match ( $path ) {
-                'recharge-success'     => 'recharge',
-                'subscription-success' => 'subscription',
-                'renew-success'        => 'renew',
-                default                => $path,
-            };
+        $mapped = match ( $path ) {
+            'recharge-success'     => 'recharge',
+            'subscription-success' => 'subscription',
+            'renew-success'        => 'renew',
+            default                => $path,
+        };
 
-            return self::epsFrontendReturnUrl( $mapped );
-        }
-
-        return self::epsCallbackBaseUrl() . '/api/user/aaparpay/' . ltrim( $path, '/' );
+        return self::epsApiCompleteUrl( $mapped );
     }
 
     public static function tenantCallbackUrl( string $path ): string
     {
         $tenantId = function_exists( 'tenant' ) ? tenant( 'id' ) : null;
 
-        $centralMapped = match ( $path ) {
+        $mapped = match ( $path ) {
             'recharge-success-for-us', 'recharge-success' => 'recharge',
             'subscription-success'                       => 'subscription',
             'renew-success'                              => 'renew',
-            'fail', 'cancel'                             => $path,
-            default                                      => null,
+            default                                      => $path,
         };
 
-        if ( $centralMapped !== null ) {
-            return self::epsFrontendReturnUrl( $centralMapped, $tenantId ? (string) $tenantId : null );
-        }
-
-        // Product checkout etc. — also use frontend return + public API when possible.
-        // Keep path tenancy API as secondary.
-        if ( $tenantId ) {
-            return self::epsFrontendReturnUrl( $path, (string) $tenantId );
-        }
-
-        return self::ensureEpsCompatibleCallbackUrl(
-            rtrim( request()->getSchemeAndHttpHost(), '/' ) . '/api/aaparpay/' . ltrim( $path, '/' )
-        );
+        return self::epsApiCompleteUrl( $mapped, $tenantId ? (string) $tenantId : null );
     }
 
     private static function callbackUrlsFromSuccess( string $successUrl ): array
     {
-        $tenantId = null;
-        if ( str_contains( $successUrl, 'eps-return.html' ) || str_contains( $successUrl, 'eps-callback.php' ) ) {
-            $parts = parse_url( $successUrl );
-            parse_str( $parts['query'] ?? '', $query );
-            $tenantId = $query['tenant'] ?? null;
-
-            return [
-                self::epsFrontendReturnUrl( 'fail', $tenantId ),
-                self::epsFrontendReturnUrl( 'cancel', $tenantId ),
-            ];
-        }
-
-        if ( str_contains( $successUrl, '/api/user/aaparpay/' ) ) {
-            return [
-                self::centralCallbackUrl( 'fail' ),
-                self::centralCallbackUrl( 'cancel' ),
-            ];
-        }
-
-        if ( preg_match( '#/api/eps/([^/]+)/aaparpay/#', $successUrl, $matches ) ) {
-            $base = self::epsCallbackBaseUrl() . '/api/eps/' . $matches[1] . '/aaparpay';
-
-            return [
-                $base . '/fail',
-                $base . '/cancel',
-            ];
-        }
-
-        $base = preg_replace( '#/[^/]+$#', '', $successUrl );
+        $parts = parse_url( $successUrl );
+        parse_str( $parts['query'] ?? '', $query );
+        $tenantId = $query['tenant'] ?? null;
 
         return [
-            self::ensureEpsCompatibleCallbackUrl( $base . '/fail' ),
-            self::ensureEpsCompatibleCallbackUrl( $base . '/cancel' ),
+            self::epsApiCompleteUrl( 'fail', $tenantId ),
+            self::epsApiCompleteUrl( 'cancel', $tenantId ),
         ];
     }
 
     /**
-     * Host registered with EPS (e.g. https://affsell.com). Callbacks must use this domain.
+     * Host used for EPS callback URLs — must match EPS merchant BaseUrl.
      */
     private static function epsCallbackBaseUrl(): string
     {
         $configured = trim( (string) config( 'services.eps.base_url' ) );
 
         if ( $configured === '' ) {
-            $configured = trim( (string) ( config( 'app.maindomain' ) ?: config( 'app.url' ) ) );
+            $configured = trim( (string) ( config( 'services.eps.api_url' ) ?: config( 'app.url' ) ) );
         }
 
-        // Allow domain-only values from EPS portal copy/paste (affsell.com)
+        $configured = rtrim( $configured, '/' );
+        $configured = preg_replace( '#/api$#i', '', $configured ) ?: $configured;
+
         if ( $configured !== '' && ! preg_match( '#^https?://#i', $configured ) ) {
             $configured = 'https://' . ltrim( $configured, '/' );
         }
@@ -321,7 +282,7 @@ class EpsPaymentService
     }
 
     /**
-     * Rewrite callback host to the EPS-registered BaseUrl; keep tenant path when needed.
+     * Keep callback URLs on the Laravel API host (never the SPA frontend).
      */
     private static function ensureEpsCompatibleCallbackUrl( string $url ): string
     {
@@ -331,7 +292,11 @@ class EpsPaymentService
             return $url;
         }
 
-        // Tenant context still using old host-based /api/aaparpay paths → convert.
+        // Already pointing at the public completer — do not rewrite to SPA host.
+        if ( str_contains( $url, '/api/public/eps/complete' ) ) {
+            return $url;
+        }
+
         if (
             function_exists( 'tenant' )
             && tenant( 'id' )
@@ -341,7 +306,7 @@ class EpsPaymentService
             return self::tenantCallbackUrl( $matches[1] );
         }
 
-        $base      = self::epsCallbackBaseUrl();
+        $base      = self::epsApiOrigin();
         $baseParts = parse_url( $base ) ?: [];
         $parts     = parse_url( $url ) ?: [];
 

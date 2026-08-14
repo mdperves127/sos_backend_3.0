@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helper\RedirectHelper;
 use App\Services\EpsPaymentCompletionService;
 use App\Services\EpsPaymentService;
 use Illuminate\Http\Request;
@@ -11,8 +12,8 @@ use Throwable;
 class PublicEpsController extends Controller
 {
     /**
-     * Public EPS return completer (called from eps-return.html on the frontend domain).
-     * Always verifies the transaction with EPS before crediting.
+     * EPS browser return URL.
+     * Credits recharge / subscription / renew after verifying with EPS, then redirects to dashboard.
      */
     public function complete( Request $request )
     {
@@ -22,17 +23,20 @@ class PublicEpsController extends Controller
 
         $callback = (string) ( $request->query( 'callback', $request->input( 'callback', '' ) ) );
         $status   = strtolower( (string) ( $request->query( 'Status', $request->query( 'status', '' ) ) ) );
+        $tenantId = $request->query( 'tenant', $request->input( 'tenant' ) );
+
+        $dashboard = $this->dashboardUrl( $tenantId );
 
         if ( in_array( $callback, ['fail', 'cancel'], true ) || in_array( $status, ['fail', 'failed', 'cancel', 'cancelled'], true ) ) {
             $message = in_array( $callback, ['cancel'], true ) || str_contains( $status, 'cancel' )
                 ? 'Payment cancelled'
                 : 'Payment failed';
 
-            return $this->finish( $request, false, $message, rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/dashboard?message=' . urlencode( $message ) );
+            return redirect()->away( $dashboard . '?message=' . urlencode( $message ) );
         }
 
         if ( ! $merchantTransactionId ) {
-            return $this->finish( $request, false, 'Missing MerchantTransactionId.', null, 422 );
+            return redirect()->away( $dashboard . '?message=' . urlencode( 'Missing MerchantTransactionId' ) );
         }
 
         try {
@@ -44,35 +48,18 @@ class PublicEpsController extends Controller
                 'error' => $e->getMessage(),
             ] );
 
-            return $this->finish( $request, false, $e->getMessage(), null, 422 );
+            return redirect()->away( $dashboard . '?message=' . urlencode( $e->getMessage() ) );
         }
 
-        return $this->finish( $request, true, 'Payment completed successfully.', $redirectUrl );
+        return redirect()->away( $redirectUrl );
     }
 
-    private function finish( Request $request, bool $ok, string $message, ?string $redirectUrl, int $status = 200 )
+    private function dashboardUrl( mixed $tenantId ): string
     {
-        $wantsJson = $request->expectsJson()
-            || $request->ajax()
-            || str_contains( (string) $request->header( 'Accept' ), 'application/json' )
-            || $request->query( 'format' ) === 'json';
-
-        if ( $wantsJson ) {
-            return response()->json( [
-                'status'  => $ok ? 200 : $status,
-                'message' => $message,
-                'data'    => [
-                    'redirect_url' => $redirectUrl,
-                ],
-            ], $ok ? 200 : $status );
+        if ( $tenantId ) {
+            return rtrim( RedirectHelper::getTenantRedirectUrl( (string) $tenantId ), '/' ) . '/dashboard';
         }
 
-        if ( $redirectUrl ) {
-            return redirect()->away( $redirectUrl );
-        }
-
-        return redirect()->away(
-            rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/dashboard?message=' . urlencode( $message )
-        );
+        return rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/dashboard';
     }
 }
