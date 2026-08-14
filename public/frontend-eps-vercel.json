@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/eps-return.html",
+      "destination": "https://mdperves.info/api/public/eps/complete",
+      "permanent": false
+    },
+    {
+      "source": "/eps-return",
+      "destination": "https://mdperves.info/api/public/eps/complete",
+      "permanent": false
+    }
+  ]
+}

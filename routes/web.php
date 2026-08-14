@@ -56,6 +56,10 @@ Route::get('/', function () {
     return "API for SOS projec :)";
 });
 
+// EPS browser return (also used when frontend proxies /eps-return.html here)
+Route::match( ['get', 'post'], 'eps-return', [\App\Http\Controllers\PublicEpsController::class, 'complete'] );
+Route::match( ['get', 'post'], 'eps-return.html', [\App\Http\Controllers\PublicEpsController::class, 'complete'] );
+
 // Auth::routes();
 
 

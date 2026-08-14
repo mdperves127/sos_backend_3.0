@@ -13,8 +13,8 @@ class PublicEpsController extends Controller
 {
     /**
      * EPS return completer.
-     * - Browser hit (no JSON Accept): credit + redirect to dashboard
-     * - fetch() from eps-return.html: credit + JSON { redirect_url }
+     * Browser lands here (directly or via affsell.com → API redirect), payment is credited,
+     * then user is sent to tenant subdomain/custom-domain /dashboard.
      */
     public function complete( Request $request )
     {
@@ -36,7 +36,13 @@ class PublicEpsController extends Controller
         }
 
         if ( ! $merchantTransactionId ) {
-            return $this->respond( $request, false, 'Missing MerchantTransactionId', $dashboard . '?message=' . urlencode( 'Missing MerchantTransactionId' ), 422 );
+            return $this->respond(
+                $request,
+                false,
+                'Missing MerchantTransactionId',
+                $dashboard . '?message=' . urlencode( 'Missing MerchantTransactionId' ),
+                422
+            );
         }
 
         try {
@@ -48,7 +54,13 @@ class PublicEpsController extends Controller
                 'error' => $e->getMessage(),
             ] );
 
-            return $this->respond( $request, false, $e->getMessage(), $dashboard . '?message=' . urlencode( $e->getMessage() ), 422 );
+            return $this->respond(
+                $request,
+                false,
+                $e->getMessage(),
+                $dashboard . '?message=' . urlencode( $e->getMessage() ),
+                422
+            );
         }
 
         return $this->respond( $request, true, 'Payment completed successfully.', $redirectUrl );
@@ -56,10 +68,13 @@ class PublicEpsController extends Controller
 
     private function respond( Request $request, bool $ok, string $message, ?string $redirectUrl, int $status = 200 )
     {
-        $wantsJson = $request->expectsJson()
-            || $request->ajax()
-            || str_contains( (string) $request->header( 'Accept' ), 'application/json' )
-            || $request->query( 'format' ) === 'json';
+        $wantsJson = $request->query( 'format' ) === 'json'
+            || ( $request->expectsJson() && ! $request->isMethod( 'GET' ) );
+
+        // Prefer browser redirect so user lands on tenant dashboard.
+        if ( ! $wantsJson && $redirectUrl ) {
+            return redirect()->away( $redirectUrl );
+        }
 
         if ( $wantsJson ) {
             return response()->json( [

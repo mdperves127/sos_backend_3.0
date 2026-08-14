@@ -5,95 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Completing payment…</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f6f7fb; display: flex; min-height: 100vh; align-items: center; justify-content: center; margin: 0; }
-    .card { background: #fff; padding: 28px 32px; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.08); text-align: center; max-width: 420px; }
-    .spinner { width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top-color: #6d28d9; border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .err { color: #b91c1c; margin-top: 12px; font-size: 14px; }
+    body { font-family: system-ui, sans-serif; background: #f6f7fb; display: flex; min-height: 100vh; align-items: center; justify-content: center; margin: 0; color: #111; }
+    .card { background: #fff; padding: 28px 32px; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.08); text-align: center; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <h2 id="title">Completing your payment…</h2>
-    <p id="msg">Please wait. Do not close this window.</p>
-    <p class="err" id="err" hidden></p>
+    <h2>Completing your payment…</h2>
+    <p>Please wait. Do not close this window.</p>
   </div>
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
-      var status = String(params.get('Status') || params.get('status') || '').toLowerCase();
-      var callback = params.get('callback') || params.get('type') || '';
-      var tenant = params.get('tenant') || '';
-      var apiBase = (params.get('api') || '').replace(/\/$/, '');
-      // If api already ends with /api, don't append another /api
-      if (/\/api$/i.test(apiBase)) {
-        apiBase = apiBase.replace(/\/api$/i, '');
-      }
-      var txn = params.get('MerchantTransactionId')
-        || params.get('merchantTransactionId')
-        || params.get('mer_txnid')
-        || '';
-
-      var fallbackDash = (tenant ? ('https://' + tenant + '.affsell.com') : 'https://affsell.com') + '/dashboard';
-
-      function fail(message, redirect) {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('title').textContent = 'Payment issue';
-        document.getElementById('msg').textContent = message || 'Unable to complete payment.';
-        var err = document.getElementById('err');
-        err.hidden = false;
-        err.textContent = 'Redirecting…';
-        setTimeout(function () {
-          window.location.replace(redirect || (fallbackDash + '?message=' + encodeURIComponent(message || 'Payment failed')));
-        }, 1800);
+      var api = (params.get('api') || '').replace(/\/$/, '');
+      if (/\/api$/i.test(api)) {
+        api = api.replace(/\/api$/i, '');
       }
 
-      if (callback === 'fail' || callback === 'cancel' || ['fail', 'failed', 'cancel', 'cancelled'].indexOf(status) !== -1) {
-        var m = (callback === 'cancel' || status.indexOf('cancel') !== -1) ? 'Payment cancelled' : 'Payment failed';
-        window.location.replace(fallbackDash + '?message=' + encodeURIComponent(m));
-        return;
+      // Fallback if api param missing
+      if (!api) {
+        api = 'https://mdperves.info';
       }
 
-      if (status && status !== 'success') {
-        fail('Payment status: ' + status);
-        return;
-      }
+      params.delete('api');
+      // Ensure JSON is not forced — full browser navigation so Laravel can redirect to tenant dashboard
+      params.delete('format');
 
-      if (!txn) {
-        fail('Missing transaction id.');
-        return;
-      }
-
-      if (!apiBase) {
-        fail('Missing API base URL. Set EPS_API_URL=https://mdperves.info in backend .env');
-        return;
-      }
-
-      var url = apiBase + '/api/public/eps/complete?' + new URLSearchParams({
-        merchant_transaction_id: txn,
-        callback: callback,
-        tenant: tenant,
-        Status: params.get('Status') || params.get('status') || 'Success',
-        EPSTransactionId: params.get('EPSTransactionId') || '',
-        format: 'json'
-      }).toString();
-
-      fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
-        .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
-        .then(function (result) {
-          var body = result.body || {};
-          var data = body.data || body;
-          if (!result.ok) {
-            fail(body.message || 'Payment verification failed.');
-            return;
-          }
-          var redirectUrl = data.redirect_url || body.redirect_url || fallbackDash;
-          window.location.replace(redirectUrl);
-        })
-        .catch(function (e) {
-          fail(e && e.message ? e.message : 'Network error while completing payment.');
-        });
+      window.location.replace(api + '/api/public/eps/complete?' + params.toString());
     })();
   </script>
 </body>
