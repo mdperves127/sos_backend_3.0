@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\PaymentStore;
 use App\Services\EpsPaymentCompletionService;
-use App\Services\EpsPaymentService;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -57,20 +56,18 @@ class CompletePendingEpsPayments extends Command
 
         foreach ( $payments as $payment ) {
             try {
-                $verification = EpsPaymentService::verifyTransaction( (string) $payment->trxid );
+                $done = $completion->tryCompleteIfSuccessful(
+                    (string) $payment->trxid,
+                    (string) ( $payment->payment_type ?? 'recharge' )
+                );
 
-                if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
+                if ( ! $done ) {
                     $this->line( "skip {$payment->trxid}: not successful at EPS yet" );
                     $skip++;
                     continue;
                 }
 
-                $url = $completion->completeByTransactionId(
-                    (string) $payment->trxid,
-                    (string) ( $payment->payment_type ?? 'recharge' )
-                );
-
-                $this->info( "completed {$payment->trxid} → {$url}" );
+                $this->info( "completed {$payment->trxid}" );
                 $ok++;
             } catch ( Throwable $e ) {
                 $this->error( "fail {$payment->trxid}: {$e->getMessage()}" );

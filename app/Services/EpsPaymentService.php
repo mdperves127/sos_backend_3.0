@@ -35,10 +35,75 @@ class EpsPaymentService
             'value_b'                 => $tenantType,
         ] );
 
+        // Same work as `php artisan eps:complete-pending`, but starts immediately
+        // after initialize so balance/membership is credited before/as user hits dashboard.
+        self::scheduleImmediateCompletion( $traxId, $type );
+
         return (object) [
             'result'      => 'true',
             'payment_url' => $initialize['RedirectURL'],
         ];
+    }
+
+    /**
+     * Poll EPS after the payment_url response is sent. When Status=Success, credit instantly
+     * (recharge / renew / subscription) — no need to wait for cron or SPA callback.
+     */
+    private static function scheduleImmediateCompletion( string $traxId, string $type ): void
+    {
+        $hint = self::completionHintFromType( $type );
+        if ( ! $hint ) {
+            return;
+        }
+
+        $traxId = self::normalizeTransactionId( $traxId );
+
+        dispatch( function () use ( $traxId, $hint ) {
+            ignore_user_abort( true );
+            @set_time_limit( 180 );
+
+            for ( $i = 0; $i < 40; $i++ ) {
+                // First check quickly, then every 3s (~2 min total)
+                if ( $i > 0 ) {
+                    sleep( 3 );
+                } else {
+                    sleep( 2 );
+                }
+
+                try {
+                    $done = app( EpsPaymentCompletionService::class )
+                        ->tryCompleteIfSuccessful( $traxId, $hint );
+
+                    if ( $done ) {
+                        Log::info( 'EPS payment completed by immediate poller.', [
+                            'trx'  => $traxId,
+                            'hint' => $hint,
+                            'try'  => $i,
+                        ] );
+
+                        return;
+                    }
+                } catch ( \Throwable $e ) {
+                    Log::debug( 'EPS immediate poll attempt', [
+                        'trx'   => $traxId,
+                        'try'   => $i,
+                        'error' => $e->getMessage(),
+                    ] );
+                }
+            }
+        } )->afterResponse();
+    }
+
+    private static function completionHintFromType( string $type ): ?string
+    {
+        $type = strtolower( trim( $type ) );
+
+        return match ( true ) {
+            str_contains( $type, 'recharge' ) => 'recharge',
+            str_contains( $type, 'renew' ) => 'renew',
+            str_contains( $type, 'subscription' ) => 'subscription',
+            default => null,
+        };
     }
 
     public static function initializePayment( array $params ): array

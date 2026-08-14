@@ -51,6 +51,38 @@ class EpsPaymentCompletionService
     }
 
     /**
+     * Verify with EPS and credit when successful. Used by artisan command + immediate poller.
+     * Returns true when payment is completed (or already completed).
+     */
+    public function tryCompleteIfSuccessful( string $merchantTransactionId, ?string $hint = null ): bool
+    {
+        $payment = PaymentStore::on( 'mysql' )
+            ->where( 'trxid', $merchantTransactionId )
+            ->first();
+
+        if ( ! $payment ) {
+            return false;
+        }
+
+        if ( ( $payment->status ?? null ) === 'completed' ) {
+            return true;
+        }
+
+        $verification = EpsPaymentService::verifyTransaction( $merchantTransactionId );
+
+        if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
+            return false;
+        }
+
+        $this->completeByTransactionId(
+            $merchantTransactionId,
+            $hint ?: (string) ( $payment->payment_type ?? null )
+        );
+
+        return true;
+    }
+
+    /**
      * Credit any successful pending EPS payments for this tenant.
      * Prefer MerchantTransactionId from the current request or Referer
      * (EPS appends it to the dashboard return URL).
