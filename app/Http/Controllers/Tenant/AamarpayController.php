@@ -193,67 +193,14 @@ class AamarpayController extends Controller
             return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
 
-        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
-        if ( ! $data ) {
-            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
+        try {
+            $url = app( \App\Services\EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'subscription' );
+        } catch ( \Throwable $e ) {
+            return redirect( $this->frontendBase() . 'dashboard?message=' . urlencode( $e->getMessage() ) );
         }
 
-        $validatedData = $data['info'];
-        $subscription  = Subscription::on('mysql')->find($validatedData['subscription_id'] ?? null);
-        $couponid      = $validatedData['coupon_id'] ?? null;
-
-        $entity = null;
-        if (!empty($validatedData['tenant_id'])) {
-            $entity = Tenant::on('mysql')->find($validatedData['tenant_id']);
-        }
-
-        if (!$entity) {
-            $entity = User::on('mysql')->find($validatedData['user_id'] ?? null);
-        }
-
-        if (!$subscription || !$entity) {
-            return redirect( $this->frontendBase( $validatedData ) . 'dashboard?message=Subscription payment could not be completed' );
-        }
-
-        $amount = $response['amount_original'] ?? $subscription->subscription_amount;
-        $subscriptiondata = SubscriptionService::store(
-            $subscription,
-            $entity,
-            $amount,
-            $couponid,
-            'Aamarpay',
-            $validatedData['user_id'] ?? null
-        );
-
-        $data->update( ['status' => 'completed'] );
-
-        if ($entity instanceof User && !is_object($subscriptiondata)) {
-            if ($subscriptiondata == '2' || $subscriptiondata == 3) {
-                $tokens = $entity->tokens;
-
-                foreach ($tokens as $token) {
-                    $token->delete();
-                }
-                return redirect(config('app.maindomain'));
-            }
-        }
-
-        $path = ($entity instanceof User) ? paymentredirect($entity->role_as) : 'dashboard';
-        $url = $this->frontendBase( $validatedData ) . $path . '?message=Subscription added successfull';
-
-        if ($entity instanceof User) {
-            //For user
-            $subscriptionText = "Congratulations! Your package was successfully purchased!";
-            Notification::send($entity, new SubscriptionNotification($entity, $subscriptionText));
-
-            //For admin
-            $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
-            $user = User::on('mysql')->where('role_as', 1)->first(); //Admin
-            $subscriptionText = $normalUser->email . "Purchase a new package";
-            Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
-        }
-
-        return redirect($url);
+        return redirect( $url );
     }
 
     function rechargesuccess()
@@ -264,39 +211,14 @@ class AamarpayController extends Controller
             return redirect( $this->frontendBase() . 'dashboard?message=Payment verification failed' );
         }
 
-        $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
-
-        if ( ! $data ) {
-            return redirect( $this->frontendBase() . 'dashboard?message=Payment not found' );
+        try {
+            $url = app( \App\Services\EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'recharge' );
+        } catch ( \Throwable $e ) {
+            return redirect( $this->frontendBase() . 'dashboard?message=' . urlencode( $e->getMessage() ) );
         }
 
-        PaymentHistoryService::store(
-            $data->trxid,
-            $data['info']['amount'],
-            'Aamarpay',
-            'Recharge',
-            '+',
-            '',
-            $data['info']['tenant_id'],
-            [
-                'entity_type' => 'tenant',
-                'tenant_id'   => $data['info']['tenant_id'],
-                'user_id'     => $data['info']['user_id'] ?? null,
-            ]
-        );
-
-        // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
-
-        $tenant = tenant();
-        if ($tenant) {
-            $tenant->increment('balance', $data['info']['amount']);
-        }
-
-        $url = $this->frontendBase( $data['info'] ) . 'dashboard?message=Recharge successful';
-        // if ($tenant) {
-        //     Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
-        // }
-        return redirect($url);
+        return redirect( $url );
     }
 
 

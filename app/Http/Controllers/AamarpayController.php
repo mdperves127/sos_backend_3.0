@@ -148,67 +148,14 @@ class AamarpayController extends Controller
             return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
         }
 
-        $data = PaymentStore::on( 'mysql' )->where( ['trxid' => $response['mer_txnid'], 'status' => 'pending'] )->first();
-        if ( ! $data ) {
-            return redirect( config( 'app.redirecturl' ) . '?message=Payment not found' );
+        try {
+            $url = app( \App\Services\EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'subscription' );
+        } catch ( \Throwable $e ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=' . urlencode( $e->getMessage() ) );
         }
 
-        $validatedData = $data['info'];
-        $subscription  = Subscription::on('mysql')->find($validatedData['subscription_id'] ?? null);
-        $couponid      = $validatedData['coupon_id'] ?? null;
-
-        $entity = null;
-        if (!empty($validatedData['tenant_id'])) {
-            $entity = Tenant::on('mysql')->find($validatedData['tenant_id']);
-        }
-
-        if (!$entity) {
-            $entity = User::on('mysql')->find($validatedData['user_id'] ?? null);
-        }
-
-        if (!$subscription || !$entity) {
-            return redirect( config( 'app.redirecturl' ) . '?message=Subscription payment could not be completed' );
-        }
-
-        $amount = $response['amount_original'] ?? $subscription->subscription_amount;
-        $subscriptiondata = SubscriptionService::store(
-            $subscription,
-            $entity,
-            $amount,
-            $couponid,
-            'Aamarpay',
-            $validatedData['user_id'] ?? null
-        );
-
-        $data->update( ['status' => 'completed'] );
-
-        if ($entity instanceof User && !is_object($subscriptiondata)) {
-            if ($subscriptiondata == '2' || $subscriptiondata == 3) {
-                $tokens = $entity->tokens;
-
-                foreach ($tokens as $token) {
-                    $token->delete();
-                }
-                return redirect(config('app.maindomain'));
-            }
-        }
-
-        $path = ($entity instanceof User) ? paymentredirect($entity->role_as) : 'dashboard';
-        $url = config('app.redirecturl') . $path . '?message=Subscription added successfull';
-
-        if ($entity instanceof User) {
-            //For user
-            $subscriptionText = "Congratulations! Your package was successfully purchased!";
-            Notification::send($entity, new SubscriptionNotification($entity, $subscriptionText));
-
-            //For admin
-            $normalUser = User::find($validatedData['user_id']); // Vendor or affiliate
-            $user = User::where('role_as', 1)->first(); //Admin
-            $subscriptionText = $normalUser->email . "Purchase a new package";
-            Notification::send($user, new SubscriptionNotification($user, $subscriptionText));
-        }
-
-        return redirect($url);
+        return redirect( $url );
     }
 
     function rechargesuccess()
@@ -218,45 +165,15 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::on('mysql')->where(['trxid' => $response['mer_txnid']])->first();
 
-        if($response['opt_b'] == 'user'){
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Aamarpay', 'Recharge', '+', '',  $data['info']['user_id']);
-        }else{
-            PaymentHistoryService::store($data->trxid, $data['info']['amount'],  'Aamarpay', 'Recharge', '+', '',  $data['info']['user_id']);
+        try {
+            $url = app( \App\Services\EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'recharge' );
+        } catch ( \Throwable $e ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=' . urlencode( $e->getMessage() ) );
         }
 
-        // User::find($data['info']['user_id'])->increment('balance', $data['info']['amount']);
-
-        $tenant = null;
-        if($response['opt_b'] == 'tenant'){
-            $tenant = Tenant::find(tenant()->id);
-            $tenant->increment('balance', $data['info']['amount']);
-        }else{
-            $tenant = User::find($data['info']['user_id']);
-            $tenant->increment('balance', $data['info']['amount']);
-        }
-
-        // $user = Tenant::find(tenant()->id);
-        // dd($user);
-        // $path = paymentredirect($user->role_as);
-        // $url = config('app.redirecturl') . $path . '?message=Recharge successful';
-        // $url = config('app.redirecturl') . 'tenant/dashboard?message=Recharge successful';
-
-        if ($tenant) {
-            Notification::send($tenant, new RechargeNotification($tenant, $data['info']['amount'] , $data->trxid));
-        }
-
-        // Redirect based on user type
-        if($response['opt_b'] == 'tenant'){
-            $url = config('app.redirecturl') . 'dashboard?message=Recharge successful';
-        } else {
-            $user = User::find($data['info']['user_id']);
-            $path = paymentredirect($user->role_as);
-            $url = config('app.redirecturl') . $path . '?message=Recharge successful';
-        }
-
-        return redirect($url);
+        return redirect( $url );
     }
 
 

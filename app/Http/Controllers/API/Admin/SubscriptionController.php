@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CreateCustomPackageRequest;
 use App\Http\Requests\StoreSubscriptionRequest;
 use App\Http\Requests\SubscriptionRequest;
-use App\Http\Requests\UpdateSubscriptionRequest;
 use App\Models\Subscription;
 use App\Services\Admin\SubscriptionService;
 
@@ -37,13 +37,20 @@ class SubscriptionController extends Controller {
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\StoreSubscriptionRequest  $request
-     * @return \Illuminate\Http\Response
+     * Create a custom subscription package.
      */
-    public function store() {
+    public function store( CreateCustomPackageRequest $request ) {
+        if ( checkpermission( 'subscription' ) != 1 ) {
+            return $this->permissionmessage();
+        }
 
+        $package = SubscriptionService::store( $request->validated() );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Custom package created successfully.',
+            'data'    => $package,
+        ] );
     }
 
     /**
@@ -65,17 +72,10 @@ class SubscriptionController extends Controller {
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\UpdateSubscriptionRequest  $request
-     * @param  \App\Models\Subscription  $subscription
+     * @param  \App\Http\Requests\StoreSubscriptionRequest  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update( StoreSubscriptionRequest $request, $id ) {

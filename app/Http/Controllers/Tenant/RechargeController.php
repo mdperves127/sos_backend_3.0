@@ -26,6 +26,7 @@ class RechargeController extends Controller
         PaymentStore::on('mysql')->create( [
             'payment_gateway'         => 'aamarpay',
             'trxid'                   => $trxid,
+            'status'                  => 'pending',
             'payment_type'            => 'recharge',
             'info'                    => $validateData,
             'customer_requirement_id' => 0,

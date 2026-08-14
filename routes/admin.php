@@ -260,6 +260,8 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::resource( 'testimonial', TestimonialController::class );
 
         Route::resource( 'subscription', SubscriptionController::class );
+        Route::post( 'subscription/custom', [SubscriptionController::class, 'store'] );
+        Route::post( 'custom-package', [SubscriptionController::class, 'store'] );
         Route::post( 'subscription/requirement/{id}', [SubscriptionController::class, 'requirement'] );
 
         Route::resource( 'supportboxcategory', SupportBoxCategoryController::class );
@@ -379,6 +381,9 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
 
         // Full tenant DB + assets backup — streams zip download (not stored)
         Route::match( ['get', 'post'], 'backup', [BackupController::class, 'download'] );
+
+        // Recover EPS payments that succeeded at the bank but missed the callback
+        Route::post( 'payment/complete-eps', [\App\Http\Controllers\API\Admin\PaymentRecoveryController::class, 'completeEps'] );
     } );
 
 }); // End of admin middleware group
