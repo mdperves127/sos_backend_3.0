@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Services\EpsPaymentCompletionService;
 use Illuminate\Http\JsonResponse;
 
 class TenantDashboardController extends Controller {
@@ -13,6 +14,14 @@ class TenantDashboardController extends Controller {
                 'status'  => 403,
                 'message' => 'Tenant context is required.',
             ], 403 );
+        }
+
+        // Credit EPS recharges that returned to SPA dashboard (no Laravel callback).
+        try {
+            app( EpsPaymentCompletionService::class )
+                ->completePendingForTenant( (string) tenant( 'id' ) );
+        } catch ( \Throwable $e ) {
+            // Never block dashboard for payment recovery.
         }
 
         return match ( tenant( 'type' ) ) {

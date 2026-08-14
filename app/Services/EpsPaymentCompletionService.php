@@ -50,6 +50,72 @@ class EpsPaymentCompletionService
         };
     }
 
+    /**
+     * Credit any successful pending EPS payments for this tenant.
+     * Safe to call on dashboard/profile requests (locked + short TTL).
+     */
+    public function completePendingForTenant( ?string $tenantId, int $hours = 12 ): int
+    {
+        if ( ! $tenantId ) {
+            return 0;
+        }
+
+        $cacheKey = 'eps-pending-tenant-' . $tenantId;
+        if ( cache()->get( $cacheKey ) ) {
+            return 0;
+        }
+        cache()->put( $cacheKey, 1, now()->addSeconds( 20 ) );
+
+        $payments = PaymentStore::on( 'mysql' )
+            ->where( 'status', 'pending' )
+            ->where( function ( $q ) {
+                $q->where( 'payment_gateway', 'aamarpay' )
+                    ->orWhereNull( 'payment_gateway' );
+            } )
+            ->whereIn( 'payment_type', [
+                'recharge',
+                'subscription',
+                'renew',
+                'recharge-success',
+                'recharge-success-for-us',
+                'subscription-success',
+                'renew-success',
+            ] )
+            ->where( 'created_at', '>=', now()->subHours( max( 1, $hours ) ) )
+            ->orderBy( 'id' )
+            ->get()
+            ->filter( function ( PaymentStore $payment ) use ( $tenantId ) {
+                $info = is_array( $payment->info ) ? $payment->info : [];
+
+                return (string) ( $info['tenant_id'] ?? '' ) === (string) $tenantId;
+            } );
+
+        $completed = 0;
+
+        foreach ( $payments as $payment ) {
+            try {
+                $verification = EpsPaymentService::verifyTransaction( (string) $payment->trxid );
+                if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
+                    continue;
+                }
+
+                $this->completeByTransactionId(
+                    (string) $payment->trxid,
+                    (string) ( $payment->payment_type ?? 'recharge' )
+                );
+                $completed++;
+            } catch ( Throwable $e ) {
+                Log::warning( 'EPS pending tenant complete skipped', [
+                    'trx'      => $payment->trxid,
+                    'tenant'   => $tenantId,
+                    'error'    => $e->getMessage(),
+                ] );
+            }
+        }
+
+        return $completed;
+    }
+
     private function completeRecharge( PaymentStore $payment, array $verification ): string
     {
         $info   = is_array( $payment->info ) ? $payment->info : [];

@@ -188,21 +188,34 @@ class EpsPaymentService
     }
 
     /**
-     * Browser return URL for recharge / subscription / renew.
+     * Browser return for recharge / subscription / renew.
      *
-     * Host MUST be under EPS merchant BaseUrl (affsell.com) or initialize returns
-     * "Domain mismatch". Path is Laravel's public completer so a frontend /api
-     * proxy (or eps:complete-pending) can credit the balance.
+     * Stay under EPS BaseUrl (*.affsell.com). /api/* on that host is SPA 404,
+     * but /dashboard is a real SPA page — send the user there, then credit when
+     * dashboard APIs load (completePendingForTenant) + scheduler backup.
      */
     public static function publicCompleteUrl( string $callback, ?string $tenantId = null ): string
     {
-        $query = array_filter( [
-            'callback' => $callback,
-            'tenant'   => $tenantId,
-        ], fn ( $value ) => $value !== null && $value !== '' );
+        $epsHost = self::epsRegisteredHost();
+        $query   = [ 'eps_callback' => $callback ];
 
-        return 'https://' . self::epsRegisteredHost()
-            . '/api/public/eps/complete?' . http_build_query( $query );
+        if ( in_array( $callback, [ 'fail', 'cancel' ], true ) ) {
+            $query['message'] = $callback === 'cancel' ? 'Payment cancelled' : 'Payment failed';
+        } else {
+            $query['message'] = match ( $callback ) {
+                'recharge'     => 'Recharge successful',
+                'subscription' => 'Subscription added successful',
+                'renew'        => 'Renew successful',
+                default        => 'Payment successful',
+            };
+        }
+
+        if ( $tenantId ) {
+            return 'https://' . strtolower( $tenantId ) . '.' . $epsHost
+                . '/dashboard?' . http_build_query( $query );
+        }
+
+        return 'https://' . $epsHost . '/dashboard?' . http_build_query( $query );
     }
 
     /**
@@ -255,10 +268,23 @@ class EpsPaymentService
     private static function callbackUrlsFromSuccess( string $successUrl ): array
     {
         $tenantId = null;
+        if ( preg_match( '#https?://([^.]+)\.[^/]+/dashboard#i', $successUrl, $m ) ) {
+            $candidate = strtolower( $m[1] );
+            if ( ! in_array( $candidate, [ 'www', 'api', 'app', 'admin' ], true ) ) {
+                $tenantId = $candidate;
+            }
+        }
         if ( preg_match( '#[?&]tenant=([^&]+)#', $successUrl, $m ) ) {
             $tenantId = urldecode( $m[1] );
         } elseif ( preg_match( '#/api/eps/([^/]+)/aaparpay/#', $successUrl, $m ) ) {
             $tenantId = urldecode( $m[1] );
+        }
+
+        if ( str_contains( $successUrl, '/dashboard' ) || str_contains( $successUrl, 'eps_callback=' ) ) {
+            return [
+                self::publicCompleteUrl( 'fail', $tenantId ),
+                self::publicCompleteUrl( 'cancel', $tenantId ),
+            ];
         }
 
         if ( str_contains( $successUrl, '/api/public/eps/complete' ) ) {
@@ -302,16 +328,29 @@ class EpsPaymentService
             return $url;
         }
 
-        $path  = $parts['path'] ?? '/';
-        $query = isset( $parts['query'] ) ? '?' . $parts['query'] : '';
+        $queryBag = [];
+        parse_str( $parts['query'] ?? '', $queryBag );
+        $tenantId = $queryBag['tenant'] ?? null;
+
+        $hostParts = explode( '.', strtolower( (string) $parts['host'] ) );
+        if ( ! $tenantId && count( $hostParts ) >= 2 ) {
+            $maybe = $hostParts[0];
+            if ( ! in_array( $maybe, [ 'www', 'api', 'app', 'admin', 'mail' ], true ) ) {
+                $tenantId = $maybe;
+            }
+        }
+
+        $path = $parts['path'] ?? '/dashboard';
+        $qs   = isset( $parts['query'] ) ? '?' . $parts['query'] : '';
+        $host = $tenantId ? strtolower( (string) $tenantId ) . '.' . $epsHost : $epsHost;
 
         Log::warning( 'EPS callback host rewritten to BaseUrl host.', [
             'from' => $parts['host'],
-            'to'   => $epsHost,
+            'to'   => $host,
             'url'  => $url,
         ] );
 
-        return 'https://' . $epsHost . $path . $query;
+        return 'https://' . $host . $path . $qs;
     }
 
     private static function epsRegisteredHost(): string

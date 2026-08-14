@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\EpsPaymentCompletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -219,6 +220,15 @@ class TenantAuthController extends Controller {
     }
 
     public function profileInfo( Request $request ): JsonResponse {
+        try {
+            if ( function_exists( 'tenant' ) && tenant() ) {
+                app( EpsPaymentCompletionService::class )
+                    ->completePendingForTenant( (string) tenant( 'id' ) );
+            }
+        } catch ( \Throwable $e ) {
+            // ignore recovery errors
+        }
+
         $user = User::on('tenant')->with( 'vendorRole' )->find( Auth::user()->id );
         return response()->json( [
             'success'     => true,
