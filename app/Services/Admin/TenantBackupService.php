@@ -6,21 +6,137 @@ use App\Models\Tenant;
 use App\Services\CrossTenantQueryService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 use ZipArchive;
 
 class TenantBackupService
 {
-    /**
-     * Build a temporary zip (tenant DBs + assets). Caller must delete the file after sending.
-     *
-     * @return array{path:string,filename:string}
-     */
-    public function createDownloadableZip( bool $includeCentral = true, bool $includeDeleted = false ): array
+    public function jobsDir(): string
     {
+        $dir = storage_path( 'app/backups/jobs' );
+        if ( ! File::isDirectory( $dir ) ) {
+            File::makeDirectory( $dir, 0755, true );
+        }
+
+        return $dir;
+    }
+
+    public function zipsDir(): string
+    {
+        $dir = storage_path( 'app/backups/zips' );
+        if ( ! File::isDirectory( $dir ) ) {
+            File::makeDirectory( $dir, 0755, true );
+        }
+
+        return $dir;
+    }
+
+    public function startJob(
+        bool $includeCentral = true,
+        bool $includeDeleted = false,
+        bool $includeAssets = false
+    ): array {
+        $jobId = (string) Str::uuid();
+        $meta  = [
+            'id'              => $jobId,
+            'status'          => 'queued',
+            'message'         => 'Backup queued.',
+            'include_central' => $includeCentral,
+            'include_deleted' => $includeDeleted,
+            'include_assets'  => $includeAssets,
+            'created_at'      => now()->toIso8601String(),
+            'updated_at'      => now()->toIso8601String(),
+            'filename'        => null,
+            'path'            => null,
+            'error'           => null,
+            'errors'          => [],
+        ];
+
+        $this->writeJob( $jobId, $meta );
+        $this->spawnJobProcess( $jobId );
+
+        return $meta;
+    }
+
+    public function getJob( string $jobId ): ?array
+    {
+        $file = $this->jobsDir() . DIRECTORY_SEPARATOR . $jobId . '.json';
+        if ( ! File::exists( $file ) ) {
+            return null;
+        }
+
+        $data = json_decode( File::get( $file ), true );
+
+        return is_array( $data ) ? $data : null;
+    }
+
+    public function runJob( string $jobId ): void
+    {
+        $meta = $this->getJob( $jobId );
+        if ( ! $meta ) {
+            throw new RuntimeException( "Backup job [{$jobId}] not found." );
+        }
+
+        $this->writeJob( $jobId, array_merge( $meta, [
+            'status'     => 'processing',
+            'message'    => 'Backup running…',
+            'updated_at' => now()->toIso8601String(),
+        ] ) );
+
+        try {
+            $zip = $this->createDownloadableZip(
+                (bool) ( $meta['include_central'] ?? true ),
+                (bool) ( $meta['include_deleted'] ?? false ),
+                (bool) ( $meta['include_assets'] ?? false ),
+                $jobId
+            );
+
+            $finalPath = $this->zipsDir() . DIRECTORY_SEPARATOR . $jobId . '.zip';
+            if ( File::exists( $finalPath ) ) {
+                File::delete( $finalPath );
+            }
+            File::move( $zip['path'], $finalPath );
+
+            $this->writeJob( $jobId, array_merge( $meta, [
+                'status'     => 'ready',
+                'message'    => 'Backup ready for download.',
+                'filename'   => $zip['filename'],
+                'path'       => $finalPath,
+                'updated_at' => now()->toIso8601String(),
+                'errors'     => $zip['errors'] ?? [],
+            ] ) );
+        } catch ( Throwable $e ) {
+            Log::error( 'Backup job failed', [
+                'job_id' => $jobId,
+                'error'  => $e->getMessage(),
+            ] );
+
+            $this->writeJob( $jobId, array_merge( $meta, [
+                'status'     => 'failed',
+                'message'    => 'Backup failed.',
+                'error'      => $e->getMessage(),
+                'updated_at' => now()->toIso8601String(),
+            ] ) );
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @return array{path:string,filename:string,errors?:array}
+     */
+    public function createDownloadableZip(
+        bool $includeCentral = true,
+        bool $includeDeleted = false,
+        bool $includeAssets = false,
+        ?string $jobId = null
+    ): array {
         @set_time_limit( 0 );
+        @ini_set( 'max_execution_time', '0' );
         @ini_set( 'memory_limit', '1024M' );
+        ignore_user_abort( true );
 
         $stamp    = now()->format( 'Y-m-d-His' );
         $basename = 'tenant-backup-' . $stamp;
@@ -36,9 +152,15 @@ class TenantBackupService
         }
 
         File::makeDirectory( $workDir . '/databases', 0755, true );
-        File::makeDirectory( $workDir . '/assets', 0755, true );
+        if ( $includeAssets ) {
+            File::makeDirectory( $workDir . '/assets', 0755, true );
+        }
 
         try {
+            if ( $jobId ) {
+                $this->touchJob( $jobId, 'Dumping databases…' );
+            }
+
             $tenantQuery = Tenant::on( 'mysql' )->with( 'domains' );
             if ( ! $includeDeleted ) {
                 $tenantQuery->whereNull( 'deleted_at' );
@@ -63,7 +185,14 @@ class TenantBackupService
                 }
             }
 
+            $i = 0;
+            $total = $tenants->count();
             foreach ( $tenants as $tenant ) {
+                $i++;
+                if ( $jobId && ( $i === 1 || $i % 5 === 0 || $i === $total ) ) {
+                    $this->touchJob( $jobId, "Dumping tenant databases ({$i}/{$total})…" );
+                }
+
                 $dbName  = CrossTenantQueryService::getDatabaseName( $tenant );
                 $sqlFile = $workDir . '/databases/' . $this->safeName( $dbName ) . '.sql';
 
@@ -85,28 +214,34 @@ class TenantBackupService
                 }
             }
 
-            $assetSources = [
-                'uploads'       => public_path( 'uploads' ),
-                'theme-content' => public_path( 'theme-content' ),
-            ];
-
-            foreach ( File::glob( storage_path( 'tenant*' ) ) ?: [] as $tenantStorage ) {
-                if ( is_dir( $tenantStorage ) ) {
-                    $assetSources[basename( $tenantStorage )] = $tenantStorage;
-                }
-            }
-
-            foreach ( $assetSources as $label => $source ) {
-                if ( ! is_dir( $source ) ) {
-                    continue;
+            if ( $includeAssets ) {
+                if ( $jobId ) {
+                    $this->touchJob( $jobId, 'Copying assets…' );
                 }
 
-                $target = $workDir . '/assets/' . $label;
-                File::copyDirectory( $source, $target );
-                $assets[] = [
-                    'name' => $label,
-                    'path' => 'assets/' . $label,
+                $assetSources = [
+                    'uploads'       => public_path( 'uploads' ),
+                    'theme-content' => public_path( 'theme-content' ),
                 ];
+
+                foreach ( File::glob( storage_path( 'tenant*' ) ) ?: [] as $tenantStorage ) {
+                    if ( is_dir( $tenantStorage ) ) {
+                        $assetSources[basename( $tenantStorage )] = $tenantStorage;
+                    }
+                }
+
+                foreach ( $assetSources as $label => $source ) {
+                    if ( ! is_dir( $source ) ) {
+                        continue;
+                    }
+
+                    $target = $workDir . '/assets/' . $label;
+                    File::copyDirectory( $source, $target );
+                    $assets[] = [
+                        'name' => $label,
+                        'path' => 'assets/' . $label,
+                    ];
+                }
             }
 
             File::put(
@@ -116,6 +251,7 @@ class TenantBackupService
                     'app_url'         => config( 'app.url' ),
                     'include_central' => $includeCentral,
                     'include_deleted' => $includeDeleted,
+                    'include_assets'  => $includeAssets,
                     'tenant_count'    => $tenants->count(),
                     'databases'       => $databases,
                     'assets'          => $assets,
@@ -130,6 +266,10 @@ class TenantBackupService
                 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES )
             );
 
+            if ( $jobId ) {
+                $this->touchJob( $jobId, 'Creating zip archive…' );
+            }
+
             $this->zipDirectory( $workDir, $zipPath );
 
             if ( ! File::exists( $zipPath ) ) {
@@ -139,6 +279,7 @@ class TenantBackupService
             return [
                 'path'     => $zipPath,
                 'filename' => basename( $zipPath ),
+                'errors'   => $errors,
             ];
         } catch ( Throwable $e ) {
             if ( File::exists( $zipPath ) ) {
@@ -150,6 +291,73 @@ class TenantBackupService
                 File::deleteDirectory( $workDir );
             }
         }
+    }
+
+    private function spawnJobProcess( string $jobId ): void
+    {
+        $php     = $this->findPhpBinary();
+        $artisan = base_path( 'artisan' );
+        $logFile = storage_path( 'logs/backup-' . $jobId . '.log' );
+
+        if ( PHP_OS_FAMILY === 'Windows' ) {
+            $command = sprintf(
+                'start /B "" %s %s backup:run %s > %s 2>&1',
+                escapeshellarg( $php ),
+                escapeshellarg( $artisan ),
+                escapeshellarg( $jobId ),
+                escapeshellarg( $logFile )
+            );
+            pclose( popen( $command, 'r' ) );
+
+            return;
+        }
+
+        $command = sprintf(
+            'nohup %s %s backup:run %s > %s 2>&1 &',
+            escapeshellarg( $php ),
+            escapeshellarg( $artisan ),
+            escapeshellarg( $jobId ),
+            escapeshellarg( $logFile )
+        );
+        exec( $command );
+    }
+
+    private function findPhpBinary(): string
+    {
+        $configured = env( 'PHP_BINARY_PATH' );
+        if ( $configured && File::exists( $configured ) ) {
+            return $configured;
+        }
+
+        if ( defined( 'PHP_BINARY' ) && PHP_BINARY && File::exists( PHP_BINARY ) ) {
+            // Avoid php-fpm/cli mismatch names that can't run artisan
+            $base = strtolower( basename( PHP_BINARY ) );
+            if ( ! str_contains( $base, 'fpm' ) && ! str_contains( $base, 'cgi' ) ) {
+                return PHP_BINARY;
+            }
+        }
+
+        return 'php';
+    }
+
+    private function writeJob( string $jobId, array $meta ): void
+    {
+        File::put(
+            $this->jobsDir() . DIRECTORY_SEPARATOR . $jobId . '.json',
+            json_encode( $meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES )
+        );
+    }
+
+    private function touchJob( string $jobId, string $message ): void
+    {
+        $meta = $this->getJob( $jobId );
+        if ( ! $meta ) {
+            return;
+        }
+
+        $meta['message']    = $message;
+        $meta['updated_at'] = now()->toIso8601String();
+        $this->writeJob( $jobId, $meta );
     }
 
     private function dumpMysqlDatabase( string $connection, string $database, string $outputFile ): void
@@ -237,8 +445,9 @@ class TenantBackupService
     ): void {
         $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
         $pdo = new \PDO( $dsn, $user, $pass, [
-            \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            \PDO::ATTR_ERRMODE                  => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE       => \PDO::FETCH_ASSOC,
+            \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
         ] );
 
         $handle = fopen( $outputFile, 'wb' );
@@ -255,7 +464,8 @@ class TenantBackupService
             $tables = $pdo->query( 'SHOW TABLES' )->fetchAll( \PDO::FETCH_COLUMN );
 
             foreach ( $tables as $table ) {
-                $create    = $pdo->query( 'SHOW CREATE TABLE `' . str_replace( '`', '``', $table ) . '`' )->fetch();
+                $safeTable = str_replace( '`', '``', $table );
+                $create    = $pdo->query( 'SHOW CREATE TABLE `' . $safeTable . '`' )->fetch();
                 $createSql = $create['Create Table'] ?? $create['Create View'] ?? null;
 
                 if ( ! $createSql ) {
@@ -265,10 +475,20 @@ class TenantBackupService
                 fwrite( $handle, "DROP TABLE IF EXISTS `{$table}`;\n" );
                 fwrite( $handle, $createSql . ";\n\n" );
 
-                $rows = $pdo->query( 'SELECT * FROM `' . str_replace( '`', '``', $table ) . '`' );
-                while ( $row = $rows->fetch() ) {
-                    $columns = array_map( fn ( $col ) => '`' . str_replace( '`', '``', $col ) . '`', array_keys( $row ) );
-                    $values  = array_map( function ( $value ) use ( $pdo ) {
+                $stmt   = $pdo->query( 'SELECT * FROM `' . $safeTable . '`' );
+                $batch  = [];
+                $colsSql = null;
+                $batchSize = 100;
+
+                while ( $row = $stmt->fetch() ) {
+                    if ( $colsSql === null ) {
+                        $colsSql = implode( ', ', array_map(
+                            fn ( $col ) => '`' . str_replace( '`', '``', $col ) . '`',
+                            array_keys( $row )
+                        ) );
+                    }
+
+                    $values = array_map( function ( $value ) use ( $pdo ) {
                         if ( $value === null ) {
                             return 'NULL';
                         }
@@ -276,10 +496,16 @@ class TenantBackupService
                         return $pdo->quote( (string) $value );
                     }, array_values( $row ) );
 
-                    fwrite(
-                        $handle,
-                        'INSERT INTO `' . $table . '` (' . implode( ', ', $columns ) . ') VALUES (' . implode( ', ', $values ) . ");\n"
-                    );
+                    $batch[] = '(' . implode( ', ', $values ) . ')';
+
+                    if ( count( $batch ) >= $batchSize ) {
+                        fwrite( $handle, "INSERT INTO `{$table}` ({$colsSql}) VALUES\n" . implode( ",\n", $batch ) . ";\n" );
+                        $batch = [];
+                    }
+                }
+
+                if ( $batch !== [] && $colsSql !== null ) {
+                    fwrite( $handle, "INSERT INTO `{$table}` ({$colsSql}) VALUES\n" . implode( ",\n", $batch ) . ";\n" );
                 }
 
                 fwrite( $handle, "\n" );

@@ -381,8 +381,10 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'vendor/service/order/{vendor_id}', [AdminNoteController::class, 'vendorServiceOrder'] );
         Route::get( 'vendor/payment/history/{vendor_id}', [AdminNoteController::class, 'vendorPaymentHistory'] );
 
-        // Full tenant DB + assets backup — streams zip download (not stored)
-        Route::match( ['get', 'post'], 'backup', [BackupController::class, 'download'] );
+        // Async backup (avoids LiteSpeed/proxy timeout). Poll status, then download.
+        Route::match( ['get', 'post'], 'backup', [BackupController::class, 'start'] );
+        Route::get( 'backup/{jobId}/status', [BackupController::class, 'status'] );
+        Route::get( 'backup/{jobId}/download', [BackupController::class, 'downloadJob'] );
 
         // Recover EPS payments that succeeded at the bank but missed the callback
         Route::post( 'payment/complete-eps', [\App\Http\Controllers\API\Admin\PaymentRecoveryController::class, 'completeEps'] );
