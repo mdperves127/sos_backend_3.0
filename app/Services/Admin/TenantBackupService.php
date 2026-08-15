@@ -295,31 +295,78 @@ class TenantBackupService
 
     private function spawnJobProcess( string $jobId ): void
     {
+        // Prefer a detached CLI process when shell functions are allowed.
+        if ( $this->spawnDetachedCliProcess( $jobId ) ) {
+            return;
+        }
+
+        // Shared hosts often disable exec()/shell_exec(). Run after the HTTP
+        // response is sent so the API still returns immediately (no proxy timeout).
+        dispatch( function () use ( $jobId ) {
+            ignore_user_abort( true );
+            @set_time_limit( 0 );
+            @ini_set( 'max_execution_time', '0' );
+
+            try {
+                app( self::class )->runJob( $jobId );
+            } catch ( Throwable $e ) {
+                Log::error( 'Backup afterResponse job failed', [
+                    'job_id' => $jobId,
+                    'error'  => $e->getMessage(),
+                ] );
+            }
+        } )->afterResponse();
+    }
+
+    private function spawnDetachedCliProcess( string $jobId ): bool
+    {
         $php     = $this->findPhpBinary();
         $artisan = base_path( 'artisan' );
         $logFile = storage_path( 'logs/backup-' . $jobId . '.log' );
 
         if ( PHP_OS_FAMILY === 'Windows' ) {
+            if ( ! \function_exists( 'popen' ) || ! \function_exists( 'pclose' ) ) {
+                return false;
+            }
+
             $command = sprintf(
                 'start /B "" %s %s backup:run %s > %s 2>&1',
-                escapeshellarg( $php ),
-                escapeshellarg( $artisan ),
-                escapeshellarg( $jobId ),
-                escapeshellarg( $logFile )
+                \escapeshellarg( $php ),
+                \escapeshellarg( $artisan ),
+                \escapeshellarg( $jobId ),
+                \escapeshellarg( $logFile )
             );
-            pclose( popen( $command, 'r' ) );
 
-            return;
+            $handle = @\popen( $command, 'r' );
+            if ( $handle === false ) {
+                return false;
+            }
+            \pclose( $handle );
+
+            return true;
+        }
+
+        if ( ! \function_exists( 'exec' ) ) {
+            return false;
         }
 
         $command = sprintf(
             'nohup %s %s backup:run %s > %s 2>&1 &',
-            escapeshellarg( $php ),
-            escapeshellarg( $artisan ),
-            escapeshellarg( $jobId ),
-            escapeshellarg( $logFile )
+            \escapeshellarg( $php ),
+            \escapeshellarg( $artisan ),
+            \escapeshellarg( $jobId ),
+            \escapeshellarg( $logFile )
         );
-        exec( $command );
+
+        try {
+            @\exec( $command );
+        } catch ( Throwable $e ) {
+            Log::warning( 'Backup CLI spawn failed', ['error' => $e->getMessage()] );
+
+            return false;
+        }
+
+        return true;
     }
 
     private function findPhpBinary(): string
@@ -417,7 +464,10 @@ class TenantBackupService
 
             $output = [];
             $code   = 0;
-            exec( $command, $output, $code );
+            if ( ! \function_exists( 'exec' ) ) {
+                return false;
+            }
+            @\exec( $command, $output, $code );
 
             if ( $code !== 0 || ! File::exists( $outputFile ) || File::size( $outputFile ) === 0 ) {
                 Log::warning( 'mysqldump failed, will try PHP dump', [
@@ -530,7 +580,10 @@ class TenantBackupService
         foreach ( $candidates as $candidate ) {
             if ( $candidate === 'mysqldump' ) {
                 $which = stripos( PHP_OS_FAMILY, 'Windows' ) === 0 ? 'where' : 'command -v';
-                $found = trim( (string) shell_exec( $which . ' mysqldump 2>/dev/null' ) );
+                $found = '';
+                if ( \function_exists( 'shell_exec' ) ) {
+                    $found = trim( (string) @\shell_exec( $which . ' mysqldump 2>/dev/null' ) );
+                }
                 if ( $found !== '' ) {
                     $first = preg_split( '/\r\n|\n|\r/', $found )[0] ?? '';
                     if ( $first !== '' && ( is_executable( $first ) || File::exists( $first ) ) ) {
