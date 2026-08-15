@@ -63,6 +63,7 @@ class BackupController extends Controller
                 'error'        => $job['error'] ?? null,
                 'errors'       => $job['errors'] ?? [],
                 'filename'     => $job['filename'] ?? null,
+                'size'         => $job['size'] ?? null,
                 'created_at'   => $job['created_at'] ?? null,
                 'updated_at'   => $job['updated_at'] ?? null,
                 'download_url' => ( $job['status'] ?? '' ) === 'ready'
@@ -83,6 +84,17 @@ class BackupController extends Controller
             ], 404 );
         }
 
+        if ( ( $job['status'] ?? '' ) === 'failed' ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => $job['message'] ?? 'Backup failed. Please start a new backup.',
+                'data'    => [
+                    'job_id' => $job['id'],
+                    'error'  => $job['error'] ?? null,
+                ],
+            ], 422 );
+        }
+
         if ( ( $job['status'] ?? '' ) !== 'ready' ) {
             return response()->json( [
                 'status'  => 409,
@@ -96,19 +108,21 @@ class BackupController extends Controller
         }
 
         $path = $job['path'] ?? null;
-        if ( ! $path || ! File::exists( $path ) ) {
+        if ( ! $path || ! File::exists( $path ) || File::size( $path ) < 1 ) {
             return response()->json( [
                 'status'  => 404,
-                'message' => 'Backup file missing.',
+                'message' => 'Backup file missing. Please start a new backup.',
+                'data'    => [
+                    'job_id' => $job['id'],
+                ],
             ], 404 );
         }
 
-        $filename = $job['filename'] ?: basename( $path );
+        $filename = $job['filename'] ?: ( $jobId . '.zip' );
 
-        return response()
-            ->download( $path, $filename, [
-                'Content-Type' => 'application/zip',
-            ] )
-            ->deleteFileAfterSend( true );
+        // Keep file so the same job can be downloaded again.
+        return response()->download( $path, $filename, [
+            'Content-Type' => 'application/zip',
+        ] );
     }
 }

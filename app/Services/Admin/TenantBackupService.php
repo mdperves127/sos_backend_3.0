@@ -68,8 +68,43 @@ class TenantBackupService
         }
 
         $data = json_decode( File::get( $file ), true );
+        if ( ! is_array( $data ) ) {
+            return null;
+        }
 
-        return is_array( $data ) ? $data : null;
+        // Job marked ready but zip was lost (cross-filesystem move fail / cleanup).
+        if ( ( $data['status'] ?? '' ) === 'ready' ) {
+            $path = $data['path'] ?? null;
+            if ( ! $path || ! File::exists( $path ) || File::size( $path ) < 1 ) {
+                $data['status']  = 'failed';
+                $data['message'] = 'Backup file missing. Please start a new backup.';
+                $data['error']   = 'Zip file not found on disk.';
+                $data['updated_at'] = now()->toIso8601String();
+                $this->writeJob( $jobId, $data );
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * rename() fails across filesystems (tmp → storage). Copy+delete is reliable.
+     */
+    private function storeZipFile( string $source, string $destination ): void
+    {
+        if ( ! File::exists( $source ) ) {
+            throw new RuntimeException( 'Temporary backup zip not found.' );
+        }
+
+        if ( @\rename( $source, $destination ) ) {
+            return;
+        }
+
+        if ( ! File::copy( $source, $destination ) ) {
+            throw new RuntimeException( 'Unable to copy backup zip into storage.' );
+        }
+
+        File::delete( $source );
     }
 
     public function runJob( string $jobId ): void
@@ -97,13 +132,19 @@ class TenantBackupService
             if ( File::exists( $finalPath ) ) {
                 File::delete( $finalPath );
             }
-            File::move( $zip['path'], $finalPath );
+
+            $this->storeZipFile( $zip['path'], $finalPath );
+
+            if ( ! File::exists( $finalPath ) || File::size( $finalPath ) < 1 ) {
+                throw new RuntimeException( 'Backup zip was created but could not be stored for download.' );
+            }
 
             $this->writeJob( $jobId, array_merge( $meta, [
                 'status'     => 'ready',
                 'message'    => 'Backup ready for download.',
-                'filename'   => $zip['filename'],
+                'filename'   => $zip['filename'] ?: ( $jobId . '.zip' ),
                 'path'       => $finalPath,
+                'size'       => File::size( $finalPath ),
                 'updated_at' => now()->toIso8601String(),
                 'errors'     => $zip['errors'] ?? [],
             ] ) );
