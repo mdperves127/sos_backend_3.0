@@ -112,13 +112,38 @@ class SubscriptionController extends Controller {
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Subscription  $subscription
-     * @return \Illuminate\Http\Response
+     * Delete a custom package (soft delete). Only packages with is_custom = true.
      */
-    public function destroy( Subscription $subscription ) {
-        //
+    public function destroyCustomPackage( $id ) {
+        if ( checkpermission( 'subscription' ) != 1 ) {
+            return $this->permissionmessage();
+        }
+
+        $package = Subscription::query()
+            ->where( 'id', $id )
+            ->where( 'is_custom', true )
+            ->first();
+
+        if ( ! $package ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Custom package not found.',
+            ], 404 );
+        }
+
+        $package->delete();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Custom package deleted successfully.',
+        ] );
+    }
+
+    /**
+     * Resource destroy — same as custom package delete when targeting a custom package.
+     */
+    public function destroy( $id ) {
+        return $this->destroyCustomPackage( $id );
     }
 
     function requirement( SubscriptionRequest $request ) {
