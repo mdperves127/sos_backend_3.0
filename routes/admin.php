@@ -261,6 +261,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
 
         Route::resource( 'subscription', SubscriptionController::class );
         Route::post( 'subscription/custom', [SubscriptionController::class, 'store'] );
+        Route::get( 'custom-package', [SubscriptionController::class, 'customPackages'] );
         Route::post( 'custom-package', [SubscriptionController::class, 'store'] );
         Route::post( 'subscription/requirement/{id}', [SubscriptionController::class, 'requirement'] );
 

@@ -21,6 +21,7 @@ class SubscriptionService
             'subscription_user_type'    => $data['subscription_user_type'],
             'subscription_package_type' => $data['subscription_package_type'],
             'plan_type'                 => $data['plan_type'],
+            'is_custom'                 => true,
             'card_symbol_icon'          => $data['card_symbol_icon'],
             'subscription_amount'       => $data['subscription_amount'],
             'card_time'                 => $data['card_time'],

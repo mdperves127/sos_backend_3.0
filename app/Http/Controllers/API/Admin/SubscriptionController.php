@@ -20,10 +20,35 @@ class SubscriptionController extends Controller {
             return $this->permissionmessage();
         }
 
-        $data = Subscription::all();
+        $query = Subscription::query()->latest( 'id' );
+
+        if ( request()->has( 'is_custom' ) ) {
+            $query->where( 'is_custom', filter_var( request( 'is_custom' ), FILTER_VALIDATE_BOOLEAN ) );
+        }
+
         return response()->json( [
             'status' => 200,
-            'data'   => $data,
+            'data'   => $query->get(),
+        ] );
+    }
+
+    /**
+     * List only custom packages (created via custom-package API).
+     */
+    public function customPackages() {
+        if ( checkpermission( 'subscription' ) != 1 ) {
+            return $this->permissionmessage();
+        }
+
+        $data = Subscription::query()
+            ->where( 'is_custom', true )
+            ->latest( 'id' )
+            ->get();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Custom packages fetched successfully.',
+            'data'    => $data,
         ] );
     }
 

@@ -80,6 +80,7 @@ use App\Http\Controllers\Tenant\TenantDashboardController;
 use App\Http\Controllers\Tenant\TenantEmployeeController;
 use App\Http\Controllers\Tenant\ProductReviewController;
 use App\Http\Controllers\BuySubscription;
+use App\Http\Controllers\Tenant\SubscriptionPackageController;
 use App\Http\Controllers\Tenant\NcategoryController;
 use App\Http\Controllers\Tenant\PageController;
 use App\Http\Controllers\Tenant\NewsController;
@@ -584,6 +585,9 @@ Route::middleware( [
 
 
         Route::prefix( 'tenant-subscription' )->group( function () {
+            // Same packages admin creates via POST /api/admin/custom-package
+            Route::get( 'custom-package', [SubscriptionPackageController::class, 'index'] );
+            Route::get( 'custom-package/{id}', [SubscriptionPackageController::class, 'show'] );
             Route::get( 'buy/subscription/{id}', [BuySubscription::class, 'buy'] );
             Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
             Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );

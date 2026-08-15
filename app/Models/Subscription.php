@@ -16,5 +16,6 @@ class Subscription extends Model
 
     protected $casts = [
         'card_facilities_title' => 'json',
+        'is_custom'             => 'boolean',
     ];
 }
