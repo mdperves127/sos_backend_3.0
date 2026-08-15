@@ -38,6 +38,9 @@ class TenantBackupService
         bool $includeDeleted = false,
         bool $includeAssets = false
     ): array {
+        // Free space before starting — old zips often cause "Disk quota exceeded".
+        $this->purgeOldBackups();
+
         $jobId = (string) Str::uuid();
         $meta  = [
             'id'              => $jobId,
@@ -58,6 +61,39 @@ class TenantBackupService
         $this->spawnJobProcess( $jobId );
 
         return $meta;
+    }
+
+    /**
+     * Remove previous backup zips, job metas, and temp dump folders.
+     */
+    public function purgeOldBackups( ?string $keepJobId = null ): void
+    {
+        foreach ( File::glob( $this->zipsDir() . DIRECTORY_SEPARATOR . '*.zip' ) ?: [] as $zip ) {
+            File::delete( $zip );
+        }
+
+        foreach ( File::glob( $this->jobsDir() . DIRECTORY_SEPARATOR . '*.json' ) ?: [] as $jobFile ) {
+            if ( $keepJobId && basename( $jobFile, '.json' ) === $keepJobId ) {
+                continue;
+            }
+            File::delete( $jobFile );
+        }
+
+        $tmpRoot = $this->tmpDir();
+        if ( File::isDirectory( $tmpRoot ) ) {
+            File::deleteDirectory( $tmpRoot );
+        }
+        File::makeDirectory( $tmpRoot, 0755, true );
+    }
+
+    public function tmpDir(): string
+    {
+        $dir = storage_path( 'app/backups/tmp' );
+        if ( ! File::isDirectory( $dir ) ) {
+            File::makeDirectory( $dir, 0755, true );
+        }
+
+        return $dir;
     }
 
     public function getJob( string $jobId ): ?array
@@ -87,26 +123,6 @@ class TenantBackupService
         return $data;
     }
 
-    /**
-     * rename() fails across filesystems (tmp → storage). Copy+delete is reliable.
-     */
-    private function storeZipFile( string $source, string $destination ): void
-    {
-        if ( ! File::exists( $source ) ) {
-            throw new RuntimeException( 'Temporary backup zip not found.' );
-        }
-
-        if ( @\rename( $source, $destination ) ) {
-            return;
-        }
-
-        if ( ! File::copy( $source, $destination ) ) {
-            throw new RuntimeException( 'Unable to copy backup zip into storage.' );
-        }
-
-        File::delete( $source );
-    }
-
     public function runJob( string $jobId ): void
     {
         $meta = $this->getJob( $jobId );
@@ -120,20 +136,17 @@ class TenantBackupService
             'updated_at' => now()->toIso8601String(),
         ] ) );
 
+        $finalPath = $this->zipsDir() . DIRECTORY_SEPARATOR . $jobId . '.zip';
+
         try {
+            // Build zip directly in the download location (no temp→storage copy).
             $zip = $this->createDownloadableZip(
                 (bool) ( $meta['include_central'] ?? true ),
                 (bool) ( $meta['include_deleted'] ?? false ),
                 (bool) ( $meta['include_assets'] ?? false ),
-                $jobId
+                $jobId,
+                $finalPath
             );
-
-            $finalPath = $this->zipsDir() . DIRECTORY_SEPARATOR . $jobId . '.zip';
-            if ( File::exists( $finalPath ) ) {
-                File::delete( $finalPath );
-            }
-
-            $this->storeZipFile( $zip['path'], $finalPath );
 
             if ( ! File::exists( $finalPath ) || File::size( $finalPath ) < 1 ) {
                 throw new RuntimeException( 'Backup zip was created but could not be stored for download.' );
@@ -149,20 +162,41 @@ class TenantBackupService
                 'errors'     => $zip['errors'] ?? [],
             ] ) );
         } catch ( Throwable $e ) {
+            if ( File::exists( $finalPath ) ) {
+                File::delete( $finalPath );
+            }
+
+            $error = $this->friendlyDiskError( $e->getMessage() );
+
             Log::error( 'Backup job failed', [
                 'job_id' => $jobId,
-                'error'  => $e->getMessage(),
+                'error'  => $error,
             ] );
 
             $this->writeJob( $jobId, array_merge( $meta, [
                 'status'     => 'failed',
                 'message'    => 'Backup failed.',
-                'error'      => $e->getMessage(),
+                'error'      => $error,
                 'updated_at' => now()->toIso8601String(),
             ] ) );
 
             throw $e;
         }
+    }
+
+    private function friendlyDiskError( string $message ): string
+    {
+        if (
+            stripos( $message, 'Disk quota exceeded' ) !== false
+            || stripos( $message, 'errno=122' ) !== false
+            || stripos( $message, 'No space left' ) !== false
+        ) {
+            return 'Disk quota exceeded on the server. Free hosting disk space '
+                . '(logs, old uploads, storage/app/backups), then start a new backup. '
+                . 'Tip: omit include_assets=1 to keep the zip smaller.';
+        }
+
+        return $message;
     }
 
     /**
@@ -172,7 +206,8 @@ class TenantBackupService
         bool $includeCentral = true,
         bool $includeDeleted = false,
         bool $includeAssets = false,
-        ?string $jobId = null
+        ?string $jobId = null,
+        ?string $targetZipPath = null
     ): array {
         @set_time_limit( 0 );
         @ini_set( 'max_execution_time', '0' );
@@ -181,8 +216,11 @@ class TenantBackupService
 
         $stamp    = now()->format( 'Y-m-d-His' );
         $basename = 'tenant-backup-' . $stamp;
-        $workDir  = rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . 'tmp-' . $basename;
-        $zipPath  = rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $basename . '.zip';
+        // Keep dumps under storage/app/backups/tmp so they share the same quota
+        // we can purge, and write the zip straight to the download path.
+        $workDir  = $this->tmpDir() . DIRECTORY_SEPARATOR . ( $jobId ?: ( 'tmp-' . $basename ) );
+        $zipPath  = $targetZipPath
+            ?: ( $this->zipsDir() . DIRECTORY_SEPARATOR . $basename . '.zip' );
         $errors   = [];
         $databases = [];
         $assets   = [];
@@ -319,7 +357,7 @@ class TenantBackupService
 
             return [
                 'path'     => $zipPath,
-                'filename' => basename( $zipPath ),
+                'filename' => $basename . '.zip',
                 'errors'   => $errors,
             ];
         } catch ( Throwable $e ) {
