@@ -35,11 +35,14 @@ class ProductOrderService {
             ], 404 );
         }
 
-        if ( auth()->check() && (int) $order->vendor_id !== (int) auth()->id() ) {
-            return response()->json( [
-                'status'  => 403,
-                'message' => 'You are not authorized to update this order.',
-            ], 403 );
+        if ( auth()->check() ) {
+            $ownerId = function_exists( 'vendorId' ) ? vendorId() : auth()->id();
+            if ( (int) $order->vendor_id !== (int) $ownerId ) {
+                return response()->json( [
+                    'status'  => 403,
+                    'message' => 'You are not authorized to update this order.',
+                ], 403 );
+            }
         }
 
         $status = $validatedData['status'] ?? request( 'status' );
@@ -237,201 +240,301 @@ class ProductOrderService {
         return self::response( 'Order ready successfull!' );
     }
 
-    // Product progress
+    // Product progress — send to active courier (Pathao / Steadfast / Redx) then update order.
 
     static function progressOrder( $order ) {
+        // Already handed to courier: do not create a duplicate consignment.
+        if ( ! empty( $order->consignment_id ) ) {
+            if ( $order->status !== 'progress' ) {
+                $order->update( [
+                    'status'      => 'progress',
+                    'last_status' => 'progress',
+                ] );
+                self::syncWoocommerceStatus( $order, 'progress', 'processing' );
+            }
+
+            return response()->json( [
+                'status'         => 200,
+                'message'        => 'Order already sent to courier.',
+                'consignment_id' => $order->consignment_id,
+                'courier_name'   => $order->courier_name,
+                'delivery_id'    => $order->delivery_id,
+            ] );
+        }
+
         $courierOrder = OrderDeliveryToCourier::where( [
             'order_id'          => $order->id,
             'vendor_id'         => $order->vendor_id,
             'merchant_order_id' => $order->order_id,
         ] )->first();
 
-        // Prefer courier credential selected on the order payload.
-        $credential = null;
-        if ( $courierOrder && !empty( $courierOrder->courier_id ) ) {
-            $credential = CourierCredential::where( [
-                'id'        => $courierOrder->courier_id,
-                'vendor_id' => $order->vendor_id,
-                'status'    => 'active',
-            ] )->first();
-        }
+        $credential = self::resolveActiveCourierCredential( $order, $courierOrder );
 
-        // Fallback to vendor default active courier.
-        if ( !$credential ) {
-            $credential = CourierCredential::where( [
-                'vendor_id' => $order->vendor_id,
-                'status'    => 'active',
-                'default'   => 'yes',
-            ] )->first();
-        }
-
-        if ( !$credential ) {
+        if ( ! $credential ) {
             return self::markOrderAsProgress( $order );
         }
 
-        if ( !$courierOrder ) {
+        if ( ! $courierOrder ) {
             $courierOrder = self::createCourierOrderFromOrder( $order, $credential );
         } else {
             self::hydrateCourierOrderFromOrder( $courierOrder, $order, $credential );
         }
 
-        if ( !$courierOrder->courier_id ) {
+        if ( (int) $courierOrder->courier_id !== (int) $credential->id ) {
             $courierOrder->update( ['courier_id' => $credential->id] );
             $courierOrder->refresh();
         }
 
-        if ( $credential->courier_name == 'pathao' ) {
-            $missingFields = self::missingPathaoFields( $credential, $courierOrder );
-            if ( !empty( $missingFields ) ) {
-                return response()->json( [
+        $courierOrder->loadMissing( 'courierCredential' );
+
+        try {
+            return match ( $credential->courier_name ) {
+                'pathao' => self::progressWithPathao( $order, $courierOrder, $credential ),
+                'steadfast' => self::progressWithSteadfast( $order, $courierOrder, $credential ),
+                'redx' => self::progressWithRedx( $order, $courierOrder, $credential ),
+                default => response()->json( [
                     'status'  => 400,
-                    'message' => 'Pathao order data is incomplete.',
-                    'missing' => $missingFields,
-                ] );
-            }
-
-            $candidates = collect( [$credential] )->merge(
-                CourierCredential::query()
-                    ->where( 'vendor_id', $order->vendor_id )
-                    ->where( 'courier_name', 'pathao' )
-                    ->where( 'status', 'active' )
-                    ->where( 'id', '!=', $credential->id )
-                    ->get()
-            );
-
-            $orderToCourier = null;
-            $usedCredential = $credential;
-            $triedStores    = [];
-
-            foreach ( $candidates as $candidate ) {
-                $candidateStoreId = is_numeric( $candidate->store_id ) ? (int) $candidate->store_id : null;
-                if ( !$candidateStoreId || $candidateStoreId < 1 ) {
-                    $triedStores[] = ['credential_id' => $candidate->id, 'store_id' => $candidate->store_id, 'result' => 'invalid_store_id'];
-                    continue;
-                }
-
-                $access_token = PathaoService::getToken( $candidate->api_key, $candidate->secret_key, $candidate->client_email, $candidate->client_password );
-                if ( !is_string( $access_token ) || $access_token === '' ) {
-                    $triedStores[] = ['credential_id' => $candidate->id, 'store_id' => $candidateStoreId, 'result' => 'token_failed'];
-                    $orderToCourier = $access_token;
-                    continue;
-                }
-
-                $attempt = PathaoService::newOrder( $access_token, $candidateStoreId, $courierOrder );
-                if ( self::isWrongStoreError( $attempt ) ) {
-                    $freshAccessToken = PathaoService::getToken(
-                        $candidate->api_key,
-                        $candidate->secret_key,
-                        $candidate->client_email,
-                        $candidate->client_password,
-                        true
-                    );
-                    if ( is_string( $freshAccessToken ) && $freshAccessToken !== '' ) {
-                        $attempt = PathaoService::newOrder( $freshAccessToken, $candidateStoreId, $courierOrder );
-                    }
-                }
-
-                $triedStores[] = ['credential_id' => $candidate->id, 'store_id' => $candidateStoreId, 'result' => isset( $attempt['data']['consignment_id'] ) ? 'success' : 'failed'];
-
-                if ( is_array( $attempt ) && isset( $attempt['data']['consignment_id'] ) ) {
-                    $orderToCourier = $attempt;
-                    $usedCredential = $candidate;
-                    break;
-                }
-
-                $orderToCourier = $attempt;
-            }
-
-            if ( !is_array( $orderToCourier ) || !isset( $orderToCourier['data']['consignment_id'] ) ) {
-                return response()->json( [
-                    'status'        => 400,
-                    'message'       => self::courierErrorMessage( $orderToCourier, 'Courier order creation failed.' ),
-                    'error_details' => self::courierErrorDetails( $orderToCourier ),
-                    'pathao_debug'  => [
-                        'credential_id' => $usedCredential->id ?? $credential->id,
-                        'store_id'      => $usedCredential->store_id ?? $credential->store_id,
-                        'client_email'  => $usedCredential->client_email ?? $credential->client_email ?? null,
-                        'pathao_mode'   => config( 'services.pathao.sandbox' ) ? 'sandbox' : 'live',
-                        'courier_id'    => $courierOrder->courier_id,
-                        'tried_stores'  => $triedStores,
-                    ],
-                ] );
-            }
-
-            if ( $courierOrder->courier_id != $usedCredential->id ) {
-                $courierOrder->update( ['courier_id' => $usedCredential->id] );
-                $courierOrder->refresh();
-            }
-
-            self::updateOrderProgressWithCourier( $order, $courierOrder, $orderToCourier['data']['consignment_id'], $usedCredential->courier_name );
-
+                    'message' => 'Unsupported courier: ' . $credential->courier_name,
+                ], 400 ),
+            };
+        } catch ( \Throwable $e ) {
             return response()->json( [
-                'status'         => 200,
-                'message'        => 'Order progress successfull!',
-                'consignment_id' => $orderToCourier['data']['consignment_id'],
-                'delivery_fee'   => $orderToCourier['data']['delivery_fee'] ?? null,
-                'courier_name'   => $courierOrder->courierCredential->courier_name ?? $credential->courier_name,
+                'status'  => 500,
+                'message' => 'Courier dispatch failed: ' . $e->getMessage(),
+            ], 500 );
+        }
+    }
 
-            ] );
-        } elseif ( $credential->courier_name == 'steadfast' ) {
-            $missingFields = self::missingSteadfastFields( $courierOrder );
-            if ( ! empty( $missingFields ) ) {
-                return response()->json( [
-                    'status'  => 400,
-                    'message' => 'Steadfast order data is incomplete.',
-                    'missing' => $missingFields,
-                ] );
+    protected static function resolveActiveCourierCredential( $order, $courierOrder = null ): ?CourierCredential
+    {
+        $requestCourierId = request()->input( 'courier_id' );
+
+        if ( $requestCourierId ) {
+            $credential = CourierCredential::where( [
+                'id'        => $requestCourierId,
+                'vendor_id' => $order->vendor_id,
+                'status'    => 'active',
+            ] )->first();
+            if ( $credential ) {
+                return $credential;
             }
-
-            $orderToCourier = SteadFastService::createOrder( $credential->api_key, $credential->secret_key, $courierOrder );
-
-            if ( ! SteadFastService::isCreateSuccess( $orderToCourier ) ) {
-                return response()->json( [
-                    'status'        => 400,
-                    'message'       => self::courierErrorMessage( $orderToCourier, 'Courier order creation failed.' ),
-                    'error_details' => self::courierErrorDetails( $orderToCourier ),
-                ] );
-            }
-
-            $consignment = $orderToCourier['consignment'];
-
-            self::updateOrderProgressWithCourier( $order, $courierOrder, $consignment['consignment_id'], $credential->courier_name );
-
-            return response()->json( [
-                'status'         => 200,
-                'message'        => $orderToCourier['message'] ?? 'Order progress successful!',
-                'consignment_id' => $consignment['consignment_id'],
-                'tracking_code'  => $consignment['tracking_code'] ?? null,
-                'invoice'        => $consignment['invoice'] ?? null,
-                'delivery_fee'   => null,
-                'courier_name'   => $courierOrder->courierCredential->courier_name ?? $credential->courier_name,
-            ] );
-        } elseif ( $credential->courier_name == 'redx' ) {
-
-            $orderToCourier = RedxService::newOrderRedx( $credential->api_key, $courierOrder );
-            if ( !is_array( $orderToCourier ) || !isset( $orderToCourier['tracking_id'] ) ) {
-                return response()->json( [
-                    'status'  => 400,
-                    'message' => self::courierErrorMessage( $orderToCourier, 'Courier order creation failed.' ),
-                ] );
-            }
-
-            self::updateOrderProgressWithCourier( $order, $courierOrder, $orderToCourier['tracking_id'], $credential->courier_name );
-
-            return response()->json( [
-                'status'         => 200,
-                'message'        => 'Order progress successfull!',
-                'consignment_id' => $orderToCourier['tracking_id'],
-                'courier_name'   => $courierOrder->courierCredential->courier_name ?? $credential->courier_name,
-
-            ] );
         }
 
-        return response()->json( [
-            'status'  => 400,
-            'message' => 'Courier credential not found!',
-        ] );
+        if ( $courierOrder && ! empty( $courierOrder->courier_id ) ) {
+            $credential = CourierCredential::where( [
+                'id'        => $courierOrder->courier_id,
+                'vendor_id' => $order->vendor_id,
+                'status'    => 'active',
+            ] )->first();
+            if ( $credential ) {
+                return $credential;
+            }
+        }
 
+        $default = CourierCredential::where( [
+            'vendor_id' => $order->vendor_id,
+            'status'    => 'active',
+            'default'   => 'yes',
+        ] )->first();
+
+        if ( $default ) {
+            return $default;
+        }
+
+        return CourierCredential::where( [
+            'vendor_id' => $order->vendor_id,
+            'status'    => 'active',
+        ] )->orderByDesc( 'id' )->first();
+    }
+
+    protected static function progressWithPathao( $order, $courierOrder, $credential )
+    {
+        $missingFields = self::missingPathaoFields( $credential, $courierOrder );
+        if ( ! empty( $missingFields ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Pathao order data is incomplete.',
+                'missing' => $missingFields,
+            ], 400 );
+        }
+
+        $candidates = collect( [$credential] )->merge(
+            CourierCredential::query()
+                ->where( 'vendor_id', $order->vendor_id )
+                ->where( 'courier_name', 'pathao' )
+                ->where( 'status', 'active' )
+                ->where( 'id', '!=', $credential->id )
+                ->get()
+        );
+
+        $orderToCourier = null;
+        $usedCredential = $credential;
+        $triedStores    = [];
+
+        foreach ( $candidates as $candidate ) {
+            $candidateStoreId = is_numeric( $candidate->store_id ) ? (int) $candidate->store_id : null;
+            if ( ! $candidateStoreId || $candidateStoreId < 1 ) {
+                $triedStores[] = ['credential_id' => $candidate->id, 'store_id' => $candidate->store_id, 'result' => 'invalid_store_id'];
+                continue;
+            }
+
+            $accessToken = PathaoService::getToken(
+                $candidate->api_key,
+                $candidate->secret_key,
+                $candidate->client_email,
+                $candidate->client_password
+            );
+
+            if ( ! is_string( $accessToken ) || $accessToken === '' ) {
+                $triedStores[]  = ['credential_id' => $candidate->id, 'store_id' => $candidateStoreId, 'result' => 'token_failed'];
+                $orderToCourier = is_array( $accessToken ) ? $accessToken : ['message' => 'Pathao token failed.', 'status' => 401];
+                continue;
+            }
+
+            $attempt = PathaoService::newOrder( $accessToken, $candidateStoreId, $courierOrder );
+            if ( self::isWrongStoreError( $attempt ) ) {
+                $freshAccessToken = PathaoService::getToken(
+                    $candidate->api_key,
+                    $candidate->secret_key,
+                    $candidate->client_email,
+                    $candidate->client_password,
+                    true
+                );
+                if ( is_string( $freshAccessToken ) && $freshAccessToken !== '' ) {
+                    $attempt = PathaoService::newOrder( $freshAccessToken, $candidateStoreId, $courierOrder );
+                }
+            }
+
+            $ok = PathaoService::isCreateSuccess( is_array( $attempt ) ? $attempt : [] );
+            $triedStores[] = [
+                'credential_id' => $candidate->id,
+                'store_id'      => $candidateStoreId,
+                'result'        => $ok ? 'success' : 'failed',
+            ];
+
+            if ( $ok ) {
+                $orderToCourier = $attempt;
+                $usedCredential = $candidate;
+                break;
+            }
+
+            $orderToCourier = $attempt;
+        }
+
+        if ( ! is_array( $orderToCourier ) || ! PathaoService::isCreateSuccess( $orderToCourier ) ) {
+            return response()->json( [
+                'status'        => 400,
+                'message'       => self::courierErrorMessage( $orderToCourier, 'Pathao order creation failed.' ),
+                'error_details' => self::courierErrorDetails( $orderToCourier ),
+                'pathao_debug'  => [
+                    'credential_id' => $usedCredential->id ?? $credential->id,
+                    'store_id'      => $usedCredential->store_id ?? $credential->store_id,
+                    'client_email'  => $usedCredential->client_email ?? $credential->client_email ?? null,
+                    'pathao_mode'   => config( 'services.pathao.sandbox' ) ? 'sandbox' : 'live',
+                    'courier_id'    => $courierOrder->courier_id,
+                    'tried_stores'  => $triedStores,
+                ],
+            ], 400 );
+        }
+
+        if ( (int) $courierOrder->courier_id !== (int) $usedCredential->id ) {
+            $courierOrder->update( ['courier_id' => $usedCredential->id] );
+            $courierOrder->refresh();
+        }
+
+        self::updateOrderProgressWithCourier(
+            $order,
+            $courierOrder,
+            $orderToCourier['data']['consignment_id'],
+            $usedCredential->courier_name
+        );
+
+        return response()->json( [
+            'status'         => 200,
+            'message'        => 'Order sent to Pathao successfully.',
+            'consignment_id' => $orderToCourier['data']['consignment_id'],
+            'delivery_fee'   => $orderToCourier['data']['delivery_fee'] ?? null,
+            'courier_name'   => $usedCredential->courier_name,
+            'delivery_id'    => $order->fresh()->delivery_id,
+        ] );
+    }
+
+    protected static function progressWithSteadfast( $order, $courierOrder, $credential )
+    {
+        $missingFields = self::missingSteadfastFields( $courierOrder );
+        if ( ! empty( $missingFields ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Steadfast order data is incomplete.',
+                'missing' => $missingFields,
+            ], 400 );
+        }
+
+        $orderToCourier = SteadFastService::createOrder( $credential->api_key, $credential->secret_key, $courierOrder );
+
+        if ( ! SteadFastService::isCreateSuccess( $orderToCourier ) ) {
+            return response()->json( [
+                'status'        => 400,
+                'message'       => self::courierErrorMessage( $orderToCourier, 'Steadfast order creation failed.' ),
+                'error_details' => self::courierErrorDetails( $orderToCourier ),
+            ], 400 );
+        }
+
+        $consignment = $orderToCourier['consignment'];
+
+        self::updateOrderProgressWithCourier(
+            $order,
+            $courierOrder,
+            $consignment['consignment_id'],
+            $credential->courier_name,
+            $consignment['tracking_code'] ?? null
+        );
+
+        return response()->json( [
+            'status'         => 200,
+            'message'        => $orderToCourier['message'] ?? 'Order sent to Steadfast successfully.',
+            'consignment_id' => $consignment['consignment_id'],
+            'tracking_code'  => $consignment['tracking_code'] ?? null,
+            'invoice'        => $consignment['invoice'] ?? null,
+            'courier_name'   => $credential->courier_name,
+            'delivery_id'    => $order->fresh()->delivery_id,
+        ] );
+    }
+
+    protected static function progressWithRedx( $order, $courierOrder, $credential )
+    {
+        $missingFields = self::missingRedxFields( $courierOrder );
+        if ( ! empty( $missingFields ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Redx order data is incomplete.',
+                'missing' => $missingFields,
+            ], 400 );
+        }
+
+        $orderToCourier = RedxService::newOrderRedx( $credential->api_key, $courierOrder );
+        if ( ! is_array( $orderToCourier ) || empty( $orderToCourier['tracking_id'] ) ) {
+            return response()->json( [
+                'status'        => 400,
+                'message'       => self::courierErrorMessage( $orderToCourier, 'Redx order creation failed.' ),
+                'error_details' => self::courierErrorDetails( $orderToCourier ),
+            ], 400 );
+        }
+
+        self::updateOrderProgressWithCourier(
+            $order,
+            $courierOrder,
+            $orderToCourier['tracking_id'],
+            $credential->courier_name
+        );
+
+        return response()->json( [
+            'status'         => 200,
+            'message'        => 'Order sent to Redx successfully.',
+            'consignment_id' => $orderToCourier['tracking_id'],
+            'courier_name'   => $credential->courier_name,
+            'delivery_id'    => $order->fresh()->delivery_id,
+        ] );
     }
 
     protected static function markOrderAsProgress( $order ) {
@@ -444,19 +547,24 @@ class ProductOrderService {
 
         return response()->json( [
             'status'  => 200,
-            'message' => 'Order progress successfull!',
+            'message' => 'Order marked as progress (no active courier configured).',
+            'courier' => null,
         ] );
     }
 
-    protected static function updateOrderProgressWithCourier( $order, $courierOrder, $consignmentId, $fallbackCourierName = null ) {
+    protected static function updateOrderProgressWithCourier( $order, $courierOrder, $consignmentId, $fallbackCourierName = null, $trackingCode = null ) {
         $courierName = $courierOrder->courierCredential->courier_name ?? $fallbackCourierName;
+        $deliveryId  = $courierName ? ( $consignmentId . '_+_' . $courierName ) : (string) $consignmentId;
+        if ( $trackingCode ) {
+            $deliveryId .= '_+_' . $trackingCode;
+        }
 
         $order->update( [
             'status'         => 'progress',
             'last_status'    => 'progress',
-            'consignment_id' => $consignmentId,
+            'consignment_id' => (string) $consignmentId,
             'courier_name'   => $courierName,
-            'delivery_id'    => $courierName ? $consignmentId . "_+_" . $courierName : null,
+            'delivery_id'    => $deliveryId,
         ] );
 
         self::syncWoocommerceStatus( $order, 'progress', 'processing' );
@@ -559,11 +667,39 @@ class ProductOrderService {
 
     protected static function createCourierOrderFromOrder( $order, $credential ) {
         $payload = self::buildCourierPayloadFromOrder( $order, $credential );
+
+        if ( ! Schema::hasColumn( 'order_delivery_to_couriers', 'area_name' ) ) {
+            unset( $payload['area_name'] );
+        }
+
         return OrderDeliveryToCourier::create( $payload );
     }
 
     protected static function hydrateCourierOrderFromOrder( $courierOrder, $order, $credential ): void {
         $payload = self::buildCourierPayloadFromOrder( $order, $credential );
+        $request = request();
+
+        // Always apply request overrides when the client sends them.
+        $requestOverrides = [
+            'recipient_city'      => $request->input( 'recipient_city', $request->input( 'city_id' ) ),
+            'recipient_zone'      => $request->input( 'recipient_zone', $request->input( 'zone_id' ) ),
+            'recipient_area'      => $request->input( 'recipient_area', $request->input( 'area_id' ) ),
+            'area_name'           => $request->input( 'area_name' ),
+            'delivery_type'       => $request->input( 'delivery_type' ),
+            'item_type'           => $request->input( 'item_type' ),
+            'special_instruction' => $request->input( 'special_instruction' ),
+            'item_quantity'       => $request->input( 'item_quantity' ),
+            'item_weight'         => $request->input( 'item_weight' ),
+            'amount_to_collect'   => $request->input( 'amount_to_collect' ),
+            'item_description'    => $request->input( 'item_description' ),
+            'courier_id'          => $request->input( 'courier_id' ),
+        ];
+
+        foreach ( $requestOverrides as $field => $value ) {
+            if ( $value !== null && $value !== '' ) {
+                $payload[$field] = $value;
+            }
+        }
 
         $fillable = [
             'courier_id',
@@ -574,6 +710,7 @@ class ProductOrderService {
             'recipient_city',
             'recipient_zone',
             'recipient_area',
+            'area_name',
             'delivery_type',
             'item_type',
             'special_instruction',
@@ -585,13 +722,26 @@ class ProductOrderService {
 
         $updates = [];
         foreach ( $fillable as $field ) {
-            $current = $courierOrder->{$field};
-            if ( empty( $current ) && $current !== 0 && $current !== '0' && isset( $payload[$field] ) ) {
-                $updates[$field] = $payload[$field];
+            if ( ! array_key_exists( $field, $payload ) ) {
+                continue;
+            }
+            $current = $courierOrder->{$field} ?? null;
+            $incoming = $payload[$field];
+
+            $shouldFillEmpty = ( $current === null || $current === '' )
+                && $incoming !== null && $incoming !== '';
+            $shouldOverride  = $request->has( $field )
+                || ( $request->has( 'city_id' ) && $field === 'recipient_city' )
+                || ( $request->has( 'zone_id' ) && $field === 'recipient_zone' )
+                || ( $request->has( 'area_id' ) && $field === 'recipient_area' )
+                || ( $field === 'courier_id' && $request->filled( 'courier_id' ) );
+
+            if ( $shouldOverride || $shouldFillEmpty ) {
+                $updates[$field] = $incoming;
             }
         }
 
-        if ( !empty( $updates ) ) {
+        if ( ! empty( $updates ) ) {
             $courierOrder->update( $updates );
             $courierOrder->refresh();
         }
@@ -602,9 +752,28 @@ class ProductOrderService {
         $dueAmount     = (int) round( (float) ( $order->due_amount ?? 0 ) );
         $collectAmount = $dueAmount > 0 ? $dueAmount : (int) round( (float) ( $order->product_amount ?? 0 ) );
         $locationGuess = self::guessPathaoLocationFromHistory( $order );
-        $recipientCity = $statusRequest->input( 'recipient_city', $statusRequest->input( 'city_id', $locationGuess['recipient_city'] ?? 1 ) );
-        $recipientZone = $statusRequest->input( 'recipient_zone', $statusRequest->input( 'zone_id', $locationGuess['recipient_zone'] ?? 1 ) );
+
+        $recipientCity = $statusRequest->input( 'recipient_city', $statusRequest->input( 'city_id', $locationGuess['recipient_city'] ?? null ) );
+        $recipientZone = $statusRequest->input( 'recipient_zone', $statusRequest->input( 'zone_id', $locationGuess['recipient_zone'] ?? null ) );
         $recipientArea = $statusRequest->input( 'recipient_area', $statusRequest->input( 'area_id', $locationGuess['recipient_area'] ?? null ) );
+
+        $courierName = $credential->courier_name ?? '';
+        if ( $courierName === 'steadfast' ) {
+            $rawDelivery = $statusRequest->input( 'delivery_type', $statusRequest->input( 'steadfast_delivery_type', 0 ) );
+            $deliveryType = in_array( (int) $rawDelivery, [0, 1], true ) ? (int) $rawDelivery : 0;
+        } elseif ( $courierName === 'pathao' ) {
+            $deliveryType = (int) $statusRequest->input( 'delivery_type', 48 );
+        } else {
+            $deliveryType = $statusRequest->input( 'delivery_type', 48 );
+        }
+
+        $phone = (string) ( $order->phone ?? '' );
+        if ( class_exists( SteadFastService::class ) ) {
+            $normalized = SteadFastService::normalizeBdPhone( $phone );
+            if ( $normalized !== '' ) {
+                $phone = $normalized;
+            }
+        }
 
         return [
             'order_id'            => $order->id,
@@ -613,16 +782,17 @@ class ProductOrderService {
             'courier_id'          => $credential->id,
             'merchant_order_id'   => $order->order_id,
             'recipient_name'      => $order->name,
-            'recipient_phone'     => $order->phone,
+            'recipient_phone'     => $phone,
             'recipient_address'   => $order->address,
             'recipient_city'      => $recipientCity,
             'recipient_zone'      => $recipientZone,
             'recipient_area'      => $recipientArea,
-            'delivery_type'       => $statusRequest->input( 'delivery_type', 48 ),
+            'area_name'           => $statusRequest->input( 'area_name', $locationGuess['area_name'] ?? null ),
+            'delivery_type'       => $deliveryType,
             'item_type'           => $statusRequest->input( 'item_type', 2 ),
-            'special_instruction' => $statusRequest->input( 'special_instruction', '' ),
+            'special_instruction' => (string) $statusRequest->input( 'special_instruction', '' ),
             'item_quantity'       => $statusRequest->input( 'item_quantity', max( 1, (int) ( $order->qty ?? 1 ) ) ),
-            'item_weight'         => $statusRequest->input( 'item_weight', 1 ),
+            'item_weight'         => $statusRequest->input( 'item_weight', 0.5 ),
             'amount_to_collect'   => $statusRequest->input( 'amount_to_collect', max( 0, $collectAmount ) ),
             'item_description'    => $statusRequest->input( 'item_description', 'Order #' . $order->order_id ),
         ];
@@ -666,7 +836,7 @@ class ProductOrderService {
         $missing = [];
 
         if ( empty( $credential->store_id ) ) {
-            $missing[] = 338136;
+            $missing[] = 'store_id';
         }
 
         $requiredCourierFields = [
@@ -674,6 +844,8 @@ class ProductOrderService {
             'recipient_name',
             'recipient_phone',
             'recipient_address',
+            'recipient_city',
+            'recipient_zone',
             'delivery_type',
             'item_type',
             'item_quantity',
@@ -683,7 +855,8 @@ class ProductOrderService {
         ];
 
         foreach ( $requiredCourierFields as $field ) {
-            if ( empty( $courierOrder->{$field} ) && $courierOrder->{$field} !== 0 && $courierOrder->{$field} !== '0' ) {
+            $value = $courierOrder->{$field} ?? null;
+            if ( $value === null || $value === '' ) {
                 $missing[] = $field;
             }
         }
@@ -697,6 +870,33 @@ class ProductOrderService {
         $errors  = SteadFastService::validateOrderPayload( $payload );
 
         return array_keys( $errors );
+    }
+
+    protected static function missingRedxFields( $courierOrder ): array
+    {
+        $missing = [];
+        $required = [
+            'merchant_order_id',
+            'recipient_name',
+            'recipient_phone',
+            'recipient_address',
+            'recipient_area',
+            'item_weight',
+            'amount_to_collect',
+        ];
+
+        foreach ( $required as $field ) {
+            $value = $courierOrder->{$field} ?? null;
+            if ( $value === null || $value === '' ) {
+                $missing[] = $field;
+            }
+        }
+
+        if ( empty( $courierOrder->area_name ) ) {
+            $missing[] = 'area_name';
+        }
+
+        return $missing;
     }
 
     protected static function syncWoocommerceStatus( $order, $systemStatus, $wcStatus ) {
