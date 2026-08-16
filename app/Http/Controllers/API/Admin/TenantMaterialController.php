@@ -21,12 +21,20 @@ class TenantMaterialController extends Controller
 
         if ( $request->hasFile( 'tenant_advertise_banner' ) ) {
             $this->deleteBanner( $material->tenant_advertise_banner );
-            $data['tenant_advertise_banner'] = fileUpload(
+            $path = fileUpload(
                 $request->file( 'tenant_advertise_banner' ),
                 'uploads/tenant-materials',
                 1200,
                 400
             );
+            $data['tenant_advertise_banner']     = $path;
+            $data['tenant_advertise_banner_url'] = asset( ltrim( $path, '/' ) );
+        }
+
+        if ( $request->filled( 'tenant_advertise_banner_url' ) ) {
+            $data['tenant_advertise_banner_url'] = $request->input( 'tenant_advertise_banner_url' );
+        } elseif ( $request->exists( 'tenant_advertise_banner_url' ) && $request->input( 'tenant_advertise_banner_url' ) === null ) {
+            $data['tenant_advertise_banner_url'] = null;
         }
 
         if ( $data !== [] ) {

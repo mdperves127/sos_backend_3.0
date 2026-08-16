@@ -16,7 +16,8 @@ class TenantMaterialRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tenant_advertise_banner' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp'],
+            'tenant_advertise_banner'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp'],
+            'tenant_advertise_banner_url' => ['nullable', 'url', 'max:2048'],
         ];
     }
 

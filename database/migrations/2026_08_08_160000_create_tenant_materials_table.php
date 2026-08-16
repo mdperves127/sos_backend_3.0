@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create( 'tenant_materials', function ( Blueprint $table ) {
             $table->id();
             $table->text( 'tenant_advertise_banner' )->nullable();
+            $table->text( 'tenant_advertise_banner_url' )->nullable();
             $table->timestamps();
         } );
     }
