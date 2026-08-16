@@ -3,100 +3,131 @@
 namespace App\Http\Controllers\API\Affiliate;
 
 use App\Http\Controllers\Controller;
-use App\Models\CourierCredential;
 use App\Services\PathaoService;
 use App\Service\Affi\DashboardService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller {
-    //
     function index() {
         return DashboardService::index();
     }
 
     function orderVsRevenue() {
         return DashboardService::orderVsRevenue();
-
     }
 
-    public function getCities() {
-
-        $credential = CourierCredential::where( 'vendor_id', 2 )->first();
-
-        if ( !$credential ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Courier not found!',
-            ] );
-        }
-
-        $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
-
-        if ( $access_token ) {
-            return PathaoService::cities( $access_token );
-        }
+    public function getCities( Request $request, $tenant_id = null ) {
+        return $this->pathaoListResponse(
+            $this->resolveTenantId( $request, $tenant_id ),
+            fn ( $token ) => PathaoService::cities( $token )
+        );
     }
 
-    public function getZones( $city_id, $vendor_id ) {
-
-        // $credential = CourierCredential::where( 'vendor_id', $vendor_id )->first();
-        $credential = courierCredential( $vendor_id, 'pathao' );
-
-        if ( !$credential ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Courier not found!',
-            ] );
-        }
-
-        $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
-
-        if ( $access_token ) {
-            return PathaoService::getZone( $access_token, $city_id );
-        }
+    public function getZones( Request $request, $city_id, $tenant_id = null ) {
+        return $this->pathaoListResponse(
+            $this->resolveTenantId( $request, $tenant_id ),
+            fn ( $token ) => PathaoService::getZone( $token, $city_id )
+        );
     }
 
-    public function getArea( $zone_id, $vendor_id ) {
-
-        $credential = courierCredential( $vendor_id, 'pathao' );
-
-        if ( !$credential ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Courier not found!',
-            ] );
-        }
-
-        $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
-
-        if ( $access_token ) {
-            return PathaoService::getArea( $access_token, $zone_id );
-        }
+    public function getArea( Request $request, $zone_id, $tenant_id = null ) {
+        return $this->pathaoListResponse(
+            $this->resolveTenantId( $request, $tenant_id ),
+            fn ( $token ) => PathaoService::getArea( $token, $zone_id )
+        );
     }
 
-    public function newShipmentOrder( Request $request ) {
+    public function newShipmentOrder( Request $request, $tenant_id = null ) {
+        $tenantId   = $this->resolveTenantId( $request, $tenant_id );
+        $credential = courierCredentialByTenant( $tenantId, 'pathao' );
 
-        $credential = CourierCredential::where( 'vendor_id', 2 )->first();
-
-        if ( !$credential ) {
+        if ( ! $credential ) {
             return response()->json( [
                 'status'  => 404,
-                'message' => 'Courier not found!',
-            ] );
+                'message' => 'Pathao courier not found!',
+            ], 404 );
         }
 
-        $access_token = PathaoService::getToken( $credential->api_key, $credential->secret_key, $credential->client_email, $credential->client_password );
-        $newOrder     = $request->all();
-        if ( $access_token ) {
-            $order = PathaoService::newOrder( $access_token, $credential->store_id, $newOrder );
+        $accessToken = PathaoService::getToken(
+            $credential->api_key,
+            $credential->secret_key,
+            $credential->client_email,
+            $credential->client_password
+        );
 
+        if ( ! is_string( $accessToken ) || $accessToken === '' ) {
             return response()->json( [
-                'status'         => 200,
-                'consignment_id' => $order['data']['consignment_id'],
-                'delivery_fee'   => $order['data']['delivery_fee'],
-            ] );
+                'status'  => 400,
+                'message' => is_array( $accessToken ) ? ( $accessToken['message'] ?? 'Pathao token failed.' ) : 'Pathao token failed.',
+                'details' => is_array( $accessToken ) ? $accessToken : null,
+            ], 400 );
         }
-        return 'failed';
 
+        $order = PathaoService::newOrder( $accessToken, $credential->store_id, $request->all() );
+
+        if ( ! PathaoService::isCreateSuccess( $order ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $order['message'] ?? 'Pathao order creation failed.',
+                'details' => $order['details'] ?? $order,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'         => 200,
+            'message'        => 'Pathao order created.',
+            'consignment_id' => $order['data']['consignment_id'],
+            'delivery_fee'   => $order['data']['delivery_fee'] ?? null,
+            'data'           => $order['data'],
+        ] );
+    }
+
+    private function resolveTenantId( Request $request, $tenantId = null )
+    {
+        return $tenantId
+            ?: $request->input( 'tenant_id' )
+            ?: ( function_exists( 'tenant' ) && tenant() ? tenant( 'id' ) : null );
+    }
+
+    private function pathaoListResponse( $tenantId, callable $fetcher )
+    {
+        $credential = courierCredentialByTenant( $tenantId, 'pathao' );
+
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Pathao courier not found!',
+            ], 404 );
+        }
+
+        $accessToken = PathaoService::getToken(
+            $credential->api_key,
+            $credential->secret_key,
+            $credential->client_email,
+            $credential->client_password
+        );
+
+        if ( ! is_string( $accessToken ) || $accessToken === '' ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => is_array( $accessToken ) ? ( $accessToken['message'] ?? 'Pathao token failed.' ) : 'Pathao token failed.',
+                'details' => is_array( $accessToken ) ? $accessToken : null,
+            ], 400 );
+        }
+
+        $data = $fetcher( $accessToken );
+
+        if ( PathaoService::isError( $data ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $data['message'] ?? 'Pathao request failed.',
+                'details' => $data['details'] ?? $data,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => $data,
+        ] );
     }
 }

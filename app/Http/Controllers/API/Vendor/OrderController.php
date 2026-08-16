@@ -330,8 +330,9 @@ class OrderController extends Controller {
 
                 $default = CourierCredential::find( $default->id )->only( 'id', 'courier_name', 'status', 'default' );
 
-                if ( $access_token ) {
-                    $cities = PathaoService::cities( $access_token ) ?? 'failed';
+                if ( is_string( $access_token ) && $access_token !== '' ) {
+                    $cityList = PathaoService::cities( $access_token );
+                    $cities   = PathaoService::isError( $cityList ) ? [] : $cityList;
                 }
             } elseif ( isset( $default ) && $default && $default->courier_name == 'redx' ) {
 

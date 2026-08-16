@@ -60,4 +60,12 @@ return [
         'base_url' => env( 'STEADFAST_BASE_URL', 'https://portal.packzy.com/api/v1' ),
     ],
 
+    'pathao' => [
+        // true = sandbox, false = live (also accepts PATHAO_MODE=sandbox|live)
+        'sandbox' => filter_var(
+            env( 'PATHAO_SANDBOX', env( 'PATHAO_MODE', 'live' ) === 'sandbox' ),
+            FILTER_VALIDATE_BOOLEAN
+        ),
+    ],
+
 ];

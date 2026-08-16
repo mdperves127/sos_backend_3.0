@@ -653,8 +653,9 @@ class CartController extends Controller {
             if ( $default && $default->courier_name == 'pathao' ) {
                 $access_token = PathaoService::getToken( $default->api_key, $default->secret_key, $default->client_email, $default->client_password );
 
-                if ( $access_token ) {
-                    $cities = PathaoService::cities( $access_token ) ?? [];
+                if ( is_string( $access_token ) && $access_token !== '' ) {
+                    $cityList = PathaoService::cities( $access_token );
+                    $cities   = PathaoService::isError( $cityList ) ? [] : $cityList;
                 }
 
                 $default = $default->only( 'id', 'courier_name', 'status', 'default' );

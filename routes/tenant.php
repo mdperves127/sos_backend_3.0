@@ -20,6 +20,7 @@ use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
 use App\Http\Controllers\API\Vendor\DamageController;
+use App\Http\Controllers\API\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
 use App\Http\Controllers\API\Vendor\DeliveryChargeController;
 use App\Http\Controllers\Tenant\DeliveryChargeController as TenantDeliveryChargeController;
@@ -436,7 +437,23 @@ Route::middleware( [
             Route::get( 'steadfast/balance/{id}', [CourierCredentialController::class, 'steadfastBalance'] );
             Route::get( 'steadfast/status/{id}', [CourierCredentialController::class, 'steadfastStatus'] );
             Route::post( 'steadfast/return-request/{id}', [CourierCredentialController::class, 'steadfastReturnRequest'] );
+
+            // Pathao helpers for tenant (aligned with pathao-courier package)
+            Route::match( ['get', 'post'], 'pathao/cities/{id?}', [CourierCredentialController::class, 'pathaoCities'] );
+            Route::match( ['get', 'post'], 'pathao/zones/{cityId}/{id?}', [CourierCredentialController::class, 'pathaoZones'] );
+            Route::match( ['get', 'post'], 'pathao/areas/{zoneId}/{id?}', [CourierCredentialController::class, 'pathaoAreas'] );
+            Route::get( 'pathao/stores/{id?}', [CourierCredentialController::class, 'pathaoStores'] );
+            Route::post( 'pathao/stores/{id?}', [CourierCredentialController::class, 'pathaoCreateStore'] );
+            Route::get( 'pathao/order/{consignmentId}/{id?}', [CourierCredentialController::class, 'pathaoOrderDetails'] );
+            Route::post( 'pathao/price/{id?}', [CourierCredentialController::class, 'pathaoPrice'] );
         } );
+
+        // Legacy Pathao helpers for tenant (tenant_id, not vendor_id)
+        Route::post( 'get-cities/{tenant_id?}', [VendorDashboardController::class, 'getCity'] );
+        Route::post( 'get-zones/{city_id}/{tenant_id?}', [VendorDashboardController::class, 'getZones'] );
+        Route::post( 'get-area/{zone_id}/{tenant_id?}', [VendorDashboardController::class, 'getArea'] );
+        Route::post( 'new-order/{tenant_id?}', [VendorDashboardController::class, 'newShipmentOrder'] );
+        Route::get( 'get-redx-area', [VendorDashboardController::class, 'getRedxArea'] );
 
         //Woo-commerce-credential Route
         Route::prefix( 'tenant-woo-commerce-credential' )->group( function () {
@@ -771,10 +788,10 @@ Route::middleware( [
 
 
             // Route::post( 'get-token', [AffiliateDashboardController::class, 'getToken'] );
-            Route::post( 'get-cities', [AffiliateDashboardController::class, 'getCities'] );
-            Route::post( 'get-zones/{city_id}/{vendor_id}', [AffiliateDashboardController::class, 'getZones'] );
-            Route::post( 'get-area/{zone_id}/{vendor_id}', [AffiliateDashboardController::class, 'getArea'] );
-            Route::post( 'new-order/{vendor_id}', [AffiliateDashboardController::class, 'newShipmentOrder'] );
+            Route::post( 'get-cities/{tenant_id?}', [AffiliateDashboardController::class, 'getCities'] );
+            Route::post( 'get-zones/{city_id}/{tenant_id?}', [AffiliateDashboardController::class, 'getZones'] );
+            Route::post( 'get-area/{zone_id}/{tenant_id?}', [AffiliateDashboardController::class, 'getArea'] );
+            Route::post( 'new-order/{tenant_id?}', [AffiliateDashboardController::class, 'newShipmentOrder'] );
         } );
 
     } );

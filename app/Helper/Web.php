@@ -410,7 +410,77 @@ if ( !function_exists( 'generateSKU' ) ) {
 
 if ( !function_exists( 'courierCredential' ) ) {
     function courierCredential( $vendorId, $courierName ) {
-        return CourierCredential::where( 'vendor_id', $vendorId )->where( 'courier_name', $courierName )->first();
+        $default = CourierCredential::where( 'vendor_id', $vendorId )
+            ->where( 'courier_name', $courierName )
+            ->where( 'status', 'active' )
+            ->where( 'default', 'yes' )
+            ->first();
+
+        if ( $default ) {
+            return $default;
+        }
+
+        $active = CourierCredential::where( 'vendor_id', $vendorId )
+            ->where( 'courier_name', $courierName )
+            ->where( 'status', 'active' )
+            ->orderByDesc( 'id' )
+            ->first();
+
+        if ( $active ) {
+            return $active;
+        }
+
+        return CourierCredential::where( 'vendor_id', $vendorId )
+            ->where( 'courier_name', $courierName )
+            ->orderByDesc( 'id' )
+            ->first();
+    }
+}
+
+/**
+ * Resolve Pathao (or other) courier credential by tenant_id.
+ * Uses the current tenant DB when possible; otherwise queries the target tenant.
+ */
+if ( ! function_exists( 'courierCredentialByTenant' ) ) {
+    function courierCredentialByTenant( $tenantId = null, string $courierName = 'pathao' ) {
+        $tenantId = $tenantId
+            ?: ( function_exists( 'tenant' ) && tenant() ? tenant( 'id' ) : null )
+            ?: request()->input( 'tenant_id' );
+
+        if ( ! $tenantId ) {
+            return courierCredential( vendorId(), $courierName );
+        }
+
+        $currentTenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant( 'id' ) : null;
+        $useLocal        = $currentTenantId !== null && $currentTenantId === (string) $tenantId;
+
+        if ( $useLocal ) {
+            return courierCredential( vendorId(), $courierName );
+        }
+
+        $credential = \App\Services\CrossTenantQueryService::getSingleFromTenant(
+            $tenantId,
+            CourierCredential::class,
+            function ( $query ) use ( $courierName ) {
+                $query->where( 'courier_name', $courierName )
+                    ->where( 'status', 'active' )
+                    ->where( 'default', 'yes' );
+            }
+        );
+
+        if ( $credential ) {
+            return $credential;
+        }
+
+        return \App\Services\CrossTenantQueryService::getSingleFromTenant(
+            $tenantId,
+            CourierCredential::class,
+            function ( $query ) use ( $courierName ) {
+                $query->where( 'courier_name', $courierName )
+                    ->where( 'status', 'active' )
+                    ->orderByDesc( 'id' );
+            }
+        );
     }
 }
 

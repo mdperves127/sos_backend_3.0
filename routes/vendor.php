@@ -207,6 +207,15 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
             Route::get( 'steadfast/balance/{id}', [CourierCredentialController::class, 'steadfastBalance'] );
             Route::get( 'steadfast/status/{id}', [CourierCredentialController::class, 'steadfastStatus'] );
             Route::post( 'steadfast/return-request/{id}', [CourierCredentialController::class, 'steadfastReturnRequest'] );
+
+            // Pathao helpers (credential id optional → uses default Pathao)
+            Route::match( ['get', 'post'], 'pathao/cities/{id?}', [CourierCredentialController::class, 'pathaoCities'] );
+            Route::match( ['get', 'post'], 'pathao/zones/{cityId}/{id?}', [CourierCredentialController::class, 'pathaoZones'] );
+            Route::match( ['get', 'post'], 'pathao/areas/{zoneId}/{id?}', [CourierCredentialController::class, 'pathaoAreas'] );
+            Route::get( 'pathao/stores/{id?}', [CourierCredentialController::class, 'pathaoStores'] );
+            Route::post( 'pathao/stores/{id?}', [CourierCredentialController::class, 'pathaoCreateStore'] );
+            Route::get( 'pathao/order/{consignmentId}/{id?}', [CourierCredentialController::class, 'pathaoOrderDetails'] );
+            Route::post( 'pathao/price/{id?}', [CourierCredentialController::class, 'pathaoPrice'] );
         } );
 
         //Woocommerce-credential Route
@@ -442,11 +451,11 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
             Route::post( '/store', [DamageController::class, 'store'] );
         } );
 
-        //---For Pathao
-        Route::post( 'get-cities/{vendor_id}', [VendorDashboardController::class, 'getCity'] );
-        Route::post( 'get-zones/{city_id}/{vendor_id}', [VendorDashboardController::class, 'getZones'] );
-        Route::post( 'get-area/{zone_id}/{vendor_id}', [VendorDashboardController::class, 'getArea'] );
-        Route::post( 'new-order/{vendor_id}', [VendorDashboardController::class, 'newShipmentOrder'] );
+        //---For Pathao (tenant_id, not vendor_id)
+        Route::post( 'get-cities/{tenant_id?}', [VendorDashboardController::class, 'getCity'] );
+        Route::post( 'get-zones/{city_id}/{tenant_id?}', [VendorDashboardController::class, 'getZones'] );
+        Route::post( 'get-area/{zone_id}/{tenant_id?}', [VendorDashboardController::class, 'getArea'] );
+        Route::post( 'new-order/{tenant_id?}', [VendorDashboardController::class, 'newShipmentOrder'] );
 
         //----For redx
         Route::get( 'get-redx-area', [VendorDashboardController::class, 'getRedxArea'] );

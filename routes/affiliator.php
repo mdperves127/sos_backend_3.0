@@ -82,11 +82,10 @@ Route::middleware( ['auth:sanctum', 'isAPIaffiliator', 'userOnline'] )->group( f
             Route::get( '/mark-as-read-all', [NotificationController::class, 'markAsReadAll'] );
         } );
 
-        Route::post( 'get-token', [AffiliateDashboardController::class, 'getToken'] );
-        Route::post( 'get-cities', [AffiliateDashboardController::class, 'getCities'] );
-        Route::post( 'get-zones/{city_id}/{vendor_id}', [AffiliateDashboardController::class, 'getZones'] );
-        Route::post( 'get-area/{zone_id}/{vendor_id}', [AffiliateDashboardController::class, 'getArea'] );
-        Route::post( 'new-order/{vendor_id}', [AffiliateDashboardController::class, 'newShipmentOrder'] );
+        Route::post( 'get-cities/{tenant_id?}', [AffiliateDashboardController::class, 'getCities'] );
+        Route::post( 'get-zones/{city_id}/{tenant_id?}', [AffiliateDashboardController::class, 'getZones'] );
+        Route::post( 'get-area/{zone_id}/{tenant_id?}', [AffiliateDashboardController::class, 'getArea'] );
+        Route::post( 'new-order/{tenant_id?}', [AffiliateDashboardController::class, 'newShipmentOrder'] );
 
     } );
 

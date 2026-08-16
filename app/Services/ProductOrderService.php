@@ -292,7 +292,7 @@ class ProductOrderService {
 
             $candidates = collect( [$credential] )->merge(
                 CourierCredential::query()
-                    // ->where( 'vendor_id', $order->vendor_id )
+                    ->where( 'vendor_id', $order->vendor_id )
                     ->where( 'courier_name', 'pathao' )
                     ->where( 'status', 'active' )
                     ->where( 'id', '!=', $credential->id )
@@ -351,7 +351,7 @@ class ProductOrderService {
                         'credential_id' => $usedCredential->id ?? $credential->id,
                         'store_id'      => $usedCredential->store_id ?? $credential->store_id,
                         'client_email'  => $usedCredential->client_email ?? $credential->client_email ?? null,
-                        'pathao_mode'   => env( 'PATHAO_MODE', 'live' ),
+                        'pathao_mode'   => config( 'services.pathao.sandbox' ) ? 'sandbox' : 'live',
                         'courier_id'    => $courierOrder->courier_id,
                         'tried_stores'  => $triedStores,
                     ],
