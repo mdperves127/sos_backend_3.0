@@ -66,6 +66,8 @@ return [
             env( 'PATHAO_SANDBOX', env( 'PATHAO_MODE', 'live' ) === 'sandbox' ),
             FILTER_VALIDATE_BOOLEAN
         ),
+        // Must match the webhook secret configured in Pathao merchant dashboard.
+        'webhook_secret' => env( 'PATHAO_WEBHOOK_SECRET', '' ),
     ],
 
 ];

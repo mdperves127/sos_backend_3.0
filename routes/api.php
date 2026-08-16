@@ -10,6 +10,7 @@ Route::get( '/test-api', function () {
 
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\PublicEpsController;
+use App\Http\Controllers\PublicPathaoWebhookController;
 use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
@@ -55,6 +56,9 @@ use App\Http\Controllers\API\HistoryController;
 Route::match( ['get', 'post'], 'public/eps/complete', [PublicEpsController::class, 'complete'] );
 // Background poller — completes payment instantly without artisan/cron
 Route::match( ['get', 'post'], 'public/eps/poll-complete', [PublicEpsController::class, 'pollComplete'] );
+
+// Pathao courier webhook (Pathao only) — delivered → order delivered, returned → order return
+Route::post( 'public/pathao/webhook/{tenant?}', PublicPathaoWebhookController::class );
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
