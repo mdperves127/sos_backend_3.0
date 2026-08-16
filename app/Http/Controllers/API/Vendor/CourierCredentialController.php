@@ -208,35 +208,26 @@ class CourierCredentialController extends Controller {
             ] );
         }
 
-        // Toggle status
         if ( $data->status == 'active' ) {
-            // If it's currently active, we need to check if we can deactivate it
-            // Ensure at least one courier remains active
-            $activeCount = CourierCredential::where( 'vendor_id', vendorId() )->where( 'status', 'active' )->count();
-
-            if ( $activeCount > 1 ) {
-                // If more than one is active, allow deactivation
-                $data->status = 'deactive';
-                $data->save();
-                return response()->json( [
-                    'status'  => 200,
-                    'message' => 'Courier Deactivated Successfully!',
-                ] );
-            } else {
-                return response()->json( [
-                    'status'  => 400,
-                    'message' => 'At least one courier must remain active!',
-                ] );
+            $data->status = 'deactive';
+            if ( $data->default === 'yes' ) {
+                $data->default = 'no';
             }
-        } else {
-            // If it's currently inactive, activate it
-            $data->status = 'active';
             $data->save();
+
             return response()->json( [
                 'status'  => 200,
-                'message' => 'Courier Activated Successfully!',
+                'message' => 'Courier Deactivated Successfully!',
             ] );
         }
+
+        $data->status = 'active';
+        $data->save();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Courier Activated Successfully!',
+        ] );
     }
 
     /**
