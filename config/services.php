@@ -56,4 +56,8 @@ return [
         'transaction_type_id' => (int) env( 'EPS_TRANSACTION_TYPE_ID', 1 ),
     ],
 
+    'steadfast' => [
+        'base_url' => env( 'STEADFAST_BASE_URL', 'https://portal.packzy.com/api/v1' ),
+    ],
+
 ];

@@ -374,30 +374,36 @@ class ProductOrderService {
 
             ] );
         } elseif ( $credential->courier_name == 'steadfast' ) {
-
-            $orderToCourier = SteadFastService::order( $credential->api_key, $credential->secret_key, $courierOrder );
-            if ( !is_array( $orderToCourier ) || !isset( $orderToCourier['status'], $orderToCourier['consignment'] ) || $orderToCourier['status'] !== 200 ) {
+            $missingFields = self::missingSteadfastFields( $courierOrder );
+            if ( ! empty( $missingFields ) ) {
                 return response()->json( [
                     'status'  => 400,
-                    'message' => self::courierErrorMessage( $orderToCourier, 'Courier order creation failed.' ),
+                    'message' => 'Steadfast order data is incomplete.',
+                    'missing' => $missingFields,
+                ] );
+            }
+
+            $orderToCourier = SteadFastService::createOrder( $credential->api_key, $credential->secret_key, $courierOrder );
+
+            if ( ! SteadFastService::isCreateSuccess( $orderToCourier ) ) {
+                return response()->json( [
+                    'status'        => 400,
+                    'message'       => self::courierErrorMessage( $orderToCourier, 'Courier order creation failed.' ),
+                    'error_details' => self::courierErrorDetails( $orderToCourier ),
                 ] );
             }
 
             $consignment = $orderToCourier['consignment'];
-            if ( !isset( $consignment['consignment_id'] ) ) {
-                return response()->json( [
-                    'status'  => 400,
-                    'message' => 'Courier consignment ID not found.',
-                ] );
-            }
 
             self::updateOrderProgressWithCourier( $order, $courierOrder, $consignment['consignment_id'], $credential->courier_name );
 
             return response()->json( [
                 'status'         => 200,
-                'message'        => 'Order progress successful!',
+                'message'        => $orderToCourier['message'] ?? 'Order progress successful!',
                 'consignment_id' => $consignment['consignment_id'],
-                'delivery_fee'   => $consignment['cod_amount'] ?? null,
+                'tracking_code'  => $consignment['tracking_code'] ?? null,
+                'invoice'        => $consignment['invoice'] ?? null,
+                'delivery_fee'   => null,
                 'courier_name'   => $courierOrder->courierCredential->courier_name ?? $credential->courier_name,
             ] );
         } elseif ( $credential->courier_name == 'redx' ) {
@@ -683,6 +689,14 @@ class ProductOrderService {
         }
 
         return $missing;
+    }
+
+    protected static function missingSteadfastFields( $courierOrder ): array
+    {
+        $payload = SteadFastService::buildOrderPayload( $courierOrder );
+        $errors  = SteadFastService::validateOrderPayload( $payload );
+
+        return array_keys( $errors );
     }
 
     protected static function syncWoocommerceStatus( $order, $systemStatus, $wcStatus ) {

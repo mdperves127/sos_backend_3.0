@@ -31,7 +31,7 @@ class CourierCredentialController extends Controller {
             // 'courier_name'    => 'required|unique:courier_credentials,courier_name,NULL,id,vendor_id,' . vendorId(),
             'courier_name'    => 'required|in:pathao,steadfast,redx',
             'api_key'         => 'required|unique:courier_credentials,api_key,NULL,id,vendor_id,' . vendorId(),
-            'secret_key'      => 'required|unique:courier_credentials,secret_key,NULL,id,vendor_id,' . vendorId(),
+            'secret_key'      => 'nullable|required_unless:courier_name,redx|unique:courier_credentials,secret_key,NULL,id,vendor_id,' . vendorId(),
             'client_email'    => 'nullable|email|required_if:courier_name,pathao',
             'client_password' => 'nullable|required_if:courier_name,pathao',
             'store_id'        => 'nullable|required_if:courier_name,pathao',
@@ -93,7 +93,7 @@ class CourierCredentialController extends Controller {
             // 'courier_name'    => 'required|unique:courier_credentials,courier_name,' . $id . ',id,vendor_id,' . vendorId(),
             'courier_name'    => 'required|in:pathao,steadfast,redx',
             'api_key'         => 'required|unique:courier_credentials,api_key,' . $id . ',id,vendor_id,' . vendorId(),
-            'secret_key'      => 'required|unique:courier_credentials,secret_key,' . $id . ',id,vendor_id,' . vendorId(),
+            'secret_key'      => 'nullable|required_unless:courier_name,redx|unique:courier_credentials,secret_key,' . $id . ',id,vendor_id,' . vendorId(),
             'client_email'    => 'nullable|email|required_if:courier_name,pathao',
             'client_password' => 'nullable|required_if:courier_name,pathao',
             'store_id'        => 'nullable|required_if:courier_name,pathao',
@@ -228,6 +228,118 @@ class CourierCredentialController extends Controller {
             'status'  => 200,
             'message' => 'Default courier set successfully!',
         ] );
+    }
+
+    /**
+     * Steadfast: current balance for a credential.
+     */
+    public function steadfastBalance( $id )
+    {
+        $credential = $this->steadfastCredential( $id );
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Steadfast credential not found.',
+            ], 404 );
+        }
+
+        $result = \App\Services\SteadFastService::getBalance( $credential->api_key, $credential->secret_key );
+
+        if ( (int) ( $result['status'] ?? 0 ) !== 200 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $result['message'] ?? 'Unable to fetch Steadfast balance.',
+                'data'    => $result,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Steadfast balance fetched.',
+            'data'    => [
+                'current_balance' => $result['current_balance'] ?? null,
+            ],
+        ] );
+    }
+
+    /**
+     * Steadfast: delivery status by consignment_id / invoice / tracking_code.
+     */
+    public function steadfastStatus( Request $request, $id )
+    {
+        $credential = $this->steadfastCredential( $id );
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Steadfast credential not found.',
+            ], 404 );
+        }
+
+        $result = \App\Services\SteadFastService::getDeliveryStatus(
+            $credential->api_key,
+            $credential->secret_key,
+            $request->query( 'consignment_id' ),
+            $request->query( 'invoice' ),
+            $request->query( 'tracking_code' )
+        );
+
+        if ( (int) ( $result['status'] ?? 0 ) !== 200 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $result['message'] ?? 'Unable to fetch Steadfast delivery status.',
+                'data'    => $result,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Steadfast delivery status fetched.',
+            'data'    => [
+                'delivery_status' => $result['delivery_status'] ?? null,
+            ],
+        ] );
+    }
+
+    /**
+     * Steadfast: create a return request.
+     */
+    public function steadfastReturnRequest( Request $request, $id )
+    {
+        $credential = $this->steadfastCredential( $id );
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Steadfast credential not found.',
+            ], 404 );
+        }
+
+        $result = \App\Services\SteadFastService::createReturnRequest(
+            $credential->api_key,
+            $credential->secret_key,
+            $request->only( ['consignment_id', 'invoice', 'tracking_code', 'reason'] )
+        );
+
+        if ( isset( $result['message'] ) && (int) ( $result['status'] ?? 0 ) >= 400 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $result['message'],
+                'data'    => $result,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Steadfast return request submitted.',
+            'data'    => $result,
+        ] );
+    }
+
+    private function steadfastCredential( $id ): ?CourierCredential
+    {
+        return CourierCredential::where( 'id', $id )
+            ->where( 'vendor_id', vendorId() )
+            ->where( 'courier_name', 'steadfast' )
+            ->first();
     }
 
 }

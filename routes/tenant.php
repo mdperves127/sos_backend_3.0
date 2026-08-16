@@ -433,6 +433,9 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [CourierCredentialController::class, 'destroy'] );
             Route::get( 'status/{id}', [CourierCredentialController::class, 'status'] );
             Route::get( 'default/{id}', [CourierCredentialController::class, 'default'] );
+            Route::get( 'steadfast/balance/{id}', [CourierCredentialController::class, 'steadfastBalance'] );
+            Route::get( 'steadfast/status/{id}', [CourierCredentialController::class, 'steadfastStatus'] );
+            Route::post( 'steadfast/return-request/{id}', [CourierCredentialController::class, 'steadfastReturnRequest'] );
         } );
 
         //Woo-commerce-credential Route
