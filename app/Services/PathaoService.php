@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +25,9 @@ class PathaoService
             : 'https://api-hermes.pathao.com';
     }
 
+    /** @var array<string, array{token:string,expires_at:int}> */
+    private static array $memoryTokens = [];
+
     /**
      * @return string|array token string on success, error array on failure
      */
@@ -35,12 +37,12 @@ class PathaoService
             $cacheKey = 'pathao_access_token_' . md5( (string) $clientId . '|' . (string) $clientEmail . '|' . (string) $clientSecret );
 
             if ( $forceRefresh ) {
-                Cache::forget( $cacheKey );
-            }
-
-            $cached = Cache::get( $cacheKey );
-            if ( is_string( $cached ) && $cached !== '' ) {
-                return $cached;
+                self::forgetToken( $cacheKey );
+            } else {
+                $cached = self::readToken( $cacheKey );
+                if ( is_string( $cached ) && $cached !== '' ) {
+                    return $cached;
+                }
             }
 
             $response = Http::withHeaders( [
@@ -59,7 +61,7 @@ class PathaoService
             if ( $response->successful() && is_array( $json ) && ! empty( $json['access_token'] ) ) {
                 $token     = (string) $json['access_token'];
                 $expiresIn = max( 60, (int) ( $json['expires_in'] ?? 3600 ) - 60 );
-                Cache::put( $cacheKey, $token, $expiresIn );
+                self::storeToken( $cacheKey, $token, $expiresIn );
 
                 return $token;
             }
@@ -70,10 +72,83 @@ class PathaoService
                 'details' => $json ?: $response->body(),
             ];
         } catch ( \Throwable $e ) {
+            Log::error( 'Pathao token exception', ['error' => $e->getMessage()] );
+
             return [
                 'message' => $e->getMessage(),
                 'status'  => 500,
             ];
+        }
+    }
+
+    private static function tokenFilePath( string $cacheKey ): string
+    {
+        $dir = storage_path( 'app/pathao' );
+        if ( ! is_dir( $dir ) ) {
+            @mkdir( $dir, 0755, true );
+        }
+
+        return $dir . DIRECTORY_SEPARATOR . $cacheKey . '.json';
+    }
+
+    private static function readToken( string $cacheKey ): ?string
+    {
+        $now = time();
+
+        if ( isset( self::$memoryTokens[$cacheKey] ) ) {
+            if ( self::$memoryTokens[$cacheKey]['expires_at'] > $now ) {
+                return self::$memoryTokens[$cacheKey]['token'];
+            }
+            unset( self::$memoryTokens[$cacheKey] );
+        }
+
+        $path = self::tokenFilePath( $cacheKey );
+        if ( ! is_file( $path ) ) {
+            return null;
+        }
+
+        $data = json_decode( (string) @file_get_contents( $path ), true );
+        if ( ! is_array( $data ) || empty( $data['token'] ) || (int) ( $data['expires_at'] ?? 0 ) <= $now ) {
+            @unlink( $path );
+
+            return null;
+        }
+
+        self::$memoryTokens[$cacheKey] = [
+            'token'      => (string) $data['token'],
+            'expires_at' => (int) $data['expires_at'],
+        ];
+
+        return (string) $data['token'];
+    }
+
+    private static function storeToken( string $cacheKey, string $token, int $expiresIn ): void
+    {
+        $expiresAt = time() + $expiresIn;
+
+        self::$memoryTokens[$cacheKey] = [
+            'token'      => $token,
+            'expires_at' => $expiresAt,
+        ];
+
+        // Avoid Laravel Cache entirely: tenant/file drivers often fail with
+        // "This cache store does not support tagging."
+        @file_put_contents(
+            self::tokenFilePath( $cacheKey ),
+            json_encode( [
+                'token'      => $token,
+                'expires_at' => $expiresAt,
+            ] )
+        );
+    }
+
+    private static function forgetToken( string $cacheKey ): void
+    {
+        unset( self::$memoryTokens[$cacheKey] );
+
+        $path = self::tokenFilePath( $cacheKey );
+        if ( is_file( $path ) ) {
+            @unlink( $path );
         }
     }
 
