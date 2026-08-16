@@ -164,6 +164,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     Route::get( 'admin/all-orders', [AdminOrderController::class, 'allOrders'] );
     Route::get( 'admin/pending-orders', [AdminOrderController::class, 'pendingOrders'] );
     Route::get( 'admin/progress-orders', [AdminOrderController::class, 'ProgressOrders'] );
+    Route::get( 'admin/courier-orders', [AdminOrderController::class, 'CourierOrders'] );
     Route::get( 'admin/delivered-orders', [AdminOrderController::class, 'DeliveredOrders'] );
     Route::get( 'admin/cancel-orders', [AdminOrderController::class, 'CanceldOrders'] );
     Route::get( 'admin/hold-orders', [AdminOrderController::class, 'HoldOrders'] );

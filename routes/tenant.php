@@ -243,6 +243,7 @@ Route::middleware( [
             Route::get( 'order/view/{id}', [VendorOrderController::class, 'orderView'] );
             Route::get( 'pending-orders', [VendorOrderController::class, 'pendingOrders'] );
             Route::get( 'progress-orders', [VendorOrderController::class, 'ProgressOrders'] );
+            Route::get( 'courier-orders', [VendorOrderController::class, 'CourierOrders'] );
             Route::get( 'product-processing', [VendorOrderController::class, 'ProductProcessing'] );
             Route::get( 'order-ready', [VendorOrderController::class, 'OrderReady'] );
             Route::get( 'received-orders', [VendorOrderController::class, 'receivedOrders'] );
@@ -252,6 +253,7 @@ Route::middleware( [
             Route::get( 'order-count', [VendorOrderController::class, 'orderCount'] );
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
             Route::match( ['POST', 'PUT', 'PATCH'], 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
+            Route::post( 'send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
         } );
 
         Route::prefix( 'tenant-product-manual-order' )->group( function () {

@@ -57,6 +57,7 @@ class ProductOrderService {
             'pending' => self::pendingdOrder( $order ),
             'cancel' => self::canceldOrder( $order ),
             'progress' => self::progressOrder( $order ),
+            'courier', 'send_to_courier' => self::sendToCourier( $order ),
             'delivered' => self::deliveredOrder( $order ),
             'return' => self::returnOrder( $order ),
             'received' => self::receivedOrder( $order ),
@@ -240,17 +241,34 @@ class ProductOrderService {
         return self::response( 'Order ready successfull!' );
     }
 
-    // Product progress — send to active courier (Pathao / Steadfast / Redx) then update order.
+    // Product progress — status only (courier dispatch is a separate API).
 
     static function progressOrder( $order ) {
+        return self::markOrderAsProgress( $order );
+    }
+
+    /**
+     * Send an order to the active courier (Pathao / Steadfast / Redx).
+     * On success the order status becomes courier.
+     */
+    static function sendToCourier( $order ) {
+        if ( auth()->check() ) {
+            $ownerId = function_exists( 'vendorId' ) ? vendorId() : auth()->id();
+            if ( (int) $order->vendor_id !== (int) $ownerId ) {
+                return response()->json( [
+                    'status'  => 403,
+                    'message' => 'You are not authorized to send this order to courier.',
+                ], 403 );
+            }
+        }
+
         // Already handed to courier: do not create a duplicate consignment.
         if ( ! empty( $order->consignment_id ) ) {
-            if ( $order->status !== 'progress' ) {
+            if ( $order->status !== 'courier' ) {
                 $order->update( [
-                    'status'      => 'progress',
-                    'last_status' => 'progress',
+                    'status'      => 'courier',
+                    'last_status' => 'courier',
                 ] );
-                self::syncWoocommerceStatus( $order, 'progress', 'processing' );
             }
 
             return response()->json( [
@@ -271,7 +289,10 @@ class ProductOrderService {
         $credential = self::resolveActiveCourierCredential( $order, $courierOrder );
 
         if ( ! $credential ) {
-            return self::markOrderAsProgress( $order );
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'No active courier configured. Add/activate a courier credential first.',
+            ], 422 );
         }
 
         if ( ! $courierOrder ) {
@@ -547,8 +568,7 @@ class ProductOrderService {
 
         return response()->json( [
             'status'  => 200,
-            'message' => 'Order marked as progress (no active courier configured).',
-            'courier' => null,
+            'message' => 'Order marked as progress.',
         ] );
     }
 
@@ -560,14 +580,14 @@ class ProductOrderService {
         }
 
         $order->update( [
-            'status'         => 'progress',
-            'last_status'    => 'progress',
+            'status'         => 'courier',
+            'last_status'    => 'courier',
             'consignment_id' => (string) $consignmentId,
             'courier_name'   => $courierName,
             'delivery_id'    => $deliveryId,
         ] );
 
-        self::syncWoocommerceStatus( $order, 'progress', 'processing' );
+        self::syncWoocommerceStatus( $order, 'courier', 'processing' );
     }
 
     protected static function courierErrorMessage( $payload, $fallback ) {

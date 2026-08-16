@@ -92,6 +92,26 @@ class OrderController extends Controller {
         ] );
     }
 
+    function CourierOrders() {
+        $orders = Order::searchProduct()
+            ->where( 'vendor_id', auth()->user()->id )
+            ->where( 'status', Status::Courier->value )
+            ->with( ['affiliator:id,name', 'vendor:id,name', 'product:id,name'] )
+            ->latest()
+            ->paginate( 10 )
+            ->withQueryString();
+
+        $orders->map( function ( $order ) {
+            $order->variants = Order::normalizeVariants( $order->variants );
+            return $order;
+        } );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => $orders,
+        ] );
+    }
+
     function ProductProcessing() {
         $orders = Order::searchProduct()
             ->where( 'vendor_id', auth()->user()->id )
@@ -223,6 +243,22 @@ class OrderController extends Controller {
 
     }
 
+    /**
+     * Send order to courier (separate from status=progress).
+     */
+    function sendToCourier( $id ) {
+        $order = Order::find( $id );
+
+        if ( ! $order ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Order not found.',
+            ], 404 );
+        }
+
+        return ProductOrderService::sendToCourier( $order );
+    }
+
     function orderView( $id ) {
         $allData = Order::where( 'id', $id )
             ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid,name,email', 'productrating' => function ( $query ) {
@@ -280,6 +316,7 @@ class OrderController extends Controller {
         $pending   = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'pending' )->count();
         $received  = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'received' )->count();
         $progress  = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'progress' )->count();
+        $courier   = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'courier' )->count();
         $delivered = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'delivered' )->count();
         $cancel    = Order::where( 'vendor_id', auth()->user()->id )->where( 'status', 'cancel' )->count();
         return response()->json( [
@@ -288,6 +325,7 @@ class OrderController extends Controller {
             'hold'      => $hold,
             'pending'   => $pending,
             'progress'  => $progress,
+            'courier'   => $courier,
             'received'  => $received,
             'delivered' => $delivered,
             'cancel'    => $cancel,

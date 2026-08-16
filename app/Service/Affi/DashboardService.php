@@ -55,7 +55,7 @@ class DashboardService {
         $today_data = Order::selectRaw( 'HOUR(created_at) AS hour, COUNT(*) AS order_count, SUM(afi_amount) AS comission' )
             ->whereDate( 'created_at', Carbon::today() )
             ->where( 'affiliator_id', auth()->user()->id )
-            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Delivered->value] )
+            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Courier->value, Status::Delivered->value] )
             ->groupBy( 'hour' )
             ->orderBy( 'hour', 'asc' )
             ->get();
@@ -69,7 +69,7 @@ class DashboardService {
         $weeklyData = Order::selectRaw( 'DATE(created_at) AS date, COUNT(*) AS order_count, SUM(afi_amount) AS comission' )
             ->whereBetween( 'created_at', [Carbon::now()->subDays( 7 )->startOfDay(), Carbon::now()->endOfDay()] )
             ->where( 'affiliator_id', auth()->user()->id )
-            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Delivered->value] )
+            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Courier->value, Status::Delivered->value] )
             ->groupBy( 'date' )
             ->orderBy( 'date', 'asc' )
             ->get();
@@ -85,7 +85,7 @@ class DashboardService {
         $monthlyData = Order::selectRaw( 'DATE(created_at) AS date, COUNT(*) AS order_count, SUM(afi_amount) AS comission' )
             ->whereBetween( 'created_at', [Carbon::now()->subDays( 30 )->startOfDay(), Carbon::now()->endOfDay()] )
             ->where( 'affiliator_id', auth()->user()->id )
-            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Delivered->value] )
+            ->whereIn( 'status', [Status::Pending->value, Status::Progress->value, Status::Courier->value, Status::Delivered->value] )
             ->groupBy( 'date' )
             ->orderBy( 'date', 'asc' )
             ->get();

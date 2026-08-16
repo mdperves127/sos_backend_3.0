@@ -118,6 +118,7 @@ class StatisticsController extends Controller
             'totalpendingorder'   => $allOrders->where( 'status', 'pending' )->count(),
             'totalreceivedorder'  => $allOrders->where( 'status', 'received' )->count(),
             'totalprogressorder'  => $allOrders->where( 'status', 'progress' )->count(),
+            'totalcourierorder'   => $allOrders->where( 'status', 'courier' )->count(),
             'totaldeliveredorder' => $allOrders->where( 'status', 'delivered' )->count(),
             'totalcancelorder'    => $allOrders->where( 'status', 'cancel' )->count(),
         ] );

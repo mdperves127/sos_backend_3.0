@@ -267,6 +267,7 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
         Route::get( 'all-orders', [VendorOrderController::class, 'AllOrders'] );
         Route::get( 'pending-orders', [VendorOrderController::class, 'pendingOrders'] );
         Route::get( 'progress-orders', [VendorOrderController::class, 'ProgressOrders'] );
+        Route::get( 'courier-orders', [VendorOrderController::class, 'CourierOrders'] );
         Route::get( 'product-processing', [VendorOrderController::class, 'ProductProcessing'] );
         Route::get( 'order-ready', [VendorOrderController::class, 'OrderReady'] );
         Route::get( 'received-orders', [VendorOrderController::class, 'receivedOrders'] );
@@ -277,6 +278,7 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
         Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
 
         Route::post( 'order/update/{id}', [VendorOrderController::class, 'productorderstatus'] );
+        Route::post( 'order/send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
         Route::get( 'order/view/{id}', [VendorOrderController::class, 'orderView'] );
 
         //bank show

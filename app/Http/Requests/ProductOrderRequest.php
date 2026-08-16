@@ -20,6 +20,12 @@ class ProductOrderRequest extends FormRequest {
         return true;
     }
 
+    protected function prepareForValidation() {
+        if ( $this->input( 'status' ) === 'send_to_courier' ) {
+            $this->merge( ['status' => 'courier'] );
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -37,11 +43,12 @@ class ProductOrderRequest extends FormRequest {
         $currentStatus = strtolower( trim( (string) ( $order->status ?? '' ) ) );
         $statusRules   = [
             'hold'       => ['cancel', 'pending'],
-            'pending'    => ['cancel', 'received', 'progress'],
-            'received'   => ['cancel', 'processing', 'progress'],
-            'processing' => ['cancel', 'ready'],
-            'ready'      => ['cancel', 'progress'],
-            'progress'   => ['return', 'delivered'],
+            'pending'    => ['cancel', 'received', 'progress', 'courier'],
+            'received'   => ['cancel', 'processing', 'progress', 'courier'],
+            'processing' => ['cancel', 'ready', 'courier'],
+            'ready'      => ['cancel', 'progress', 'courier'],
+            'progress'   => ['courier', 'return', 'delivered'],
+            'courier'    => ['cancel', 'return', 'delivered'],
         ];
 
         if ( ! isset( $statusRules[$currentStatus] ) ) {

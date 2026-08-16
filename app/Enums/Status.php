@@ -8,6 +8,7 @@ case Admin      = "admin";
 case Vendor     = "vendor";
 case Rejected   = "rejected";
 case Progress   = "progress";
+case Courier    = "courier";
 case Processing = "processing";
 case Ready      = "ready";
 case Delivered  = "delivered";

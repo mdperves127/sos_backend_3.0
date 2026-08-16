@@ -15,15 +15,15 @@ use Illuminate\Support\Facades\DB;
 
 class MerchantDashboardController extends Controller {
 
-    private const ACTIVE_STATUSES = ['active', 'progress', 'processing', 'received', 'ready'];
+    private const ACTIVE_STATUSES = ['active', 'progress', 'courier', 'processing', 'received', 'ready'];
 
     private const PENDING_STATUSES = ['pending', 'hold'];
 
     private const COMPLETED_STATUSES = ['delivered', 'completed', 'received'];
 
-    private const PROCESSING_STATUSES = ['progress', 'processing', 'ready', 'received'];
+    private const PROCESSING_STATUSES = ['progress', 'courier', 'processing', 'ready', 'received'];
 
-    private const REVENUE_STATUSES = ['pending', 'progress', 'processing', 'delivered', 'completed', 'received'];
+    private const REVENUE_STATUSES = ['pending', 'progress', 'courier', 'processing', 'delivered', 'completed', 'received'];
 
     private function merchantOwnerId(): int {
         return (int) tenantOwnerId();

@@ -148,6 +148,17 @@ class PathaoWebhookService
                 ];
             }
 
+            // Webhook delivery/return is allowed from progress or courier.
+            if ( ! in_array( $current, ['progress', 'courier', 'processing', 'ready', 'received', 'pending'], true ) ) {
+                return [
+                    'ok'       => true,
+                    'http'     => 202,
+                    'message'  => "Order status {$current} is not eligible for Pathao webhook update.",
+                    'action'   => 'skipped',
+                    'order_id' => (int) $order->id,
+                ];
+            }
+
             if ( $targetStatus === 'delivered' ) {
                 $response = ProductOrderService::deliveredOrder( $order );
             } else {

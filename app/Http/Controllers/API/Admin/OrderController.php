@@ -158,6 +158,10 @@ class OrderController extends Controller {
     function ProgressOrders() {
         return $this->tenantOrdersListing( Status::Progress->value, 'delivery-processing' );
     }
+
+    function CourierOrders() {
+        return $this->tenantOrdersListing( Status::Courier->value, 'delivery-processing' );
+    }
     function ReceivedOrders() {
         return $this->tenantOrdersListing( 'received', 'order-received' );
     }

@@ -17,9 +17,9 @@ class DropshipperDashboardController extends Controller {
 
     private const COMPLETED_STATUSES = ['delivered', 'completed'];
 
-    private const PENDING_FULFILLMENT_STATUSES = ['pending', 'hold', 'progress', 'processing', 'received', 'ready'];
+    private const PENDING_FULFILLMENT_STATUSES = ['pending', 'hold', 'progress', 'courier', 'processing', 'received', 'ready'];
 
-    private const REVENUE_STATUSES = ['pending', 'progress', 'processing', 'delivered', 'completed', 'received'];
+    private const REVENUE_STATUSES = ['pending', 'progress', 'courier', 'processing', 'delivered', 'completed', 'received'];
 
     private function ownerId(): int {
         return (int) tenantOwnerId();
@@ -84,7 +84,7 @@ class DropshipperDashboardController extends Controller {
         if ( in_array( $status, self::COMPLETED_STATUSES, true ) ) {
             return 'completed';
         }
-        if ( in_array( $status, ['progress', 'processing', 'received', 'ready'], true ) ) {
+        if ( in_array( $status, ['progress', 'courier', 'processing', 'received', 'ready'], true ) ) {
             return 'processing';
         }
 
