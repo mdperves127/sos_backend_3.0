@@ -11,6 +11,10 @@ class OrderDeliveryToCourier extends Model {
 
     protected $guarded = [];
 
+    public function setAffiliatorIdAttribute( $value ): void {
+        $this->attributes['affiliator_id'] = ( (int) $value > 0 ) ? (int) $value : 0;
+    }
+
     public function courierCredential() {
         return $this->belongsTo( CourierCredential::class, 'courier_id' );
     }

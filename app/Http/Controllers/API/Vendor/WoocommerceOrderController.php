@@ -344,7 +344,7 @@ class WoocommerceOrderController extends Controller {
                 OrderDeliveryToCourier::create( [
                     'order_id'            => $order->id,
                     'vendor_id'           => $order->vendor_id,
-                    'affiliator_id'       => $order->affiliator_id,
+                    'affiliator_id'       => (int) ( $order->affiliator_id ?? 0 ),
                     'merchant_order_id'   => $order->order_id,
                     'recipient_name'      => $order->name ?? "unknow",
                     'recipient_phone'     => $request->phone,

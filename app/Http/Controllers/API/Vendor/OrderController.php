@@ -641,7 +641,7 @@ class OrderController extends Controller {
                 OrderDeliveryToCourier::create( [
                     'order_id'            => $order->id,
                     'vendor_id'           => vendorId(),
-                    'affiliator_id'       => $order->affiliator_id,
+                    'affiliator_id'       => (int) ( $order->affiliator_id ?? 0 ),
                     'merchant_order_id'   => $order->order_id,
                     'recipient_name'      => $request->customer_name,
                     'recipient_phone'     => $request->phone,

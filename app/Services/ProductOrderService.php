@@ -798,7 +798,7 @@ class ProductOrderService {
         return [
             'order_id'            => $order->id,
             'vendor_id'           => $order->vendor_id,
-            'affiliator_id'       => $order->affiliator_id,
+            'affiliator_id'       => (int) ( $order->affiliator_id ?? 0 ),
             'courier_id'          => $credential->id,
             'merchant_order_id'   => $order->order_id,
             'recipient_name'      => $order->name,
