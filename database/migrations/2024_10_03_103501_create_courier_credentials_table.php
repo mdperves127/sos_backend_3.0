@@ -15,10 +15,10 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger( 'vendor_id' );
             $table->string( 'courier_name' )->nullable();
-            $table->string( 'api_key' )->comment( 'api key / access key / client id' );
-            $table->string( 'secret_key' )->comment( 'secret key / access secret / client secret' );
+            $table->text( 'api_key' )->comment( 'api key / access key / client id' );
+            $table->text( 'secret_key' )->nullable()->comment( 'secret key / access secret / client secret' );
             $table->string( 'client_email' )->nullable();
-            $table->string( 'client_password' )->nullable();
+            $table->text( 'client_password' )->nullable();
             $table->string( 'store_id' )->nullable();
             $table->enum( 'default', ['yes', 'no'] )->default( 'no' );
             $table->enum( 'status', ['active', 'deactive'] )->default( 'active' );
