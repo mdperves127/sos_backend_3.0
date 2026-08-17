@@ -72,4 +72,10 @@ return [
         'webhook_secret' => env( 'PATHAO_WEBHOOK_SECRET', '' ),
     ],
 
+    'redx' => [
+        'sandbox' => env( 'REDX_MODE', 'live' ) === 'sandbox',
+        // Query token for RedX webhook callback URL (?token=).
+        'webhook_secret' => env( 'REDX_WEBHOOK_SECRET', '' ),
+    ],
+
 ];

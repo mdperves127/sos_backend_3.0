@@ -444,6 +444,107 @@ class CourierCredentialController extends Controller {
     }
 
     /**
+     * RedX: area list (optional post_code / district_name).
+     */
+    public function redxAreas( Request $request, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $request ) {
+            $query = array_filter( [
+                'post_code'     => $request->query( 'post_code', $request->input( 'post_code' ) ),
+                'district_name' => $request->query( 'district_name', $request->input( 'district_name' ) ),
+            ], static fn ( $v ) => $v !== null && $v !== '' );
+
+            $result = \App\Services\RedxService::areas( $credential->api_key, $query );
+
+            return $this->redxApiResponse( $result, 'RedX areas fetched.' );
+        } );
+    }
+
+    /**
+     * RedX: track parcel.
+     */
+    public function redxTrack( $trackingId, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $trackingId ) {
+            $result = \App\Services\RedxService::trackParcel( $credential->api_key, $trackingId );
+
+            return $this->redxApiResponse( $result, 'RedX tracking fetched.' );
+        } );
+    }
+
+    /**
+     * RedX: parcel details.
+     */
+    public function redxParcel( $trackingId, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $trackingId ) {
+            $result = \App\Services\RedxService::parcelInfo( $credential->api_key, $trackingId );
+
+            return $this->redxApiResponse( $result, 'RedX parcel details fetched.' );
+        } );
+    }
+
+    /**
+     * RedX: pickup store list.
+     */
+    public function redxPickupStores( $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) {
+            $result = \App\Services\RedxService::pickupStores( $credential->api_key );
+
+            return $this->redxApiResponse( $result, 'RedX pickup stores fetched.' );
+        } );
+    }
+
+    /**
+     * RedX: create pickup store.
+     */
+    public function redxCreatePickupStore( Request $request, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $request ) {
+            $result = \App\Services\RedxService::createPickupStore( $credential->api_key, $request->all() );
+
+            return $this->redxApiResponse( $result, 'RedX pickup store created.' );
+        } );
+    }
+
+    /**
+     * RedX: pickup store details.
+     */
+    public function redxPickupStore( $storeId, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $storeId ) {
+            $result = \App\Services\RedxService::pickupStore( $credential->api_key, $storeId );
+
+            return $this->redxApiResponse( $result, 'RedX pickup store fetched.' );
+        } );
+    }
+
+    /**
+     * RedX: parcel charge calculation.
+     */
+    public function redxCharge( Request $request, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $request ) {
+            $result = \App\Services\RedxService::chargeCalculator( $credential->api_key, $request->all() );
+
+            return $this->redxApiResponse( $result, 'RedX charge calculated.' );
+        } );
+    }
+
+    /**
+     * RedX: update/cancel parcel.
+     */
+    public function redxParcelUpdate( Request $request, $id = null )
+    {
+        return $this->withRedxCredential( $id, function ( $credential ) use ( $request ) {
+            $result = \App\Services\RedxService::updateParcel( $credential->api_key, $request->all() );
+
+            return $this->redxApiResponse( $result, 'RedX parcel updated.' );
+        } );
+    }
+
+    /**
      * Pathao: city list for a credential (or default Pathao).
      */
     public function pathaoCities( $id = null )
@@ -668,6 +769,48 @@ class CourierCredentialController extends Controller {
             return response()->json( [
                 'status'  => 400,
                 'message' => $result['message'],
+                'data'    => $result,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => $successMessage,
+            'data'    => $result,
+        ] );
+    }
+
+    private function redxCredential( $id = null ): ?CourierCredential
+    {
+        if ( $id ) {
+            return CourierCredential::where( 'id', $id )
+                ->where( 'vendor_id', vendorId() )
+                ->where( 'courier_name', 'redx' )
+                ->first();
+        }
+
+        return courierCredential( vendorId(), 'redx' );
+    }
+
+    private function withRedxCredential( $id, callable $callback )
+    {
+        $credential = $this->redxCredential( $id );
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'RedX credential not found.',
+            ], 404 );
+        }
+
+        return $callback( $credential );
+    }
+
+    private function redxApiResponse( array $result, string $successMessage )
+    {
+        if ( \App\Services\RedxService::isError( $result ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $result['message'] ?? 'RedX request failed.',
                 'data'    => $result,
             ], 400 );
         }

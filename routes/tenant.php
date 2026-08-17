@@ -453,6 +453,15 @@ Route::middleware( [
             Route::post( 'pathao/stores/{id?}', [CourierCredentialController::class, 'pathaoCreateStore'] );
             Route::get( 'pathao/order/{consignmentId}/{id?}', [CourierCredentialController::class, 'pathaoOrderDetails'] );
             Route::post( 'pathao/price/{id?}', [CourierCredentialController::class, 'pathaoPrice'] );
+
+            Route::match( ['get', 'post'], 'redx/areas/{id?}', [CourierCredentialController::class, 'redxAreas'] );
+            Route::get( 'redx/track/{trackingId}/{id?}', [CourierCredentialController::class, 'redxTrack'] );
+            Route::get( 'redx/parcel/{trackingId}/{id?}', [CourierCredentialController::class, 'redxParcel'] );
+            Route::get( 'redx/pickup-stores/{id?}', [CourierCredentialController::class, 'redxPickupStores'] );
+            Route::post( 'redx/pickup-stores/{id?}', [CourierCredentialController::class, 'redxCreatePickupStore'] );
+            Route::get( 'redx/pickup-store/{storeId}/{id?}', [CourierCredentialController::class, 'redxPickupStore'] );
+            Route::get( 'redx/charge/{id?}', [CourierCredentialController::class, 'redxCharge'] );
+            Route::post( 'redx/parcel-update/{id?}', [CourierCredentialController::class, 'redxParcelUpdate'] );
         } );
 
         // Legacy Pathao helpers for tenant (tenant_id, not vendor_id)

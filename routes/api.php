@@ -11,6 +11,7 @@ Route::get( '/test-api', function () {
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\PublicEpsController;
 use App\Http\Controllers\PublicPathaoWebhookController;
+use App\Http\Controllers\PublicRedxWebhookController;
 use App\Http\Controllers\PublicSteadfastWebhookController;
 use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
 use App\Http\Controllers\AdvertiseController;
@@ -62,6 +63,8 @@ Route::match( ['get', 'post'], 'public/eps/poll-complete', [PublicEpsController:
 Route::post( 'public/pathao/webhook/{tenant?}', PublicPathaoWebhookController::class );
 // Steadfast courier webhook — delivered → order delivered, cancelled → order return
 Route::match( ['get', 'post'], 'public/steadfast/webhook/{tenant?}', PublicSteadfastWebhookController::class );
+// RedX courier webhook — delivered → order delivered, returned → order return
+Route::match( ['get', 'post'], 'public/redx/webhook/{tenant?}', PublicRedxWebhookController::class );
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
