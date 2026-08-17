@@ -439,6 +439,11 @@ Route::middleware( [
             Route::get( 'steadfast/balance/{id}', [CourierCredentialController::class, 'steadfastBalance'] );
             Route::get( 'steadfast/status/{id}', [CourierCredentialController::class, 'steadfastStatus'] );
             Route::post( 'steadfast/return-request/{id}', [CourierCredentialController::class, 'steadfastReturnRequest'] );
+            Route::get( 'steadfast/return-requests/{id?}', [CourierCredentialController::class, 'steadfastReturnRequests'] );
+            Route::get( 'steadfast/return-request/{requestId}/{id?}', [CourierCredentialController::class, 'steadfastReturnRequestShow'] );
+            Route::get( 'steadfast/payments/{id?}', [CourierCredentialController::class, 'steadfastPayments'] );
+            Route::get( 'steadfast/payment/{paymentId}/{id?}', [CourierCredentialController::class, 'steadfastPayment'] );
+            Route::get( 'steadfast/police-stations/{id?}', [CourierCredentialController::class, 'steadfastPoliceStations'] );
 
             // Pathao helpers for tenant (aligned with pathao-courier package)
             Route::match( ['get', 'post'], 'pathao/cities/{id?}', [CourierCredentialController::class, 'pathaoCities'] );

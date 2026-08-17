@@ -367,6 +367,83 @@ class CourierCredentialController extends Controller {
     }
 
     /**
+     * Steadfast: single return request.
+     */
+    public function steadfastReturnRequestShow( $requestId, $id = null )
+    {
+        return $this->withSteadfastCredential( $id, function ( $credential ) use ( $requestId ) {
+            $result = \App\Services\SteadFastService::getReturnRequest(
+                $credential->api_key,
+                $credential->secret_key,
+                $requestId
+            );
+
+            return $this->steadfastApiResponse( $result, 'Steadfast return request fetched.' );
+        } );
+    }
+
+    /**
+     * Steadfast: return request list.
+     */
+    public function steadfastReturnRequests( $id = null )
+    {
+        return $this->withSteadfastCredential( $id, function ( $credential ) {
+            $result = \App\Services\SteadFastService::getReturnRequests(
+                $credential->api_key,
+                $credential->secret_key
+            );
+
+            return $this->steadfastApiResponse( $result, 'Steadfast return requests fetched.' );
+        } );
+    }
+
+    /**
+     * Steadfast: payment list.
+     */
+    public function steadfastPayments( $id = null )
+    {
+        return $this->withSteadfastCredential( $id, function ( $credential ) {
+            $result = \App\Services\SteadFastService::getPayments(
+                $credential->api_key,
+                $credential->secret_key
+            );
+
+            return $this->steadfastApiResponse( $result, 'Steadfast payments fetched.' );
+        } );
+    }
+
+    /**
+     * Steadfast: single payment with consignments.
+     */
+    public function steadfastPayment( $paymentId, $id = null )
+    {
+        return $this->withSteadfastCredential( $id, function ( $credential ) use ( $paymentId ) {
+            $result = \App\Services\SteadFastService::getPayment(
+                $credential->api_key,
+                $credential->secret_key,
+                $paymentId
+            );
+
+            return $this->steadfastApiResponse( $result, 'Steadfast payment fetched.' );
+        } );
+    }
+
+    /**
+     * Steadfast: police stations.
+     */
+    public function steadfastPoliceStations( $id = null )
+    {
+        return $this->withSteadfastCredential( $id, function ( $credential ) {
+            $result = \App\Services\SteadFastService::getPoliceStations(
+                $credential->api_key,
+                $credential->secret_key
+            );
+
+            return $this->steadfastApiResponse( $result, 'Steadfast police stations fetched.' );
+        } );
+    }
+
+    /**
      * Pathao: city list for a credential (or default Pathao).
      */
     public function pathaoCities( $id = null )
@@ -560,12 +637,46 @@ class CourierCredentialController extends Controller {
         return courierCredential( vendorId(), 'pathao' );
     }
 
-    private function steadfastCredential( $id ): ?CourierCredential
+    private function steadfastCredential( $id = null ): ?CourierCredential
     {
-        return CourierCredential::where( 'id', $id )
-            ->where( 'vendor_id', vendorId() )
-            ->where( 'courier_name', 'steadfast' )
-            ->first();
+        if ( $id ) {
+            return CourierCredential::where( 'id', $id )
+                ->where( 'vendor_id', vendorId() )
+                ->where( 'courier_name', 'steadfast' )
+                ->first();
+        }
+
+        return courierCredential( vendorId(), 'steadfast' );
+    }
+
+    private function withSteadfastCredential( $id, callable $callback )
+    {
+        $credential = $this->steadfastCredential( $id );
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Steadfast credential not found.',
+            ], 404 );
+        }
+
+        return $callback( $credential );
+    }
+
+    private function steadfastApiResponse( array $result, string $successMessage )
+    {
+        if ( isset( $result['message'] ) && (int) ( $result['status'] ?? 0 ) >= 400 ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => $result['message'],
+                'data'    => $result,
+            ], 400 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => $successMessage,
+            'data'    => $result,
+        ] );
     }
 
 }

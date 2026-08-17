@@ -57,7 +57,9 @@ return [
     ],
 
     'steadfast' => [
-        'base_url' => env( 'STEADFAST_BASE_URL', 'https://portal.packzy.com/api/v1' ),
+        'base_url'        => env( 'STEADFAST_BASE_URL', 'https://portal.packzy.com/api/v1' ),
+        // Bearer token configured in Steadfast merchant webhook settings.
+        'webhook_bearer'  => env( 'STEADFAST_WEBHOOK_BEARER', env( 'STEADFAST_WEBHOOK_SECRET', '' ) ),
     ],
 
     'pathao' => [

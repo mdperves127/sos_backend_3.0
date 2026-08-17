@@ -11,6 +11,7 @@ Route::get( '/test-api', function () {
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\PublicEpsController;
 use App\Http\Controllers\PublicPathaoWebhookController;
+use App\Http\Controllers\PublicSteadfastWebhookController;
 use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
@@ -59,6 +60,8 @@ Route::match( ['get', 'post'], 'public/eps/poll-complete', [PublicEpsController:
 
 // Pathao courier webhook (Pathao only) — delivered → order delivered, returned → order return
 Route::post( 'public/pathao/webhook/{tenant?}', PublicPathaoWebhookController::class );
+// Steadfast courier webhook — delivered → order delivered, cancelled → order return
+Route::match( ['get', 'post'], 'public/steadfast/webhook/{tenant?}', PublicSteadfastWebhookController::class );
 //register
 Route::post( 'register', [AuthController::class, 'Register'] );
 Route::post( 'verify', [AuthController::class, 'verify'] );
