@@ -253,6 +253,7 @@ Route::middleware( [
             Route::get( 'order-count', [VendorOrderController::class, 'orderCount'] );
             Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
             Route::match( ['POST', 'PUT', 'PATCH'], 'status/{id}', [VendorOrderController::class, 'productorderstatus'] );
+            Route::post( 'send-to-courier-bulk', [VendorOrderController::class, 'sendToCourierBulk'] );
             Route::post( 'send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
         } );
 

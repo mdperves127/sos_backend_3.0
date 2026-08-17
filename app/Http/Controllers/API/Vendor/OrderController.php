@@ -259,6 +259,18 @@ class OrderController extends Controller {
         return ProductOrderService::sendToCourier( $order );
     }
 
+    /**
+     * Send multiple selected orders to courier.
+     */
+    function sendToCourierBulk( Request $request ) {
+        $ids = $request->input( 'ids', $request->input( 'order_ids', [] ) );
+        if ( is_string( $ids ) ) {
+            $ids = preg_split( '/\s*,\s*/', $ids ) ?: [];
+        }
+
+        return ProductOrderService::sendToCourierBulk( (array) $ids );
+    }
+
     function orderView( $id ) {
         $allData = Order::where( 'id', $id )
             ->with( ['product', 'product.category:id,name', 'product.subcategory:id,name', 'product.brand:id,name', 'affiliator:id,uniqid,name,email', 'productrating' => function ( $query ) {

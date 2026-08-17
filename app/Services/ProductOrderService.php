@@ -326,6 +326,84 @@ class ProductOrderService {
         }
     }
 
+    /**
+     * Send multiple selected orders to courier.
+     *
+     * @param  array<int, mixed>  $ids
+     */
+    static function sendToCourierBulk( array $ids ) {
+        $ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ), static fn ( $id ) => $id > 0 ) ) );
+
+        if ( $ids === [] ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Select at least one order.',
+            ], 422 );
+        }
+
+        if ( count( $ids ) > 100 ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'You can send at most 100 parcels at a time.',
+            ], 422 );
+        }
+
+        $results = [];
+        $sent    = 0;
+        $skipped = 0;
+        $failed  = 0;
+
+        foreach ( $ids as $id ) {
+            $order = Order::find( $id );
+            if ( ! $order ) {
+                $failed++;
+                $results[] = [
+                    'id'      => $id,
+                    'ok'      => false,
+                    'status'  => 404,
+                    'message' => 'Order not found.',
+                ];
+                continue;
+            }
+
+            $response   = self::sendToCourier( $order );
+            $http       = method_exists( $response, 'getStatusCode' ) ? (int) $response->getStatusCode() : 200;
+            $body       = method_exists( $response, 'getData' ) ? (array) $response->getData( true ) : [];
+            $message    = (string) ( $body['message'] ?? ( $http < 400 ? 'Sent.' : 'Failed.' ) );
+            $alreadySent = $http < 400 && stripos( $message, 'already sent' ) !== false;
+
+            if ( $http >= 400 ) {
+                $failed++;
+            } elseif ( $alreadySent ) {
+                $skipped++;
+            } else {
+                $sent++;
+            }
+
+            $results[] = [
+                'id'             => (int) $order->id,
+                'order_id'       => $order->order_id,
+                'ok'             => $http < 400,
+                'status'         => $http,
+                'message'        => $message,
+                'consignment_id' => $body['consignment_id'] ?? $order->fresh()->consignment_id ?? null,
+                'courier_name'   => $body['courier_name'] ?? $order->courier_name ?? null,
+            ];
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => "Sent {$sent}, skipped {$skipped}, failed {$failed}.",
+            'summary' => [
+                'total'   => count( $ids ),
+                'sent'    => $sent,
+                'skipped' => $skipped,
+                'failed'  => $failed,
+            ],
+            'results' => $results,
+        ], $failed > 0 && $sent === 0 && $skipped === 0 ? 400 : 200 );
+    }
+
     protected static function resolveActiveCourierCredential( $order, $courierOrder = null ): ?CourierCredential
     {
         $requestCourierId = request()->input( 'courier_id' );
