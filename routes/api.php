@@ -192,12 +192,11 @@ Route::get( 'services-rating/{id}', [VendorServiceController::class, 'servicerat
 
 Route::get( 'doller-rate', [DollerRateController::class, 'index'] );
 Route::get( '/settings', [SettingsController::class, 'index'] );
+Route::get( '/seo', [SettingsController::class, 'seo'] );
 
 Route::get( '/companions', [SettingsController::class, 'companion'] );
 
 Route::get( '/faqs', [SettingsController::class, 'faq'] );
-
-Route::get( '/seos', [SettingsController::class, 'seo'] );
 
 Route::get( '/footer-medias', [SettingsController::class, 'fottermedia'] );
 

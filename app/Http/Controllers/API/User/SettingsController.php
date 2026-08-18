@@ -39,10 +39,20 @@ class SettingsController extends Controller {
                 ], 404 );
             }
 
-            return $this->responseData( $seo );
+            return response()->json( [
+                'status'  => 200,
+                'data'    => $seo,
+                'message' => $seo,
+            ] );
         }
 
-        return $this->responseData( DB::table( 'seo' )->get() );
+        $seos = DB::table( 'seo' )->get();
+
+        return response()->json( [
+            'status'  => 200,
+            'data'    => $seos,
+            'message' => $seos,
+        ] );
     }
 
     public function fottermedia() {
