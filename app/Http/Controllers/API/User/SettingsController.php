@@ -30,7 +30,7 @@ class SettingsController extends Controller {
         $pageUrl = request( 'page_url' );
 
         if ( $pageUrl ) {
-            $seo = DB::table( 'seo' )->where( 'page_url', $pageUrl )->first();
+            $seo = DB::table( 'seo' )->where( 'page_url', $pageUrl )->get();
 
             if ( ! $seo ) {
                 return response()->json( [
