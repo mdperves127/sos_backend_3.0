@@ -246,7 +246,7 @@ class OrderController extends Controller {
     /**
      * Send order to courier (separate from status=progress).
      */
-    function sendToCourier( $id ) {
+    function sendToCourier( Request $request, $id ) {
         $order = Order::find( $id );
 
         if ( ! $order ) {
@@ -256,11 +256,27 @@ class OrderController extends Controller {
             ], 404 );
         }
 
-        return ProductOrderService::sendToCourier( $order );
+        $validator = Validator::make( $request->all(), [
+            'courier_id'   => 'nullable|integer',
+            'courier_name' => 'nullable|in:pathao,steadfast,redx',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status' => 422,
+                'errors' => $validator->messages(),
+            ], 422 );
+        }
+
+        return ProductOrderService::sendToCourier(
+            $order,
+            $request->input( 'courier_id' ),
+            $request->input( 'courier_name' )
+        );
     }
 
     /**
-     * Send multiple selected orders to courier.
+     * Send multiple selected orders to a chosen courier.
      */
     function sendToCourierBulk( Request $request ) {
         $ids = $request->input( 'ids', $request->input( 'order_ids', [] ) );
@@ -268,7 +284,27 @@ class OrderController extends Controller {
             $ids = preg_split( '/\s*,\s*/', $ids ) ?: [];
         }
 
-        return ProductOrderService::sendToCourierBulk( (array) $ids );
+        $validator = Validator::make( $request->all(), [
+            'courier_id'   => 'required_without:courier_name|nullable|integer',
+            'courier_name' => 'required_without:courier_id|nullable|in:pathao,steadfast,redx',
+        ], [
+            'courier_id.required_without'   => 'Select a courier (courier_id or courier_name).',
+            'courier_name.required_without' => 'Select a courier (courier_id or courier_name).',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Select a courier (courier_id or courier_name).',
+                'errors'  => $validator->messages(),
+            ], 422 );
+        }
+
+        return ProductOrderService::sendToCourierBulk(
+            (array) $ids,
+            $request->input( 'courier_id' ),
+            $request->input( 'courier_name' )
+        );
     }
 
     function orderView( $id ) {

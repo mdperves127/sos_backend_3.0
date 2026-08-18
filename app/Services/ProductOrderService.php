@@ -248,10 +248,10 @@ class ProductOrderService {
     }
 
     /**
-     * Send an order to the active courier (Pathao / Steadfast / Redx).
+     * Send an order to the selected courier (Pathao / Steadfast / Redx).
      * On success the order status becomes courier.
      */
-    static function sendToCourier( $order ) {
+    static function sendToCourier( $order, $courierId = null, $courierName = null ) {
         if ( auth()->check() ) {
             $ownerId = function_exists( 'vendorId' ) ? vendorId() : auth()->id();
             if ( (int) $order->vendor_id !== (int) $ownerId ) {
@@ -286,7 +286,16 @@ class ProductOrderService {
             'merchant_order_id' => $order->order_id,
         ] )->first();
 
-        $credential = self::resolveActiveCourierCredential( $order, $courierOrder );
+        $credential = self::resolveSelectedCourierCredential( $order->vendor_id, $courierId, $courierName );
+
+        if ( ( $courierId || $courierName ) && ! $credential ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Selected courier was not found or is not active.',
+            ], 422 );
+        }
+
+        $credential = $credential ?: self::resolveActiveCourierCredential( $order, $courierOrder );
 
         if ( ! $credential ) {
             return response()->json( [
@@ -327,11 +336,11 @@ class ProductOrderService {
     }
 
     /**
-     * Send multiple selected orders to courier.
+     * Send multiple selected orders to a chosen courier.
      *
      * @param  array<int, mixed>  $ids
      */
-    static function sendToCourierBulk( array $ids ) {
+    static function sendToCourierBulk( array $ids, $courierId = null, $courierName = null ) {
         $ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ), static fn ( $id ) => $id > 0 ) ) );
 
         if ( $ids === [] ) {
@@ -345,6 +354,16 @@ class ProductOrderService {
             return response()->json( [
                 'status'  => 422,
                 'message' => 'You can send at most 100 parcels at a time.',
+            ], 422 );
+        }
+
+        $vendorId   = function_exists( 'vendorId' ) ? vendorId() : ( auth()->id() );
+        $credential = self::resolveSelectedCourierCredential( $vendorId, $courierId, $courierName );
+
+        if ( ! $credential ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Selected courier was not found or is not active.',
             ], 422 );
         }
 
@@ -366,7 +385,7 @@ class ProductOrderService {
                 continue;
             }
 
-            $response   = self::sendToCourier( $order );
+            $response   = self::sendToCourier( $order, $credential->id, $credential->courier_name );
             $http       = method_exists( $response, 'getStatusCode' ) ? (int) $response->getStatusCode() : 200;
             $body       = method_exists( $response, 'getData' ) ? (array) $response->getData( true ) : [];
             $message    = (string) ( $body['message'] ?? ( $http < 400 ? 'Sent.' : 'Failed.' ) );
@@ -394,6 +413,10 @@ class ProductOrderService {
         return response()->json( [
             'status'  => 200,
             'message' => "Sent {$sent}, skipped {$skipped}, failed {$failed}.",
+            'courier' => [
+                'id'           => $credential->id,
+                'courier_name' => $credential->courier_name,
+            ],
             'summary' => [
                 'total'   => count( $ids ),
                 'sent'    => $sent,
@@ -402,6 +425,22 @@ class ProductOrderService {
             ],
             'results' => $results,
         ], $failed > 0 && $sent === 0 && $skipped === 0 ? 400 : 200 );
+    }
+
+    protected static function resolveSelectedCourierCredential( $vendorId, $courierId = null, $courierName = null ): ?CourierCredential
+    {
+        $query = CourierCredential::where( 'vendor_id', $vendorId )
+            ->where( 'status', 'active' );
+
+        if ( ! empty( $courierId ) ) {
+            return ( clone $query )->where( 'id', $courierId )->first();
+        }
+
+        if ( ! empty( $courierName ) ) {
+            return ( clone $query )->where( 'courier_name', $courierName )->first();
+        }
+
+        return null;
     }
 
     protected static function resolveActiveCourierCredential( $order, $courierOrder = null ): ?CourierCredential
