@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 return new class extends Migration
 {
@@ -14,6 +14,19 @@ return new class extends Migration
         }
 
         $now = now();
+
+        $webSeo = DB::table( 'permissions' )
+            ->where( 'name', 'seo' )
+            ->where( 'guard_name', 'web' )
+            ->first();
+
+        if ( $webSeo ) {
+            if ( Schema::hasTable( 'role_has_permissions' ) ) {
+                DB::table( 'role_has_permissions' )->where( 'permission_id', $webSeo->id )->delete();
+            }
+
+            DB::table( 'permissions' )->where( 'id', $webSeo->id )->delete();
+        }
 
         $exists = DB::table( 'permissions' )
             ->where( 'name', 'seo' )
@@ -32,30 +45,28 @@ return new class extends Migration
         $seo = DB::table( 'permissions' )->where( 'name', 'seo' )->where( 'guard_name', 'sanctum' )->first();
         $faq = DB::table( 'permissions' )->where( 'name', 'faq' )->where( 'guard_name', 'sanctum' )->first();
 
-        if ( ! $seo || ! $faq || ! Schema::hasTable( 'role_has_permissions' ) ) {
-            return;
-        }
+        if ( $seo && $faq && Schema::hasTable( 'role_has_permissions' ) ) {
+            $roleIds = DB::table( 'role_has_permissions' )
+                ->where( 'permission_id', $faq->id )
+                ->pluck( 'role_id' );
 
-        $roleIds = DB::table( 'role_has_permissions' )
-            ->where( 'permission_id', $faq->id )
-            ->pluck( 'role_id' );
+            foreach ( $roleIds as $roleId ) {
+                $alreadyAssigned = DB::table( 'role_has_permissions' )
+                    ->where( 'permission_id', $seo->id )
+                    ->where( 'role_id', $roleId )
+                    ->exists();
 
-        foreach ( $roleIds as $roleId ) {
-            $alreadyAssigned = DB::table( 'role_has_permissions' )
-                ->where( 'permission_id', $seo->id )
-                ->where( 'role_id', $roleId )
-                ->exists();
-
-            if ( ! $alreadyAssigned ) {
-                DB::table( 'role_has_permissions' )->insert( [
-                    'permission_id' => $seo->id,
-                    'role_id'       => $roleId,
-                ] );
+                if ( ! $alreadyAssigned ) {
+                    DB::table( 'role_has_permissions' )->insert( [
+                        'permission_id' => $seo->id,
+                        'role_id'       => $roleId,
+                    ] );
+                }
             }
         }
 
-        if ( class_exists( Permission::class ) ) {
-            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        if ( class_exists( PermissionRegistrar::class ) ) {
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
         }
     }
 
