@@ -12,8 +12,20 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsController extends Controller {
     public function index() {
-        $strring = DB::table( 'settings' )->where( 'deleted_at', null )->first();
-        return $this->response( $strring );
+        $settings = DB::table( 'settings' )->where( 'deleted_at', null )->first();
+        $pageUrl  = request( 'page_url' );
+
+        $seo = $pageUrl
+            ? DB::table( 'seo' )->where( 'page_url', $pageUrl )->first()
+            : DB::table( 'seo' )->get();
+
+        if ( ! $settings ) {
+            $settings = (object) [];
+        }
+
+        $settings->seo = $seo;
+
+        return $this->response( $settings );
     }
 
     public function companion() {
