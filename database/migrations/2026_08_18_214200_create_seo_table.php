@@ -14,7 +14,7 @@ return new class extends Migration
 
         Schema::create( 'seo', function ( Blueprint $table ) {
             $table->id();
-            $table->string( 'page_url' )->unique();
+            $table->string( 'page_url' );
             $table->string( 'seo_title' );
             $table->text( 'seo_value' )->nullable();
             $table->timestamps();

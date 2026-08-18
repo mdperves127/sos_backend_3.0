@@ -16,7 +16,7 @@ class SettingsController extends Controller {
         $pageUrl  = request( 'page_url' );
 
         $seo = $pageUrl
-            ? DB::table( 'seo' )->where( 'page_url', $pageUrl )->first()
+            ? DB::table( 'seo' )->where( 'page_url', $pageUrl )->get()
             : DB::table( 'seo' )->get();
 
         if ( ! $settings ) {

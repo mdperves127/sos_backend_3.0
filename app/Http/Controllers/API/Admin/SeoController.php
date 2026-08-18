@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class SeoController extends Controller
 {
@@ -27,7 +26,7 @@ class SeoController extends Controller
     public function store( Request $request )
     {
         $validator = Validator::make( $request->all(), [
-            'page_url'   => 'required|string|max:255|unique:seo,page_url',
+            'page_url'   => 'required|string|max:255',
             'seo_title'  => 'required|string|max:255',
             'seo_value'  => 'nullable|string',
         ] );
@@ -76,12 +75,7 @@ class SeoController extends Controller
         }
 
         $validator = Validator::make( $request->all(), [
-            'page_url'  => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique( 'seo', 'page_url' )->ignore( $seo->id ),
-            ],
+            'page_url'  => 'required|string|max:255',
             'seo_title' => 'required|string|max:255',
             'seo_value' => 'nullable|string',
         ] );
