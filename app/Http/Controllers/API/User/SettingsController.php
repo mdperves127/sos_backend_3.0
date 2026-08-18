@@ -26,6 +26,25 @@ class SettingsController extends Controller {
         return $this->response( $faqs );
     }
 
+    public function seo() {
+        $pageUrl = request( 'page_url' );
+
+        if ( $pageUrl ) {
+            $seo = DB::table( 'seo' )->where( 'page_url', $pageUrl )->first();
+
+            if ( ! $seo ) {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'No SEO data found for this page.',
+                ], 404 );
+            }
+
+            return $this->responseData( $seo );
+        }
+
+        return $this->responseData( DB::table( 'seo' )->get() );
+    }
+
     public function fottermedia() {
         $footermedia = DB::table( 'footer_media' )->where( 'deleted_at', null )->take( 8 )->get();
         return $this->response( $footermedia );

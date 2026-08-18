@@ -25,6 +25,7 @@ class SubscriptionService {
         $userSubscription->subscription_price = $subscription->subscription_amount;
         $userSubscription->chat_access        = $subscription->chat_access;
         $userSubscription->has_website        = $subscription->has_website ?? 'no';
+        $userSubscription->has_custom_domain  = $subscription->has_custom_domain ?? 'no';
         $userSubscription->website_visits     = $subscription->website_visits ?? 0;
         $userSubscription->already_visits     = 0;
 

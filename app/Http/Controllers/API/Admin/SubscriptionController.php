@@ -160,8 +160,9 @@ class SubscriptionController extends Controller {
         $subscription->chat_access     = request( 'chat_access' );
         $subscription->employee_create = request( 'employee_create' );
         $subscription->pos_sale_qty    = request( 'pos_sale_qty' );
-        $subscription->has_website     = request( 'has_website' );
-        $subscription->website_visits  = request( 'website_visits' );
+        $subscription->has_website        = request( 'has_website' );
+        $subscription->has_custom_domain  = request( 'has_custom_domain' );
+        $subscription->website_visits     = request( 'website_visits' );
         $subscription->save();
 
         return $this->response( 'Successfull' );

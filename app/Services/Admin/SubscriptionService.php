@@ -40,6 +40,7 @@ class SubscriptionService
             'chat_access'               => ( $data['chat_access'] ?? 'no' ) === 'yes' ? 'yes' : null,
             'employee_create'           => ( $data['employee_create'] ?? 'no' ) === 'yes' ? 'yes' : null,
             'has_website'               => $data['has_website'] ?? 'no',
+            'has_custom_domain'         => $data['has_custom_domain'] ?? 'no',
         ] );
     }
 

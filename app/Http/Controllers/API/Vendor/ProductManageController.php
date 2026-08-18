@@ -533,6 +533,52 @@ class ProductManageController extends Controller {
         }
     }
 
+    public function VendorDeleteBulk( Request $request ) {
+        $ids = $request->input( 'ids', $request->input( 'product_ids', [] ) );
+        if ( is_string( $ids ) ) {
+            $ids = preg_split( '/\s*,\s*/', $ids ) ?: [];
+        }
+
+        $ids = array_values( array_unique( array_filter( array_map( 'intval', (array) $ids ), static fn ( $id ) => $id > 0 ) ) );
+
+        if ( $ids === [] ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Select at least one product.',
+            ], 422 );
+        }
+
+        $ownerId  = function_exists( 'vendorId' ) ? vendorId() : Auth::id();
+        $products = Product::whereIn( 'id', $ids )
+            ->where( function ( $q ) use ( $ownerId ) {
+                $q->where( 'vendor_id', $ownerId )
+                    ->orWhere( 'user_id', $ownerId )
+                    ->orWhere( 'user_id', Auth::id() );
+            } )
+            ->get();
+
+        $foundIds = $products->pluck( 'id' )->map( fn ( $id ) => (int) $id )->all();
+        $deleted  = [];
+        $missing  = array_values( array_diff( $ids, $foundIds ) );
+
+        foreach ( $products as $product ) {
+            $product->delete();
+            $deleted[] = (int) $product->id;
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => count( $deleted ) . ' product(s) deleted successfully.',
+            'summary' => [
+                'total'   => count( $ids ),
+                'deleted' => count( $deleted ),
+                'failed'  => count( $missing ),
+            ],
+            'deleted_ids' => $deleted,
+            'failed_ids'  => $missing,
+        ], count( $deleted ) === 0 ? 404 : 200 );
+    }
+
     function VendorDeleteImage( $id ) {
         $image = ProductImage::find( $id );
         if ( $image ) {

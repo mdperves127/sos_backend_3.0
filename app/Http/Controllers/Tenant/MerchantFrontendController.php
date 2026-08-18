@@ -772,6 +772,7 @@ class MerchantFrontendController extends Controller
         $website_visits = $package_info?->website_visits;
         $already_visits = $package_info?->already_visits;
         $has_website = $package_info?->has_website;
+        $has_custom_domain = $package_info?->has_custom_domain;
 
         $populer_section_category_id_1 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' );
         $populer_section_category_id_2 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' );
@@ -835,6 +836,7 @@ class MerchantFrontendController extends Controller
             'website_visits' => $website_visits,
             'already_visits' => $already_visits,
             'has_website' => $has_website,
+            'has_custom_domain' => $has_custom_domain,
             'tenant_type' => tenant()->type,
         ]);
     }

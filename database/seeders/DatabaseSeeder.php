@@ -29,5 +29,6 @@ class DatabaseSeeder extends Seeder
         
         // Tenant-specific seeders
         $this->call(CmsSettingSeeder::class);
+        $this->call(SeoSeeder::class);
     }
 }

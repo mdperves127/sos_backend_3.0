@@ -65,6 +65,7 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
     Route::get( 'vendor-edit-product/{id}', [ProductManageController::class, 'VendorProductEdit'] );
     Route::get( 'vendor-edit-product-count', [ProductManageController::class, 'vendorProductEditCount'] );
     Route::post( 'vendor-update-product/{id}', [ProductManageController::class, 'VendotUpdateProduct'] );
+    Route::match( ['POST', 'DELETE'], 'vendor-delete-product-bulk', [ProductManageController::class, 'VendorDeleteBulk'] );
     Route::delete( 'vendor-delete-product/{id}', [ProductManageController::class, 'VendorDelete'] );
     Route::delete( 'vendor-delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
 

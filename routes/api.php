@@ -197,6 +197,8 @@ Route::get( '/companions', [SettingsController::class, 'companion'] );
 
 Route::get( '/faqs', [SettingsController::class, 'faq'] );
 
+Route::get( '/seos', [SettingsController::class, 'seo'] );
+
 Route::get( '/footer-medias', [SettingsController::class, 'fottermedia'] );
 
 Route::get( '/members', [SettingsController::class, 'members'] );

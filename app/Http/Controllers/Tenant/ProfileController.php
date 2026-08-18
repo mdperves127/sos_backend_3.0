@@ -103,10 +103,15 @@ class ProfileController extends Controller
         $tenant = Tenant::on('mysql')->where('id', tenant()->id)->first();
         $domainRecord = TenantCustomDomain::on('mysql')->where('tenant_id', tenant()->id)->first();
         $targetIp = app(CustomDomainService::class)->targetIp();
+        $package = UserSubscription::on('mysql')
+            ->where('tenant_id', tenant()->id)
+            ->latest('id')
+            ->first();
 
         return response()->json([
             'status' => 200,
             'shop_info' => $tenant,
+            'has_custom_domain' => $package?->has_custom_domain ?? 'no',
             'custom_domain_connection' => $domainRecord ? [
                 'domain' => $domainRecord->domain,
                 'status' => $domainRecord->status,
@@ -154,6 +159,18 @@ class ProfileController extends Controller
         ];
 
         if ( $request->filled( 'custom_domain' ) ) {
+            $package = UserSubscription::on('mysql')
+                ->where('tenant_id', tenant()->id)
+                ->latest('id')
+                ->first();
+
+            if ( ( $package?->has_custom_domain ?? 'no' ) !== 'yes' ) {
+                return response()->json( [
+                    'status'  => 403,
+                    'message' => 'Your package does not include custom domain.',
+                ], 403 );
+            }
+
             $updateData['custom_domain'] = $request->custom_domain;
         }
 

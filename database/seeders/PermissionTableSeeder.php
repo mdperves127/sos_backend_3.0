@@ -90,6 +90,7 @@ class PermissionTableSeeder extends Seeder
 
             // Advertise Content
             'faq',
+            'seo',
             'advertise-update-content',
 
             // Service content

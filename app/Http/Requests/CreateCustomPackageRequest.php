@@ -38,6 +38,7 @@ class CreateCustomPackageRequest extends FormRequest
             'chat_access'               => 'nullable|in:yes,no',
             'employee_create'           => 'nullable|in:yes,no',
             'has_website'               => 'nullable|in:yes,no',
+            'has_custom_domain'         => 'nullable|in:yes,no',
         ];
     }
 

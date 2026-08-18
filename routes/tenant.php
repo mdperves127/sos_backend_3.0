@@ -233,6 +233,7 @@ Route::middleware( [
             Route::get( 'edit/{id}', [ProductManageController::class, 'VendorProductEdit'] );
             Route::post( 'update/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
             Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
+            Route::match( ['POST', 'DELETE'], 'delete-bulk', [ProductManageController::class, 'VendorDeleteBulk'] );
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
             Route::get( '/{status?}', [ProductManageController::class, 'VendorProduct'] );
 

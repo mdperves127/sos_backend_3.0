@@ -32,6 +32,7 @@ use App\Http\Controllers\API\Admin\PlacementController;
 use App\Http\Controllers\API\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\API\Admin\ProductStatusController;
 use App\Http\Controllers\API\Admin\ProfileController;
+use App\Http\Controllers\API\Admin\SeoController;
 use App\Http\Controllers\API\Admin\ServiceOrderShowController;
 use App\Http\Controllers\API\Admin\SettingsController;
 use App\Http\Controllers\API\Admin\SubscriptionController;
@@ -255,6 +256,8 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'coupon-users', [CouponController::class, 'couponusers'] );
 
         Route::resource( 'faq', FaqController::class );
+
+        Route::resource( 'seo', SeoController::class );
 
         Route::resource( 'mission', MissionController::class );
 
