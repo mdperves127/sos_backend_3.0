@@ -85,9 +85,9 @@ class ProductService {
             $variantsData[] = [
                 'user_id'    => vendorId(),
                 'product_id' => $product_id,
-                'unit_id'    => $variant['unit_id'][$key],
-                'size_id'    => $variant['size_id'][$key],
-                'color_id'   => $variant['color_id'][$key],
+                'unit_id'    => $variant['unit_id'][$key] ?? null,
+                'size_id'    => $variant['size_id'][$key] ?? null,
+                'color_id'   => $variant['color_id'][$key] ?? null,
                 'qty'        => $purchaseStatus == "received" ? $variant['qty'][$key] : 0,
                 'rate'       => $variant['rate'][$key],
             ];

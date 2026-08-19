@@ -66,7 +66,7 @@ class ProductManageController extends Controller {
             'discount_price'                         => ['nullable', 'numeric', 'min:1'],
             'brand_id'                               => ['required', 'integer', 'min:1', new BrandRule],
             'warehouse_id'                           => ['required', 'integer'],
-            'supplier_id'                            => ['required', 'integer'],
+            'supplier_id'                            => ['nullable', 'integer'],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -184,7 +184,7 @@ class ProductManageController extends Controller {
             $product->category_id    = $request->category_id;
             $product->sku            = $request->sku;
             $product->subcategory_id = $request->subcategory_id;
-            $product->supplier_id    = $request->supplier_id;
+            $product->supplier_id    = $request->supplier_id ?: null;
             $product->warehouse_id   = $request->warehouse_id;
             $product->brand_id       = $request->brand_id;
             $product->user_id        = Auth::user()->id;
@@ -319,7 +319,7 @@ class ProductManageController extends Controller {
             // 'discount_price'                         => ['numeric', 'min:1'],
             'brand_id'                               => ['required', 'integer', 'min:1', new BrandRule],
             'warehouse_id'                           => ['required', 'integer'],
-            'supplier_id'                            => ['required', 'integer'],
+            'supplier_id'                            => ['nullable', 'integer'],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -403,6 +403,9 @@ class ProductManageController extends Controller {
                 $product->sku            = $request->input( 'sku' );
                 $product->subcategory_id = $request->input( 'subcategory_id' );
                 $product->brand_id       = $request->input( 'brand_id' );
+                if ( $request->exists( 'supplier_id' ) ) {
+                    $product->supplier_id = $request->supplier_id ?: null;
+                }
                 $product->user_id        = auth()->id();
                 $product->pre_order      = $request->pre_order;
                 $product->vendor_id      = vendorId();
