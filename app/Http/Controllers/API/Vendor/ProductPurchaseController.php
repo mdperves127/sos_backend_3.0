@@ -39,11 +39,6 @@ class ProductPurchaseController extends Controller {
                 ->where( 'vendor_id', vendorId() )
                 ->select( 'id', 'supplier_name', 'business_name' )
                 ->get(),
-            'products'       => Product::latest()
-                ->where( 'vendor_id', vendorId() )
-                ->where( 'status', 'active' )
-                ->select( 'id', 'name', 'sku', 'original_price', 'qty', 'supplier_id' )
-                ->get(),
             'unit'           => Unit::where( ['status' => 'active'] )->select( 'id', 'unit_name' )->get(),
             'color'          => Color::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
             'variation'      => Size::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
@@ -57,11 +52,15 @@ class ProductPurchaseController extends Controller {
         ] );
     }
 
+    /**
+     * After a supplier is selected on the purchase page, return every product
+     * so the user can pick which items to buy from that supplier.
+     */
     function supplierProduct( $supplier_id ) {
         $supplier = Supplier::where( 'id', $supplier_id )
             ->where( 'vendor_id', vendorId() )
             ->where( 'status', 'active' )
-            ->select( 'id', 'supplier_name', 'business_name' )
+            ->select( 'id', 'supplier_name', 'business_name', 'phone' )
             ->first();
 
         if ( ! $supplier ) {
@@ -80,7 +79,7 @@ class ProductPurchaseController extends Controller {
                         ->orWhere( 'sku', 'like', '%' . $search . '%' );
                 } );
             } )
-            ->select( 'id', 'name', 'sku', 'original_price', 'qty', 'supplier_id' )
+            ->select( 'id', 'name', 'sku', 'original_price', 'selling_price', 'qty', 'image', 'supplier_id' )
             ->get();
 
         return response()->json( [
