@@ -19,12 +19,7 @@ use App\Models\TenantCoupon;
 class OrderController extends Controller
 {
     function guestStore( Request $request ) {
-        $requestDatas = collect(
-            ProductCheckoutService::enrichCheckoutDatasWithDelivery(
-                $request,
-                $this->normalizeGuestDatas( $request )->all()
-            )
-        );
+        $requestDatas = $this->normalizeGuestDatas( $request );
 
         if ( $requestDatas->isEmpty() ) {
             return responsejson( 'Checkout data is required for guest checkout.', 'fail' );
@@ -153,11 +148,6 @@ class OrderController extends Controller
                 (int) ( $cart->product_qty ?? 0 )
             );
 
-            $checkoutDatas = ProductCheckoutService::enrichCheckoutDatasWithDelivery(
-                $request,
-                $checkoutDatas
-            );
-
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
 
             $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );
@@ -241,10 +231,7 @@ class OrderController extends Controller
 
     function store( ProductRequest $request ) {
         $user = auth()->user();
-        $requestDatas = ProductCheckoutService::enrichCheckoutDatasWithDelivery(
-            $request,
-            $request->input( 'datas', [] )
-        );
+        $requestDatas = $request->input( 'datas', [] );
         $shippingTemplate = $requestDatas[0] ?? [];
         $paymentType = $request->input( 'payment_type', 'aamarpay' );
 
@@ -769,10 +756,6 @@ class OrderController extends Controller
             $payload['qty'] = (int) ( $cart->product_qty ?? 0 );
         }
 
-        if ( empty( $payload['delivery_charge'] ) && ! empty( $shippingTemplate['delivery_charge'] ) ) {
-            $payload['delivery_charge'] = $shippingTemplate['delivery_charge'];
-        }
-
         return $payload;
     }
 
@@ -1249,11 +1232,15 @@ class OrderController extends Controller
     }
 
     private function computeLineOrderAmount( Cart $cart, array $checkoutDatas, int $totalqty ): float {
-        $productAmount  = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
-        $first            = $checkoutDatas[0] ?? [];
-        $deliveryContext  = ProductCheckoutService::resolveDeliveryCharge( $first );
+        $productAmount = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
+        $first         = $checkoutDatas[0] ?? [];
+        $deliveryCharge = isset( $first['delivery_charge']['charge'] )
+            ? (float) $first['delivery_charge']['charge']
+            : ( isset( $first['delivery_charge'] ) && is_numeric( $first['delivery_charge'] )
+                ? (float) $first['delivery_charge']
+                : 0 );
 
-        return $productAmount + $deliveryContext['charge'];
+        return $productAmount + $deliveryCharge;
     }
 
     private function estimateAuthenticatedCheckoutTotal(
