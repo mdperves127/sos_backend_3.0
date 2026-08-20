@@ -49,7 +49,7 @@ class ProductService {
                 $q->whereBetween( 'selling_price', [$min, $max] );
             } )
 
-            ->select( 'id', 'uniqid', 'image', 'name', 'selling_price', 'qty', 'status', 'created_at', 'discount_type', 'discount_rate', 'original_price', 'discount_price', 'is_affiliate', 'wc_product_id', 'product_type', 'is_stock_show', 'is_show_website' )
+            ->select( 'id', 'uniqid', 'image', 'name', 'selling_price', 'qty', 'status', 'created_at', 'discount_type', 'discount_rate', 'original_price', 'discount_price', 'is_affiliate', 'wc_product_id', 'product_type', 'is_stock_show', 'is_show_website', 'slug' )
             ->latest()
             ->paginate( 10 )
             ->withQueryString();
