@@ -144,7 +144,7 @@ class OrderController extends Controller
 
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
 
-            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas );
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );
             if ( $validationError ) {
                 if ( $createdGuestCart ) {
                     $cart->delete();
@@ -295,7 +295,7 @@ class OrderController extends Controller
 
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
 
-            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas );
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );
             if ( $validationError ) {
                 $failed[] = [
                     'cart_id' => $cart->id,
@@ -366,12 +366,19 @@ class OrderController extends Controller
         ] );
     }
 
-    private function validateCartForCheckout( Cart $cart, $product, int $totalqty, array $checkoutDatas = [] ): ?string {
+    private function validateCartForCheckout( Cart $cart, $product, int $totalqty, array $checkoutDatas = [], bool $lenientStock = false ): ?string {
         if ( $cart->purchase_type == 'single' && $product->selling_type == 'bulk' ) {
             return 'Something is wrong delete the cart.';
         }
 
         if ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) {
+            $requestedQty = max( 1, $totalqty );
+            $cartQty      = (int) ( $cart->product_qty ?? 0 );
+
+            if ( $cartQty > 0 ) {
+                $requestedQty = $cartQty;
+            }
+
             $variantLines = $this->extractCheckoutVariants( $checkoutDatas )
                 ->filter( function ( $variant ) {
                     $variant = (array) $variant;
@@ -379,17 +386,22 @@ class OrderController extends Controller
                     return $this->checkoutVariantHasIdentity( $variant ) && (int) ( $variant['qty'] ?? 0 ) > 0;
                 } );
 
+            $availableQty = $this->resolveAvailableProductQuantity( $cart->tenant_id, $product );
+
             if ( $variantLines->isNotEmpty() ) {
                 foreach ( $variantLines as $variant ) {
                     $variant      = (array) $variant;
-                    $requestedQty = (int) ( $variant['qty'] ?? 0 );
-                    $availableQty = $this->resolveVariantAvailableQuantity( $cart->tenant_id, $product, $variant );
+                    $lineQty      = (int) ( $variant['qty'] ?? $requestedQty );
+                    $lineAvailable = max(
+                        $availableQty,
+                        $this->resolveVariantAvailableQuantity( $cart->tenant_id, $product, $variant )
+                    );
 
-                    if ( $availableQty < $requestedQty ) {
+                    if ( $this->isStockInsufficient( $lineAvailable, $lineQty, $lenientStock ) ) {
                         return 'Product quantity not available!';
                     }
                 }
-            } elseif ( $this->resolveAvailableProductQuantity( $cart->tenant_id, $product ) < $totalqty ) {
+            } elseif ( $this->isStockInsufficient( $availableQty, $requestedQty, $lenientStock ) ) {
                 return 'Product quantity not available!';
             }
         }
@@ -399,6 +411,24 @@ class OrderController extends Controller
         }
 
         return null;
+    }
+
+    private function isStockInsufficient( int $availableQty, int $requestedQty, bool $lenientStock ): bool {
+        if ( $requestedQty < 1 ) {
+            return true;
+        }
+
+        if ( $availableQty >= $requestedQty ) {
+            return false;
+        }
+
+        // Website/guest products often have qty 0 because inventory was never filled in.
+        // Only block when we know there is tracked stock and it is too low.
+        if ( $lenientStock && $availableQty < 1 ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -430,10 +460,18 @@ class OrderController extends Controller
                 $variants = [$variants];
             }
 
+            $variants = array_values( array_filter(
+                $variants,
+                fn( $variant ) => ! $this->isAttributeDefinition( (array) $variant )
+            ) );
+
             if ( $variants === [] ) {
                 $variants = [['qty' => $lineQty]];
             } else {
-                $variants = $this->normalizeVariantList( $variants, $lineQty );
+                $variants = $this->mergeSplitAttributeVariants(
+                    $this->normalizeVariantList( $variants, $lineQty ),
+                    $lineQty
+                );
             }
 
             $data['variants'] = array_values( $variants );
@@ -463,6 +501,10 @@ class OrderController extends Controller
      * @param  array<int, array<string, mixed>>  $checkoutDatas
      */
     private function resolveCheckoutTotalQty( array $checkoutDatas, int $cartProductQty = 0, ?Cart $cart = null ): int {
+        if ( $cart && (int) ( $cart->product_qty ?? 0 ) > 0 ) {
+            return (int) $cart->product_qty;
+        }
+
         $totalqty = (int) $this->extractCheckoutVariants( $checkoutDatas )->sum( 'qty' );
 
         if ( $totalqty < 1 ) {
@@ -494,12 +536,70 @@ class OrderController extends Controller
             ->filter()
             ->flatMap( fn( $variants ) => is_array( $variants ) ? $variants : [] )
             ->map( fn( $variant ) => (array) $variant )
+            ->reject( fn( $variant ) => $this->isAttributeDefinition( $variant ) )
             ->values();
     }
 
+    private function isAttributeDefinition( array $variant ): bool {
+        if ( isset( $variant['options'] ) && is_array( $variant['options'] ) ) {
+            return true;
+        }
+
+        $hasStockIdentity = ! empty( $variant['variant_id'] )
+            || isset( $variant['qty'] )
+            || isset( $variant['quantity'] )
+            || isset( $variant['color'] )
+            || isset( $variant['size'] )
+            || isset( $variant['unit'] );
+
+        return isset( $variant['name'] ) && ! $hasStockIdentity;
+    }
+
+    private function mergeSplitAttributeVariants( array $variants, int $fallbackQty = 1 ): array {
+        if ( count( $variants ) < 2 ) {
+            return array_values( $variants );
+        }
+
+        $merged     = [];
+        $canMerge   = true;
+        $fallbackQty = max( 1, $fallbackQty );
+
+        foreach ( $variants as $variant ) {
+            $variant = (array) $variant;
+
+            if ( ! empty( $variant['variant_id'] ) ) {
+                $canMerge = false;
+                break;
+            }
+
+            $attrCount = (int) isset( $variant['color'] )
+                + (int) isset( $variant['size'] )
+                + (int) isset( $variant['unit'] )
+                + (int) isset( $variant['variation'] );
+
+            if ( $attrCount !== 1 ) {
+                $canMerge = false;
+                break;
+            }
+
+            $merged = array_merge( $merged, $variant );
+        }
+
+        if ( ! $canMerge || $merged === [] ) {
+            return array_values( $variants );
+        }
+
+        $merged['qty'] = (int) ( $merged['qty'] ?? $fallbackQty );
+
+        return [$merged];
+    }
+
     private function checkoutVariantHasIdentity( array $variant ): bool {
+        if ( $this->isAttributeDefinition( $variant ) ) {
+            return false;
+        }
+
         return ! empty( $variant['variant_id'] )
-            || ! empty( $variant['id'] )
             || ! empty( $this->variantAttributeId( $variant, 'color', 'color_id' ) )
             || ! empty( $this->variantAttributeId( $variant, 'size', 'size_id' ) )
             || ! empty( $this->variantAttributeId( $variant, 'variation', 'variation_id' ) )
@@ -646,29 +746,39 @@ class OrderController extends Controller
 
     private function resolveAvailableProductQuantity( $tenantId, $product ): int {
         $productQty = (int) ( $product->qty ?? 0 );
+        $jsonQty    = (int) collect( $product->variants ?? [] )
+            ->map( fn( $variant ) => (array) $variant )
+            ->reject( fn( $variant ) => $this->isAttributeDefinition( $variant ) )
+            ->sum( fn( $variant ) => (int) ( $variant['qty'] ?? $variant['quantity'] ?? $variant['qnt'] ?? 0 ) );
+
+        $availableQty = max( $productQty, $jsonQty );
 
         if ( ! $tenantId ) {
-            return $productQty;
+            return $availableQty;
         }
 
         $tenant = Tenant::on( 'mysql' )->find( $tenantId );
         if ( ! $tenant ) {
-            return $productQty;
+            return $availableQty;
         }
 
-        $variants = CrossTenantQueryService::queryTenant(
-            $tenant,
-            ProductVariant::class,
-            fn( $query ) => $query->where( 'product_id', $product->id )
-        );
+        try {
+            $variants = CrossTenantQueryService::queryTenant(
+                $tenant,
+                ProductVariant::class,
+                fn( $query ) => $query->where( 'product_id', $product->id )
+            );
 
-        if ( $variants->isNotEmpty() ) {
-            $variantQty = (int) $variants->sum( fn( $variant ) => (int) ( $variant->qty ?? 0 ) );
+            if ( $variants->isNotEmpty() ) {
+                $variantQty = (int) $variants->sum( fn( $variant ) => (int) ( $variant->qty ?? 0 ) );
 
-            return max( $productQty, $variantQty );
+                return max( $availableQty, $variantQty );
+            }
+        } catch ( \Throwable $e ) {
+            return $availableQty;
         }
 
-        return $productQty;
+        return $availableQty;
     }
 
     private function resolveVariantAvailableQuantity( $tenantId, $product, array $variant ): int {
@@ -676,7 +786,11 @@ class OrderController extends Controller
 
         if ( $variantId < 1 ) {
             $maybeId = (int) ( $variant['id'] ?? 0 );
-            if ( $maybeId > 0 && ! isset( $variant['color'] ) && ! isset( $variant['size'] ) && ! isset( $variant['unit'] ) ) {
+            if (
+                $maybeId > 0
+                && ! $this->isAttributeDefinition( $variant )
+                && ( isset( $variant['qty'] ) || isset( $variant['color'] ) || isset( $variant['size'] ) || isset( $variant['unit'] ) )
+            ) {
                 $variantId = $maybeId;
             }
         }
@@ -1108,7 +1222,7 @@ class OrderController extends Controller
             );
 
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
-            if ( $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas ) ) {
+            if ( $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true ) ) {
                 continue;
             }
 
@@ -1197,7 +1311,7 @@ class OrderController extends Controller
             );
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
 
-            if ( $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas ) ) {
+            if ( $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true ) ) {
                 continue;
             }
 
