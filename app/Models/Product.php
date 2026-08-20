@@ -68,6 +68,7 @@ class Product extends Model {
         'selling_details'  => 'array',
         'specifications'   => 'array',
         'is_show_website'  => 'integer',
+        'is_stock_show'    => 'integer',
     ];
 
     public function scopeShownOnWebsite( $query ) {
