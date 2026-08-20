@@ -316,25 +316,86 @@ class ProductCheckoutService {
         $area   = null;
         $id     = null;
 
-        $payload = $data['delivery_charge'] ?? $data['deliveryCharge'] ?? null;
+        $payload = $data['delivery_charge']
+            ?? $data['deliveryCharge']
+            ?? $data['delivery']
+            ?? $data['shipping_charge']
+            ?? null;
 
         if ( is_array( $payload ) ) {
+            $id = self::numericId( $payload['id'] ?? $payload['delivery_charge_id'] ?? null );
+
             if ( isset( $payload['charge'] ) && is_numeric( $payload['charge'] ) ) {
                 $charge = (float) $payload['charge'];
             }
 
-            $area = $payload['area'] ?? $payload['name'] ?? null;
-            $id   = ! empty( $payload['id'] ) ? (int) $payload['id'] : null;
+            $area = $payload['area'] ?? $payload['name'] ?? $payload['label'] ?? null;
+
+            // Storefront often sends only selected option id: { id: 1 }
+            if ( $charge <= 0 && $id ) {
+                $record = self::findDeliveryChargeRecord( $id );
+
+                if ( $record ) {
+                    $charge = (float) $record->charge;
+                    $area   = $record->area;
+                }
+            }
         } elseif ( is_numeric( $payload ) ) {
-            $charge = (float) $payload;
+            // Prefer treating a bare number as delivery_charges.id, not as Tk amount.
+            $record = self::findDeliveryChargeRecord( (int) $payload );
+
+            if ( $record ) {
+                $charge = (float) $record->charge;
+                $area   = $record->area;
+                $id     = (int) $record->id;
+            } else {
+                $charge = (float) $payload;
+            }
+        } elseif ( is_string( $payload ) && trim( $payload ) !== '' ) {
+            $record = self::findDeliveryChargeByArea( $payload );
+
+            if ( $record ) {
+                $charge = (float) $record->charge;
+                $area   = $record->area;
+                $id     = (int) $record->id;
+            }
         }
 
-        foreach ( ['delivery_charge_id', 'delivery_area_id'] as $key ) {
-            if ( $charge > 0 || empty( $data[$key] ) || ! is_numeric( $data[$key] ) ) {
+        $candidateIds = [
+            $data['delivery_charge_id'] ?? null,
+            $data['delivery_area_id'] ?? null,
+            $data['delivery_area'] ?? null,
+            $data['shipping_area'] ?? null,
+            $data['delivery_id'] ?? null,
+        ];
+
+        // datas[].id is commonly the selected delivery option id from the storefront dropdown.
+        if ( empty( $data['product_id'] ) && self::numericId( $data['id'] ?? null ) ) {
+            $candidateIds[] = $data['id'];
+        }
+
+        foreach ( $candidateIds as $candidate ) {
+            if ( $charge > 0 ) {
+                break;
+            }
+
+            $candidateId = self::numericId( $candidate );
+
+            if ( ! $candidateId ) {
+                if ( is_string( $candidate ) && trim( $candidate ) !== '' ) {
+                    $record = self::findDeliveryChargeByArea( $candidate );
+
+                    if ( $record ) {
+                        $charge = (float) $record->charge;
+                        $area   = $record->area;
+                        $id     = (int) $record->id;
+                    }
+                }
+
                 continue;
             }
 
-            $record = self::findDeliveryChargeRecord( (int) $data[$key] );
+            $record = self::findDeliveryChargeRecord( $candidateId );
 
             if ( $record ) {
                 $charge = (float) $record->charge;
@@ -354,11 +415,8 @@ class ProductCheckoutService {
                     $area   = $record->area;
                     $id     = (int) $record->id;
                 }
-            } elseif ( is_string( $city ) && trim( $city ) !== '' && ! in_array( strtolower( trim( $city ) ), ['city', 'select city'], true ) ) {
-                $record = DeliveryCharge::query()
-                    ->where( 'area', $city )
-                    ->orWhere( 'area', 'like', '%' . $city . '%' )
-                    ->first();
+            } elseif ( is_string( $city ) && ! self::isPlaceholderCity( $city ) ) {
+                $record = self::findDeliveryChargeByArea( $city );
 
                 if ( $record ) {
                     $charge = (float) $record->charge;
@@ -383,38 +441,62 @@ class ProductCheckoutService {
             return [];
         }
 
-        $payload = $request->input( 'delivery_charge' ) ?? $request->input( 'deliveryCharge' );
+        $payload = $request->input( 'delivery_charge' )
+            ?? $request->input( 'deliveryCharge' )
+            ?? $request->input( 'delivery' );
 
         if ( is_array( $payload ) && $payload !== [] ) {
-            return $payload;
+            $resolved = self::resolveDeliveryCharge( ['delivery_charge' => $payload] );
+
+            if ( $resolved['charge'] > 0 || $resolved['id'] ) {
+                return array_filter( [
+                    'id'     => $resolved['id'],
+                    'area'   => $resolved['area'],
+                    'charge' => $resolved['charge'],
+                ], fn( $value ) => $value !== null && $value !== '' );
+            }
         }
 
-        foreach ( ['delivery_charge_id', 'delivery_area_id', 'delivery_id'] as $key ) {
+        if ( is_numeric( $payload ) ) {
+            $resolved = self::resolveDeliveryCharge( ['delivery_charge' => $payload] );
+
+            if ( $resolved['charge'] > 0 ) {
+                return [
+                    'id'     => $resolved['id'],
+                    'area'   => $resolved['area'],
+                    'charge' => $resolved['charge'],
+                ];
+            }
+        }
+
+        foreach ( ['delivery_charge_id', 'delivery_area_id', 'delivery_id', 'delivery_area', 'shipping_area'] as $key ) {
             $value = $request->input( $key );
 
-            if ( $value !== null && $value !== '' && is_numeric( $value ) ) {
-                $record = self::findDeliveryChargeRecord( (int) $value );
+            if ( $value === null || $value === '' ) {
+                continue;
+            }
 
-                if ( $record ) {
-                    return [
-                        'id'     => (int) $record->id,
-                        'area'   => $record->area,
-                        'charge' => (float) $record->charge,
-                    ];
-                }
+            $resolved = self::resolveDeliveryCharge( [$key => $value] );
+
+            if ( $resolved['charge'] > 0 ) {
+                return [
+                    'id'     => $resolved['id'],
+                    'area'   => $resolved['area'],
+                    'charge' => $resolved['charge'],
+                ];
             }
         }
 
         $city = $request->input( 'city' );
 
-        if ( $city !== null && $city !== '' && is_numeric( $city ) ) {
-            $record = self::findDeliveryChargeRecord( (int) $city );
+        if ( $city !== null && $city !== '' && ! self::isPlaceholderCity( (string) $city ) ) {
+            $resolved = self::resolveDeliveryCharge( ['city' => $city] );
 
-            if ( $record ) {
+            if ( $resolved['charge'] > 0 ) {
                 return [
-                    'id'     => (int) $record->id,
-                    'area'   => $record->area,
-                    'charge' => (float) $record->charge,
+                    'id'     => $resolved['id'],
+                    'area'   => $resolved['area'],
+                    'charge' => $resolved['charge'],
                 ];
             }
         }
@@ -432,13 +514,23 @@ class ProductCheckoutService {
         return collect( $requestDatas )
             ->map( function ( $data ) use ( $rootDelivery ) {
                 $data = (array) $data;
+                $resolved = self::resolveDeliveryCharge( $data );
 
-                if ( $rootDelivery !== [] && empty( $data['delivery_charge'] ) && empty( $data['deliveryCharge'] ) ) {
+                if ( $resolved['charge'] <= 0 && $rootDelivery !== [] ) {
                     $data['delivery_charge'] = $rootDelivery;
+                    $resolved = self::resolveDeliveryCharge( $data );
                 }
 
-                if ( $rootDelivery !== [] && empty( $data['city'] ) && ! empty( $rootDelivery['area'] ) ) {
-                    $data['city'] = $rootDelivery['area'];
+                if ( $resolved['charge'] > 0 ) {
+                    $data['delivery_charge'] = [
+                        'id'     => $resolved['id'],
+                        'area'   => $resolved['area'],
+                        'charge' => $resolved['charge'],
+                    ];
+
+                    if ( self::isPlaceholderCity( (string) ( $data['city'] ?? '' ) ) && ! empty( $resolved['area'] ) ) {
+                        $data['city'] = $resolved['area'];
+                    }
                 }
 
                 return $data;
@@ -453,6 +545,36 @@ class ProductCheckoutService {
         }
 
         return DeliveryCharge::query()->find( $id );
+    }
+
+    private static function findDeliveryChargeByArea( string $area ): ?DeliveryCharge {
+        $area = trim( $area );
+
+        if ( $area === '' || self::isPlaceholderCity( $area ) ) {
+            return null;
+        }
+
+        return DeliveryCharge::query()
+            ->where( 'area', $area )
+            ->orWhere( 'area', 'like', '%' . $area . '%' )
+            ->first();
+    }
+
+    private static function numericId( mixed $value ): ?int {
+        if ( $value === null || $value === '' || ! is_numeric( $value ) ) {
+            return null;
+        }
+
+        $id = (int) $value;
+
+        return $id > 0 ? $id : null;
+    }
+
+    private static function isPlaceholderCity( string $city ): bool {
+        $city = strtolower( trim( $city ) );
+
+        return $city === ''
+            || in_array( $city, ['city', 'select city', 'select delivery area', 'null', 'undefined'], true );
     }
 
     /**
