@@ -65,10 +65,6 @@ class OrderController extends Controller
 
             $explicitProductId = $this->resolveExplicitGuestProductId( $request, $entryDatas );
 
-            if ( $cart && (int) $cart->user_id !== 0 && ( ! $explicitProductId || (int) $cart->product_id !== (int) $explicitProductId ) ) {
-                $cart = null;
-            }
-
             if ( $cart && $explicitProductId && (int) $cart->product_id !== (int) $explicitProductId ) {
                 $cart = null;
             }
@@ -639,23 +635,13 @@ class OrderController extends Controller
         $cartIds = array_values( array_filter( (array) $request->input( 'cart_ids', [] ) ) );
 
         if ( $cartIds !== [] ) {
-            $explicitProductId = $this->resolveExplicitGuestProductId( $request, $requestDatas );
-
-            $guestCarts = Cart::query()
+            $carts = Cart::query()
                 ->whereIn( 'id', $cartIds )
                 ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
-                ->get()
-                ->filter( function ( Cart $cart ) use ( $explicitProductId ) {
-                    if ( (int) $cart->user_id === 0 ) {
-                        return true;
-                    }
+                ->get();
 
-                    return $explicitProductId && (int) $cart->product_id === (int) $explicitProductId;
-                } )
-                ->values();
-
-            if ( $guestCarts->isNotEmpty() ) {
-                return $guestCarts
+            if ( $carts->isNotEmpty() ) {
+                return $carts
                     ->map( fn( Cart $cart ) => [
                         'cart'          => $cart,
                         'tenant_id'     => $cart->tenant_id ?: $request->tenant_id ?: tenant( 'id' ),
@@ -707,9 +693,6 @@ class OrderController extends Controller
             : null;
 
         $explicitProductId = $this->resolveExplicitGuestProductId( $request, $requestDatas );
-        if ( $cart && (int) $cart->user_id !== 0 && ( ! $explicitProductId || (int) $cart->product_id !== (int) $explicitProductId ) ) {
-            $cart = null;
-        }
         if ( $cart && $explicitProductId && (int) $cart->product_id !== (int) $explicitProductId ) {
             $cart = null;
         }
@@ -1076,6 +1059,67 @@ class OrderController extends Controller
         return ['cart' => $cart];
     }
 
+    private function flattenCheckoutVariants( $datas ) {
+        return collect( $datas )
+            ->map( function ( $data ) {
+                $variants = is_array( $data ) ? ( $data['variants'] ?? [] ) : ( $data->variants ?? [] );
+
+                if ( ! is_array( $variants ) || $variants === [] ) {
+                    return [];
+                }
+
+                if ( ! array_is_list( $variants ) ) {
+                    if (
+                        isset( $variants['variant_id'] )
+                        || isset( $variants['product_id'] )
+                        || isset( $variants['qty'] )
+                        || isset( $variants['color'] )
+                        || isset( $variants['size'] )
+                    ) {
+                        return [$variants];
+                    }
+
+                    return [];
+                }
+
+                return $variants;
+            } )
+            ->flatten( 1 )
+            ->map( fn( $variant ) => (array) $variant )
+            ->reject( fn( $variant ) => $this->isAttributeDefinition( $variant ) )
+            ->values();
+    }
+
+    private function productIdFromCheckoutVariant( array $variant ): ?int {
+        if ( ! empty( $variant['product_id'] ) && (int) $variant['product_id'] > 0 ) {
+            return (int) $variant['product_id'];
+        }
+
+        $lineId    = (int) ( $variant['id'] ?? 0 );
+        $variantId = (int) ( $variant['variant_id'] ?? 0 );
+
+        if ( $lineId < 1 ) {
+            return null;
+        }
+
+        $looksLikeLineItem = $variantId > 0
+            || isset( $variant['qty'] )
+            || isset( $variant['quantity'] )
+            || isset( $variant['color'] )
+            || isset( $variant['size'] )
+            || isset( $variant['unit'] );
+
+        if ( ! $looksLikeLineItem ) {
+            return null;
+        }
+
+        if ( $variantId > 0 && $lineId === $variantId ) {
+            return null;
+        }
+
+        return $lineId;
+    }
+
     private function resolveExplicitGuestProductId( Request $request, $datas = null ) {
         $candidateKeys = [
             'product_id',
@@ -1095,7 +1139,7 @@ class OrderController extends Controller
 
         $items = collect( $request->input( 'items', [] ) );
         $itemProductId = $items
-            ->map( fn( $item ) => $item['product_id'] ?? $item['id'] ?? null )
+            ->map( fn( $item ) => $item['product_id'] ?? null )
             ->filter()
             ->first();
 
@@ -1113,15 +1157,13 @@ class OrderController extends Controller
                 return (int) $fromDatas;
             }
 
-            $fromVariantProduct = collect( $datas )
-                ->pluck( 'variants' )
-                ->collapse()
-                ->pluck( 'product_id' )
+            $fromVariant = $this->flattenCheckoutVariants( $datas )
+                ->map( fn( $variant ) => $this->productIdFromCheckoutVariant( $variant ) )
                 ->filter()
                 ->first();
 
-            if ( $fromVariantProduct ) {
-                return (int) $fromVariantProduct;
+            if ( $fromVariant ) {
+                return (int) $fromVariant;
             }
         }
 
@@ -1138,9 +1180,7 @@ class OrderController extends Controller
             return $explicitProductId;
         }
 
-        $variantId = collect( $datas )
-            ->pluck( 'variants' )
-            ->collapse()
+        $variantId = $this->flattenCheckoutVariants( $datas )
             ->pluck( 'variant_id' )
             ->filter()
             ->first();
