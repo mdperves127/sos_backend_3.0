@@ -18,6 +18,10 @@ class TenantMaterialRequest extends FormRequest
         return [
             'tenant_advertise_banner'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp'],
             'tenant_advertise_banner_url' => ['nullable', 'url', 'max:2048'],
+            'theme_one_url'               => ['nullable', 'url', 'max:2048'],
+            'theme_two_url'               => ['nullable', 'url', 'max:2048'],
+            'theme_three_url'             => ['nullable', 'url', 'max:2048'],
+            'theme_four_url'              => ['nullable', 'url', 'max:2048'],
         ];
     }
 

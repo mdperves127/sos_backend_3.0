@@ -37,6 +37,14 @@ class TenantMaterialController extends Controller
             $data['tenant_advertise_banner_url'] = null;
         }
 
+        foreach ( ['theme_one_url', 'theme_two_url', 'theme_three_url', 'theme_four_url'] as $field ) {
+            if ( $request->filled( $field ) ) {
+                $data[$field] = $request->input( $field );
+            } elseif ( $request->exists( $field ) && $request->input( $field ) === null ) {
+                $data[$field] = null;
+            }
+        }
+
         if ( $data !== [] ) {
             $material->update( $data );
         }
