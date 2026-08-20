@@ -171,7 +171,7 @@ class ProductCheckoutService {
                 $order->order_id            = $orderId;
                 $order->user_id             = $customerUserId;
                 $order->vendor_id           = $product->user_id;
-                $order->affiliator_id       = $afi_amount > 0 ? $userid : null;
+                $order->affiliator_id       = $afi_amount > 0 ? $userid : 0;
                 $order->product_id          = $product->id;
                 $order->name                = $data['name'];
                 $order->phone               = $data['phone'];
