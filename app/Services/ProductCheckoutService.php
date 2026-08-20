@@ -100,7 +100,6 @@ class ProductCheckoutService {
 
                 $afi_amount = $totalqty * $cart->amount;
 
-                // Dropshipper affiliator profit (from product_details.profit_amount on placing tenant)
                 $unitProfitAmount = self::resolveDropshipperProfitAmount(
                     $orderMedia,
                     $resolvedPlacingTenantId,
@@ -109,7 +108,6 @@ class ProductCheckoutService {
                 );
                 $profit_amount = $unitProfitAmount * $totalqty;
 
-                // Check if vendor balance exists and has balance property
                 $vendorBalanceValue = ($vendor_balance && property_exists($vendor_balance, 'balance'))
                     ? $vendor_balance->balance
                     : 0;
@@ -122,6 +120,11 @@ class ProductCheckoutService {
 
                 $isDirectWebsiteOrder = $userid <= 0
                     || in_array( $orderMedia, ['website', 'website-guest'], true );
+
+                if ( $orderMedia === 'website-guest' ) {
+                    $afi_amount = 0;
+                    $userid = 0;
+                }
 
                 if ( $isDirectWebsiteOrder ) {
                     $status = Status::Pending->value;
@@ -168,7 +171,7 @@ class ProductCheckoutService {
                 $order->order_id            = $orderId;
                 $order->user_id             = $customerUserId;
                 $order->vendor_id           = $product->user_id;
-                $order->affiliator_id       = $userid;
+                $order->affiliator_id       = $afi_amount > 0 ? $userid : null;
                 $order->product_id          = $product->id;
                 $order->name                = $data['name'];
                 $order->phone               = $data['phone'];

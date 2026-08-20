@@ -63,8 +63,18 @@ class OrderController extends Controller
                 continue;
             }
 
+            $explicitProductId = $this->resolveExplicitGuestProductId( $request, $entryDatas );
+
+            if ( $cart && (int) $cart->user_id !== 0 && ( ! $explicitProductId || (int) $cart->product_id !== (int) $explicitProductId ) ) {
+                $cart = null;
+            }
+
+            if ( $cart && $explicitProductId && (int) $cart->product_id !== (int) $explicitProductId ) {
+                $cart = null;
+            }
+
             if ( !$cart ) {
-                $productId = $this->resolveGuestProductId( $request, null, $tenantId, $entryDatas );
+                $productId = $explicitProductId ?: $this->resolveGuestProductId( $request, null, $tenantId, $entryDatas );
 
                 if ( !$productId ) {
                     $failed[] = [
@@ -629,17 +639,31 @@ class OrderController extends Controller
         $cartIds = array_values( array_filter( (array) $request->input( 'cart_ids', [] ) ) );
 
         if ( $cartIds !== [] ) {
-            return Cart::query()
+            $explicitProductId = $this->resolveExplicitGuestProductId( $request, $requestDatas );
+
+            $guestCarts = Cart::query()
                 ->whereIn( 'id', $cartIds )
                 ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
                 ->get()
-                ->map( fn( Cart $cart ) => [
-                    'cart'          => $cart,
-                    'tenant_id'     => $cart->tenant_id ?: $request->tenant_id ?: tenant( 'id' ),
-                    'datas'         => $requestDatas,
-                    'purchase_type' => null,
-                ] )
-                ->all();
+                ->filter( function ( Cart $cart ) use ( $explicitProductId ) {
+                    if ( (int) $cart->user_id === 0 ) {
+                        return true;
+                    }
+
+                    return $explicitProductId && (int) $cart->product_id === (int) $explicitProductId;
+                } )
+                ->values();
+
+            if ( $guestCarts->isNotEmpty() ) {
+                return $guestCarts
+                    ->map( fn( Cart $cart ) => [
+                        'cart'          => $cart,
+                        'tenant_id'     => $cart->tenant_id ?: $request->tenant_id ?: tenant( 'id' ),
+                        'datas'         => $requestDatas,
+                        'purchase_type' => null,
+                    ] )
+                    ->all();
+            }
         }
 
         $items = $request->input( 'items', [] );
@@ -663,9 +687,8 @@ class OrderController extends Controller
         }
 
         $productSpecificDatas = $requestDatas->filter( function ( $data ) {
-            return !empty( $data['id'] )
-                || !empty( $data['product_id'] )
-                || !empty( $data['variants'] );
+            return !empty( $data['product_id'] )
+                || ( !empty( $data['id'] ) && ( isset( $data['qty'] ) || isset( $data['product_qty'] ) || isset( $data['purchase_type'] ) ) );
         } );
 
         if ( $productSpecificDatas->count() > 1 ) {
@@ -682,9 +705,18 @@ class OrderController extends Controller
         $cart = $request->filled( 'cart_id' )
             ? Cart::with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )->find( $request->cart_id )
             : null;
+
+        $explicitProductId = $this->resolveExplicitGuestProductId( $request, $requestDatas );
+        if ( $cart && (int) $cart->user_id !== 0 && ( ! $explicitProductId || (int) $cart->product_id !== (int) $explicitProductId ) ) {
+            $cart = null;
+        }
+        if ( $cart && $explicitProductId && (int) $cart->product_id !== (int) $explicitProductId ) {
+            $cart = null;
+        }
+
         $tenantId = $cart?->tenant_id ?: $request->tenant_id ?: tenant( 'id' );
 
-        if ( !$tenantId && !$this->resolveGuestProductId( $request, $cart, $tenantId, $requestDatas ) ) {
+        if ( !$tenantId && !$explicitProductId && !$this->resolveGuestProductId( $request, $cart, $tenantId, $requestDatas ) ) {
             return [];
         }
 
@@ -971,14 +1003,7 @@ class OrderController extends Controller
         $totalAdvancePayment = 0;
 
         if ( $purchaseType === 'single' ) {
-            if ( $product->discount_type == 'percent' ) {
-                $affiliateCommission = ( $productPrice / 100 ) * $product->discount_rate;
-            } else {
-                $affiliateCommission = $product->discount_rate;
-            }
-
             $totalProductPrice = $productPrice * $totalqty;
-            $totalAffiliateCommission = $affiliateCommission * $totalqty;
 
             if ( $product->single_advance_payment_type == 'percent' ) {
                 $advancePayment = ( $productPrice / 100 ) * $product->advance_payment;
@@ -1011,14 +1036,6 @@ class OrderController extends Controller
             $productPrice = $bulkdetails['min_bulk_price'] ?? 0;
             $totalProductPrice = $productPrice * $totalqty;
 
-            if ( ( $bulkdetails['bulk_commission_type'] ?? null ) == 'percent' ) {
-                $affiliateCommission = ( $productPrice / 100 ) * ( $bulkdetails['bulk_commission'] ?? 0 );
-            } else {
-                $affiliateCommission = $bulkdetails['bulk_commission'] ?? 0;
-            }
-
-            $totalAffiliateCommission = $affiliateCommission * $totalqty;
-
             if ( ( $bulkdetails['advance_payment_type'] ?? null ) == 'percent' ) {
                 $advancePayment = ( $productPrice / 100 ) * ( $bulkdetails['advance_payment'] ?? 0 );
             } else {
@@ -1029,15 +1046,15 @@ class OrderController extends Controller
         }
 
         $cart = Cart::create( [
-            'user_id'                    => 1,
+            'user_id'                    => 0,
             'product_id'                 => $product->id,
             'product_qty'                => $totalqty,
             'product_price'              => $productPrice,
             'vendor_id'                  => $product->user_id,
-            'amount'                     => $affiliateCommission,
+            'amount'                     => 0,
             'category_id'                => $product->category_id,
             'totalproductprice'          => $totalProductPrice,
-            'total_affiliate_commission' => $totalAffiliateCommission,
+            'total_affiliate_commission' => 0,
             'purchase_type'              => $purchaseType,
             'advancepayment'             => $advancePayment,
             'totaladvancepayment'        => $totalAdvancePayment,
@@ -1059,76 +1076,76 @@ class OrderController extends Controller
         return ['cart' => $cart];
     }
 
-    private function resolveGuestProductId( Request $request, $cart, $tenantId, $datas ) {
-        if ( $cart?->product_id ) {
-            return $cart->product_id;
-        }
-
+    private function resolveExplicitGuestProductId( Request $request, $datas = null ) {
         $candidateKeys = [
             'product_id',
-            'id',
             'product.id',
             'product.product_id',
-            'item.id',
             'item.product_id',
-            'datas.0.id',
             'datas.0.product_id',
         ];
 
         foreach ( $candidateKeys as $key ) {
             $value = $request->input( $key );
 
-            if ( !empty( $value ) ) {
-                return $value;
+            if ( ! empty( $value ) && (int) $value > 0 ) {
+                return (int) $value;
             }
         }
 
-        $variantProductId = $datas
-            ->pluck( 'id' )
+        $items = collect( $request->input( 'items', [] ) );
+        $itemProductId = $items
+            ->map( fn( $item ) => $item['product_id'] ?? $item['id'] ?? null )
             ->filter()
             ->first();
 
-        if ( $variantProductId ) {
-            return $variantProductId;
+        if ( $itemProductId ) {
+            return (int) $itemProductId;
         }
 
-        $variantProductId = $datas
-            ->pluck( 'product_id' )
-            ->filter()
-            ->first();
+        if ( $datas ) {
+            $fromDatas = collect( $datas )
+                ->map( fn( $data ) => is_array( $data ) ? ( $data['product_id'] ?? null ) : ( $data->product_id ?? null ) )
+                ->filter()
+                ->first();
 
-        if ( $variantProductId ) {
-            return $variantProductId;
+            if ( $fromDatas ) {
+                return (int) $fromDatas;
+            }
+
+            $fromVariantProduct = collect( $datas )
+                ->pluck( 'variants' )
+                ->collapse()
+                ->pluck( 'product_id' )
+                ->filter()
+                ->first();
+
+            if ( $fromVariantProduct ) {
+                return (int) $fromVariantProduct;
+            }
         }
 
-        $variantProductId = $datas
-            ->pluck( 'variants' )
-            ->collapse()
-            ->pluck( 'product_id' )
-            ->filter()
-            ->first();
+        return null;
+    }
 
-        if ( $variantProductId ) {
-            return $variantProductId;
+    private function resolveGuestProductId( Request $request, $cart, $tenantId, $datas ) {
+        if ( $cart?->product_id ) {
+            return $cart->product_id;
         }
 
-        $variantId = $datas
+        $explicitProductId = $this->resolveExplicitGuestProductId( $request, $datas );
+        if ( $explicitProductId ) {
+            return $explicitProductId;
+        }
+
+        $variantId = collect( $datas )
             ->pluck( 'variants' )
             ->collapse()
             ->pluck( 'variant_id' )
             ->filter()
             ->first();
 
-        if ( !$variantId ) {
-            $variantId = $datas
-                ->pluck( 'variants' )
-                ->collapse()
-                ->pluck( 'id' )
-                ->filter()
-                ->first();
-        }
-
-        if ( !$variantId ) {
+        if ( ! $variantId || ! $tenantId ) {
             return null;
         }
 
