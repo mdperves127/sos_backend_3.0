@@ -153,6 +153,11 @@ class OrderController extends Controller
                 (int) ( $cart->product_qty ?? 0 )
             );
 
+            $checkoutDatas = ProductCheckoutService::enrichCheckoutDatasWithDelivery(
+                $request,
+                $checkoutDatas
+            );
+
             $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
 
             $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );

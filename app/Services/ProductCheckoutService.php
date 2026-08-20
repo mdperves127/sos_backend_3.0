@@ -318,8 +318,32 @@ class ProductCheckoutService {
             $record = self::findDeliveryChargeRecord( $selection['id'] );
 
             if ( $record ) {
+                $recordCharge = (float) $record->charge;
+
+                if (
+                    $selection['charge'] > 0
+                    && abs( $recordCharge - $selection['charge'] ) > 0.001
+                    && ! empty( $selection['area'] )
+                ) {
+                    $byArea = self::findDeliveryChargeByArea( (string) $selection['area'] );
+
+                    if ( $byArea && abs( (float) $byArea->charge - $selection['charge'] ) < 0.001 ) {
+                        return [
+                            'charge' => (float) $byArea->charge,
+                            'area'   => $byArea->area,
+                            'id'     => (int) $byArea->id,
+                        ];
+                    }
+
+                    return [
+                        'charge' => $selection['charge'],
+                        'area'   => $selection['area'],
+                        'id'     => (int) $record->id,
+                    ];
+                }
+
                 return [
-                    'charge' => (float) $record->charge,
+                    'charge' => $recordCharge,
                     'area'   => $record->area,
                     'id'     => (int) $record->id,
                 ];
@@ -380,7 +404,7 @@ class ProductCheckoutService {
     }
 
     /**
-     * Read delivery selection only from explicit delivery fields (never datas[].id).
+     * Read delivery selection from explicit delivery fields and guest shipping row id.
      *
      * @param  array<string, mixed>  $data
      * @return array{id: ?int, area: ?string, charge: float}
@@ -436,11 +460,58 @@ class ProductCheckoutService {
             }
         }
 
+        if ( ! $id ) {
+            $rowId = self::numericId( $data['id'] ?? null );
+
+            if ( $rowId && ! self::datasRowIdIsProductReference( $data, $rowId ) ) {
+                $id = $rowId;
+            }
+        }
+
         return [
             'id'     => $id,
             'area'   => is_string( $area ) && $area !== '' ? $area : null,
             'charge' => max( 0, $charge ),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private static function datasRowIdIsProductReference( array $data, int $rowId ): bool {
+        if ( self::numericId( $data['product_id'] ?? null ) === $rowId ) {
+            return true;
+        }
+
+        foreach ( $data['variants'] ?? [] as $variant ) {
+            if ( ! is_array( $variant ) ) {
+                continue;
+            }
+
+            $variantProductId = self::numericId( $variant['id'] ?? null );
+
+            if (
+                $variantProductId === $rowId
+                && (
+                    isset( $variant['variant_id'] )
+                    || isset( $variant['color'] )
+                    || isset( $variant['size'] )
+                    || isset( $variant['unit'] )
+                    || isset( $variant['qty'] )
+                )
+            ) {
+                return true;
+            }
+        }
+
+        if (
+            isset( $data['qty'], $data['id'] )
+            && ! isset( $data['name'], $data['phone'], $data['address'] )
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -511,6 +582,22 @@ class ProductCheckoutService {
             }
         }
 
+        foreach ( (array) $request->input( 'datas', [] ) as $dataRow ) {
+            if ( ! is_array( $dataRow ) ) {
+                continue;
+            }
+
+            $resolved = self::resolveDeliveryCharge( $dataRow );
+
+            if ( $resolved['charge'] > 0 || $resolved['id'] ) {
+                return array_filter( [
+                    'id'     => $resolved['id'],
+                    'area'   => $resolved['area'],
+                    'charge' => $resolved['charge'],
+                ], fn( $value ) => $value !== null && $value !== '' );
+            }
+        }
+
         return [];
     }
 
@@ -565,10 +652,21 @@ class ProductCheckoutService {
             return null;
         }
 
+        $normalized = strtolower( preg_replace( '/[\s_\-]+/', '', $area ) ?? '' );
+
         return DeliveryCharge::query()
             ->where( 'area', $area )
             ->orWhere( 'area', 'like', '%' . $area . '%' )
-            ->first();
+            ->get()
+            ->first( function ( DeliveryCharge $record ) use ( $normalized ) {
+                $recordArea = strtolower( preg_replace( '/[\s_\-]+/', '', (string) $record->area ) ?? '' );
+
+                return $recordArea !== '' && $recordArea === $normalized;
+            } )
+            ?? DeliveryCharge::query()
+                ->where( 'area', $area )
+                ->orWhere( 'area', 'like', '%' . $area . '%' )
+                ->first();
     }
 
     private static function numericId( mixed $value ): ?int {
