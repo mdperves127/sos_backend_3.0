@@ -67,6 +67,8 @@ class ProductManageController extends Controller {
             'brand_id'                               => ['required', 'integer', 'min:1', new BrandRule],
             'warehouse_id'                           => ['required', 'integer'],
             'supplier_id'                            => ['nullable', 'integer'],
+            'is_show_website'                        => ['nullable', 'integer', 'in:0,1'],
+            'is_stock_show'                          => ['nullable', 'integer', 'in:0,1'],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -210,6 +212,7 @@ class ProductManageController extends Controller {
             $product->is_feature     = $request->is_feature;
             $product->is_affiliate   = $request->is_affiliate;
             $product->is_show_website = $request->input( 'is_show_website', 1 );
+            $product->is_stock_show  = $request->input( 'is_stock_show', 1 );
             $product->discount_price = $request->discount_price;
             $product->pre_order      = $request->pre_order;
 
@@ -320,6 +323,8 @@ class ProductManageController extends Controller {
             'brand_id'                               => ['required', 'integer', 'min:1', new BrandRule],
             'warehouse_id'                           => ['required', 'integer'],
             'supplier_id'                            => ['nullable', 'integer'],
+            'is_show_website'                        => ['nullable', 'integer', 'in:0,1'],
+            'is_stock_show'                          => ['nullable', 'integer', 'in:0,1'],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -411,6 +416,7 @@ class ProductManageController extends Controller {
                 $product->vendor_id      = vendorId();
                 $product->is_feature     = $request->is_feature;
                 $product->is_show_website = $request->input( 'is_show_website', $product->is_show_website ?? 1 );
+                $product->is_stock_show  = $request->input( 'is_stock_show', $product->is_stock_show ?? 1 );
                 $product->name           = $request->input( 'name' );
                 $product->slug           = slugUpdate( Product::class, $request->name, $id );
                 // $product->short_description = $request->input('short_description');
