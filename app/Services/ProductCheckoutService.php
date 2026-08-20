@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\Status;
 use App\Models\AdvancePayment;
 use App\Models\Cart;
+use App\Models\DeliveryCharge;
 use App\Models\CourierCredential;
 use App\Models\Order;
 use App\Models\OrderDeliveryToCourier;
@@ -143,12 +144,8 @@ class ProductCheckoutService {
                 $totalAmount         = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
                 $totaladvancepayment = $cart->advancepayment * $totalqty;
 
-                // Get delivery charge safely, default to 0 if not provided
-                $deliveryCharge = isset($data['delivery_charge']['charge'])
-                    ? $data['delivery_charge']['charge']
-                    : (isset($data['delivery_charge']) && is_numeric($data['delivery_charge'])
-                        ? $data['delivery_charge']
-                        : 0);
+                $deliveryContext = self::resolveDeliveryCharge( $data );
+                $deliveryCharge  = $deliveryContext['charge'];
 
                 $totalDue = ( $totalAmount + $deliveryCharge ) - $totaladvancepayment;
 
@@ -189,6 +186,9 @@ class ProductCheckoutService {
                 $order->totaladvancepayment = $totaladvancepayment;
                 $order->is_unlimited        = $is_unlimited;
                 $order->delivery_charge     = $deliveryCharge;
+                if ( ! empty( $deliveryContext['area'] ) ) {
+                    $order->delivery_area = $deliveryContext['area'];
+                }
                 if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
                     $order->sale_discount = $saleDiscount;
                     $order->coupon_code   = $tenantCoupon->code;
@@ -305,6 +305,154 @@ class ProductCheckoutService {
                 'message' => $e->getMessage(),
             ] );
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{charge: float, area: ?string, id: ?int}
+     */
+    public static function resolveDeliveryCharge( array $data ): array {
+        $charge = 0.0;
+        $area   = null;
+        $id     = null;
+
+        $payload = $data['delivery_charge'] ?? $data['deliveryCharge'] ?? null;
+
+        if ( is_array( $payload ) ) {
+            if ( isset( $payload['charge'] ) && is_numeric( $payload['charge'] ) ) {
+                $charge = (float) $payload['charge'];
+            }
+
+            $area = $payload['area'] ?? $payload['name'] ?? null;
+            $id   = ! empty( $payload['id'] ) ? (int) $payload['id'] : null;
+        } elseif ( is_numeric( $payload ) ) {
+            $charge = (float) $payload;
+        }
+
+        foreach ( ['delivery_charge_id', 'delivery_area_id'] as $key ) {
+            if ( $charge > 0 || empty( $data[$key] ) || ! is_numeric( $data[$key] ) ) {
+                continue;
+            }
+
+            $record = self::findDeliveryChargeRecord( (int) $data[$key] );
+
+            if ( $record ) {
+                $charge = (float) $record->charge;
+                $area   = $record->area;
+                $id     = (int) $record->id;
+            }
+        }
+
+        if ( $charge <= 0 && ! empty( $data['city'] ) ) {
+            $city = $data['city'];
+
+            if ( is_numeric( $city ) ) {
+                $record = self::findDeliveryChargeRecord( (int) $city );
+
+                if ( $record ) {
+                    $charge = (float) $record->charge;
+                    $area   = $record->area;
+                    $id     = (int) $record->id;
+                }
+            } elseif ( is_string( $city ) && trim( $city ) !== '' && ! in_array( strtolower( trim( $city ) ), ['city', 'select city'], true ) ) {
+                $record = DeliveryCharge::query()
+                    ->where( 'area', $city )
+                    ->orWhere( 'area', 'like', '%' . $city . '%' )
+                    ->first();
+
+                if ( $record ) {
+                    $charge = (float) $record->charge;
+                    $area   = $record->area;
+                    $id     = (int) $record->id;
+                }
+            }
+        }
+
+        return [
+            'charge' => max( 0, $charge ),
+            'area'   => $area,
+            'id'     => $id,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function deliveryChargePayloadFromRequest( $request ): array {
+        if ( ! $request ) {
+            return [];
+        }
+
+        $payload = $request->input( 'delivery_charge' ) ?? $request->input( 'deliveryCharge' );
+
+        if ( is_array( $payload ) && $payload !== [] ) {
+            return $payload;
+        }
+
+        foreach ( ['delivery_charge_id', 'delivery_area_id', 'delivery_id'] as $key ) {
+            $value = $request->input( $key );
+
+            if ( $value !== null && $value !== '' && is_numeric( $value ) ) {
+                $record = self::findDeliveryChargeRecord( (int) $value );
+
+                if ( $record ) {
+                    return [
+                        'id'     => (int) $record->id,
+                        'area'   => $record->area,
+                        'charge' => (float) $record->charge,
+                    ];
+                }
+            }
+        }
+
+        $city = $request->input( 'city' );
+
+        if ( $city !== null && $city !== '' && is_numeric( $city ) ) {
+            $record = self::findDeliveryChargeRecord( (int) $city );
+
+            if ( $record ) {
+                return [
+                    'id'     => (int) $record->id,
+                    'area'   => $record->area,
+                    'charge' => (float) $record->charge,
+                ];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  iterable<int, array<string, mixed>>  $requestDatas
+     * @return array<int, array<string, mixed>>
+     */
+    public static function enrichCheckoutDatasWithDelivery( $request, iterable $requestDatas ): array {
+        $rootDelivery = self::deliveryChargePayloadFromRequest( $request );
+
+        return collect( $requestDatas )
+            ->map( function ( $data ) use ( $rootDelivery ) {
+                $data = (array) $data;
+
+                if ( $rootDelivery !== [] && empty( $data['delivery_charge'] ) && empty( $data['deliveryCharge'] ) ) {
+                    $data['delivery_charge'] = $rootDelivery;
+                }
+
+                if ( $rootDelivery !== [] && empty( $data['city'] ) && ! empty( $rootDelivery['area'] ) ) {
+                    $data['city'] = $rootDelivery['area'];
+                }
+
+                return $data;
+            } )
+            ->values()
+            ->all();
+    }
+
+    private static function findDeliveryChargeRecord( int $id ): ?DeliveryCharge {
+        if ( $id < 1 ) {
+            return null;
+        }
+
+        return DeliveryCharge::query()->find( $id );
     }
 
     /**

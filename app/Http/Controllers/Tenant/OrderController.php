@@ -19,7 +19,12 @@ use App\Models\TenantCoupon;
 class OrderController extends Controller
 {
     function guestStore( Request $request ) {
-        $requestDatas = $this->normalizeGuestDatas( $request );
+        $requestDatas = collect(
+            ProductCheckoutService::enrichCheckoutDatasWithDelivery(
+                $request,
+                $this->normalizeGuestDatas( $request )->all()
+            )
+        );
 
         if ( $requestDatas->isEmpty() ) {
             return responsejson( 'Checkout data is required for guest checkout.', 'fail' );
@@ -231,7 +236,10 @@ class OrderController extends Controller
 
     function store( ProductRequest $request ) {
         $user = auth()->user();
-        $requestDatas = $request->input( 'datas', [] );
+        $requestDatas = ProductCheckoutService::enrichCheckoutDatasWithDelivery(
+            $request,
+            $request->input( 'datas', [] )
+        );
         $shippingTemplate = $requestDatas[0] ?? [];
         $paymentType = $request->input( 'payment_type', 'aamarpay' );
 
@@ -756,6 +764,10 @@ class OrderController extends Controller
             $payload['qty'] = (int) ( $cart->product_qty ?? 0 );
         }
 
+        if ( empty( $payload['delivery_charge'] ) && ! empty( $shippingTemplate['delivery_charge'] ) ) {
+            $payload['delivery_charge'] = $shippingTemplate['delivery_charge'];
+        }
+
         return $payload;
     }
 
@@ -1232,15 +1244,11 @@ class OrderController extends Controller
     }
 
     private function computeLineOrderAmount( Cart $cart, array $checkoutDatas, int $totalqty ): float {
-        $productAmount = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
-        $first         = $checkoutDatas[0] ?? [];
-        $deliveryCharge = isset( $first['delivery_charge']['charge'] )
-            ? (float) $first['delivery_charge']['charge']
-            : ( isset( $first['delivery_charge'] ) && is_numeric( $first['delivery_charge'] )
-                ? (float) $first['delivery_charge']
-                : 0 );
+        $productAmount  = convertfloat( $cart->product_price ) * convertfloat( $totalqty );
+        $first            = $checkoutDatas[0] ?? [];
+        $deliveryContext  = ProductCheckoutService::resolveDeliveryCharge( $first );
 
-        return $productAmount + $deliveryCharge;
+        return $productAmount + $deliveryContext['charge'];
     }
 
     private function estimateAuthenticatedCheckoutTotal(
