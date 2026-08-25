@@ -68,11 +68,48 @@ class Order extends Model {
             } );
         } )
             ->when( request()->filled( 'start_date' ), function ( $q ) {
-                $q->whereDate( 'created_at', '>=', request( 'start_date' ) );
+                $startDate = self::parseFilterDate( request( 'start_date' ) );
+
+                if ( $startDate ) {
+                    $q->whereDate( 'created_at', '>=', $startDate );
+                }
             } )
             ->when( request()->filled( 'end_date' ), function ( $q ) {
-                $q->whereDate( 'created_at', '<=', request( 'end_date' ) );
+                $endDate = self::parseFilterDate( request( 'end_date' ) );
+
+                if ( $endDate ) {
+                    $q->whereDate( 'created_at', '<=', $endDate );
+                }
             } );
+    }
+
+    /**
+     * Accept frontend dates like 20-08-2026 or 2026-08-20.
+     */
+    private static function parseFilterDate( mixed $value ): ?string {
+        if ( $value === null || $value === '' ) {
+            return null;
+        }
+
+        $value = trim( (string) $value );
+
+        foreach ( ['d-m-Y', 'Y-m-d', 'd/m/Y', 'Y/m/d'] as $format ) {
+            try {
+                $date = \Carbon\Carbon::createFromFormat( $format, $value );
+
+                if ( $date && $date->format( $format ) === $value ) {
+                    return $date->format( 'Y-m-d' );
+                }
+            } catch ( \Throwable $e ) {
+                // try next format
+            }
+        }
+
+        try {
+            return \Carbon\Carbon::parse( $value )->format( 'Y-m-d' );
+        } catch ( \Throwable $e ) {
+            return null;
+        }
     }
 
     public static function boot() {
