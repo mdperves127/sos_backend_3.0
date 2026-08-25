@@ -62,7 +62,8 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => 'affsellc_',
+        // Must match the cPanel MySQL account prefix (usually first 8 chars of CPANEL_USER + '_').
+        'prefix' => env('TENANCY_DB_PREFIX', 'affsellc_'),
         'suffix' => '',
 
         /**

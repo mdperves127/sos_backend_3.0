@@ -300,9 +300,59 @@ class CpanelService
     }
 
     /**
+     * Resolve the MySQL database prefix used by this cPanel account.
+     * Prefers live Mysql::get_restrictions; falls back to tenancy config / CPANEL_USER.
+     */
+    public function getMysqlPrefix(): string
+    {
+        static $cachedPrefix = null;
+
+        if ( is_string( $cachedPrefix ) && $cachedPrefix !== '' ) {
+            return $cachedPrefix;
+        }
+
+        $configured = (string) config( 'tenancy.database.prefix', '' );
+        $cpanelUser = (string) env( 'CPANEL_USER', '' );
+
+        try {
+            $result = $this->cpanelExecute( 'Mysql/get_restrictions' );
+            $prefix = $result['data']['prefix']
+                ?? $result['result']['data']['prefix']
+                ?? null;
+
+            if ( is_string( $prefix ) && $prefix !== '' ) {
+                $cachedPrefix = $prefix;
+                \Log::info( 'cPanel MySQL prefix resolved', [
+                    'prefix'           => $prefix,
+                    'configured'       => $configured,
+                    'prefix_mismatch'  => $configured !== '' && $configured !== $prefix,
+                ] );
+
+                return $cachedPrefix;
+            }
+        } catch ( \Throwable $e ) {
+            \Log::warning( 'cPanel get_restrictions failed; using configured prefix', [
+                'error' => $e->getMessage(),
+            ] );
+        }
+
+        if ( $configured !== '' ) {
+            $cachedPrefix = $configured;
+
+            return $cachedPrefix;
+        }
+
+        // cPanel prefix is typically first 8 chars of the account username + underscore.
+        $base         = $cpanelUser !== '' ? substr( $cpanelUser, 0, 8 ) : 'tenant';
+        $cachedPrefix = $base . '_';
+
+        return $cachedPrefix;
+    }
+
+    /**
      * Create database using cPanel API
      *
-     * @param string $dbname
+     * @param string $dbname Full or short database name
      * @return array
      */
     private function createDatabaseViaCpanel($dbname)
@@ -318,59 +368,194 @@ class CpanelService
                 'database'   => ['status' => 0, 'errors' => ['Missing cPanel configuration']],
                 'assignment' => ['status' => 0],
                 'status'     => 0,
+                'full_name'  => (string) $dbname,
+                'error'      => 'Missing cPanel configuration (CPANEL_USER / CPANEL_PASSWORD / CPANEL_HOST)',
             ];
         }
 
-        // cPanel adds the account prefix automatically — send name without prefix.
-        $dbPrefix     = config( 'tenancy.database.prefix', $cpanelUser . '_' );
-        $dbNameForApi = str_starts_with( (string) $dbname, $dbPrefix )
-            ? substr( (string) $dbname, strlen( $dbPrefix ) )
-            : (string) $dbname;
-        $fullDbName = $dbPrefix . $dbNameForApi;
+        $cpanelPrefix   = $this->getMysqlPrefix();
+        $configuredPref = (string) config( 'tenancy.database.prefix', $cpanelPrefix );
+        $rawName        = (string) $dbname;
 
-        $dbUsername = env( 'DB_USERNAME' );
+        // Strip whichever known prefix is present so cPanel can re-apply its own.
+        $dbNameForApi = $rawName;
+        foreach ( array_unique( array_filter( [ $cpanelPrefix, $configuredPref ] ) ) as $prefix ) {
+            if ( $prefix !== '' && str_starts_with( $dbNameForApi, $prefix ) ) {
+                $dbNameForApi = substr( $dbNameForApi, strlen( $prefix ) );
+                break;
+            }
+        }
 
-        // Step 1: Create the database
-        $createDbUrl = 'https://' . $cpanelHost . ':2083/execute/Mysql/create_database?name=' . urlencode( $dbNameForApi );
-        $ch          = curl_init();
-        curl_setopt( $ch, CURLOPT_URL, $createDbUrl );
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt( $ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword" );
-        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        $createDbResponse = curl_exec( $ch );
-        curl_close( $ch );
+        $fullDbName = $cpanelPrefix . $dbNameForApi;
+        $dbUsername = (string) env( 'DB_USERNAME', '' );
 
-        $createDbResult = json_decode( $createDbResponse, true );
+        // Step 1: Create the database (name WITHOUT account prefix).
+        $createDbResult = $this->cpanelExecute(
+            'Mysql/create_database',
+            [ 'name' => $dbNameForApi ]
+        );
+
+        $createOk     = $this->isCpanelSuccess( $createDbResult );
+        $alreadyExists = $this->cpanelErrorsContain( $createDbResult, [ 'exists', 'already' ] );
 
         \Log::info( 'cPanel database creation response', [
             'requested_name' => $dbNameForApi,
             'full_db_name'   => $fullDbName,
+            'create_ok'      => $createOk,
+            'already_exists' => $alreadyExists,
             'result'         => $createDbResult,
         ] );
 
-        // Step 2: Assign the app DB user to the database (full prefixed name).
-        $assignUserUrl = 'https://' . $cpanelHost . ':2083/execute/Mysql/set_privileges_on_database?user='
-            . urlencode( (string) $dbUsername )
-            . '&database=' . urlencode( $fullDbName )
-            . '&privileges=ALL';
-        $ch = curl_init();
-        curl_setopt( $ch, CURLOPT_URL, $assignUserUrl );
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt( $ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword" );
-        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        $assignUserResponse = curl_exec( $ch );
-        curl_close( $ch );
+        if ( ! $createOk && ! $alreadyExists ) {
+            $error = $this->extractCpanelError( $createDbResult ) ?: 'cPanel create_database failed';
 
-        $assignUserResult = json_decode( $assignUserResponse, true );
+            return [
+                'database'   => $createDbResult,
+                'assignment' => ['status' => 0],
+                'status'     => 0,
+                'full_name'  => $fullDbName,
+                'error'      => $error,
+            ];
+        }
+
+        // Step 2: Grant privileges (FULL prefixed user + database names per cPanel docs).
+        $assignUserResult = [ 'status' => 0 ];
+        if ( $dbUsername !== '' ) {
+            $assignUserResult = $this->cpanelExecute(
+                'Mysql/set_privileges_on_database',
+                [
+                    'user'       => $dbUsername,
+                    'database'   => $fullDbName,
+                    'privileges' => 'ALL',
+                ]
+            );
+
+            // Retry with short names if the account rejects prefixed values.
+            if ( ! $this->isCpanelSuccess( $assignUserResult ) ) {
+                $shortUser = str_starts_with( $dbUsername, $cpanelPrefix )
+                    ? substr( $dbUsername, strlen( $cpanelPrefix ) )
+                    : $dbUsername;
+
+                $assignUserResult = $this->cpanelExecute(
+                    'Mysql/set_privileges_on_database',
+                    [
+                        'user'       => $shortUser,
+                        'database'   => $dbNameForApi,
+                        'privileges' => 'ALL',
+                    ]
+                );
+            }
+        }
 
         return [
             'database'   => $createDbResult,
             'assignment' => $assignUserResult,
-            'status'     => (
-                ( isset( $createDbResult['status'] ) && (int) $createDbResult['status'] === 1 )
-                || ( isset( $assignUserResult['status'] ) && (int) $assignUserResult['status'] === 1 )
-            ) ? 1 : 0,
+            'status'     => 1,
+            'full_name'  => $fullDbName,
+            'error'      => null,
         ];
+    }
+
+    /**
+     * Call a cPanel UAPI execute endpoint.
+     *
+     * @param string $path  e.g. Mysql/create_database
+     * @param array  $query Query parameters
+     * @return array
+     */
+    private function cpanelExecute( string $path, array $query = [] ): array
+    {
+        $cpanelUser     = env( 'CPANEL_USER' );
+        $cpanelPassword = env( 'CPANEL_PASSWORD' );
+        $cpanelHost     = env( 'CPANEL_HOST' );
+
+        $url = 'https://' . $cpanelHost . ':2083/execute/' . ltrim( $path, '/' );
+        if ( $query !== [] ) {
+            $url .= '?' . http_build_query( $query );
+        }
+
+        $ch = curl_init();
+        curl_setopt( $ch, CURLOPT_URL, $url );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt( $ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword" );
+        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+        curl_setopt( $ch, CURLOPT_TIMEOUT, 45 );
+        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 15 );
+        $response  = curl_exec( $ch );
+        $httpCode  = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+        $curlError = curl_error( $ch );
+        curl_close( $ch );
+
+        if ( $response === false || $curlError !== '' ) {
+            return [
+                'status'    => 0,
+                'errors'    => [ 'cURL error: ' . $curlError ],
+                'http_code' => $httpCode,
+            ];
+        }
+
+        $decoded = json_decode( $response, true );
+        if ( ! is_array( $decoded ) ) {
+            return [
+                'status'        => 0,
+                'errors'        => [ 'Invalid JSON from cPanel' ],
+                'http_code'     => $httpCode,
+                'raw_response'  => $response,
+            ];
+        }
+
+        $decoded['http_code'] = $httpCode;
+
+        return $decoded;
+    }
+
+    private function isCpanelSuccess( ?array $result ): bool
+    {
+        if ( ! is_array( $result ) ) {
+            return false;
+        }
+
+        $status = $result['status'] ?? $result['result']['status'] ?? null;
+
+        return (int) $status === 1;
+    }
+
+    private function cpanelErrorsContain( ?array $result, array $needles ): bool
+    {
+        $error = strtolower( (string) $this->extractCpanelError( $result ) );
+        if ( $error === '' ) {
+            return false;
+        }
+
+        foreach ( $needles as $needle ) {
+            if ( str_contains( $error, strtolower( (string) $needle ) ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function extractCpanelError( ?array $result ): ?string
+    {
+        if ( ! is_array( $result ) ) {
+            return null;
+        }
+
+        $errors = $result['errors']
+            ?? $result['result']['errors']
+            ?? $result['error']
+            ?? null;
+
+        if ( is_array( $errors ) ) {
+            return implode( '; ', array_map( 'strval', $errors ) );
+        }
+
+        if ( is_string( $errors ) && $errors !== '' ) {
+            return $errors;
+        }
+
+        return null;
     }
 
     /**

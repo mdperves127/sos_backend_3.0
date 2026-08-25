@@ -55,18 +55,25 @@ class TenantService
                 'all_data' => $data
             ]);
 
-            // Create the tenant without storing password in database
-            $tenant = Tenant::create([
-                'id' => $tenantId,
-                'company_name' => $data['company_name'],
-                'email' => $data['email'],
-                'phone' => $data['phone'] ?? null,
-                'address' => $data['address'] ?? null,
-                'owner_name' => $data['owner_name'],
-                'type' => $data['type'],
-                'status' => $data['status'] ?? 'pending',
-                'data' => null // Don't store password in database
-            ]);
+            // Create the tenant without storing password in database.
+            // TenantCreated pipeline (CreateDatabase → Migrate → Seed → CreateTenantUser) runs here.
+            try {
+                $tenant = Tenant::create([
+                    'id' => $tenantId,
+                    'company_name' => $data['company_name'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'owner_name' => $data['owner_name'],
+                    'type' => $data['type'],
+                    'status' => $data['status'] ?? 'pending',
+                    'data' => null // Don't store password in database
+                ]);
+            } catch ( Exception $e ) {
+                // Pipeline can leave an orphan central tenant row if DB create/migrate fails.
+                $this->cleanupFailedTenant( $tenantId );
+                throw $e;
+            }
 
             \Log::info('TenantService: Tenant created with password in session', [
                 'tenant_id' => $tenant->id,
@@ -83,10 +90,15 @@ class TenantService
             ]);
 
             // Create the domain
-            $domainModel = Domain::create([
-                'domain' => $domain,
-                'tenant_id' => $tenantId,
-            ]);
+            try {
+                $domainModel = Domain::create([
+                    'domain' => $domain,
+                    'tenant_id' => $tenantId,
+                ]);
+            } catch ( Exception $e ) {
+                $this->cleanupFailedTenant( $tenantId );
+                throw $e;
+            }
 
             // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
             $subdomainPart = $data['domain'];
@@ -166,5 +178,30 @@ class TenantService
     public function createDatabase(string $dbname): array
     {
         return $this->cpanelService->createDatabase($dbname);
+    }
+
+    /**
+     * Remove a partially created tenant without firing DeleteDatabase (DB may never have existed).
+     */
+    protected function cleanupFailedTenant( string $tenantId ): void
+    {
+        try {
+            Domain::withoutEvents( function () use ( $tenantId ) {
+                Domain::where( 'tenant_id', $tenantId )->delete();
+            } );
+
+            Tenant::withoutEvents( function () use ( $tenantId ) {
+                Tenant::where( 'id', $tenantId )->delete();
+            } );
+
+            \Log::warning( 'TenantService: cleaned up failed tenant registration', [
+                'tenant_id' => $tenantId,
+            ] );
+        } catch ( \Throwable $e ) {
+            \Log::error( 'TenantService: failed to clean up orphan tenant', [
+                'tenant_id' => $tenantId,
+                'error'     => $e->getMessage(),
+            ] );
+        }
     }
 }
