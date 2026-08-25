@@ -42,8 +42,21 @@ class BuysubscriptionRequest extends FormRequest
                     $subscription = Subscription::on('mysql')->find(request('subscription_id'));
                     $coupon = Coupon::on('mysql')->find(request('coupon_id'));
 
-                    if ($subscription && $coupon && ($subscription->subscription_amount < $coupon->amount || $subscription->subscription_amount == 0)) {
+                    if ( ! $subscription || ! $coupon ) {
+                        return;
+                    }
+
+                    // Free packages cannot use a paid coupon.
+                    if ( (float) $subscription->subscription_amount <= 0 ) {
                         return $fail('You can not use this coupon');
+                    }
+
+                    // Flat: coupon may fully cover the package (100% off). Only reject if somehow invalid type data.
+                    // Percent: allow up to 100% off.
+                    if ( $coupon->type === 'percent' || $coupon->type === 'percentage' ) {
+                        if ( (float) $coupon->amount > 100 ) {
+                            return $fail('You can not use this coupon');
+                        }
                     }
                 }
             }],
