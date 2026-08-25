@@ -59,13 +59,20 @@ class Order extends Model {
     }
 
     static function searchProduct() {
-        return self::when( request( 'search' ), function ( $q, $search ) {
+        return self::when( request()->filled( 'search' ), function ( $q ) {
+            $search = request( 'search' );
             $q->where( function ( $query ) use ( $search ) {
                 $query->whereHas( 'product', function ( $subQuery ) use ( $search ) {
                     $subQuery->where( 'name', 'like', "%{$search}%" );
                 } )->orWhere( 'order_id', 'like', "%{$search}%" );
             } );
-        } );
+        } )
+            ->when( request()->filled( 'start_date' ), function ( $q ) {
+                $q->whereDate( 'created_at', '>=', request( 'start_date' ) );
+            } )
+            ->when( request()->filled( 'end_date' ), function ( $q ) {
+                $q->whereDate( 'created_at', '<=', request( 'end_date' ) );
+            } );
     }
 
     public static function boot() {
