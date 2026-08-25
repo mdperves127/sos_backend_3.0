@@ -374,7 +374,14 @@ function employeePermission( $value ) {
 }
 
 function otpType() {
-    return Settings::first()->otp_type;
+    try {
+        $settings = \App\Models\Settings::on( 'mysql' )->first()
+            ?? \App\Models\Settings::query()->first();
+
+        return $settings?->otp_type ?: 'email';
+    } catch ( \Throwable $e ) {
+        return 'email';
+    }
 }
 
 function extraCharge( $amount, $percent = 0 ) {

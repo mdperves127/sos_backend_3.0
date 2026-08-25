@@ -22,19 +22,7 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
      */
     public function createDatabase(TenantWithDatabase $tenant): bool
     {
-        // Check environment
-        // if (env('APP_ENV') === 'local') {
-        //     // For local environment, use the parent method (direct MySQL)
-        //     return parent::createDatabase($tenant);
-        // } else
-
-        if (env('APP_ENV') === 'local') {
-            // For production environment, use cPanel API
-            return $this->createDatabaseViaCpanel($tenant);
-        } else {
-            // For other environments, return false
-            return false;
-        }
+        return $this->createDatabaseViaCpanel( $tenant );
     }
 
     /**
@@ -46,32 +34,33 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
     private function createDatabaseViaCpanel(TenantWithDatabase $tenant): bool
     {
         try {
-            $databaseName = $this->getDatabaseName($tenant);
-            $result = $this->cpanelService->createDatabase($databaseName);
+            $databaseName = $this->getDatabaseName( $tenant );
+            $result       = $this->cpanelService->createDatabase( $databaseName );
 
-            // Check if the result indicates success
-            if (isset($result['database']) && isset($result['database']['status']) && $result['database']['status'] == 1) {
+            if (
+                ( isset( $result['status'] ) && (int) $result['status'] === 1 )
+                || ( isset( $result['database']['status'] ) && (int) $result['database']['status'] === 1 )
+                || ( isset( $result['assignment']['status'] ) && (int) $result['assignment']['status'] === 1 )
+            ) {
                 return true;
             }
 
-            // Log the error for debugging
-            \Log::error('cPanel database creation failed', [
-                'tenant_id' => $tenant->getTenantKey(),
+            \Log::error( 'cPanel database creation failed', [
+                'tenant_id'     => $tenant->getTenantKey(),
                 'database_name' => $databaseName,
-                'result' => $result
-            ]);
+                'result'        => $result,
+            ] );
 
             return false;
-        } catch (\Exception $e) {
-            \Log::error('cPanel database creation exception', [
+        } catch ( \Exception $e ) {
+            \Log::error( 'cPanel database creation exception', [
                 'tenant_id' => $tenant->getTenantKey(),
-                'error' => $e->getMessage()
-            ]);
+                'error'     => $e->getMessage(),
+            ] );
+
             return false;
         }
     }
-
-
 
     /**
      * Delete a database for a tenant
@@ -81,19 +70,7 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
      */
     public function deleteDatabase(TenantWithDatabase $tenant): bool
     {
-        // Check environment
-        // if (env('APP_ENV') === 'local') {
-        //     // For local environment, use the parent method (direct MySQL)
-        //     return parent::deleteDatabase($tenant);
-        // } else
-
-        if (env('APP_ENV') === 'local') {
-            // For production environment, use cPanel API
-            return $this->deleteDatabaseViaCpanel($tenant);
-        } else {
-            // For other environments, return false
-            return false;
-        }
+        return $this->deleteDatabaseViaCpanel( $tenant );
     }
 
     /**
@@ -105,40 +82,43 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
     private function deleteDatabaseViaCpanel(TenantWithDatabase $tenant): bool
     {
         try {
-            $databaseName = $this->getDatabaseName($tenant);
-            $cpanelUser = env('CPANEL_USER');
-            $cpanelPassword = env('CPANEL_PASSWORD');
-            $cpanelHost = env('CPANEL_HOST');
+            $databaseName   = $this->getDatabaseName( $tenant );
+            $cpanelUser     = env( 'CPANEL_USER' );
+            $cpanelPassword = env( 'CPANEL_PASSWORD' );
+            $cpanelHost     = env( 'CPANEL_HOST' );
+            $dbPrefix       = config( 'tenancy.database.prefix', $cpanelUser . '_' );
+            $dbNameForApi   = str_starts_with( $databaseName, $dbPrefix )
+                ? substr( $databaseName, strlen( $dbPrefix ) )
+                : $databaseName;
 
-            // Delete the database using cPanel API
-            $deleteDbUrl = "https://$cpanelHost:2083/execute/Mysql/delete_database?name=$databaseName";
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $deleteDbUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $response = curl_exec($ch);
-            curl_close($ch);
+            $deleteDbUrl = 'https://' . $cpanelHost . ':2083/execute/Mysql/delete_database?name=' . urlencode( $dbNameForApi );
+            $ch          = curl_init();
+            curl_setopt( $ch, CURLOPT_URL, $deleteDbUrl );
+            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+            curl_setopt( $ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword" );
+            curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+            $response = curl_exec( $ch );
+            curl_close( $ch );
 
-            $result = json_decode($response, true);
+            $result = json_decode( $response, true );
 
-            if (isset($result['status']) && $result['status'] == 1) {
+            if ( isset( $result['status'] ) && (int) $result['status'] === 1 ) {
                 return true;
             }
 
-            // Log the error for debugging
-            \Log::error('cPanel database deletion failed', [
-                'tenant_id' => $tenant->getTenantKey(),
+            \Log::error( 'cPanel database deletion failed', [
+                'tenant_id'     => $tenant->getTenantKey(),
                 'database_name' => $databaseName,
-                'result' => $result
-            ]);
+                'result'        => $result,
+            ] );
 
             return false;
-        } catch (\Exception $e) {
-            \Log::error('cPanel database deletion exception', [
+        } catch ( \Exception $e ) {
+            \Log::error( 'cPanel database deletion exception', [
                 'tenant_id' => $tenant->getTenantKey(),
-                'error' => $e->getMessage()
-            ]);
+                'error'     => $e->getMessage(),
+            ] );
+
             return false;
         }
     }

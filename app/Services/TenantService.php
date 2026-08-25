@@ -41,14 +41,11 @@ class TenantService
             //     }
             // } else
 
-            if (env('APP_ENV') === 'local') {
-                // For production environment, add main domain if no domain extension
-                $mainDomain = env('MAIN_DOMAIN');
-                if (!str_contains($domain, '.') && $mainDomain) {
-                    $domain = $domain . '.' . $mainDomain;
-                }
+            // Always build full tenant domain from MAIN_DOMAIN when a bare subdomain is given.
+            $mainDomain = env( 'MAIN_DOMAIN' );
+            if ( ! str_contains( $domain, '.' ) && $mainDomain ) {
+                $domain = $domain . '.' . $mainDomain;
             }
-            // For other environments, keep the domain as is
 
             // Store password in session for later use
             session(['tenant_password_' . $tenantId => $data['password']]);
@@ -93,12 +90,9 @@ class TenantService
 
             // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
             $subdomainPart = $data['domain'];
-            if (env('APP_ENV') === 'local') {
-                $mainDomain = env('MAIN_DOMAIN');
-                // If domain contains the main domain, extract just the subdomain part
-                if ($mainDomain && str_contains($domain, $mainDomain)) {
-                    $subdomainPart = str_replace('.' . $mainDomain, '', $domain);
-                }
+            $mainDomain    = env( 'MAIN_DOMAIN' );
+            if ( $mainDomain && str_contains( $domain, $mainDomain ) ) {
+                $subdomainPart = str_replace( '.' . $mainDomain, '', $domain );
             }
 
             // Create subdomain infrastructure based on environment
