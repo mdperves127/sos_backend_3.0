@@ -26,9 +26,19 @@ class ProductObserver
      */
     public function updated(Product $product)
     {
-        if($product->isDirty(['category_id','subcategory_id','brand_id','user_id','name','slug','short_description','long_description','selling_price','original_price','meta_title','meta_keyword','meta_description','tags','discount_type','selling_details','advance_payment'])){
+        // Only affiliate products require admin re-approval after key field changes.
+        if ( (int) $product->is_affiliate !== 1 ) {
+            return;
+        }
+
+        if ( $product->isDirty( [
+            'category_id', 'subcategory_id', 'brand_id', 'user_id', 'name', 'slug',
+            'short_description', 'long_description', 'selling_price', 'original_price',
+            'meta_title', 'meta_keyword', 'meta_description', 'tags', 'discount_type',
+            'selling_details', 'advance_payment',
+        ] ) ) {
             $product->status = Status::Pending->value;
-            $product->save();
+            $product->saveQuietly();
         }
     }
 

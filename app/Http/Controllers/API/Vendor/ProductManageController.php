@@ -426,8 +426,12 @@ class ProductManageController extends Controller {
                 // if($request->is_affiliate == 1){
                 //     $product->qty = $request->input('qty');
                 // }
-                $product->status           = $request->is_affiliate == 1 ? Status::Pending->value : Status::Active->value;
-                $product->is_affiliate     = $request->input( 'is_affiliate' );
+                $isAffiliate = (int) $request->input( 'is_affiliate', $product->is_affiliate );
+                $product->is_affiliate = $isAffiliate;
+                // Affiliate products need admin approval; non-affiliate updates stay/go active.
+                $product->status = $isAffiliate === 1
+                    ? Status::Pending->value
+                    : Status::Active->value;
                 $product->meta_title       = $request->input( 'meta_title' );
                 $product->meta_keyword     = $request->input( 'meta_keyword' );
                 $product->meta_description = $request->input( 'meta_description' );
@@ -449,68 +453,105 @@ class ProductManageController extends Controller {
                 $product->market_place_subcategory_id = $request->market_place_subcategory_id ?? null;
                 $product->dropshipper_message         = $request->input( 'dropshipper_message' );
 
-                $product->update();
-                ProductVariantService::syncFromProductVariantsJson( $product, null, true );
+                $contentChanged = ( $product->short_description != request( 'short_description' ) )
+                    || ( $product->long_description != request( 'long_description' ) )
+                    || request()->hasFile( 'image' )
+                    || request()->hasFile( 'images' )
+                    || $product->specifications != request( 'specifications' );
 
-                $specification     = request( 'specification', [] );
-                $specification_ans = request( 'specification_ans', [] );
+                if ( $isAffiliate === 1 ) {
+                    // Affiliate: sensitive content waits for admin approval via pending_products.
+                    if ( $contentChanged ) {
+                        $pendingproductdetails = PendingProduct::where( 'product_id', $product->id )->first();
 
-                if ( ( $product->short_description != request( 'short_description' ) ) || ( $product->long_description != request( 'long_description' ) ) || request()->hasFile( 'image' ) || request()->hasFile( 'images' ) || $product->specifications != request( 'specifications' ) ) {
-                    $pendingproductdetails = PendingProduct::where( 'product_id', $product->id )->first();
+                        if ( ! $pendingproductdetails ) {
+                            $pendingproduct = new PendingProduct();
+                        } else {
+                            $pendingproduct = $pendingproductdetails;
+                        }
 
-                    if ( !$pendingproductdetails ) {
-                        $pendingproduct = new PendingProduct();
-                    } else {
-                        $pendingproduct = $pendingproductdetails;
+                        $pendingproduct->product_id = $product->id;
+                        if ( $product->short_description != request( 'short_description' ) ) {
+                            $pendingproduct->short_description = request( 'short_description' );
+                        }
+
+                        if ( $product->long_description != request( 'long_description' ) ) {
+                            $pendingproduct->long_description = request( 'long_description' );
+                        }
+
+                        if ( request()->hasFile( 'image' ) ) {
+                            $pendingproduct->image = productImageUpload( $request->file( 'image' ) );
+                        }
+
+                        $allimages = [];
+                        if ( $request->file( 'images' ) ) {
+                            foreach ( $request->file( 'images' ) as $key => $image ) {
+                                $allimages[] = productImageUpload( $request->file( 'images' )[$key] );
+                            }
+                        }
+
+                        if ( $product->specifications != request( 'specifications' ) ) {
+                            $specification     = request( 'specifications' );
+                            $specification_ans = request( 'specification_ans' );
+
+                            $specificationdata = collect( $specification )->map( function ( $item, $key ) use ( $specification_ans ) {
+                                return [
+                                    "specifications"    => $item,
+                                    "specification_ans" => $specification_ans[$key],
+                                ];
+                            } )->toArray();
+
+                            $pendingproduct->specifications = $specificationdata;
+                        }
+
+                        if ( request()->has( 'images' ) ) {
+                            $pendingproduct->images = $allimages;
+                        }
+                        $pendingproduct->save();
                     }
-
-                    $pendingproduct->product_id = $product->id;
-                    if ( $product->short_description != request( 'short_description' ) ) {
-                        $pendingproduct->short_description = request( 'short_description' );
+                } else {
+                    // Non-affiliate: apply content changes immediately, no admin approval.
+                    if ( request()->exists( 'short_description' ) ) {
+                        $product->short_description = request( 'short_description' );
                     }
-
-                    if ( $product->long_description != request( 'long_description' ) ) {
-                        $pendingproduct->long_description = request( 'long_description' );
+                    if ( request()->exists( 'long_description' ) ) {
+                        $product->long_description = request( 'long_description' );
                     }
-
                     if ( request()->hasFile( 'image' ) ) {
-                        $pendingproduct->image = productImageUpload( $request->file( 'image' ) );
+                        $product->image = productImageUpload( $request->file( 'image' ) );
                     }
+                    if ( request()->exists( 'specifications' ) || request()->exists( 'specification' ) ) {
+                        $specification     = request( 'specifications', request( 'specification', [] ) );
+                        $specification_ans = request( 'specification_ans', [] );
 
-                    $allimages = [];
-                    if ( $request->file( 'images' ) ) {
-                        foreach ( $request->file( 'images' ) as $key => $image ) {
-                            $allimages[] = productImageUpload( $request->file( 'images' )[$key] );
+                        if ( is_array( $specification ) ) {
+                            $product->specifications = collect( $specification )->map( function ( $item, $key ) use ( $specification_ans ) {
+                                if ( is_array( $item ) && ( isset( $item['specification'] ) || isset( $item['specifications'] ) ) ) {
+                                    return $item;
+                                }
+
+                                return [
+                                    'specification'     => $item,
+                                    'specification_ans' => $specification_ans[$key] ?? null,
+                                ];
+                            } )->values()->toArray();
+                        }
+                    }
+                    if ( $request->hasFile( 'images' ) ) {
+                        foreach ( $request->file( 'images' ) as $image ) {
+                            $proimage             = new ProductImage();
+                            $proimage->product_id = $product->id;
+                            $proimage->image      = productImageUpload( $image );
+                            $proimage->save();
                         }
                     }
 
-                    if ( $product->specifications != request( 'specifications' ) ) {
-                        // $pendingproduct->specifications =  array_map(function ($item) {
-                        //     unset($item['id']);
-                        //     return $item;
-                        // }, request('specifications'));
-
-                        $specification     = request( 'specifications' );
-                        $specification_ans = request( 'specification_ans' );
-
-                        $specificationdata = collect( $specification )->map( function ( $item, $key ) use ( $specification_ans ) {
-                            return [
-                                "specifications"    => $item,
-                                "specification_ans" => $specification_ans[$key],
-                            ];
-                        } )->toArray();
-
-                        $pendingproduct->specifications = $specificationdata;
-
-                    }
-
-                    if ( request()->has( 'images' ) ) {
-                        $pendingproduct->images = $allimages;
-                    }
-                    $pendingproduct->save();
+                    // Clear any leftover pending approval row for non-affiliate products.
+                    PendingProduct::where( 'product_id', $product->id )->delete();
                 }
 
                 $product->update();
+                ProductVariantService::syncFromProductVariantsJson( $product, null, true );
 
                 return response()->json( [
                     'status'  => 200,
