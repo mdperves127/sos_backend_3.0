@@ -414,17 +414,42 @@ class CpanelService
         $fullDbName = $cpanelPrefix . $dbNameForApi;
         $dbUsername = (string) config( 'database.connections.mysql.username', '' );
 
-        // Step 1: Create the database (name WITHOUT account prefix).
+        // Step 1: Create the database.
+        // Some cPanel hosts auto-prefix (send short name); others require the full prefixed name.
         $createDbResult = $this->cpanelExecute(
             'Mysql/create_database',
             [ 'name' => $dbNameForApi ]
         );
 
-        $createOk     = $this->isCpanelSuccess( $createDbResult );
+        $createOk      = $this->isCpanelSuccess( $createDbResult );
         $alreadyExists = $this->cpanelErrorsContain( $createDbResult, [ 'exists', 'already' ] );
+        $needsPrefix   = $this->cpanelErrorsContain( $createDbResult, [ 'required prefix', 'does not begin with', 'begin with the required' ] );
+
+        if ( ! $createOk && ! $alreadyExists && $needsPrefix ) {
+            \Log::info( 'cPanel create_database requires prefixed name; retrying', [
+                'short_name' => $dbNameForApi,
+                'full_name'  => $fullDbName,
+            ] );
+
+            $createDbResult = $this->cpanelExecute(
+                'Mysql/create_database',
+                [ 'name' => $fullDbName ]
+            );
+
+            $createOk      = $this->isCpanelSuccess( $createDbResult );
+            $alreadyExists = $this->cpanelErrorsContain( $createDbResult, [ 'exists', 'already' ] );
+        }
+
+        // Prefer the full name returned by cPanel when present.
+        $returnedName = $createDbResult['data']['name']
+            ?? $createDbResult['result']['data']['name']
+            ?? null;
+        if ( is_string( $returnedName ) && $returnedName !== '' ) {
+            $fullDbName = $returnedName;
+        }
 
         \Log::info( 'cPanel database creation response', [
-            'requested_name' => $dbNameForApi,
+            'short_name'     => $dbNameForApi,
             'full_db_name'   => $fullDbName,
             'create_ok'      => $createOk,
             'already_exists' => $alreadyExists,
