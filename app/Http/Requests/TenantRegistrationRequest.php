@@ -17,6 +17,24 @@ class TenantRegistrationRequest extends FormRequest
     }
 
     /**
+     * Accept legacy `number` field as phone (admin/frontend payloads).
+     */
+    protected function prepareForValidation(): void
+    {
+        $phone = $this->input( 'phone', $this->input( 'number' ) );
+
+        if ( is_string( $phone ) ) {
+            $phone = preg_replace( '/\s+/', '', $phone );
+        }
+
+        if ( $phone !== null && $phone !== '' ) {
+            $this->merge( [
+                'phone' => $phone,
+            ] );
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, mixed>
@@ -27,7 +45,8 @@ class TenantRegistrationRequest extends FormRequest
             'company_name' => 'required|string|max:255',
             'domain'       => 'required|string|max:255|regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/',
             'email'        => 'required|email|max:255|unique:mysql.tenants,email',
-            'phone'        => 'nullable|string|max:20|unique:mysql.tenants,phone',
+            'phone'        => 'required|string|max:20|unique:mysql.tenants,phone',
+            'number'       => 'nullable|string|max:20',
             'address'      => 'nullable|string|max:500',
             'owner_name'   => 'required|string|max:255',
             'password'     => 'required|string|min:8|confirmed|max:255',
@@ -104,6 +123,7 @@ class TenantRegistrationRequest extends FormRequest
             'email.max' => 'Email cannot exceed 255 characters.',
             'email.unique' => 'This email is already registered.',
 
+            'phone.required' => 'Phone number is required.',
             'phone.string' => 'Phone must be a string.',
             'phone.max' => 'Phone number cannot exceed 20 characters.',
             'phone.unique' => 'This phone number is already registered.',

@@ -58,11 +58,16 @@ class TenantService
             // Create the tenant without storing password in database.
             // TenantCreated pipeline (CreateDatabase → Migrate → Seed → CreateTenantUser) runs here.
             try {
+                $phone = $data['phone'] ?? $data['number'] ?? null;
+                if ( is_string( $phone ) ) {
+                    $phone = preg_replace( '/\s+/', '', $phone ) ?: null;
+                }
+
                 $tenant = Tenant::create([
                     'id' => $tenantId,
                     'company_name' => $data['company_name'],
                     'email' => $data['email'],
-                    'phone' => $data['phone'] ?? null,
+                    'phone' => $phone,
                     'address' => $data['address'] ?? null,
                     'owner_name' => $data['owner_name'],
                     'type' => $data['type'],

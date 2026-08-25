@@ -69,6 +69,7 @@ class TenantRegistrationController extends Controller
                     'type' => $request->type ?? 'dropshipper',
                     'company_name' => $request->company_name,
                     'email' => $request->email,
+                    'phone' => $result['tenant']->phone,
                     'domain_url' => $result['domain_url'],
                 ]
             ], 201);
