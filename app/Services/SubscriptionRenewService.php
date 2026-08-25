@@ -90,6 +90,19 @@ class SubscriptionRenewService {
         }
         $totalprice = $couponResult;
 
+        // 100% / full coupon cover — complete renew without charging.
+        if ( (float) $totalprice <= 0 ) {
+            return self::subscriptionadd(
+                $user,
+                $subscriptionid,
+                $trxid,
+                request( 'coupon_id' ) ? 'Coupon' : 'Free',
+                'Renew',
+                0,
+                request( 'coupon_id' )
+            );
+        }
+
         if ( request( 'payment_method' ) == 'my-wallet' ) {
             $userbalance = $user->balance;
             if ( request( 'package_id' ) && $userbalance < $totalprice ) {
@@ -182,6 +195,21 @@ class SubscriptionRenewService {
         }
         $totalprice = $couponResult;
 
+        // 100% / full coupon cover — complete renew without charging wallet or gateway.
+        if ( (float) $totalprice <= 0 ) {
+            $centralTenant = Tenant::on( 'mysql' )->find( $tenant->id ) ?? $tenant;
+
+            return self::subscriptionadd(
+                $centralTenant,
+                $subscriptionid,
+                $trxid,
+                request( 'coupon_id' ) ? 'Coupon' : 'Free',
+                'Renew',
+                0,
+                request( 'coupon_id' )
+            );
+        }
+
         if ( request( 'payment_method' ) == 'my-wallet' || ( $validatedData['payment_method'] ?? null ) == 'my-wallet' ) {
             $centralTenant = Tenant::on( 'mysql' )->find( $tenant->id );
             $tenantBalance = (float) convertfloat( (string) ( $centralTenant->balance ?? 0 ) );
@@ -255,9 +283,10 @@ class SubscriptionRenewService {
 
     /**
      * Apply coupon discount. Returns totalprice or JsonResponse on validation failure.
+     * 100% / full-cover coupons are allowed and result in payable 0.
      */
     protected static function applyCoupon( $totalprice ) {
-        if ( request( 'coupon_id' ) == '' ) {
+        if ( request( 'coupon_id' ) == '' || request( 'coupon_id' ) === null ) {
             return $totalprice;
         }
         $coupondata = couponget( request( 'coupon_id' ) );
@@ -269,9 +298,13 @@ class SubscriptionRenewService {
         } else {
             $totalprice = ( $totalprice - ( ( $totalprice / 100 ) * $coupondata->amount ) );
         }
-        if ( $totalprice < 1 ) {
-            return responsejson( 'You can not use this coupon!', 'fail' );
+
+        // Full discount (e.g. 100% off) is valid — payable becomes 0.
+        // Only reject if discount somehow produces a negative amount we cannot interpret.
+        if ( $totalprice < 0 ) {
+            $totalprice = 0;
         }
+
         return $totalprice;
     }
 
