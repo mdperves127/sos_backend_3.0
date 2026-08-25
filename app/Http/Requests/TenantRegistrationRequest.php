@@ -69,12 +69,12 @@ class TenantRegistrationRequest extends FormRequest
             return $domain;
         }
 
-        $mainDomain = env( 'MAIN_DOMAIN' );
+        $mainDomain = config( 'cpanel.main_domain' );
         if ( $mainDomain ) {
             return $domain . '.' . $mainDomain;
         }
 
-        if ( env( 'APP_ENV' ) === 'local' ) {
+        if ( config( 'app.env' ) === 'local' ) {
             return $domain . '.localhost';
         }
 

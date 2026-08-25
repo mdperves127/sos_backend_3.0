@@ -104,9 +104,9 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
         $databaseName = $tenant->database()->getName() ?: $this->getDatabaseName( $tenant );
 
         try {
-            $cpanelUser     = env( 'CPANEL_USER' );
-            $cpanelPassword = env( 'CPANEL_PASSWORD' );
-            $cpanelHost     = env( 'CPANEL_HOST' );
+            $cpanelUser     = (string) config( 'cpanel.user', '' );
+            $cpanelPassword = (string) config( 'cpanel.password', '' );
+            $cpanelHost     = (string) config( 'cpanel.host', '' );
 
             if ( $cpanelUser && $cpanelPassword && $cpanelHost ) {
                 $dbPrefix     = $this->cpanelService->getMysqlPrefix();

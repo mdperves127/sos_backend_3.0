@@ -42,7 +42,7 @@ class TenantService
             // } else
 
             // Always build full tenant domain from MAIN_DOMAIN when a bare subdomain is given.
-            $mainDomain = env( 'MAIN_DOMAIN' );
+            $mainDomain = config( 'cpanel.main_domain' );
             if ( ! str_contains( $domain, '.' ) && $mainDomain ) {
                 $domain = $domain . '.' . $mainDomain;
             }
@@ -102,7 +102,7 @@ class TenantService
 
             // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
             $subdomainPart = $data['domain'];
-            $mainDomain    = env( 'MAIN_DOMAIN' );
+            $mainDomain    = config( 'cpanel.main_domain' );
             if ( $mainDomain && str_contains( $domain, $mainDomain ) ) {
                 $subdomainPart = str_replace( '.' . $mainDomain, '', $domain );
             }
@@ -114,7 +114,7 @@ class TenantService
                 \Log::info('TenantService: Creating subdomain', [
                     'subdomain_part' => $subdomainPart,
                     'full_domain' => $domain,
-                    'environment' => env('APP_ENV')
+                    'environment' => config( 'app.env' )
                 ]);
                 $subdomainResult = $this->cpanelService->createSubdomain($subdomainPart);
 

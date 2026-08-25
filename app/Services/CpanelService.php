@@ -29,6 +29,21 @@ class CpanelService
     }
 
     /**
+     * cPanel credentials from config (safe with config:cache).
+     *
+     * @return array{user: string, password: string, host: string, main_domain: string}
+     */
+    private function credentials(): array
+    {
+        return [
+            'user'         => (string) config( 'cpanel.user', '' ),
+            'password'     => (string) config( 'cpanel.password', '' ),
+            'host'         => (string) config( 'cpanel.host', '' ),
+            'main_domain'  => (string) config( 'cpanel.main_domain', '' ),
+        ];
+    }
+
+    /**
      * Create subdomain using cPanel API
      *
      * @param string $subdomain
@@ -37,10 +52,11 @@ class CpanelService
     private function createSubdomainViaCpanel($subdomain)
     {
         try {
-            $cpanelUser = env('CPANEL_USER');
-            $cpanelPassword = env('CPANEL_PASSWORD');
-            $cpanelHost = env('CPANEL_HOST'); // e.g., cpanel.example.com
-            $mainDomain = env('MAIN_DOMAIN'); // e.g., example.com
+            $creds          = $this->credentials();
+            $cpanelUser     = $creds['user'];
+            $cpanelPassword = $creds['password'];
+            $cpanelHost     = $creds['host'];
+            $mainDomain     = $creds['main_domain'];
 
             // Validate required environment variables
             if (empty($cpanelUser) || empty($cpanelPassword) || empty($cpanelHost) || empty($mainDomain)) {
@@ -58,8 +74,7 @@ class CpanelService
             }
 
             // Define the directory for the subdomain (point to the same directory as main app)
-            $subdomainDir = env('CPANEL_TENANT_ROOT', 'public_html/');
-
+            $subdomainDir = config( 'cpanel.tenant_root', 'public_html/' );
             // URL encode parameters to handle special characters
             $subdomainEncoded = urlencode($subdomain);
             $mainDomainEncoded = urlencode($mainDomain);
@@ -130,7 +145,7 @@ class CpanelService
 
             if ($success) {
                 // Set PHP version for the subdomain (production: default PHP 8.2, cPanel format: ea-php82)
-                $phpVersion = env('CPANEL_PHP_VERSION', 'ea-php82');
+                $phpVersion = (string) config( 'cpanel.php_version', 'ea-php82' );
                 $phpVersionResult = $this->setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion);
 
                 \Log::info('cPanel subdomain creation: PHP version setting result', [
@@ -184,9 +199,10 @@ class CpanelService
     private function setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion = 'ea-php82')
     {
         try {
-            $cpanelUser = env('CPANEL_USER');
-            $cpanelPassword = env('CPANEL_PASSWORD');
-            $cpanelHost = env('CPANEL_HOST');
+            $creds          = $this->credentials();
+            $cpanelUser     = $creds['user'];
+            $cpanelPassword = $creds['password'];
+            $cpanelHost     = $creds['host'];
 
             // Full domain name (subdomain.maindomain.com) = vhost name
             $fullDomain = $subdomain . '.' . $mainDomain;
@@ -312,7 +328,7 @@ class CpanelService
         }
 
         $configured = (string) config( 'tenancy.database.prefix', '' );
-        $cpanelUser = (string) env( 'CPANEL_USER', '' );
+        $cpanelUser = (string) config( 'cpanel.user', '' );
 
         try {
             $result = $this->cpanelExecute( 'Mysql/get_restrictions' );
@@ -357,19 +373,24 @@ class CpanelService
      */
     private function createDatabaseViaCpanel($dbname)
     {
-        $cpanelUser     = env( 'CPANEL_USER' );
-        $cpanelPassword = env( 'CPANEL_PASSWORD' );
-        $cpanelHost     = env( 'CPANEL_HOST' );
+        $creds          = $this->credentials();
+        $cpanelUser     = $creds['user'];
+        $cpanelPassword = $creds['password'];
+        $cpanelHost     = $creds['host'];
 
         if ( empty( $cpanelUser ) || empty( $cpanelPassword ) || empty( $cpanelHost ) ) {
-            \Log::error( 'cPanel database creation: Missing required environment variables' );
+            \Log::error( 'cPanel database creation: Missing required environment variables', [
+                'has_user'     => $cpanelUser !== '',
+                'has_password' => $cpanelPassword !== '',
+                'has_host'     => $cpanelHost !== '',
+            ] );
 
             return [
                 'database'   => ['status' => 0, 'errors' => ['Missing cPanel configuration']],
                 'assignment' => ['status' => 0],
                 'status'     => 0,
                 'full_name'  => (string) $dbname,
-                'error'      => 'Missing cPanel configuration (CPANEL_USER / CPANEL_PASSWORD / CPANEL_HOST)',
+                'error'      => 'Missing cPanel configuration (CPANEL_USER / CPANEL_PASSWORD / CPANEL_HOST). If config is cached, run: php artisan config:clear && php artisan config:cache. Quote passwords with special chars in .env.',
             ];
         }
 
@@ -387,7 +408,7 @@ class CpanelService
         }
 
         $fullDbName = $cpanelPrefix . $dbNameForApi;
-        $dbUsername = (string) env( 'DB_USERNAME', '' );
+        $dbUsername = (string) config( 'database.connections.mysql.username', '' );
 
         // Step 1: Create the database (name WITHOUT account prefix).
         $createDbResult = $this->cpanelExecute(
@@ -465,9 +486,10 @@ class CpanelService
      */
     private function cpanelExecute( string $path, array $query = [] ): array
     {
-        $cpanelUser     = env( 'CPANEL_USER' );
-        $cpanelPassword = env( 'CPANEL_PASSWORD' );
-        $cpanelHost     = env( 'CPANEL_HOST' );
+        $creds          = $this->credentials();
+        $cpanelUser     = $creds['user'];
+        $cpanelPassword = $creds['password'];
+        $cpanelHost     = $creds['host'];
 
         $url = 'https://' . $cpanelHost . ':2083/execute/' . ltrim( $path, '/' );
         if ( $query !== [] ) {
@@ -574,13 +596,13 @@ class CpanelService
             return [
                 'subdomain' => $subdomainResult,
                 'database' => $databaseResult,
-                'environment' => env('APP_ENV'),
+                'environment' => config( 'app.env' ),
                 'success' => true
             ];
         } catch (Exception $e) {
             return [
                 'error' => $e->getMessage(),
-                'environment' => env('APP_ENV'),
+                'environment' => config( 'app.env' ),
                 'success' => false
             ];
         }
