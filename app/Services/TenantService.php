@@ -111,28 +111,44 @@ class TenantService
             if ( $mainDomain && str_contains( $domain, $mainDomain ) ) {
                 $subdomainPart = str_replace( '.' . $mainDomain, '', $domain );
             }
+            // Guard against accidental FQDN being passed as the subdomain label.
+            if ( str_contains( (string) $subdomainPart, '.' ) ) {
+                $subdomainPart = explode( '.', (string) $subdomainPart )[0];
+            }
 
             // Create subdomain infrastructure based on environment
             // Wrap in try-catch so tenant creation doesn't fail if subdomain creation fails
             $subdomainResult = null;
             try {
-                \Log::info('TenantService: Creating subdomain', [
-                    'subdomain_part' => $subdomainPart,
-                    'full_domain' => $domain,
-                    'environment' => config( 'app.env' )
-                ]);
-                $subdomainResult = $this->cpanelService->createSubdomain($subdomainPart);
-
-                \Log::info('TenantService: Subdomain creation result', [
-                    'subdomain_result' => $subdomainResult
-                ]);
-
-                // Log warning if subdomain creation failed but don't throw exception
-                if (isset($subdomainResult['status']) && $subdomainResult['status'] == 0) {
-                    \Log::warning('TenantService: Subdomain creation failed but tenant was created', [
+                if ( empty( $mainDomain ) ) {
+                    \Log::error( 'TenantService: MAIN_DOMAIN is not configured; cannot create cPanel subdomain', [
                         'tenant_id' => $tenantId,
-                        'subdomain_result' => $subdomainResult
-                    ]);
+                        'domain'    => $domain,
+                    ] );
+                    $subdomainResult = [
+                        'status'  => 0,
+                        'error'   => 'MAIN_DOMAIN is not configured',
+                        'message' => 'Set MAIN_DOMAIN in .env to your root domain (e.g. storeeb.com)',
+                    ];
+                } else {
+                    \Log::info( 'TenantService: Creating subdomain', [
+                        'subdomain_part' => $subdomainPart,
+                        'full_domain'    => $domain,
+                        'environment'    => config( 'app.env' ),
+                    ] );
+                    $subdomainResult = $this->cpanelService->createSubdomain( $subdomainPart );
+
+                    \Log::info( 'TenantService: Subdomain creation result', [
+                        'subdomain_result' => $subdomainResult,
+                    ] );
+
+                    // Log warning if subdomain creation failed but don't throw exception
+                    if ( isset( $subdomainResult['status'] ) && (int) $subdomainResult['status'] === 0 ) {
+                        \Log::warning( 'TenantService: Subdomain creation failed but tenant was created', [
+                            'tenant_id'        => $tenantId,
+                            'subdomain_result' => $subdomainResult,
+                        ] );
+                    }
                 }
             } catch (\Exception $e) {
                 // Log the error but don't fail tenant creation

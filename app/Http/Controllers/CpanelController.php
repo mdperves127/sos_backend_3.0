@@ -119,10 +119,13 @@ class CpanelController extends Controller
             'data' => [
                 'environment' => env('APP_ENV'),
                 'app_url' => env('APP_URL'),
-                'cpanel_configured' => !empty(config('cpanel.user')) && !empty(config('cpanel.password')) && !empty(config('cpanel.host')),
+                'cpanel_configured' => ! empty( config( 'cpanel.user' ) )
+                    && ! empty( config( 'cpanel.host' ) )
+                    && ! empty( config( 'cpanel.main_domain' ) )
+                    && ( ! empty( config( 'cpanel.password' ) ) || ! empty( config( 'cpanel.api_token' ) ) ),
                 'main_domain' => config('cpanel.main_domain'),
                 'db_username' => config('database.connections.mysql.username'),
-                'db_password_configured' => !empty(env('DB_PASSWORD'))
+                'db_password_configured' => !empty(config('database.connections.mysql.password'))
             ]
         ]);
     }

@@ -46,146 +46,113 @@ class CpanelService
     }
 
     /**
-     * Create subdomain using cPanel API
+     * Create subdomain using cPanel UAPI (same auth/host fallback as DB create).
      *
-     * @param string $subdomain
+     * @param string $subdomain Bare subdomain label (e.g. "myshop"), not the FQDN
      * @return array
      */
     private function createSubdomainViaCpanel($subdomain)
     {
         try {
-            $creds          = $this->credentials();
-            $cpanelUser     = $creds['user'];
-            $cpanelPassword = $creds['password'];
-            $cpanelHost     = $creds['host'];
-            $mainDomain     = $creds['main_domain'];
+            $creds      = $this->credentials();
+            $cpanelUser = $creds['user'];
+            $cpanelHost = $creds['host'];
+            $mainDomain = $creds['main_domain'];
+            $apiToken   = $creds['api_token'];
+            $password   = $creds['password'];
 
-            // Validate required environment variables
-            if (empty($cpanelUser) || empty($cpanelPassword) || empty($cpanelHost) || empty($mainDomain)) {
-                \Log::error('cPanel subdomain creation: Missing required environment variables', [
-                    'has_user' => !empty($cpanelUser),
-                    'has_password' => !empty($cpanelPassword),
-                    'has_host' => !empty($cpanelHost),
-                    'has_main_domain' => !empty($mainDomain)
-                ]);
+            if ( $cpanelUser === '' || $cpanelHost === '' || $mainDomain === '' || ( $password === '' && $apiToken === '' ) ) {
+                \Log::error( 'cPanel subdomain creation: Missing required configuration', [
+                    'has_user'        => $cpanelUser !== '',
+                    'has_password'    => $password !== '',
+                    'has_token'       => $apiToken !== '',
+                    'has_host'        => $cpanelHost !== '',
+                    'has_main_domain' => $mainDomain !== '',
+                ] );
+
                 return [
-                    'status' => 0,
-                    'error' => 'Missing required cPanel configuration',
-                    'message' => 'cPanel credentials or main domain not configured'
+                    'status'  => 0,
+                    'error'   => 'Missing cPanel configuration',
+                    'message' => 'Set CPANEL_USER, CPANEL_HOST, MAIN_DOMAIN, and CPANEL_PASSWORD (or CPANEL_API_TOKEN). Prefer CPANEL_HOST=127.0.0.1 on the same server.',
                 ];
             }
 
-            // Define the directory for the subdomain (point to the same directory as main app)
-            $subdomainDir = config( 'cpanel.tenant_root', 'public_html/' );
-            // URL encode parameters to handle special characters
-            $subdomainEncoded = urlencode($subdomain);
-            $mainDomainEncoded = urlencode($mainDomain);
-            $subdomainDirEncoded = urlencode($subdomainDir);
+            $subdomain = strtolower( trim( (string) $subdomain ) );
+            // If a full domain was passed, keep only the leftmost label.
+            if ( str_contains( $subdomain, '.' ) ) {
+                $subdomain = explode( '.', $subdomain )[0];
+            }
 
-            $url = "https://$cpanelHost:2083/json-api/cpanel?cpanel_jsonapi_user=$cpanelUser&cpanel_jsonapi_apiversion=2&cpanel_jsonapi_module=SubDomain&cpanel_jsonapi_func=addsubdomain&domain=$subdomainEncoded&rootdomain=$mainDomainEncoded&dir=$subdomainDirEncoded";
+            $subdomainDir = (string) config( 'cpanel.tenant_root', 'public_html/' );
 
-            \Log::info('cPanel subdomain creation: Making API call', [
-                'subdomain' => $subdomain,
+            \Log::info( 'cPanel subdomain creation: Making API call', [
+                'subdomain'   => $subdomain,
                 'main_domain' => $mainDomain,
-                'host' => $cpanelHost
-            ]);
+                'dir'         => $subdomainDir,
+                'host'        => $cpanelHost,
+            ] );
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            $result = $this->cpanelExecute( 'SubDomain/addsubdomain', [
+                'domain'     => $subdomain,
+                'rootdomain' => $mainDomain,
+                'dir'        => $subdomainDir,
+            ] );
 
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
+            $success       = $this->isCpanelSuccess( $result );
+            $alreadyExists = $this->cpanelErrorsContain( $result, [ 'exists', 'already', 'in use' ] );
 
-            if ($response === false || !empty($curlError)) {
-                \Log::error('cPanel subdomain creation: cURL error', [
-                    'subdomain' => $subdomain,
-                    'curl_error' => $curlError,
-                    'http_code' => $httpCode
-                ]);
+            \Log::info( 'cPanel subdomain creation: API response', [
+                'subdomain'      => $subdomain,
+                'success'        => $success,
+                'already_exists' => $alreadyExists,
+                'result'         => $result,
+            ] );
+
+            if ( $success || $alreadyExists ) {
+                $phpVersion       = (string) config( 'cpanel.php_version', 'ea-php82' );
+                $phpVersionResult = $this->setPhpVersionForSubdomain( $subdomain, $mainDomain, $phpVersion );
+
+                \Log::info( 'cPanel subdomain creation: PHP version setting result', [
+                    'subdomain'          => $subdomain,
+                    'php_version_result' => $phpVersionResult,
+                ] );
+
                 return [
-                    'status' => 0,
-                    'error' => 'cURL error: ' . $curlError,
-                    'http_code' => $httpCode
+                    'status'              => 1,
+                    'message'             => $alreadyExists
+                        ? 'Subdomain already exists'
+                        : 'Subdomain created successfully',
+                    'subdomain'           => $subdomain,
+                    'full_domain'         => $subdomain . '.' . $mainDomain,
+                    'php_version_set'     => $phpVersionResult['status'] ?? 0,
+                    'php_version_message' => $phpVersionResult['message'] ?? ( $phpVersionResult['error'] ?? '' ),
+                    'full_response'       => $result,
                 ];
             }
 
-            $result = json_decode($response, true);
+            $errorMessage = $this->extractCpanelError( $result ) ?: 'Unknown error from cPanel API';
 
-            \Log::info('cPanel subdomain creation: API response', [
+            \Log::error( 'cPanel subdomain creation: Failed', [
                 'subdomain' => $subdomain,
-                'response' => $result,
-                'http_code' => $httpCode,
-                'raw_response' => $response
-            ]);
+                'error'     => $errorMessage,
+                'response'  => $result,
+            ] );
 
-            // Check various possible success indicators in cPanel API response
-            $success = false;
-            $errorMessage = null;
-
-            // Check for success in different possible response structures
-            if (isset($result['cpanelresult']['data'][0]['result']['status']) && $result['cpanelresult']['data'][0]['result']['status'] == 1) {
-                $success = true;
-            } elseif (isset($result['cpanelresult']['data'][0]['status']) && $result['cpanelresult']['data'][0]['status'] == 1) {
-                $success = true;
-            } elseif (isset($result['status']) && $result['status'] == 1) {
-                $success = true;
-            } elseif (isset($result['cpanelresult']['error'])) {
-                $errorMessage = $result['cpanelresult']['error'];
-            } elseif (isset($result['error'])) {
-                $errorMessage = $result['error'];
-            } elseif ($httpCode >= 200 && $httpCode < 300 && !isset($result['error'])) {
-                // If HTTP code is success and no error field, assume success
-                $success = true;
-            }
-
-            if ($success) {
-                // Set PHP version for the subdomain (production: default PHP 8.2, cPanel format: ea-php82)
-                $phpVersion = (string) config( 'cpanel.php_version', 'ea-php82' );
-                $phpVersionResult = $this->setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion);
-
-                \Log::info('cPanel subdomain creation: PHP version setting result', [
-                    'subdomain' => $subdomain,
-                    'php_version_result' => $phpVersionResult
-                ]);
-
-                return [
-                    'status' => 1,
-                    'message' => 'Subdomain created successfully',
-                    'subdomain' => $subdomain,
-                    'php_version_set' => $phpVersionResult['status'] ?? 0,
-                    'php_version_message' => $phpVersionResult['message'] ?? '',
-                    'full_response' => $result
-                ];
-            } else {
-                \Log::error('cPanel subdomain creation: Failed', [
-                    'subdomain' => $subdomain,
-                    'error' => $errorMessage,
-                    'response' => $result,
-                    'http_code' => $httpCode
-                ]);
-                return [
-                    'status' => 0,
-                    'error' => $errorMessage ?: 'Unknown error from cPanel API',
-                    'full_response' => $result,
-                    'http_code' => $httpCode
-                ];
-            }
-        } catch (\Exception $e) {
-            \Log::error('cPanel subdomain creation: Exception', [
+            return [
+                'status'        => 0,
+                'error'         => $errorMessage,
+                'full_response' => $result,
+            ];
+        } catch ( \Exception $e ) {
+            \Log::error( 'cPanel subdomain creation: Exception', [
                 'subdomain' => $subdomain,
                 'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+                'trace'     => $e->getTraceAsString(),
+            ] );
+
             return [
                 'status' => 0,
-                'error' => 'Exception: ' . $e->getMessage()
+                'error'  => 'Exception: ' . $e->getMessage(),
             ];
         }
     }
@@ -198,121 +165,65 @@ class CpanelService
      * @param string $phpVersion PHP version: cPanel format (e.g. 'ea-php82', 'ea-php81') or short '82'/'81'
      * @return array
      */
-    private function setPhpVersionForSubdomain($subdomain, $mainDomain, $phpVersion = 'ea-php82')
+    private function setPhpVersionForSubdomain( $subdomain, $mainDomain, $phpVersion = 'ea-php82' )
     {
         try {
-            $creds          = $this->credentials();
-            $cpanelUser     = $creds['user'];
-            $cpanelPassword = $creds['password'];
-            $cpanelHost     = $creds['host'];
-
-            // Full domain name (subdomain.maindomain.com) = vhost name
             $fullDomain = $subdomain . '.' . $mainDomain;
 
-            // cPanel expects ea-phpXX format (e.g. ea-php82). Normalize if env has short form like "82"
-            if (preg_match('/^\d{2}$/', $phpVersion)) {
+            if ( preg_match( '/^\d{2}$/', $phpVersion ) ) {
                 $phpVersion = 'ea-php' . $phpVersion;
             }
 
-            // UAPI: LangPHP php_set_vhost_versions (required for EasyApache 4; overrides "Inherited")
-            $url = "https://$cpanelHost:2083/execute/LangPHP/php_set_vhost_versions";
+            \Log::info( 'cPanel PHP version setting: Making API call', [
+                'vhost'       => $fullDomain,
+                'php_version' => $phpVersion,
+            ] );
 
-            \Log::info('cPanel PHP version setting: Making API call', [
-                'vhost' => $fullDomain,
-                'php_version' => $phpVersion
-            ]);
+            $result = $this->cpanelExecute( 'LangPHP/php_set_vhost_versions', [
+                'vhost'   => $fullDomain,
+                'version' => $phpVersion,
+            ] );
 
-            $postData = [
-                'vhost' => $fullDomain,
-                'version' => $phpVersion
+            \Log::info( 'cPanel PHP version setting: API response', [
+                'vhost'       => $fullDomain,
+                'php_version' => $phpVersion,
+                'response'    => $result,
+            ] );
+
+            if ( $this->isCpanelSuccess( $result ) ) {
+                return [
+                    'status'        => 1,
+                    'message'       => 'PHP version set to ' . $phpVersion . ' successfully',
+                    'domain'        => $fullDomain,
+                    'php_version'   => $phpVersion,
+                    'full_response' => $result,
+                ];
+            }
+
+            $errorMessage = $this->extractCpanelError( $result ) ?: 'Unexpected response setting PHP version';
+
+            \Log::error( 'cPanel PHP version setting: API error', [
+                'vhost'       => $fullDomain,
+                'php_version' => $phpVersion,
+                'error'       => $errorMessage,
+            ] );
+
+            return [
+                'status'        => 0,
+                'error'         => $errorMessage,
+                'full_response' => $result,
             ];
-
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-
-            if ($response === false || !empty($curlError)) {
-                \Log::error('cPanel PHP version setting: cURL error', [
-                    'domain' => $fullDomain,
-                    'php_version' => $phpVersion,
-                    'curl_error' => $curlError,
-                    'http_code' => $httpCode
-                ]);
-                return [
-                    'status' => 0,
-                    'error' => 'cURL error: ' . $curlError,
-                    'http_code' => $httpCode
-                ];
-            }
-
-            $result = json_decode($response, true);
-
-            \Log::info('cPanel PHP version setting: API response', [
-                'vhost' => $fullDomain,
+        } catch ( \Exception $e ) {
+            \Log::error( 'cPanel PHP version setting: Exception', [
+                'domain'      => $subdomain . '.' . $mainDomain,
                 'php_version' => $phpVersion,
-                'response' => $result,
-                'http_code' => $httpCode
-            ]);
+                'exception'   => $e->getMessage(),
+                'trace'       => $e->getTraceAsString(),
+            ] );
 
-            // LangPHP returns result under 'result' key with result.status
-            $status = $result['result']['status'] ?? $result['status'] ?? 0;
-            $errors = $result['result']['errors'] ?? $result['errors'] ?? null;
-
-            if ($status == 1) {
-                return [
-                    'status' => 1,
-                    'message' => 'PHP version set to ' . $phpVersion . ' successfully',
-                    'domain' => $fullDomain,
-                    'php_version' => $phpVersion,
-                    'full_response' => $result
-                ];
-            }
-
-            if ($errors) {
-                $errorMessage = is_array($errors) ? implode(', ', $errors) : $errors;
-                \Log::error('cPanel PHP version setting: API error', [
-                    'vhost' => $fullDomain,
-                    'php_version' => $phpVersion,
-                    'error' => $errorMessage
-                ]);
-                return [
-                    'status' => 0,
-                    'error' => $errorMessage,
-                    'full_response' => $result
-                ];
-            }
-
-            \Log::warning('cPanel PHP version setting: Unexpected response', [
-                'vhost' => $fullDomain,
-                'php_version' => $phpVersion,
-                'response' => $result
-            ]);
             return [
                 'status' => 0,
-                'message' => 'PHP version setting completed with unexpected response',
-                'full_response' => $result
-            ];
-        } catch (\Exception $e) {
-            \Log::error('cPanel PHP version setting: Exception', [
-                'domain' => $subdomain . '.' . $mainDomain,
-                'php_version' => $phpVersion,
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return [
-                'status' => 0,
-                'error' => 'Exception: ' . $e->getMessage()
+                'error'  => 'Exception: ' . $e->getMessage(),
             ];
         }
     }
