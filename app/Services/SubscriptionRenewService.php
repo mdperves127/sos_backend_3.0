@@ -8,12 +8,14 @@ use App\Models\PaymentStore;
 use App\Models\Product;
 use App\Models\ProductDetails;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\VendorService;
 use Carbon\Carbon;
 use App\Services\EpsPaymentService;
 use App\Helper\RedirectHelper;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class SubscriptionRenewService.
@@ -180,17 +182,55 @@ class SubscriptionRenewService {
         }
         $totalprice = $couponResult;
 
-        if ( request( 'payment_method' ) == 'my-wallet' ) {
-            $tenantBalance = convertfloat( $tenant->balance ?? 0 );
+        if ( request( 'payment_method' ) == 'my-wallet' || ( $validatedData['payment_method'] ?? null ) == 'my-wallet' ) {
+            $centralTenant = Tenant::on( 'mysql' )->find( $tenant->id );
+            $tenantBalance = (float) convertfloat( (string) ( $centralTenant->balance ?? 0 ) );
             if ( request( 'package_id' ) && $tenantBalance < $totalprice ) {
                 return responsejson( 'You have not enough balance. You should recharge', 'fail' );
             }
         }
 
         if ( $validatedData['payment_method'] == 'my-wallet' ) {
-            $tenant->balance = convertfloat( $tenant->balance ?? 0 ) - $totalprice;
-            $tenant->save();
-            return self::subscriptionadd( $tenant, $subscriptionid, $trxid, 'My wallet', 'Renew', $totalprice, request( 'coupon_id' ) );
+            $amount = (float) convertfloat( (string) $totalprice );
+
+            // Deduct from central mysql.tenants.balance only.
+            // tenant()->save() / VirtualColumn often skips persisting balance during renew.
+            $result = DB::connection( 'mysql' )->transaction( function () use ( $tenant, $amount ) {
+                $row = DB::connection( 'mysql' )
+                    ->table( 'tenants' )
+                    ->where( 'id', $tenant->id )
+                    ->lockForUpdate()
+                    ->first( ['id', 'balance'] );
+
+                if ( ! $row ) {
+                    return responsejson( 'Tenant wallet not found.', 'fail' );
+                }
+
+                $current = (float) convertfloat( (string) ( $row->balance ?? 0 ) );
+                if ( $current < $amount ) {
+                    return responsejson( 'You have not enough balance. You should recharge', 'fail' );
+                }
+
+                $newBalance = $current - $amount;
+
+                DB::connection( 'mysql' )
+                    ->table( 'tenants' )
+                    ->where( 'id', $tenant->id )
+                    ->update( [
+                        'balance'    => $newBalance,
+                        'updated_at' => now(),
+                    ] );
+
+                $tenant->setAttribute( 'balance', $newBalance );
+
+                return Tenant::on( 'mysql' )->find( $tenant->id );
+            } );
+
+            if ( $result instanceof \Illuminate\Http\JsonResponse ) {
+                return $result;
+            }
+
+            return self::subscriptionadd( $result, $subscriptionid, $trxid, 'My wallet', 'Renew', $totalprice, request( 'coupon_id' ) );
         }
 
         if ( $validatedData['payment_method'] == 'aamarpay' ) {
