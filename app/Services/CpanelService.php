@@ -31,15 +31,17 @@ class CpanelService
     /**
      * cPanel credentials from config (safe with config:cache).
      *
-     * @return array{user: string, password: string, host: string, main_domain: string}
+     * @return array{user: string, password: string, host: string, main_domain: string, api_token: string, port: int}
      */
     private function credentials(): array
     {
         return [
-            'user'         => (string) config( 'cpanel.user', '' ),
-            'password'     => (string) config( 'cpanel.password', '' ),
-            'host'         => (string) config( 'cpanel.host', '' ),
-            'main_domain'  => (string) config( 'cpanel.main_domain', '' ),
+            'user'        => trim( (string) config( 'cpanel.user', '' ) ),
+            'password'    => (string) config( 'cpanel.password', '' ),
+            'api_token'   => trim( (string) config( 'cpanel.api_token', '' ) ),
+            'host'        => trim( (string) config( 'cpanel.host', '127.0.0.1' ) ),
+            'port'        => (int) config( 'cpanel.port', 2083 ),
+            'main_domain' => trim( (string) config( 'cpanel.main_domain', '' ) ),
         ];
     }
 
@@ -377,11 +379,13 @@ class CpanelService
         $cpanelUser     = $creds['user'];
         $cpanelPassword = $creds['password'];
         $cpanelHost     = $creds['host'];
+        $apiToken       = $creds['api_token'];
 
-        if ( empty( $cpanelUser ) || empty( $cpanelPassword ) || empty( $cpanelHost ) ) {
+        if ( $cpanelUser === '' || $cpanelHost === '' || ( $cpanelPassword === '' && $apiToken === '' ) ) {
             \Log::error( 'cPanel database creation: Missing required environment variables', [
                 'has_user'     => $cpanelUser !== '',
                 'has_password' => $cpanelPassword !== '',
+                'has_token'    => $apiToken !== '',
                 'has_host'     => $cpanelHost !== '',
             ] );
 
@@ -390,7 +394,7 @@ class CpanelService
                 'assignment' => ['status' => 0],
                 'status'     => 0,
                 'full_name'  => (string) $dbname,
-                'error'      => 'Missing cPanel configuration (CPANEL_USER / CPANEL_PASSWORD / CPANEL_HOST). If config is cached, run: php artisan config:clear && php artisan config:cache. Quote passwords with special chars in .env.',
+                'error'      => 'Missing cPanel configuration. Set CPANEL_USER, CPANEL_HOST, and CPANEL_PASSWORD (or CPANEL_API_TOKEN). Prefer CPANEL_HOST=127.0.0.1 on the same server.',
             ];
         }
 
@@ -480,29 +484,95 @@ class CpanelService
     /**
      * Call a cPanel UAPI execute endpoint.
      *
+     * Tries the configured host first, then 127.0.0.1 / localhost when the
+     * public hostname returns HTML (Cloudflare, login page, etc.).
+     *
      * @param string $path  e.g. Mysql/create_database
      * @param array  $query Query parameters
      * @return array
      */
     private function cpanelExecute( string $path, array $query = [] ): array
     {
+        $creds = $this->credentials();
+        $hosts = array_values( array_unique( array_filter( [
+            $creds['host'],
+            '127.0.0.1',
+            'localhost',
+        ] ) ) );
+
+        $lastFailure = [
+            'status' => 0,
+            'errors' => [ 'cPanel request failed' ],
+        ];
+
+        foreach ( $hosts as $host ) {
+            $result = $this->cpanelExecuteAgainstHost( $host, $path, $query );
+
+            if ( $this->isUsableCpanelPayload( $result ) ) {
+                if ( $host !== $creds['host'] ) {
+                    \Log::info( 'cPanel API succeeded via fallback host', [
+                        'configured_host' => $creds['host'],
+                        'used_host'       => $host,
+                        'path'            => $path,
+                    ] );
+                }
+
+                return $result;
+            }
+
+            $lastFailure = $result;
+        }
+
+        return $lastFailure;
+    }
+
+    /**
+     * @return array
+     */
+    private function cpanelExecuteAgainstHost( string $host, string $path, array $query = [] ): array
+    {
         $creds          = $this->credentials();
         $cpanelUser     = $creds['user'];
         $cpanelPassword = $creds['password'];
-        $cpanelHost     = $creds['host'];
+        $apiToken       = $creds['api_token'];
+        $port           = $creds['port'] ?: 2083;
 
-        $url = 'https://' . $cpanelHost . ':2083/execute/' . ltrim( $path, '/' );
+        if ( $cpanelUser === '' || ( $cpanelPassword === '' && $apiToken === '' ) ) {
+            return [
+                'status' => 0,
+                'errors' => [ 'Missing cPanel user/password (or CPANEL_API_TOKEN)' ],
+            ];
+        }
+
+        $url = 'https://' . $host . ':' . $port . '/execute/' . ltrim( $path, '/' );
         if ( $query !== [] ) {
             $url .= '?' . http_build_query( $query );
         }
 
+        // Prefer API token auth; otherwise Basic auth (handles special chars in password).
+        if ( $apiToken !== '' ) {
+            $authHeader = 'Authorization: cpanel ' . $cpanelUser . ':' . $apiToken;
+        } else {
+            $authHeader = 'Authorization: Basic ' . base64_encode( $cpanelUser . ':' . $cpanelPassword );
+        }
+
         $ch = curl_init();
-        curl_setopt( $ch, CURLOPT_URL, $url );
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt( $ch, CURLOPT_USERPWD, "$cpanelUser:$cpanelPassword" );
-        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        curl_setopt( $ch, CURLOPT_TIMEOUT, 45 );
-        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 15 );
+        curl_setopt_array( $ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                $authHeader,
+                'Accept: application/json',
+            ],
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_TIMEOUT        => 45,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS      => 3,
+            CURLOPT_ENCODING       => '',
+        ] );
+
         $response  = curl_exec( $ch );
         $httpCode  = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
         $curlError = curl_error( $ch );
@@ -511,24 +581,77 @@ class CpanelService
         if ( $response === false || $curlError !== '' ) {
             return [
                 'status'    => 0,
-                'errors'    => [ 'cURL error: ' . $curlError ],
+                'errors'    => [ 'cURL error (' . $host . '): ' . $curlError ],
                 'http_code' => $httpCode,
+                'host'      => $host,
             ];
         }
 
         $decoded = json_decode( $response, true );
         if ( ! is_array( $decoded ) ) {
+            $summary = $this->summarizeNonJsonResponse( (string) $response, $httpCode, $host );
+
+            \Log::error( 'cPanel non-JSON response', [
+                'host'      => $host,
+                'path'      => $path,
+                'http_code' => $httpCode,
+                'summary'   => $summary,
+                'preview'   => mb_substr( preg_replace( '/\s+/', ' ', (string) $response ), 0, 300 ),
+            ] );
+
             return [
-                'status'        => 0,
-                'errors'        => [ 'Invalid JSON from cPanel' ],
-                'http_code'     => $httpCode,
-                'raw_response'  => $response,
+                'status'       => 0,
+                'errors'       => [ $summary ],
+                'http_code'    => $httpCode,
+                'host'         => $host,
+                'raw_response' => mb_substr( (string) $response, 0, 500 ),
             ];
         }
 
         $decoded['http_code'] = $httpCode;
+        $decoded['host']      = $host;
 
         return $decoded;
+    }
+
+    private function isUsableCpanelPayload( array $result ): bool
+    {
+        // Valid JSON from UAPI always has status (0 or 1) or result.status
+        if ( array_key_exists( 'status', $result ) || isset( $result['result']['status'] ) ) {
+            // Exclude our own synthetic failures that still use status=0 + errors only
+            if ( isset( $result['errors'][0] ) && is_string( $result['errors'][0] ) ) {
+                $first = $result['errors'][0];
+                if ( str_starts_with( $first, 'cURL error' )
+                    || str_contains( $first, 'non-JSON' )
+                    || str_contains( $first, 'Invalid JSON' )
+                    || str_contains( $first, 'HTML instead of JSON' )
+                    || str_contains( $first, 'Missing cPanel' )
+                ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function summarizeNonJsonResponse( string $response, int $httpCode, string $host ): string
+    {
+        $trimmed = trim( $response );
+
+        if ( $trimmed === '' ) {
+            return "cPanel returned empty body (HTTP {$httpCode}) from {$host}:{$this->credentials()['port']}. Try CPANEL_HOST=127.0.0.1";
+        }
+
+        if ( str_contains( strtolower( $trimmed ), '<html' )
+            || str_contains( strtolower( $trimmed ), '<!doctype' )
+        ) {
+            return "cPanel returned HTML instead of JSON (HTTP {$httpCode}) from {$host}. Set CPANEL_HOST=127.0.0.1 in .env (same server) or use CPANEL_API_TOKEN, then run php artisan config:cache";
+        }
+
+        return 'cPanel non-JSON response (HTTP ' . $httpCode . ') from ' . $host . ': ' . mb_substr( preg_replace( '/\s+/', ' ', $trimmed ), 0, 180 );
     }
 
     private function isCpanelSuccess( ?array $result ): bool
