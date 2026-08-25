@@ -22,11 +22,19 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
      */
     public function createDatabase(TenantWithDatabase $tenant): bool
     {
-        if ( env( 'APP_ENV' ) === 'local' ) {
-            return parent::createDatabase( $tenant );
-        }
+        // Check environment
+        // if (env('APP_ENV') === 'local') {
+        //     // For local environment, use the parent method (direct MySQL)
+        //     return parent::createDatabase($tenant);
+        // } else
 
-        return $this->createDatabaseViaCpanel( $tenant );
+        if (env('APP_ENV') === 'local') {
+            // For production environment, use cPanel API
+            return $this->createDatabaseViaCpanel($tenant);
+        } else {
+            // For other environments, return false
+            return false;
+        }
     }
 
     /**
@@ -73,11 +81,19 @@ class CpanelDatabaseManager extends MySQLDatabaseManager
      */
     public function deleteDatabase(TenantWithDatabase $tenant): bool
     {
-        if ( env( 'APP_ENV' ) === 'local' ) {
-            return parent::deleteDatabase( $tenant );
-        }
+        // Check environment
+        // if (env('APP_ENV') === 'local') {
+        //     // For local environment, use the parent method (direct MySQL)
+        //     return parent::deleteDatabase($tenant);
+        // } else
 
-        return $this->deleteDatabaseViaCpanel( $tenant );
+        if (env('APP_ENV') === 'local') {
+            // For production environment, use cPanel API
+            return $this->deleteDatabaseViaCpanel($tenant);
+        } else {
+            // For other environments, return false
+            return false;
+        }
     }
 
     /**

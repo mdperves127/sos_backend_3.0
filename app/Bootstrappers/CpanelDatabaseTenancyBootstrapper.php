@@ -72,6 +72,14 @@ class CpanelDatabaseTenancyBootstrapper extends DatabaseTenancyBootstrapper
             'database.connections.tenant.strict' => false,
         ]);
 
+        // In production, use cPanel credentials for tenant databases
+        if (env('APP_ENV') === 'local') {
+            config([
+                'database.connections.tenant.username' => env('CPANEL_USER'),
+                'database.connections.tenant.password' => env('CPANEL_PASSWORD'),
+            ]);
+        }
+
         // Purge the connection to force Laravel to use the new configuration
         try {
             \DB::purge('tenant');
