@@ -20,7 +20,8 @@ class CmsController extends Controller
     public function update(Request $request)
     {
         $request->validate( [
-            'is_stock_show' => ['nullable', 'in:yes,no'],
+            'is_stock_show'           => ['nullable', 'in:yes,no'],
+            'show_whats_app_website'  => ['nullable', 'in:yes,no'],
         ] );
 
         $data = CmsSetting::first();
