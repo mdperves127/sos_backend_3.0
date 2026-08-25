@@ -14,28 +14,16 @@ class CpanelService
      */
     public function createSubdomain($subdomain)
     {
-        // Check environment
-        // if (env('APP_ENV') === 'local') {
-        //     // For local environment, just return success without actual cPanel operations
-        //     return [
-        //         'status' => 1,
-        //         'message' => 'Subdomain creation skipped for local environment',
-        //         'subdomain' => $subdomain,
-        //         'environment' => 'local'
-        //     ];
-        // } else
-
-        if (env('APP_ENV') === 'local') {
-            // For production environment, use cPanel API
-            return $this->createSubdomainViaCpanel($subdomain);
-        } else {
-            // For other environments, you can add custom logic here
+        if ( env( 'APP_ENV' ) === 'local' ) {
             return [
-                'status' => 0,
-                'message' => 'Unsupported environment: ' . env('APP_ENV'),
-                'environment' => env('APP_ENV')
+                'status'      => 1,
+                'message'     => 'Subdomain creation skipped for local environment',
+                'subdomain'   => $subdomain,
+                'environment' => 'local',
             ];
         }
+
+        return $this->createSubdomainViaCpanel( $subdomain );
     }
 
     /**
@@ -46,28 +34,16 @@ class CpanelService
      */
     public function createDatabase($dbname)
     {
-        // Check environment
-        // if (env('APP_ENV') === 'local') {
-        //     // For local environment, just return success without actual cPanel operations
-        //     return [
-        //         'status' => 1,
-        //         'message' => 'Database creation skipped for local environment',
-        //         'database' => $dbname,
-        //         'environment' => 'local'
-        //     ];
-        // } else
-
-        if (env('APP_ENV') === 'local') {
-            // For production environment, use cPanel API
-            return $this->createDatabaseViaCpanel($dbname);
-        } else {
-            // For other environments, you can add custom logic here
+        if ( env( 'APP_ENV' ) === 'local' ) {
             return [
-                'status' => 0,
-                'message' => 'Unsupported environment: ' . env('APP_ENV'),
-                'environment' => env('APP_ENV')
+                'status'      => 1,
+                'message'     => 'Database creation handled by MySQL manager for local environment',
+                'database'    => ['status' => 1, 'name' => $dbname],
+                'environment' => 'local',
             ];
         }
+
+        return $this->createDatabaseViaCpanel( $dbname );
     }
 
     /**
@@ -349,16 +325,33 @@ class CpanelService
      */
     private function createDatabaseViaCpanel($dbname)
     {
-        $cpanelUser = env('CPANEL_USER');
-        $cpanelPassword = env('CPANEL_PASSWORD');
-        $cpanelHost = env('CPANEL_HOST');
+        $cpanelUser     = env( 'CPANEL_USER' );
+        $cpanelPassword = env( 'CPANEL_PASSWORD' );
+        $cpanelHost     = env( 'CPANEL_HOST' );
+
+        if ( empty( $cpanelUser ) || empty( $cpanelPassword ) || empty( $cpanelHost ) ) {
+            \Log::error( 'cPanel database creation: Missing required environment variables' );
+
+            return [
+                'database'   => ['status' => 0, 'errors' => ['Missing cPanel configuration']],
+                'assignment' => ['status' => 0],
+                'status'     => 0,
+            ];
+        }
+
+        // cPanel API expects the name without the account prefix (it adds affsellc_ automatically).
+        $dbPrefix       = config( 'tenancy.database.prefix', $cpanelUser . '_' );
+        $dbNameForApi   = str_starts_with( $dbname, $dbPrefix )
+            ? substr( $dbname, strlen( $dbPrefix ) )
+            : $dbname;
+        $fullDbName     = $dbPrefix . $dbNameForApi;
 
         // Fixed username and password
-        $dbUsername = env('DB_USERNAME'); // Fixed username
-        $dbPassword = env('DB_PASSWORD'); // Fixed password (change this to a secure password)
+        $dbUsername = env( 'DB_USERNAME' );
+        $dbPassword = env( 'DB_PASSWORD' );
 
         // Step 1: Create the database
-        $createDbUrl = "https://$cpanelHost:2083/execute/Mysql/create_database?name=$dbname";
+        $createDbUrl = "https://$cpanelHost:2083/execute/Mysql/create_database?name=" . urlencode( $dbNameForApi );
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $createDbUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -373,7 +366,7 @@ class CpanelService
         // We attempt to assign the user in either case to ensure permissions are correct (Idempotency).
 
         // Step 3: Assign the user to the database
-        $assignUserUrl = "https://$cpanelHost:2083/execute/Mysql/set_privileges_on_database?user=$dbUsername&database=$dbname&privileges=ALL";
+        $assignUserUrl = "https://$cpanelHost:2083/execute/Mysql/set_privileges_on_database?user=$dbUsername&database=" . urlencode( $fullDbName ) . '&privileges=ALL';
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $assignUserUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -386,9 +379,12 @@ class CpanelService
 
         // Return combined result
         return [
-            'database' => $createDbResult,
+            'database'   => $createDbResult,
             'assignment' => $assignUserResult,
-            'status' => (isset($createDbResult['status']) && $createDbResult['status'] == 1) || (isset($assignUserResult['status']) && $assignUserResult['status'] == 1) ? 1 : 0
+            'status'     => ( isset( $createDbResult['status'] ) && $createDbResult['status'] == 1 )
+                || ( isset( $assignUserResult['status'] ) && $assignUserResult['status'] == 1 )
+                ? 1
+                : 0,
         ];
     }
 
