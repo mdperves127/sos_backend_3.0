@@ -15,12 +15,16 @@ use Illuminate\Support\Facades\Validator;
 
 class ResetPasswordController extends Controller
 {
+    /** @var array<int, string> */
+    private const ALLOWED_ROLE_TYPES = ['admin', 'employee', 'tenant_user'];
+
     public function reset( Request $request ): JsonResponse
     {
         $validator = Validator::make( $request->all(), [
-            'email'    => 'required|email',
-            'token'    => 'required|integer',
-            'password' => 'required|confirmed|min:8',
+            'email'     => 'required|email',
+            'token'     => 'required',
+            'password'  => 'required|confirmed|min:8',
+            'role_type' => ['nullable', 'in:admin,employee,tenant_user'],
         ], [
             'token.required' => 'OTP is required',
         ] );
@@ -33,10 +37,18 @@ class ResetPasswordController extends Controller
             ], 400 );
         }
 
-        // Check if the provided token exists in the tenant's password_resets table
+        if ( ! function_exists( 'tenant' ) || ! tenant() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Tenant context not found',
+            ], 400 );
+        }
+
+        $email = strtolower( trim( (string) $request->input( 'email' ) ) );
+
         $tokenData = DB::connection( 'tenant' )
             ->table( 'password_resets' )
-            ->where( 'email', $request->email )
+            ->whereRaw( 'LOWER(email) = ?', [$email] )
             ->first();
 
         if ( $tokenData === null ) {
@@ -51,7 +63,7 @@ class ResetPasswordController extends Controller
         if ( $expiredTime->isPast() ) {
             DB::connection( 'tenant' )
                 ->table( 'password_resets' )
-                ->where( 'email', $request->email )
+                ->whereRaw( 'LOWER(email) = ?', [$email] )
                 ->delete();
 
             return response()->json( [
@@ -67,8 +79,15 @@ class ResetPasswordController extends Controller
             ], 400 );
         }
 
-        // Find user in tenant database and update password
-        $user = User::on( 'tenant' )->where( 'email', $request->email )->first();
+        $userQuery = User::on( 'tenant' )
+            ->whereRaw( 'LOWER(email) = ?', [$email] )
+            ->whereIn( 'role_type', self::ALLOWED_ROLE_TYPES );
+
+        if ( $request->filled( 'role_type' ) ) {
+            $userQuery->where( 'role_type', $request->input( 'role_type' ) );
+        }
+
+        $user = $userQuery->first();
 
         if ( ! $user ) {
             return response()->json( [
@@ -81,15 +100,15 @@ class ResetPasswordController extends Controller
             'password' => Hash::make( $request->password ),
         ] )->save();
 
-        // Delete the used token from password_resets
         DB::connection( 'tenant' )
             ->table( 'password_resets' )
-            ->where( 'email', $request->email )
+            ->whereRaw( 'LOWER(email) = ?', [$email] )
             ->delete();
 
         return response()->json( [
-            'status'  => 200,
-            'message' => 'Password reset successfully. You can now login with your new password.',
+            'status'    => 200,
+            'message'   => 'Password reset successfully. You can now login with your new password.',
+            'role_type' => $user->role_type,
         ] );
     }
 }

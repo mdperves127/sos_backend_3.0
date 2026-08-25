@@ -15,16 +15,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class ForgotPasswordController extends Controller
 {
+    /** @var array<int, string> */
+    private const ALLOWED_ROLE_TYPES = ['admin', 'employee', 'tenant_user'];
+
     public function sendResetLinkEmail( Request $request ): JsonResponse
     {
         $validator = Validator::make( $request->all(), [
-            'email' => ['required', 'email', Rule::exists( 'tenant.users', 'email' )],
-        ], [
-            'email.exists' => 'No account found with this email address.',
+            'email'     => ['required', 'email'],
+            'role_type' => ['nullable', 'in:admin,employee,tenant_user'],
         ] );
 
         if ( $validator->fails() ) {
@@ -35,19 +36,41 @@ class ForgotPasswordController extends Controller
             ], 400 );
         }
 
-        $user = User::on( 'tenant' )->where( 'email', $request->email )->first();
+        if ( ! function_exists( 'tenant' ) || ! tenant() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Tenant context not found',
+            ], 400 );
+        }
+
+        $email = strtolower( trim( (string) $request->input( 'email' ) ) );
+
+        // Works for tenant admin, employee, and storefront tenant_user.
+        $userQuery = User::on( 'tenant' )
+            ->whereRaw( 'LOWER(email) = ?', [$email] )
+            ->whereIn( 'role_type', self::ALLOWED_ROLE_TYPES );
+
+        if ( $request->filled( 'role_type' ) ) {
+            $userQuery->where( 'role_type', $request->input( 'role_type' ) );
+        }
+
+        $user = $userQuery->first();
 
         if ( ! $user ) {
             return response()->json( [
                 'status'  => 400,
-                'message' => 'The selected email is invalid',
+                'message' => 'No account found with this email address.',
+                'errors'  => [
+                    'email' => ['No account found with this email address.'],
+                ],
             ], 400 );
         }
 
         if ( ! Schema::connection( 'tenant' )->hasTable( 'password_resets' ) ) {
             Log::error( 'Tenant password_resets table missing', [
-                'tenant_id' => function_exists( 'tenant' ) ? tenant( 'id' ) : null,
+                'tenant_id' => tenant( 'id' ),
                 'email'     => $user->email,
+                'role_type' => $user->role_type,
             ] );
 
             return response()->json( [
@@ -68,12 +91,12 @@ class ForgotPasswordController extends Controller
         );
 
         try {
-            // Tenant storefront password reset always sends OTP by email.
             Mail::to( $user->email )->send( new ResetPasswordMail( $token ) );
         } catch ( \Throwable $e ) {
             Log::error( 'Tenant forgot password OTP send failed', [
-                'tenant_id' => function_exists( 'tenant' ) ? tenant( 'id' ) : null,
+                'tenant_id' => tenant( 'id' ),
                 'email'     => $user->email,
+                'role_type' => $user->role_type,
                 'error'     => $e->getMessage(),
             ] );
 
@@ -84,9 +107,10 @@ class ForgotPasswordController extends Controller
         }
 
         return response()->json( [
-            'status'  => 200,
-            'message' => 'Password reset OTP sent to your email address!',
-            'send_to' => $user->email,
+            'status'    => 200,
+            'message'   => 'Password reset OTP sent to your email address!',
+            'send_to'   => $user->email,
+            'role_type' => $user->role_type,
         ] );
     }
 }
