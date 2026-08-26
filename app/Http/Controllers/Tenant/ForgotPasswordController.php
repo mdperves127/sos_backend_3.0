@@ -97,6 +97,7 @@ class ForgotPasswordController extends Controller
                 'tenant_id' => tenant( 'id' ),
                 'email'     => $user->email,
                 'role_type' => $user->role_type,
+                'channel'   => 'email',
                 'error'     => $e->getMessage(),
             ] );
 
@@ -110,6 +111,7 @@ class ForgotPasswordController extends Controller
             'status'    => 200,
             'message'   => 'Password reset OTP sent to your email address!',
             'send_to'   => $user->email,
+            'channel'   => 'email',
             'role_type' => $user->role_type,
         ] );
     }

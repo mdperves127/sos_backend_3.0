@@ -30,11 +30,19 @@ class OrderController extends Controller {
     //
     function AllOrders() {
         // return auth()->user()->id;
+        $perPage = (int) request( 'limit', request( 'per_page', request( 'perpage', 10 ) ) );
+        if ( $perPage < 1 ) {
+            $perPage = 10;
+        }
+        if ( $perPage > 500 ) {
+            $perPage = 500;
+        }
+
         $orders = Order::searchProduct()
             ->where( 'vendor_id', auth()->user()->id )
             ->with( ['affiliator:id,name,email', 'vendor:id,name', 'product:id,name', 'orderDetails'] )
             ->latest()
-            ->paginate( 10 )
+            ->paginate( $perPage )
             ->withQueryString();
 
         $orders->getCollection()->transform( function ( $order ) {
