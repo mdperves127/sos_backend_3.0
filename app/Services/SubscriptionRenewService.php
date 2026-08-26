@@ -42,12 +42,11 @@ class SubscriptionRenewService {
             }
         }
 
-        $subscriptionid  = $validatedData['package_id'];
-        $trxid           = uniqid();
+        $subscriptionid   = $validatedData['package_id'];
+        $trxid            = uniqid();
         $getsubscription  = Subscription::on( 'mysql' )->find( $subscriptionid );
-        $subscriptiondue = ( SubscriptionDueService::subscriptiondue( auth()->id() ) - SubscriptionDueService::membership_credit( auth()->id(), $subscriptionid ) );
-        $getusertype     = userrole( $user->role_as );
-        $servicecreated  = VendorService::where( 'user_id', auth()->id() )->count();
+        $getusertype      = userrole( $user->role_as );
+        $servicecreated   = VendorService::where( 'user_id', auth()->id() )->count();
 
         if ( $getusertype == 'vendor' ) {
             $productcreated   = Product::where( 'user_id', auth()->id() )->count();
@@ -83,12 +82,11 @@ class SubscriptionRenewService {
             }
         }
 
-        $totalprice = $getsubscription->subscription_amount + $subscriptiondue;
-        $couponResult = self::applyCoupon( $totalprice );
-        if ( $couponResult instanceof \Illuminate\Http\JsonResponse ) {
-            return $couponResult;
+        $pricing = self::calculateRenewPayable( $getsubscription->subscription_amount, auth()->id(), $subscriptionid );
+        if ( $pricing instanceof \Illuminate\Http\JsonResponse ) {
+            return $pricing;
         }
-        $totalprice = $couponResult;
+        $totalprice = $pricing['payable'];
 
         // 100% / full coupon cover — complete renew without charging.
         if ( (float) $totalprice <= 0 ) {
@@ -148,7 +146,6 @@ class SubscriptionRenewService {
         $trxid           = uniqid();
         $getsubscription = Subscription::on( 'mysql' )->find( $subscriptionid );
         $entityId        = $tenant->id;
-        $subscriptiondue = ( SubscriptionDueService::subscriptiondue( $entityId ) - SubscriptionDueService::membership_credit( $entityId, $subscriptionid ) );
         // Tenant: map type (merchant=vendor, dropshipper=affiliate) - tenant users don't have role_as
         $getusertype     = ( $tenant->type ?? 'merchant' ) === 'dropshipper' ? 'affiliate' : 'vendor';
         // vendor_services is in central DB (mysql) with tenant_id - not in tenant DB
@@ -188,12 +185,11 @@ class SubscriptionRenewService {
             }
         }
 
-        $totalprice = $getsubscription->subscription_amount + $subscriptiondue;
-        $couponResult = self::applyCoupon( $totalprice );
-        if ( $couponResult instanceof \Illuminate\Http\JsonResponse ) {
-            return $couponResult;
+        $pricing = self::calculateRenewPayable( $getsubscription->subscription_amount, $entityId, $subscriptionid );
+        if ( $pricing instanceof \Illuminate\Http\JsonResponse ) {
+            return $pricing;
         }
-        $totalprice = $couponResult;
+        $totalprice = $pricing['payable'];
 
         // 100% / full coupon cover — complete renew without charging wallet or gateway.
         if ( (float) $totalprice <= 0 ) {
@@ -282,8 +278,49 @@ class SubscriptionRenewService {
     }
 
     /**
-     * Apply coupon discount. Returns totalprice or JsonResponse on validation failure.
-     * 100% / full-cover coupons are allowed and result in payable 0.
+     * Match UI renew math:
+     * 1) apply coupon on package price
+     * 2) add previous due
+     * 3) subtract previous membership credit
+     * 4) payable = max(0, result)
+     *
+     * @return array{package_amount: float, due: float, credit: float, after_coupon: float, coupon_discount: float, payable: float}|\Illuminate\Http\JsonResponse
+     */
+    protected static function calculateRenewPayable( $packageAmount, $entityId, $packageId )
+    {
+        $packageAmount = (float) convertfloat( (string) $packageAmount );
+        $due           = (float) convertfloat( (string) SubscriptionDueService::subscriptiondue( $entityId ) );
+        $credit        = (float) convertfloat( (string) SubscriptionDueService::membership_credit( $entityId, $packageId ) );
+
+        $afterCoupon = self::applyCoupon( $packageAmount );
+        if ( $afterCoupon instanceof \Illuminate\Http\JsonResponse ) {
+            return $afterCoupon;
+        }
+
+        $afterCoupon    = (float) convertfloat( (string) $afterCoupon );
+        $couponDiscount = max( 0, $packageAmount - $afterCoupon );
+        $payable        = $afterCoupon + $due - $credit;
+
+        if ( $payable < 0 ) {
+            $payable = 0;
+        }
+
+        // Keep money values stable for wallet / payment history / referral.
+        $payable = round( $payable, 2 );
+
+        return [
+            'package_amount'  => round( $packageAmount, 2 ),
+            'due'             => round( $due, 2 ),
+            'credit'          => round( $credit, 2 ),
+            'after_coupon'    => round( $afterCoupon, 2 ),
+            'coupon_discount' => round( $couponDiscount, 2 ),
+            'payable'         => $payable,
+        ];
+    }
+
+    /**
+     * Apply coupon discount on package price only.
+     * 100% / full-cover coupons are allowed and result in 0.
      */
     protected static function applyCoupon( $totalprice ) {
         if ( request( 'coupon_id' ) == '' || request( 'coupon_id' ) === null ) {
@@ -299,8 +336,6 @@ class SubscriptionRenewService {
             $totalprice = ( $totalprice - ( ( $totalprice / 100 ) * $coupondata->amount ) );
         }
 
-        // Full discount (e.g. 100% off) is valid — payable becomes 0.
-        // Only reject if discount somehow produces a negative amount we cannot interpret.
         if ( $totalprice < 0 ) {
             $totalprice = 0;
         }
@@ -323,6 +358,7 @@ class SubscriptionRenewService {
         $usersubscriptionPlan = Subscription::on( 'mysql' )->find( $userCurrentSubscription->subscription_id );
         $addMonth             = getmonth( $getsubscription->subscription_package_type );
         $entityId             = $entity->id;
+        $paidAmount           = (float) convertfloat( (string) ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ?? 0 ) );
 
         $paymentHistoryContext = $isTenant
             ? [
@@ -337,7 +373,7 @@ class SubscriptionRenewService {
 
         PaymentHistoryService::store(
             $trxid,
-            ( $totalsubscriptionamount ?? $getsubscription->subscription_amount ),
+            $paidAmount,
             $payment_method,
             $transition_type,
             '-',
@@ -349,13 +385,16 @@ class SubscriptionRenewService {
         $getcoupon = Coupon::on( 'mysql' )->find( $couponName ?? 0 );
 
         if ( $getcoupon ) {
-            if ( $getcoupon->commission_type == "flat" ) {
-                $commission = $getcoupon->commission;
+            // Referral bonus is based on the actual paid renew amount (after coupon + credit).
+            if ( $getcoupon->commission_type == 'flat' ) {
+                $commission = (float) convertfloat( (string) $getcoupon->commission );
             } else {
-                $commission = ( ( $totalsubscriptionamount / 100 ) * $getcoupon->commission );
+                $commission = round( ( $paidAmount / 100 ) * (float) convertfloat( (string) $getcoupon->commission ), 2 );
             }
 
-            SubscriptionService::creditCouponReferralBonus( $getcoupon, $commission, $trxid, $couponName );
+            if ( $commission > 0 ) {
+                SubscriptionService::creditCouponReferralBonus( $getcoupon, $commission, $trxid, $couponName );
+            }
         }
 
         $userCurrentSubscription->trxid = $trxid;

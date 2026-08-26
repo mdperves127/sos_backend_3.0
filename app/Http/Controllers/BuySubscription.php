@@ -76,7 +76,8 @@ class BuySubscription extends Controller {
         // }
 
         $subscription = Subscription::on('mysql')->find( $validateData['subscription_id'] );
-        $amount       = $subscription->subscription_amount;
+        $packageAmount = (float) convertfloat( (string) $subscription->subscription_amount );
+        $amount        = $packageAmount;
 
         $coupon = null;
         if ( request( 'coupon_id' ) != '' ) {
@@ -110,6 +111,12 @@ class BuySubscription extends Controller {
                 $amount = 0;
             }
         }
+
+        // Same order as renew UI: coupon on package, then + due - previous credit.
+        $entityId = $entity instanceof Tenant ? $entity->id : ( $entity->id ?? auth()->id() );
+        $due      = (float) convertfloat( (string) SubscriptionDueService::subscriptiondue( $entityId ) );
+        $credit   = (float) convertfloat( (string) SubscriptionDueService::membership_credit( $entityId, $subscription->id ) );
+        $amount   = round( max( 0, (float) $amount + $due - $credit ), 2 );
 
         // 100% / full coupon — activate membership without wallet or gateway charge.
         if ( (float) $amount <= 0 ) {

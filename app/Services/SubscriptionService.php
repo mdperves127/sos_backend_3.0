@@ -148,14 +148,18 @@ class SubscriptionService {
         $getcoupon = Coupon::on('mysql')->find( $coupon );
 
         if ( $getcoupon ) {
-            $totalreffralBonus = colculateflatpercentage( $getcoupon->commission_type, $subscription->subscription_amount, $getcoupon->commission );
-            self::creditCouponReferralBonus(
-                $getcoupon,
-                $totalreffralBonus,
-                $trxid,
-                $coupon,
-                $actingUserId ?? ( Auth::check() ? Auth::id() : null )
-            );
+            // Referral bonus based on actual paid amount (after coupon/credit), not full package price.
+            $paidAmount = (float) convertfloat( (string) ( $totalamount ?? 0 ) );
+            $totalreffralBonus = colculateflatpercentage( $getcoupon->commission_type, $paidAmount, $getcoupon->commission );
+            if ( (float) $totalreffralBonus > 0 ) {
+                self::creditCouponReferralBonus(
+                    $getcoupon,
+                    $totalreffralBonus,
+                    $trxid,
+                    $coupon,
+                    $actingUserId ?? ( Auth::check() ? Auth::id() : null )
+                );
+            }
         }
 
         if ( $entity instanceof User && userrole( $entity->role_as ) == 'user' ) {
