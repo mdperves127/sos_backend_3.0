@@ -252,6 +252,53 @@ class OrderController extends Controller {
     }
 
     /**
+     * Change status for multiple selected product orders.
+     */
+    function productOrderStatusBulk( Request $request ) {
+        $ids = $request->input( 'ids', $request->input( 'order_ids', [] ) );
+        if ( is_string( $ids ) ) {
+            $ids = preg_split( '/\s*,\s*/', $ids ) ?: [];
+        }
+
+        $status = $request->input( 'status' );
+        if ( $status === 'send_to_courier' ) {
+            $status = 'courier';
+        }
+
+        $validator = Validator::make( [
+            'ids'    => $ids,
+            'status' => $status,
+            'reason' => $request->input( 'reason' ),
+        ], [
+            'ids'      => 'required|array|min:1|max:100',
+            'ids.*'    => 'integer|min:1',
+            'status'   => 'required|in:pending,cancel,progress,courier,delivered,return,received,ready,processing',
+            'reason'   => 'required_if:status,cancel,return|nullable|string|max:1000',
+        ], [
+            'ids.required'           => 'Select at least one order.',
+            'ids.min'                => 'Select at least one order.',
+            'ids.max'                => 'You can update at most 100 orders at a time.',
+            'status.required'        => 'Select a status.',
+            'status.in'              => 'Invalid status selected.',
+            'reason.required_if'     => 'Reason is required for cancel/return.',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Validation errors',
+                'errors'  => $validator->messages(),
+            ], 422 );
+        }
+
+        return ProductOrderService::orderStatusBulk(
+            (array) $ids,
+            $status,
+            $request->input( 'reason' )
+        );
+    }
+
+    /**
      * Send order to courier (separate from status=progress).
      */
     function sendToCourier( Request $request, $id ) {

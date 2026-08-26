@@ -70,6 +70,184 @@ class ProductOrderService {
         };
     }
 
+    /**
+     * Allowed next statuses from a given current status (same rules as ProductOrderRequest).
+     *
+     * @return array<string, array<int, string>>
+     */
+    protected static function statusTransitionMap(): array
+    {
+        return [
+            'hold'       => ['cancel', 'pending'],
+            'pending'    => ['cancel', 'received', 'progress', 'courier'],
+            'received'   => ['cancel', 'processing', 'progress', 'courier'],
+            'processing' => ['cancel', 'ready', 'courier'],
+            'ready'      => ['cancel', 'progress', 'courier'],
+            'progress'   => ['courier', 'return', 'delivered'],
+            'courier'    => ['cancel', 'return', 'delivered'],
+        ];
+    }
+
+    /**
+     * Bulk change status for selected product orders.
+     *
+     * @param  array<int, mixed>  $ids
+     */
+    static function orderStatusBulk( array $ids, string $status, ?string $reason = null )
+    {
+        $ids = array_values( array_unique( array_filter( array_map( 'intval', $ids ), static fn ( $id ) => $id > 0 ) ) );
+
+        if ( $ids === [] ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Select at least one order.',
+            ], 422 );
+        }
+
+        if ( count( $ids ) > 100 ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'You can update at most 100 orders at a time.',
+            ], 422 );
+        }
+
+        $status = strtolower( trim( $status ) );
+        if ( $status === 'send_to_courier' ) {
+            $status = 'courier';
+        }
+
+        $allowedTargets = [
+            'pending', 'cancel', 'progress', 'courier', 'delivered',
+            'return', 'received', 'ready', 'processing',
+        ];
+
+        if ( ! in_array( $status, $allowedTargets, true ) ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Invalid order status.',
+            ], 422 );
+        }
+
+        if ( in_array( $status, ['cancel', 'return'], true ) && ( $reason === null || trim( $reason ) === '' ) ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Reason is required for cancel/return.',
+            ], 422 );
+        }
+
+        // Ensure cancel/return handlers can read reason from request().
+        if ( $reason !== null ) {
+            request()->merge( ['reason' => $reason, 'status' => $status] );
+        } else {
+            request()->merge( ['status' => $status] );
+        }
+
+        $transitions = self::statusTransitionMap();
+        $results     = [];
+        $updated     = 0;
+        $skipped     = 0;
+        $failed      = 0;
+
+        foreach ( $ids as $id ) {
+            $order = Order::find( $id );
+
+            if ( ! $order ) {
+                $failed++;
+                $results[] = [
+                    'id'      => $id,
+                    'ok'      => false,
+                    'status'  => 404,
+                    'message' => 'Order not found.',
+                ];
+                continue;
+            }
+
+            if ( auth()->check() ) {
+                $ownerId = function_exists( 'vendorId' ) ? vendorId() : auth()->id();
+                if ( (int) $order->vendor_id !== (int) $ownerId ) {
+                    $failed++;
+                    $results[] = [
+                        'id'       => (int) $order->id,
+                        'order_id' => $order->order_id,
+                        'ok'       => false,
+                        'status'   => 403,
+                        'message'  => 'You are not authorized to update this order.',
+                    ];
+                    continue;
+                }
+            }
+
+            $currentStatus = strtolower( trim( (string) ( $order->status ?? '' ) ) );
+
+            if ( in_array( $currentStatus, ['return', 'delivered', 'cancel'], true ) ) {
+                $skipped++;
+                $results[] = [
+                    'id'              => (int) $order->id,
+                    'order_id'        => $order->order_id,
+                    'ok'              => false,
+                    'status'          => 422,
+                    'current_status'  => $currentStatus,
+                    'message'         => 'Not possible to change current status',
+                ];
+                continue;
+            }
+
+            if ( ! isset( $transitions[$currentStatus] ) || ! in_array( $status, $transitions[$currentStatus], true ) ) {
+                $skipped++;
+                $results[] = [
+                    'id'             => (int) $order->id,
+                    'order_id'       => $order->order_id,
+                    'ok'             => false,
+                    'status'         => 422,
+                    'current_status' => $currentStatus,
+                    'message'        => 'Cannot change status from ' . ( $currentStatus ?: 'unknown' ) . ' to ' . $status,
+                ];
+                continue;
+            }
+
+            $response = self::orderStatus( ['status' => $status, 'reason' => $reason], $order->id );
+            $http     = method_exists( $response, 'getStatusCode' ) ? (int) $response->getStatusCode() : 200;
+            $body     = method_exists( $response, 'getData' ) ? (array) $response->getData( true ) : [];
+            $message  = (string) ( $body['message'] ?? ( $http < 400 ? 'Updated.' : 'Failed.' ) );
+            $ok       = $http < 400 && ( (int) ( $body['status'] ?? $http ) ) < 400;
+
+            // Some helpers return JSON with status:400 and HTTP 200.
+            if ( isset( $body['status'] ) && (int) $body['status'] >= 400 ) {
+                $ok   = false;
+                $http = (int) $body['status'];
+            }
+
+            if ( $ok ) {
+                $updated++;
+            } else {
+                $failed++;
+            }
+
+            $results[] = [
+                'id'             => (int) $order->id,
+                'order_id'       => $order->order_id,
+                'ok'             => $ok,
+                'status'         => $http,
+                'current_status' => $currentStatus,
+                'new_status'     => $ok ? $status : $currentStatus,
+                'message'        => $message,
+            ];
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => "Updated {$updated}, skipped {$skipped}, failed {$failed}.",
+            'target'  => $status,
+            'summary' => [
+                'total'   => count( $ids ),
+                'updated' => $updated,
+                'skipped' => $skipped,
+                'failed'  => $failed,
+            ],
+            'results' => $results,
+        ], $failed > 0 && $updated === 0 && $skipped === 0 ? 400 : 200 );
+    }
+
     static function canceldOrder( $order ) {
 
         DB::beginTransaction();

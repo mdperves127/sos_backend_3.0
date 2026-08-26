@@ -293,6 +293,7 @@ Route::middleware( ['auth:sanctum', 'isAPIVendor'] )->group( function () {
         Route::get( 'order-return', [VendorOrderController::class, 'orderReturn'] );
 
         Route::post( 'order/update/{id}', [VendorOrderController::class, 'productorderstatus'] );
+        Route::post( 'order/status-bulk', [VendorOrderController::class, 'productOrderStatusBulk'] );
         Route::post( 'order/send-to-courier-bulk', [VendorOrderController::class, 'sendToCourierBulk'] );
         Route::post( 'order/send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
         Route::get( 'order/view/{id}', [VendorOrderController::class, 'orderView'] );
