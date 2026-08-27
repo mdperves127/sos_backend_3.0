@@ -89,7 +89,7 @@ class ProductController extends Controller {
                 $tenant = Tenant::find( $product->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'affsellc_' . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -208,7 +208,7 @@ class ProductController extends Controller {
 
             // Configure tenant connection
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName = 'affsellc_' . $tenant->id;
+            $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
             config([
                 'database.connections.' . $connectionName => [
@@ -356,7 +356,7 @@ class ProductController extends Controller {
 
         // Configure tenant connection (use 'tenant' name since models use protected $connection = 'tenant')
         $connectionName = 'tenant_' . $tenant->id;
-        $databaseName = 'affsellc_' . $tenant->id;
+        $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
         // Store original tenant connection config if it exists
         $originalTenantConfig = config('database.connections.tenant');

@@ -39,7 +39,7 @@ class VendorProductController extends Controller
                 $tenant = Tenant::on('mysql')->find( $product->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = 'affsellc_' . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                     // Configure connection
                     config([

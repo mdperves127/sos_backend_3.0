@@ -50,9 +50,11 @@ class TenantService
             // Store password in session for later use
             session(['tenant_password_' . $tenantId => $data['password']]);
             \Log::info('TenantService: About to create tenant', [
-                'tenant_id' => $tenantId,
-                'type' => $data['type'] ?? 'NOT PROVIDED',
-                'all_data' => $data
+                'tenant_id'    => $tenantId,
+                'type'         => $data['type'] ?? 'NOT PROVIDED',
+                'company_name' => $data['company_name'] ?? null,
+                'email'        => $data['email'] ?? null,
+                'domain'       => $data['domain'] ?? null,
             ]);
 
             // Create the tenant without storing password in database.

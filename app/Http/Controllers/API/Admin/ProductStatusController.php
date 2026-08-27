@@ -30,7 +30,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'affsellc_' . $dropshipperTenant->id;
+                $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -111,7 +111,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
+            $merchantDatabaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([
@@ -190,7 +190,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'affsellc_' . $dropshipperTenant->id;
+                $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -271,7 +271,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
+            $merchantDatabaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([
@@ -464,7 +464,7 @@ class ProductStatusController extends Controller
                 'driver'   => 'mysql',
                 'host'     => config( 'database.connections.mysql.host' ),
                 'port'     => config( 'database.connections.mysql.port' ),
-                'database' => 'affsellc_' . $tenant->id,
+                'database' => config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id,
                 'username' => config( 'database.connections.mysql.username' ),
                 'password' => config( 'database.connections.mysql.password' ),
                 'charset'  => 'utf8mb4',
@@ -547,7 +547,7 @@ class ProductStatusController extends Controller
         foreach ( $dropshipperTenants as $dropshipperTenant ) {
             try {
                 $connectionName = 'tenant_' . $dropshipperTenant->id;
-                $databaseName = 'affsellc_' . $dropshipperTenant->id;
+                $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $dropshipperTenant->id;
 
                 // Configure dropshipper tenant connection
                 config([
@@ -628,7 +628,7 @@ class ProductStatusController extends Controller
             }
 
             $merchantConnectionName = 'tenant_' . $merchantTenant->id;
-            $merchantDatabaseName = 'affsellc_' . $merchantTenant->id;
+            $merchantDatabaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $merchantTenant->id;
 
             // Configure merchant tenant connection
             config([

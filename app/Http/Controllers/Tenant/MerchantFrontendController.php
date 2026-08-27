@@ -217,7 +217,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -368,7 +368,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 config( [
                     'database.connections.' . $connectionName => [
@@ -502,7 +502,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -596,7 +596,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -678,7 +678,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 // Configure connection to the tenant database specified by tenant_id
                 config( [
@@ -866,7 +866,7 @@ class MerchantFrontendController extends Controller
                 }
 
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 config( [
                     'database.connections.' . $connectionName => [

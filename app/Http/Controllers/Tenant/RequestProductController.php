@@ -115,7 +115,7 @@ class RequestProductController extends Controller {
         foreach ( $tenants as $tenant ) {
             try {
                 $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = 'affsellc_' . $tenant->id;
+                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
                 config( [
                     'database.connections.' . $connectionName => [
@@ -289,7 +289,7 @@ class RequestProductController extends Controller {
                 'driver'   => 'mysql',
                 'host'     => config( 'database.connections.mysql.host' ),
                 'port'     => config( 'database.connections.mysql.port' ),
-                'database' => 'affsellc_' . $tenant->id,
+                'database' => config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id,
                 'username' => config( 'database.connections.mysql.username' ),
                 'password' => config( 'database.connections.mysql.password' ),
                 'charset'  => 'utf8mb4',

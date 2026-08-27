@@ -123,7 +123,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'affsellc_' . $tenant->id;
+            $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [
@@ -257,7 +257,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'affsellc_' . $tenant->id;
+            $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [
@@ -432,7 +432,7 @@ class ProductStatusController extends Controller {
             }
 
             $connectionName = 'tenant_' . $tenant->id;
-            $databaseName   = 'affsellc_' . $tenant->id;
+            $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
 
             // Configure connection to the tenant database specified by tenant_id
             config( [

@@ -53,7 +53,7 @@ use Spatie\Permission\Models\Role;
 */
 
 Route::get('/', function () {
-    return "API for SOS projec :)";
+    return redirect('https://affsell.com');
 });
 
 // EPS browser return (also used when frontend proxies /eps-return.html here)

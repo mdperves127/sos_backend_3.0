@@ -19,8 +19,6 @@ class LowStockNotification extends Notification
      */
     public function __construct($product, $user)
     {
-
-        dd($product);
         $this->product = $product;
         $this->user = $user;
     }
