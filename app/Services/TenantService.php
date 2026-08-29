@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use Illuminate\Support\Str;
+use App\Mail\TenantWelcomeMail;
 use App\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 
 class TenantService
 {
@@ -166,16 +168,64 @@ class TenantService
                 ];
             }
 
+            $welcomeEmail = $this->sendWelcomeEmail( $tenant, $domain );
+
             return [
                 'tenant' => $tenant,
                 'domain' => $domainModel,
                 'tenant_id' => $tenantId,
                 'domain_url' => $domain,
-                'subdomain' => $subdomainResult
+                'subdomain' => $subdomainResult,
+                'welcome_email' => $welcomeEmail,
             ];
 
         } catch (Exception $e) {
             throw new Exception('Failed to create tenant: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send welcome email after successful tenant registration.
+     * Failures are logged only — registration must still succeed.
+     *
+     * @return array{sent: bool, error: string|null}
+     */
+    protected function sendWelcomeEmail( Tenant $tenant, string $domainUrl ): array
+    {
+        if ( empty( $tenant->email ) ) {
+            \Log::warning( 'TenantService: Welcome email skipped — tenant has no email', [
+                'tenant_id' => $tenant->id,
+            ] );
+
+            return [ 'sent' => false, 'error' => 'Tenant has no email address' ];
+        }
+
+        try {
+            Mail::to( $tenant->email )->send( new TenantWelcomeMail(
+                (string) ( $tenant->owner_name ?? '' ),
+                (string) ( $tenant->company_name ?? '' ),
+                (string) $tenant->email,
+                $domainUrl,
+                (string) ( $tenant->type ?? 'dropshipper' ),
+            ) );
+
+            \Log::info( 'TenantService: Welcome email sent', [
+                'tenant_id' => $tenant->id,
+                'email'     => $tenant->email,
+                'mailer'    => config( 'mail.default' ),
+            ] );
+
+            return [ 'sent' => true, 'error' => null ];
+        } catch ( \Throwable $e ) {
+            \Log::error( 'TenantService: Welcome email failed (non-blocking)', [
+                'tenant_id' => $tenant->id,
+                'email'     => $tenant->email,
+                'mailer'    => config( 'mail.default' ),
+                'host'      => config( 'mail.mailers.smtp.host' ),
+                'error'     => $e->getMessage(),
+            ] );
+
+            return [ 'sent' => false, 'error' => $e->getMessage() ];
         }
     }
 

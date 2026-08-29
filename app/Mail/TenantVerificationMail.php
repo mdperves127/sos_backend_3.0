@@ -16,8 +16,8 @@ class TenantVerificationMail extends Mailable
 
     public function build()
     {
-        return $this->subject( 'Tenant Registration Verification Code' )
-            ->view( 'emails.reset_password' )
+        return $this->subject( 'Verify your registration' )
+            ->view( 'emails.tenant_verification' )
             ->with( [
                 'token' => $this->code,
             ] );

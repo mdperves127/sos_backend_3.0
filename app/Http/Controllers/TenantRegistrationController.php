@@ -71,6 +71,8 @@ class TenantRegistrationController extends Controller
                     'email' => $request->email,
                     'phone' => $result['tenant']->phone,
                     'domain_url' => $result['domain_url'],
+                    'welcome_email_sent' => $result['welcome_email']['sent'] ?? false,
+                    'welcome_email_error' => $result['welcome_email']['error'] ?? null,
                     'subdomain' => [
                         'status'  => $result['subdomain']['status'] ?? 0,
                         'message' => $result['subdomain']['message']

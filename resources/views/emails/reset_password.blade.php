@@ -1,36 +1,28 @@
+@extends('emails.layouts.professional', [
+    'title' => 'Password Reset',
+    'heading' => 'Reset your password',
+    'preheader' => 'Your password reset code is ready.',
+])
 
-    <table border="0" cellpadding="0" cellspacing="0" class="heading_block block-3" role="presentation"
-    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+@section('content')
+    <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#334155;">
+        We received a request to reset your password. Use the code below to continue. This code expires shortly for your security.
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
         <tr>
-            <td class="pad">
-                <h3 style="margin: 0; color: #2c2c2c; direction: ltr; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0;">
-                    Verification Code
-                    <br>
+            <td align="center" style="background-color:#f8fafc;border:1px solid #e2e8f0;padding:24px 16px;">
+                <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;">
+                    Reset code
+                </p>
+                <p style="margin:0;font-family:Consolas,'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:6px;color:#392D87;line-height:1.2;">
                     {{ $token }}
-                </h3>
-                <h3>Thanks !</h3>
+                </p>
             </td>
         </tr>
     </table>
 
-    <table border="0" cellpadding="0" cellspacing="0" class="heading_block block-4" role="presentation"
-    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-    <tr>
-        <td class="pad"
-            style="padding-bottom:20px;padding-left:20px;padding-right:20px;padding-top:10px;text-align:center;width:100%;">
-            <h3
-                style="margin: 0; color: #5d5d5d; direction: ltr; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0;">
-
-            </h3>
-        </td>
-    </tr>
-    </table>
-
-    <table border="0" cellpadding="25" cellspacing="0" class="button_block block-5" role="presentation"
-    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-        <tr>
-            <td class="pad">
-
-            </td>
-        </tr>
-    </table>
+    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#64748b;">
+        Enter this code in the app to set a new password. If you did not request a reset, no action is needed.
+    </p>
+@endsection

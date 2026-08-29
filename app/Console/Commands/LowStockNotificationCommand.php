@@ -30,21 +30,24 @@ class LowStockNotificationCommand extends Command
     public function handle()
     {
         $lowStockProducts = Product::where('qty', '<', 1)
-        ->whereHas('product_details', function ($query) {
-            $query->where('status', 1);
-        })
-        ->get();
-
-        return $lowStockProducts;
+            ->whereHas('product_details', function ($query) {
+                $query->where('status', 1);
+            })
+            ->get();
 
         foreach ($lowStockProducts as $product) {
             $users = $product->product_details()->with('user')->get()->pluck('user')->unique();
 
             foreach ($users as $user) {
-                $user->notify(new LowStockNotification($product , $user));
+                if (! $user) {
+                    continue;
+                }
+                $user->notify(new LowStockNotification($product, $user));
             }
         }
 
         $this->info('Low stock notifications sent successfully.');
+
+        return self::SUCCESS;
     }
 }

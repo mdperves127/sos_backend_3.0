@@ -47,8 +47,10 @@ class UserVerifyNotification extends Notification
         //             ->line('Thank you for using our application!');
 
         $user = $this->user;
-        return (new MailMessage)->view('notifications.userVerification', compact('user'))
-            ->subject('Verification Email.');
+
+        return ( new MailMessage )
+            ->subject( 'Verify your email' )
+            ->view( 'emails.user_verification', compact( 'user' ) );
     }
 
     /**

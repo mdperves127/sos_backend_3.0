@@ -40,16 +40,14 @@ class LowStockNotification extends Notification
      * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail( $notifiable )
     {
-        // return (new MailMessage)
-        //             ->line('The introduction to the notification.')
-        //             ->action('Notification Action', url('/'))
-        //             ->line('Thank you for using our application!');
-
-        // return (new MailMessage)
-        // ->subject('Low Stock Notification')
-        // ->line('Product ' . $this->product->name . ' is low in stock. Current stock: ' . $this->product->stock);
+        return ( new MailMessage )
+            ->subject( 'Low stock alert' )
+            ->view( 'emails.low_stock', [
+                'product' => $this->product,
+                'user'    => $this->user,
+            ] );
     }
 
     /**

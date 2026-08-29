@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email template previews</title>
+  <style>
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #e2e8f0; color: #392D87; }
+    .nav { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px; background: #392D87; position: sticky; top: 0; z-index: 2; }
+    .nav button { border: 0; background: #1e293b; color: #e2e8f0; padding: 10px 14px; cursor: pointer; font-size: 13px; }
+    .nav button.active { background: #38bdf8; color: #392D87; font-weight: 700; }
+    .frame-wrap { padding: 24px 16px 48px; }
+    iframe { width: 100%; max-width: 600px; height: 720px; border: 1px solid #94a3b8; background: #fff; display: block; margin: 0 auto; }
+    h1 { margin: 0; padding: 20px 16px 0; font-size: 18px; }
+    p.hint { margin: 6px 16px 0; color: #475569; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Professional email templates</h1>
+  <p class="hint">Open this file in Cursor Simple Browser or any browser. Switch tabs to preview each template.</p>
+  <div class="nav">
+    <button class="active" data-src="reset-password.html">Password reset</button>
+    <button data-src="tenant-verification.html">Tenant registration</button>
+    <button data-src="user-verification.html">User verification</button>
+    <button data-src="tenant-welcome.html">Tenant welcome</button>
+    <button data-src="low-stock.html">Low stock</button>
+  </div>
+  <div class="frame-wrap">
+    <iframe id="preview" title="Email preview" src="reset-password.html"></iframe>
+  </div>
+  <script>
+    const iframe = document.getElementById('preview');
+    document.querySelectorAll('.nav button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        iframe.src = btn.dataset.src;
+      });
+    });
+  </script>
+</body>
+</html>
