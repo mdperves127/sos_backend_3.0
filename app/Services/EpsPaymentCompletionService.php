@@ -46,6 +46,7 @@ class EpsPaymentCompletionService
             in_array( $type, ['recharge', 'recharge-success', 'recharge-success-for-us'], true ) => $this->completeRecharge( $payment, $verification ),
             in_array( $type, ['subscription', 'subscription-success'], true ) => $this->completeSubscription( $payment, $verification ),
             in_array( $type, ['renew', 'renew-success'], true ) => $this->completeRenew( $payment, $verification ),
+            in_array( $type, ['addon', 'addon-success'], true ) => AddonActivationService::completeFromPayment( $payment, $verification ),
             default => throw new RuntimeException( 'Unsupported payment type: ' . ( $type ?: 'unknown' ) ),
         };
     }
@@ -125,10 +126,12 @@ class EpsPaymentCompletionService
                 'recharge',
                 'subscription',
                 'renew',
+                'addon',
                 'recharge-success',
                 'recharge-success-for-us',
                 'subscription-success',
                 'renew-success',
+                'addon-success',
             ] )
             ->where( 'created_at', '>=', now()->subHours( max( 1, $hours ) ) )
             ->orderBy( 'id' )

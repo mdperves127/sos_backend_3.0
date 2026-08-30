@@ -123,7 +123,7 @@ class EpsPaymentService
 
     public static function pollSignature( string $traxId, string $hint ): string
     {
-        $key = trim( (string) config( 'services.eps.hash_key' ), " \t\n\r\0\x0B\"'" );
+        $key = trim( (string) EpsConfig::get( 'hash_key' ), " \t\n\r\0\x0B\"'" );
 
         return hash_hmac( 'sha256', $traxId . '|' . $hint, $key );
     }
@@ -136,6 +136,7 @@ class EpsPaymentService
             str_contains( $type, 'recharge' ) => 'recharge',
             str_contains( $type, 'renew' ) => 'renew',
             str_contains( $type, 'subscription' ) => 'subscription',
+            str_contains( $type, 'addon' ) => 'addon',
             default => null,
         };
     }
@@ -154,12 +155,12 @@ class EpsPaymentService
         }
 
         $body = [
-            'merchantId'            => trim( (string) config( 'services.eps.merchant_id' ) ),
-            'storeId'               => trim( (string) config( 'services.eps.store_id' ) ),
+            'merchantId'            => trim( (string) EpsConfig::get( 'merchant_id' ) ),
+            'storeId'               => trim( (string) EpsConfig::get( 'store_id' ) ),
             'CustomerOrderId'       => self::normalizeTransactionId( (string) ( $params['customer_order_id'] ?? $merchantTransactionId ) ),
             'merchantTransactionId' => $merchantTransactionId,
             // EPS: 1=Web, 2=Android, 3=iOS
-            'transactionTypeId'     => (int) config( 'services.eps.transaction_type_id', 1 ),
+            'transactionTypeId'     => (int) EpsConfig::get( 'transaction_type_id' ),
             'financialEntityId'     => 0,
             'transitionStatusId'    => 0,
             'totalAmount'           => $totalAmount,
@@ -208,7 +209,8 @@ class EpsPaymentService
         if ( ! $response->successful() || ! empty( $data['ErrorMessage'] ) || empty( $data['RedirectURL'] ) ) {
             Log::error( 'EPS initialize failed.', [
                 'status'   => $response->status(),
-                'sandbox'  => (bool) config( 'services.eps.sandbox' ),
+                'sandbox'  => EpsConfig::isSandbox(),
+                'mode'     => EpsConfig::mode(),
                 'endpoint' => self::endpoint( 'initialize' ),
                 'payload'  => collect( $body )->except( [] )->all(),
                 'response' => $data,
@@ -271,6 +273,7 @@ class EpsPaymentService
             'recharge-success'        => 'recharge',
             'subscription-success'    => 'subscription',
             'renew-success'           => 'renew',
+            'addon-success'           => 'addon',
         ];
 
         if ( isset( $centralStoreCallbacks[$callbackPath] ) ) {
@@ -483,7 +486,7 @@ class EpsPaymentService
 
     private static function epsRegisteredHost(): string
     {
-        $base = trim( (string) config( 'services.eps.base_url', 'https://affsell.com' ) );
+        $base = EpsConfig::merchantBaseUrl();
         if ( $base !== '' && ! preg_match( '#^https?://#i', $base ) ) {
             $base = 'https://' . ltrim( $base, '/' );
         }
@@ -523,8 +526,8 @@ class EpsPaymentService
 
         self::ensureConfigured();
 
-        $username = config( 'services.eps.username' );
-        $password = config( 'services.eps.password' );
+        $username = EpsConfig::get( 'username' );
+        $password = EpsConfig::get( 'password' );
 
         $response = Http::timeout( 30 )
             ->withHeaders( ['x-hash' => self::generateHash( $username )] )
@@ -549,7 +552,7 @@ class EpsPaymentService
             );
 
             if ( str_contains( strtolower( $message ), 'error occured' ) ) {
-                $message .= ' Check that EPS_USERNAME, EPS_PASSWORD, EPS_HASH_KEY, EPS_MERCHANT_ID, and EPS_STORE_ID all belong to the same EPS merchant account, and EPS_SANDBOX matches live/sandbox credentials.';
+                $message .= ' Check that EPS credentials for ' . EpsConfig::mode() . ' mode (EPS_' . strtoupper( EpsConfig::mode() ) . '_* or legacy EPS_*) belong to the same EPS merchant account, and EPS_MODE matches those credentials.';
             }
 
             throw new RuntimeException( $message );
@@ -565,7 +568,7 @@ class EpsPaymentService
 
     private static function generateHash( string $value ): string
     {
-        $hashKey = trim( (string) config( 'services.eps.hash_key' ), " \t\n\r\0\x0B\"'" );
+        $hashKey = trim( (string) EpsConfig::get( 'hash_key' ), " \t\n\r\0\x0B\"'" );
 
         return base64_encode( hash_hmac( 'sha512', $value, $hashKey, true ) );
     }
@@ -669,36 +672,26 @@ class EpsPaymentService
         }
 
         $message = filled( $message ) ? (string) $message : $fallback;
-        $mode    = config( 'services.eps.sandbox' ) ? 'sandbox' : 'live';
+        $mode = EpsConfig::mode();
 
         return $message . " [EPS {$mode}, HTTP {$status}]";
     }
 
     private static function ensureConfigured(): void
     {
-        $required = [
-            'EPS_USERNAME'    => config( 'services.eps.username' ),
-            'EPS_PASSWORD'    => config( 'services.eps.password' ),
-            'EPS_HASH_KEY'    => config( 'services.eps.hash_key' ),
-            'EPS_MERCHANT_ID' => config( 'services.eps.merchant_id' ),
-            'EPS_STORE_ID'    => config( 'services.eps.store_id' ),
-        ];
-
-        $missing = array_keys( array_filter( $required, fn ( $value ) => blank( $value ) ) );
-
-        if ( $missing !== [] ) {
-            throw new RuntimeException(
-                'EPS payment gateway is not configured. Add these to .env: ' . implode( ', ', $missing )
-            );
+        if ( EpsConfig::isConfigured() ) {
+            return;
         }
+
+        throw new RuntimeException(
+            'EPS payment gateway is not configured for ' . EpsConfig::mode() . ' mode. Add these to .env: '
+            . implode( ', ', EpsConfig::missingCredentialEnvKeys() )
+        );
     }
 
     private static function endpoint( string $name ): string
     {
-        // Official/community SDKs use sandbox-pgapi (hyphen) for sandbox.
-        $base = config( 'services.eps.sandbox' )
-            ? 'https://sandbox-pgapi.eps.com.bd/v1'
-            : 'https://pgapi.eps.com.bd/v1';
+        $base = EpsConfig::apiBaseUrl();
 
         return match ( $name ) {
             'token'      => $base . '/Auth/GetToken',

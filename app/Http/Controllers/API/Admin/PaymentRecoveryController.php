@@ -3,12 +3,21 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\EpsConfig;
 use App\Services\EpsPaymentCompletionService;
 use Illuminate\Http\Request;
 use Throwable;
 
 class PaymentRecoveryController extends Controller
 {
+    /**
+     * GET /api/admin/payment/gateway-status
+     */
+    public function gatewayStatus()
+    {
+        return $this->responseData( EpsConfig::publicStatus() );
+    }
+
     /**
      * Manually complete a successful EPS payment that never hit the callback
      * (e.g. SPA 404 after bank debit).

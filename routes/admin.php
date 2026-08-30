@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\UserRegisterChartController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
+use App\Http\Controllers\API\Admin\AddonController;
 use App\Http\Controllers\API\Admin\AssignController;
 use App\Http\Controllers\API\Admin\BankController;
 use App\Http\Controllers\API\Admin\BackupController;
@@ -252,6 +253,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'category-status', [DashboardController::class, 'categoryStatus'] );
 
         Route::resource( 'coupons', CouponController::class );
+        Route::resource( 'addons', AddonController::class );
         Route::post( 'coupon-update/{id}', [CouponController::class, 'couponUpdate'] );
         Route::get( 'coupon-users', [CouponController::class, 'couponusers'] );
 
@@ -391,6 +393,7 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
         Route::get( 'backup/{jobId}/download', [BackupController::class, 'downloadJob'] );
 
         // Recover EPS payments that succeeded at the bank but missed the callback
+        Route::get( 'payment/gateway-status', [\App\Http\Controllers\API\Admin\PaymentRecoveryController::class, 'gatewayStatus'] );
         Route::post( 'payment/complete-eps', [\App\Http\Controllers\API\Admin\PaymentRecoveryController::class, 'completeEps'] );
     } );
 

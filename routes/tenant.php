@@ -57,6 +57,7 @@ use App\Http\Controllers\Tenant\ServiceController as TenantServiceController;
 use App\Http\Controllers\Tenant\ServiceOrderController as TenantServiceOrderController;
 use App\Http\Controllers\Tenant\SupportBoxCategoryController;
 use App\Http\Controllers\Tenant\SupportBoxController;
+use App\Http\Controllers\Tenant\TenantAddonController;
 use App\Http\Controllers\Tenant\TenantAuthController;
 use App\Http\Controllers\Tenant\WithdrawController;
 use App\Http\Controllers\Tenant\TenantCouponController;
@@ -631,8 +632,11 @@ Route::middleware( [
             Route::post( 'apply/coupon', [BuySubscription::class, 'coupon'] );
             Route::post( 'buy-subscription', [BuySubscription::class, 'buysubscription'] );
             Route::post( 'renew-subscription', [RenewController::class, 'store'] );
-        });
+        } );
 
+        Route::get( 'tenant-addons', [TenantAddonController::class, 'index'] );
+        Route::get( 'tenant-addons/installed', [TenantAddonController::class, 'installed'] );
+        Route::post( 'tenant-addons/{addon}/activate', [TenantAddonController::class, 'activate'] );
 
         Route::prefix( 'tenant-advertise' )->group( function () {
             Route::get( '/', [AdvertiseController::class, 'index'] );
@@ -666,6 +670,7 @@ Route::middleware( [
         Route::get( 'vendor-subcategories', [SubCategoryController::class, 'SubCategoryIndex'] );
 
         Route::post( 'recharge', [RechargeController::class, 'recharge'] );
+        Route::get( 'payment-gateway/status', [RechargeController::class, 'gatewayStatus'] );
         Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
         Route::get( 'tenant-withdraw-history/{status?}', [WithdrawController::class, 'index'] );

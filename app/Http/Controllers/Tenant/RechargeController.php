@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\RechargeRequest;
 use App\Models\PaymentStore;
 use App\Services\AamarPayService;
+use App\Services\EpsConfig;
 use App\Services\EpsPaymentService;
 use App\Helper\RedirectHelper;
 
@@ -34,6 +35,11 @@ class RechargeController extends Controller
         // return 2;
 
         return AamarPayService::gateway( $total_amount, $trxid, $type, $successurl, $request->tenant_type );
+    }
+
+    function gatewayStatus()
+    {
+        return $this->responseData( EpsConfig::publicStatus() );
     }
 
 

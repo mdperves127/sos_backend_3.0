@@ -40,20 +40,46 @@ return [
     ],
 
     'eps' => [
-        'sandbox'             => filter_var( env( 'EPS_SANDBOX', true ), FILTER_VALIDATE_BOOLEAN ),
-        // MUST match EPS merchant portal BaseUrl exactly (currently affsell.com).
-        'base_url'            => env( 'EPS_BASE_URL', 'https://affsell.com' ),
+        // Primary switch: sandbox | live (legacy EPS_SANDBOX=true|false still works via EpsConfig).
+        'mode'           => env( 'EPS_MODE' ),
+        'legacy_sandbox' => env( 'EPS_SANDBOX' ),
+        // Fallback when mode-specific base URL is not set.
+        'base_url'       => env( 'EPS_BASE_URL', 'https://affsell.com' ),
+        'base_urls'      => [
+            'sandbox' => env( 'EPS_SANDBOX_BASE_URL', env( 'EPS_BASE_URL', 'https://affsell.com' ) ),
+            'live'    => env( 'EPS_LIVE_BASE_URL', env( 'EPS_BASE_URL', 'https://affsell.com' ) ),
+        ],
         // Real Laravel API (auto-complete / recovery).
-        'api_url'             => env( 'EPS_API_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
+        'api_url'       => env( 'EPS_API_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
         // Optional: host under affsell.com that points to Laravel, e.g. pay.affsell.com
-        // If set, recharge/renew return here and credit immediately.
-        'callback_host'       => env( 'EPS_CALLBACK_HOST', '' ),
-        'merchant_id'         => env( 'EPS_MERCHANT_ID' ),
-        'store_id'            => env( 'EPS_STORE_ID' ),
-        'username'            => env( 'EPS_USERNAME' ),
-        'password'            => env( 'EPS_PASSWORD' ),
-        'hash_key'            => env( 'EPS_HASH_KEY' ),
-        'transaction_type_id' => (int) env( 'EPS_TRANSACTION_TYPE_ID', 1 ),
+        'callback_host' => env( 'EPS_CALLBACK_HOST', '' ),
+        'credentials'   => [
+            'sandbox' => [
+                'username'            => env( 'EPS_SANDBOX_USERNAME' ),
+                'password'            => env( 'EPS_SANDBOX_PASSWORD' ),
+                'hash_key'            => env( 'EPS_SANDBOX_HASH_KEY' ),
+                'merchant_id'         => env( 'EPS_SANDBOX_MERCHANT_ID' ),
+                'store_id'            => env( 'EPS_SANDBOX_STORE_ID' ),
+                'transaction_type_id' => (int) env( 'EPS_SANDBOX_TRANSACTION_TYPE_ID', env( 'EPS_TRANSACTION_TYPE_ID', 1 ) ),
+            ],
+            'live' => [
+                'username'            => env( 'EPS_LIVE_USERNAME' ),
+                'password'            => env( 'EPS_LIVE_PASSWORD' ),
+                'hash_key'            => env( 'EPS_LIVE_HASH_KEY' ),
+                'merchant_id'         => env( 'EPS_LIVE_MERCHANT_ID' ),
+                'store_id'            => env( 'EPS_LIVE_STORE_ID' ),
+                'transaction_type_id' => (int) env( 'EPS_LIVE_TRANSACTION_TYPE_ID', env( 'EPS_TRANSACTION_TYPE_ID', 1 ) ),
+            ],
+            // Shared fallback when mode-specific vars are empty (backward compatible).
+            'legacy' => [
+                'username'            => env( 'EPS_USERNAME' ),
+                'password'            => env( 'EPS_PASSWORD' ),
+                'hash_key'            => env( 'EPS_HASH_KEY' ),
+                'merchant_id'         => env( 'EPS_MERCHANT_ID' ),
+                'store_id'            => env( 'EPS_STORE_ID' ),
+                'transaction_type_id' => (int) env( 'EPS_TRANSACTION_TYPE_ID', 1 ),
+            ],
+        ],
     ],
 
     'steadfast' => [
