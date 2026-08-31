@@ -637,6 +637,7 @@ Route::middleware( [
         Route::get( 'tenant-addons', [TenantAddonController::class, 'index'] );
         Route::get( 'tenant-addons/installed', [TenantAddonController::class, 'installed'] );
         Route::post( 'tenant-addons/{addon}/activate', [TenantAddonController::class, 'activate'] );
+        Route::post( 'tenant-addons/{addon}/deactivate', [TenantAddonController::class, 'deactivate'] );
 
         Route::prefix( 'tenant-advertise' )->group( function () {
             Route::get( '/', [AdvertiseController::class, 'index'] );

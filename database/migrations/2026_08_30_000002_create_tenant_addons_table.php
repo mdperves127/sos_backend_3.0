@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal( 'price_paid', 12, 2 )->default( 0 );
             $table->string( 'payment_method' )->nullable();
             $table->string( 'trxid' )->nullable();
-            $table->enum( 'status', ['pending', 'active', 'cancelled'] )->default( 'pending' );
+            $table->enum( 'status', ['pending', 'active', 'inactive', 'cancelled'] )->default( 'pending' );
             $table->timestamp( 'activated_at' )->nullable();
             $table->softDeletes();
             $table->timestamps();

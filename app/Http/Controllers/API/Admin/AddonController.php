@@ -15,7 +15,7 @@ class AddonController extends Controller
 
     public function index( Request $request ): JsonResponse
     {
-        $query = Addon::query()->latest();
+        $query = Addon::query()->with( 'features' )->latest();
 
         if ( $request->filled( 'addon_type' ) ) {
             $query->where( 'addon_type', $request->input( 'addon_type' ) );
@@ -23,10 +23,6 @@ class AddonController extends Controller
 
         if ( $request->filled( 'for_tenant' ) ) {
             $query->where( 'for_tenant', $request->input( 'for_tenant' ) );
-        }
-
-        if ( $request->filled( 'type' ) ) {
-            $query->where( 'type', $request->input( 'type' ) );
         }
 
         $perPage = min( max( (int) $request->input( 'per_page', 10 ), 1 ), 100 );
@@ -39,17 +35,19 @@ class AddonController extends Controller
 
     public function store( AddonRequest $request ): JsonResponse
     {
-        $data = $request->safe()->except( ['photo'] );
+        $data = $request->safe()->except( ['photo', 'features'] );
 
         if ( $request->hasFile( 'photo' ) ) {
             $data['photo'] = fileUpload( $request->file( 'photo' ), self::PHOTO_PATH );
         }
 
-        Addon::create( $data );
+        $addon = Addon::create( $data );
+        $this->syncFeatures( $addon, $request->input( 'features', [] ) );
 
         return response()->json( [
             'status'  => 200,
             'message' => 'Addon created successfully.',
+            'data'    => $addon->load( 'features' ),
         ] );
     }
 
@@ -57,13 +55,13 @@ class AddonController extends Controller
     {
         return response()->json( [
             'status' => 200,
-            'data'   => $addon,
+            'data'   => $addon->load( 'features' ),
         ] );
     }
 
     public function update( AddonRequest $request, Addon $addon ): JsonResponse
     {
-        $data = $request->safe()->except( ['photo'] );
+        $data = $request->safe()->except( ['photo', 'features'] );
 
         if ( $request->hasFile( 'photo' ) ) {
             $this->deletePhoto( $addon->photo );
@@ -72,9 +70,14 @@ class AddonController extends Controller
 
         $addon->update( $data );
 
+        if ( $request->has( 'features' ) ) {
+            $this->syncFeatures( $addon, $request->input( 'features', [] ) );
+        }
+
         return response()->json( [
             'status'  => 200,
             'message' => 'Addon updated successfully.',
+            'data'    => $addon->load( 'features' ),
         ] );
     }
 
@@ -99,6 +102,22 @@ class AddonController extends Controller
 
         if ( File::exists( $path ) ) {
             File::delete( $path );
+        }
+    }
+
+    /**
+     * @param  array<int, array{key: string, value: string, visibility: string}>  $features
+     */
+    private function syncFeatures( Addon $addon, array $features ): void
+    {
+        $addon->features()->delete();
+
+        foreach ( $features as $feature ) {
+            $addon->features()->create( [
+                'key'        => $feature['key'],
+                'value'      => $feature['value'],
+                'visibility' => $feature['visibility'],
+            ] );
         }
     }
 }

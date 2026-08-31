@@ -41,7 +41,7 @@ class EpsConfig
     public static function apiBaseUrl(): string
     {
         return self::isSandbox()
-            ? 'https://sandbox-pgapi.eps.com.bd/v1'
+            ? 'https://sandboxpgapi.eps.com.bd/v1'
             : 'https://pgapi.eps.com.bd/v1';
     }
 

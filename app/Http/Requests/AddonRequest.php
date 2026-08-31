@@ -24,9 +24,13 @@ class AddonRequest extends FormRequest
             'photo'       => $photoRules,
             'addon_type'  => ['required', 'in:membership,system'],
             'price'       => ['required', 'numeric', 'min:0'],
-            'for_tenant'  => ['required', 'in:dropshipper,merchant'],
-            'type'        => ['required', 'in:number,string,yes,no'],
-            'description' => ['nullable', 'string'],
+            'for_tenant'       => ['required', 'in:dropshipper,merchant'],
+            'short_description'=> ['nullable', 'string', 'max:500'],
+            'description'      => ['nullable', 'string'],
+            'features'         => ['nullable', 'array'],
+            'features.*.key'   => ['required', 'string', 'max:255'],
+            'features.*.value' => ['required', 'string', 'max:255'],
+            'features.*.visibility' => ['required', 'in:private,public'],
         ];
     }
 

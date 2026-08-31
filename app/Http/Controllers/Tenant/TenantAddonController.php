@@ -26,6 +26,7 @@ class TenantAddonController extends Controller
             ->all();
 
         $query = Addon::on( 'mysql' )
+            ->with( 'features' )
             ->where( 'for_tenant', $tenantType )
             ->latest( 'id' );
 
@@ -35,8 +36,18 @@ class TenantAddonController extends Controller
 
         $addons = $query->get()->map( function ( Addon $addon ) use ( $activeIds ) {
             $row = $addon->toArray();
-            $row['is_active'] = in_array( $addon->id, $activeIds, true );
+            $isActive = in_array( $addon->id, $activeIds, true );
+            $row['is_active'] = $isActive;
             $row['is_free']   = (float) $addon->price <= 0;
+            $row['features']  = $addon->features
+                ->when( ! $isActive, fn ( $features ) => $features->where( 'visibility', 'public' ) )
+                ->values()
+                ->map( fn ( $feature ) => [
+                    'key'        => $feature->key,
+                    'value'      => $feature->value,
+                    'visibility' => $feature->visibility,
+                ] )
+                ->all();
 
             return $row;
         } );
@@ -102,17 +113,25 @@ class TenantAddonController extends Controller
             ], 409 );
         }
 
+        $inactive = AddonActivationService::findInactiveForTenant( tenant()->id, $addon->id );
+        if ( $inactive ) {
+            $installation = AddonActivationService::reactivateFromInactive(
+                $inactive,
+                (int) auth()->id(),
+                $request->input( 'value' )
+            );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Addon reactivated successfully.',
+                'data'    => $installation,
+            ] );
+        }
+
         $price          = (float) $addon->price;
         $paymentMethod  = $request->input( 'payment_method' );
         $value          = $request->input( 'value' );
         $userId         = (int) auth()->id();
-
-        if ( in_array( $addon->type, ['number', 'string'], true ) && blank( $value ) ) {
-            return response()->json( [
-                'status'  => 422,
-                'message' => 'Value is required for this addon.',
-            ], 422 );
-        }
 
         // Free addon — activate immediately.
         if ( $price <= 0 ) {
@@ -178,6 +197,36 @@ class TenantAddonController extends Controller
                 'message' => $e->getMessage(),
             ], 500 );
         }
+    }
+
+    /**
+     * Deactivate an active addon (sets status to inactive; does not uninstall).
+     */
+    public function deactivate( Addon $addon ): JsonResponse
+    {
+        $tenantType = $this->tenantTypeOrFail();
+
+        if ( $addon->for_tenant !== $tenantType ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Addon not available for this tenant type.',
+            ], 404 );
+        }
+
+        try {
+            $installation = AddonActivationService::deactivate( tenant()->id, $addon->id );
+        } catch ( \Throwable $e ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => $e->getMessage(),
+            ], 404 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Addon deactivated successfully.',
+            'data'    => $installation,
+        ] );
     }
 
     private function tenantTypeOrFail(): string

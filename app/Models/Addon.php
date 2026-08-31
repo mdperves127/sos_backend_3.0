@@ -23,4 +23,9 @@ class Addon extends Model
     {
         return $this->hasMany( TenantInstalledAddon::class );
     }
+
+    public function features(): HasMany
+    {
+        return $this->hasMany( AddonFeature::class );
+    }
 }

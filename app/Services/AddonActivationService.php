@@ -18,12 +18,7 @@ class AddonActivationService
      */
     public static function resolveValue( Addon $addon, ?string $requestedValue ): string
     {
-        return match ( $addon->type ) {
-            'yes'    => 'yes',
-            'no'     => 'no',
-            'number' => (string) ( is_numeric( $requestedValue ) ? $requestedValue : '1' ),
-            default  => (string) ( $requestedValue ?? '' ),
-        };
+        return (string) ( $requestedValue ?? '' );
     }
 
     public static function isActiveForTenant( string $tenantId, int $addonId ): bool
@@ -44,6 +39,59 @@ class AddonActivationService
             ->exists();
     }
 
+    public static function findInactiveForTenant( string $tenantId, int $addonId ): ?TenantInstalledAddon
+    {
+        return TenantInstalledAddon::on( 'mysql' )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'addon_id', $addonId )
+            ->where( 'status', 'inactive' )
+            ->latest( 'id' )
+            ->first();
+    }
+
+    public static function findActiveForTenant( string $tenantId, int $addonId ): ?TenantInstalledAddon
+    {
+        return TenantInstalledAddon::on( 'mysql' )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'addon_id', $addonId )
+            ->where( 'status', 'active' )
+            ->first();
+    }
+
+    /**
+     * Mark an active addon as inactive (keeps installation record).
+     */
+    public static function deactivate( string $tenantId, int $addonId ): TenantInstalledAddon
+    {
+        $installation = self::findActiveForTenant( $tenantId, $addonId );
+
+        if ( ! $installation ) {
+            throw new RuntimeException( 'Active addon installation not found.' );
+        }
+
+        $installation->update( ['status' => 'inactive'] );
+
+        return $installation->fresh();
+    }
+
+    /**
+     * Re-enable a previously deactivated addon without charging again.
+     */
+    public static function reactivateFromInactive(
+        TenantInstalledAddon $installation,
+        ?int $userId,
+        ?string $value
+    ): TenantInstalledAddon {
+        $installation->update( [
+            'user_id'      => $userId,
+            'value'        => $value ?? $installation->value,
+            'status'       => 'active',
+            'activated_at' => now(),
+        ] );
+
+        return $installation->fresh();
+    }
+
     /**
      * Activate addon immediately (free or after wallet / gateway payment).
      */
@@ -59,13 +107,36 @@ class AddonActivationService
     ): TenantInstalledAddon {
         $resolvedValue = self::resolveValue( $addon, $value );
 
+        $existing = TenantInstalledAddon::on( 'mysql' )
+            ->where( 'tenant_id', $tenant->id )
+            ->where( 'addon_id', $addon->id )
+            ->whereIn( 'status', ['inactive', 'cancelled'] )
+            ->latest( 'id' )
+            ->first();
+
+        if ( $existing ) {
+            $existing->update( [
+                'user_id'        => $userId,
+                'addon_name'     => $addon->name,
+                'addon_type'     => $addon->addon_type,
+                'value'          => $resolvedValue,
+                'price_paid'     => $pricePaid > 0 ? $pricePaid : $existing->price_paid,
+                'payment_method' => $paymentMethod,
+                'trxid'          => $trxid,
+                'status'         => $status,
+                'activated_at'   => $status === 'active' ? now() : null,
+            ] );
+
+            return $existing->fresh();
+        }
+
         $installation = TenantInstalledAddon::on( 'mysql' )->create( [
             'tenant_id'      => $tenant->id,
             'addon_id'       => $addon->id,
             'user_id'        => $userId,
             'addon_name'     => $addon->name,
             'addon_type'     => $addon->addon_type,
-            'value_type'     => $addon->type,
+            'value_type'     => 'string',
             'value'          => $resolvedValue,
             'price_paid'     => $pricePaid,
             'payment_method' => $paymentMethod,
