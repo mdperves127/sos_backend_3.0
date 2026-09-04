@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\User;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicApiCache;
 use App\Models\CampaignCategory;
 use App\Models\Category;
 use App\Models\ConversionLocation;
@@ -12,18 +13,22 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsController extends Controller {
     public function index() {
-        $settings = DB::table( 'settings' )->where( 'deleted_at', null )->first();
-        $pageUrl  = request( 'page_url' );
+        $pageUrl = (string) request( 'page_url', '' );
 
-        $seo = $pageUrl
-            ? DB::table( 'seo' )->where( 'page_url', $pageUrl )->get()
-            : DB::table( 'seo' )->get();
+        $settings = PublicApiCache::remember( 'settings:' . md5( $pageUrl ), function () use ( $pageUrl ) {
+            $row = DB::table( 'settings' )->where( 'deleted_at', null )->first();
+            $seo = $pageUrl !== ''
+                ? DB::table( 'seo' )->where( 'page_url', $pageUrl )->get()
+                : DB::table( 'seo' )->get();
 
-        if ( ! $settings ) {
-            $settings = (object) [];
-        }
+            if ( ! $row ) {
+                $row = (object) [];
+            }
 
-        $settings->seo = $seo;
+            $row->seo = $seo;
+
+            return $row;
+        } );
 
         return $this->response( $settings );
     }
@@ -94,7 +99,10 @@ class SettingsController extends Controller {
     }
 
     public function service() {
-        $service = DB::table( 'our_services' )->take( 5 )->where( 'deleted_at', null )->get();
+        $service = PublicApiCache::remember( 'services', function () {
+            return DB::table( 'our_services' )->take( 5 )->where( 'deleted_at', null )->get();
+        } );
+
         return $this->response( $service );
     }
     public function Itservice() {
@@ -108,7 +116,10 @@ class SettingsController extends Controller {
     }
 
     public function testimonial() {
-        $testimonial = DB::table( 'testimonials' )->where( 'deleted_at', null )->get();
+        $testimonial = PublicApiCache::remember( 'testimonials', function () {
+            return DB::table( 'testimonials' )->where( 'deleted_at', null )->get();
+        } );
+
         return $this->response( $testimonial );
     }
 

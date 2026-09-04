@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 class TrustProxies extends Middleware
 {
     /**
-     * The trusted proxies for this application.
+     * Trusted proxies (LiteSpeed/cPanel/CDN). Leave null unless the app
+     * is only reachable through a known reverse proxy.
      *
      * @var array<int, string>|string|null
      */

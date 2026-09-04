@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SettingsRequest;
 use App\Models\Settings;
+use App\Support\PublicApiCache;
 
 class SettingsController extends Controller {
     private const IMAGE_FIELDS = [
@@ -46,6 +47,7 @@ class SettingsController extends Controller {
                 }
             }
             $data->create( $input );
+            PublicApiCache::bump();
             return $this->response( 'Settings Created Successfuly' );
 
         } else {
@@ -58,6 +60,7 @@ class SettingsController extends Controller {
                 }
             }
             $data->update( $input );
+            PublicApiCache::bump();
             return $this->response( 'Settings Updated Successfuly' );
         }
 

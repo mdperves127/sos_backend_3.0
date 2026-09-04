@@ -47,8 +47,8 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/vendor.php'));
 
-            // Tenant routes - load with api prefix and middleware
-            Route::middleware(['throttle:api', \Illuminate\Routing\Middleware\SubstituteBindings::class])
+            // Tenant routes - same API stack as other /api groups (logging + throttle + bindings)
+            Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/tenant.php'));
 
@@ -65,7 +65,25 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(100)->by($request->user()?->id ?: $request->ip());
+            $ip = (string) $request->ip();
+
+            if ( $request->user() ) {
+                $limit = max( 60, (int) env( 'API_RATE_LIMIT_AUTHENTICATED', 300 ) );
+
+                return Limit::perMinute( $limit )->by( 'user:' . $request->user()->id );
+            }
+
+            // Public marketing/storefront GETs are hit by many browsers (and load tests)
+            // from a single NAT/proxy IP. 100/min per IP rejects ~90% of that traffic as 429.
+            if ( $request->isMethod( 'GET' ) ) {
+                $limit = max( 100, (int) env( 'API_RATE_LIMIT_PUBLIC_GET', 12000 ) );
+
+                return Limit::perMinute( $limit )->by( 'ip-get:' . $ip );
+            }
+
+            $writeLimit = max( 20, (int) env( 'API_RATE_LIMIT_WRITE', 120 ) );
+
+            return Limit::perMinute( $writeLimit )->by( 'ip-write:' . $ip );
         });
     }
 }

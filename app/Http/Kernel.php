@@ -16,6 +16,7 @@ class Kernel extends HttpKernel
     protected $middleware = [
         \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\AssignRequestId::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
@@ -39,6 +40,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            \App\Http\Middleware\LogFailedApiRequests::class,
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -80,5 +82,6 @@ class Kernel extends HttpKernel
         'preventTenancyOnAdmin' => \App\Http\Middleware\PreventTenancyOnAdminRoutes::class,
         'adminDatabase' => \App\Http\Middleware\ForceAdminBaseDatabase::class,
         'adminAuth' => \App\Http\Middleware\SimpleSanctumMiddleware::class,
+        'assign.request.id' => \App\Http\Middleware\AssignRequestId::class,
     ];
 }

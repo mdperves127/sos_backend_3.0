@@ -31,13 +31,13 @@ class CpanelDatabaseTenancyBootstrapper extends DatabaseTenancyBootstrapper
         // Force Laravel to use tenant connection by setting config
         config(['database.default' => 'tenant']);
 
-        // Log for debugging
-        \Log::info('Tenancy bootstrapped', [
-            'tenant_id' => $tenant->getTenantKey(),
-            'database_name' => $databaseName,
-            'default_connection' => \DB::getDefaultConnection(),
-            'tenant_connection_database' => \DB::connection('tenant')->getDatabaseName()
-        ]);
+        // Avoid per-request info logs under load (was amplifying I/O at high concurrency).
+        if ( config( 'app.debug' ) ) {
+            \Log::debug( 'Tenancy bootstrapped', [
+                'tenant_id'     => $tenant->getTenantKey(),
+                'database_name' => $databaseName,
+            ] );
+        }
     }
 
     /**
@@ -51,13 +51,6 @@ class CpanelDatabaseTenancyBootstrapper extends DatabaseTenancyBootstrapper
     {
         // Get the actual database name from tenant data if available
         $actualDatabaseName = $tenant->data['tenancy_db_name'] ?? $databaseName;
-
-        \Log::info('Configuring tenant connection', [
-            'tenant_id' => $tenant->getTenantKey(),
-            'provided_database_name' => $databaseName,
-            'actual_database_name' => $actualDatabaseName,
-            'tenant_data' => $tenant->data
-        ]);
 
         // Set the database name and ensure connection isolation
         config([
@@ -83,15 +76,14 @@ class CpanelDatabaseTenancyBootstrapper extends DatabaseTenancyBootstrapper
         // Force Laravel to reinitialize the connection with new config
         try {
             \DB::connection('tenant')->getPdo();
-            \Log::info('Tenant database connection successful', [
-                'database_name' => $actualDatabaseName
-            ]);
         } catch (\Exception $e) {
-            // This is expected if the database doesn't exist yet
-            \Log::info('Tenant database connection failed (expected if DB not exists)', [
-                'database_name' => $actualDatabaseName,
-                'error' => $e->getMessage()
-            ]);
+            // Expected if the tenant database does not exist yet
+            if ( config( 'app.debug' ) ) {
+                \Log::debug( 'Tenant database connection failed', [
+                    'database_name' => $actualDatabaseName,
+                    'error'         => $e->getMessage(),
+                ] );
+            }
         }
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicApiCache;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
@@ -196,52 +197,30 @@ class MerchantFrontendController extends Controller
         $sizeId = $request->get('size_id');
 
         if(tenant()->type == 'dropshipper') {
-            // Step 1: Get all ProductDetails from current tenant's database
             $allProductDetails = ProductDetails::where('status', 1)->get();
-
-            // Step 2: For each ProductDetails, get tenant_id and load product from that tenant's database
             $products = collect();
 
-            foreach ( $allProductDetails as $productDetail ) {
-                // Get tenant_id from ProductDetails record (this is the merchant tenant ID)
-                $storedTenantId = $productDetail->tenant_id;
-
-                if ( !$storedTenantId || !$productDetail->product_id ) {
+            foreach ( $allProductDetails->groupBy( 'tenant_id' ) as $storedTenantId => $details ) {
+                if ( ! $storedTenantId ) {
                     continue;
                 }
 
-                // Lookup tenant from central database
-                $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
-                if ( !$tenant ) {
+                $connectionName = $this->configureMerchantConnection( (string) $storedTenantId );
+                if ( ! $connectionName ) {
                     continue;
                 }
 
-                $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                $productIds = $details->pluck( 'product_id' )->filter()->unique()->values();
+                if ( $productIds->isEmpty() ) {
+                    continue;
+                }
 
-                // Configure connection to the tenant database specified by tenant_id
-                config( [
-                    'database.connections.' . $connectionName => [
-                        'driver'   => 'mysql',
-                        'host'     => config( 'database.connections.mysql.host' ),
-                        'port'     => config( 'database.connections.mysql.port' ),
-                        'database' => $databaseName,
-                        'username' => config( 'database.connections.mysql.username' ),
-                        'password' => config( 'database.connections.mysql.password' ),
-                        'charset'  => 'utf8mb4',
-                        'collation'=> 'utf8mb4_unicode_ci',
-                        'strict'   => false,
-                    ],
-                ] );
-                DB::purge( $connectionName );
-
-                // Build query with filters
                 $productQuery = $this->applyWebsiteVisibleProductFilter(
                     Product::on( $connectionName )
                         ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
+                        ->whereIn( 'id', $productIds )
                 );
 
-                // Apply category filter (support multiple categories)
                 if ( !empty( $categoryIds ) ) {
                     $productQuery->where( function( $q ) use ( $categoryIds ) {
                         $q->whereIn( 'category_id', $categoryIds )
@@ -249,16 +228,13 @@ class MerchantFrontendController extends Controller
                     } );
                 }
 
-                // Apply price range filter
                 if ( $minPrice !== null || $maxPrice !== null ) {
                     $productQuery->where( function( $q ) use ( $minPrice, $maxPrice ) {
-                        // Use discount_price if available, otherwise selling_price
                         $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [$minPrice ?? 0] )
                           ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [$maxPrice ?? 999999999] );
                     } );
                 }
 
-                // Apply color filter (product_variants has product_id, color_id; colors table: colors)
                 if ( $colorId ) {
                     $productQuery->whereExists( function ( $q ) use ( $colorId ) {
                         $q->select( DB::raw( 1 ) )
@@ -269,7 +245,6 @@ class MerchantFrontendController extends Controller
                     } );
                 }
 
-                // Apply size filter (product_variants has product_id, size_id; sizes table: sizes)
                 if ( $sizeId ) {
                     $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
                         $q->select( DB::raw( 1 ) )
@@ -280,17 +255,18 @@ class MerchantFrontendController extends Controller
                     } );
                 }
 
-                // Load product
                 try {
-                    $product = $productQuery->find( $productDetail->product_id );
+                    $found = $productQuery->get()->keyBy( 'id' );
                 } catch ( \Exception $e ) {
-                    // Skip this product if there's an error
                     continue;
                 }
 
-                if ( $product ) {
-                    $this->attachDropshipperProductMeta( $product, $productDetail );
-                    $products->push( $product );
+                foreach ( $details as $productDetail ) {
+                    $product = $found->get( $productDetail->product_id );
+                    if ( $product ) {
+                        $this->attachDropshipperProductMeta( $product, $productDetail );
+                        $products->push( $product );
+                    }
                 }
             }
 
@@ -480,70 +456,45 @@ class MerchantFrontendController extends Controller
 
     public function categories()
     {
-        if (tenant()->type == 'dropshipper') {
-            // Step 1: Get all ProductDetails from current tenant's database
-            $allProductDetails = ProductDetails::where('status', 1)->get();
+        $tenantId = (string) tenant()->id;
 
-            // Step 2: Collect unique category IDs from products
+        if (tenant()->type == 'dropshipper') {
+            $allProductDetails = ProductDetails::where('status', 1)->get();
             $categoryIds = collect();
 
-            foreach ( $allProductDetails as $productDetail ) {
-                // Get tenant_id from ProductDetails record (this is the merchant tenant ID)
-                $storedTenantId = $productDetail->tenant_id;
-
-                if ( !$storedTenantId || !$productDetail->product_id ) {
+            foreach ( $allProductDetails->groupBy( 'tenant_id' ) as $storedTenantId => $details ) {
+                if ( ! $storedTenantId ) {
                     continue;
                 }
 
-                // Lookup tenant from central database
-                $tenant = Tenant::on( 'mysql' )->find( $storedTenantId );
-                if ( !$tenant ) {
+                $connectionName = $this->configureMerchantConnection( (string) $storedTenantId );
+                if ( ! $connectionName ) {
                     continue;
                 }
 
-                $connectionName = 'tenant_' . $tenant->id;
-                $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                $productIds = $details->pluck( 'product_id' )->filter()->unique()->values();
+                if ( $productIds->isEmpty() ) {
+                    continue;
+                }
 
-                // Configure connection to the tenant database specified by tenant_id
-                config( [
-                    'database.connections.' . $connectionName => [
-                        'driver'   => 'mysql',
-                        'host'     => config( 'database.connections.mysql.host' ),
-                        'port'     => config( 'database.connections.mysql.port' ),
-                        'database' => $databaseName,
-                        'username' => config( 'database.connections.mysql.username' ),
-                        'password' => config( 'database.connections.mysql.password' ),
-                        'charset'  => 'utf8mb4',
-                        'collation'=> 'utf8mb4_unicode_ci',
-                        'strict'   => false,
-                    ],
-                ] );
-                DB::purge( $connectionName );
-
-                // Get market_place_category_id from the product using DB facade
-                $categoryId = DB::connection( $connectionName )
+                $ids = DB::connection( $connectionName )
                     ->table( 'products' )
-                    ->where( 'id', $productDetail->product_id )
+                    ->whereIn( 'id', $productIds )
                     ->where( 'is_show_website', 1 )
-                    ->value( 'market_place_category_id' );
+                    ->pluck( 'market_place_category_id' );
 
-                if ( $categoryId ) {
-                    $categoryIds->push( $categoryId );
-                }
+                $categoryIds = $categoryIds->merge( $ids );
             }
 
-            // Step 3: Get unique categories from m_p_categories (mysql database)
             $uniqueCategoryIds = $categoryIds->filter()->unique()->values()->toArray();
 
             if ( !empty( $uniqueCategoryIds ) ) {
-                // Query categories from mysql database using DB facade
                 $categoryData = DB::connection( 'mysql' )
                     ->table( 'm_p_categories' )
                     ->whereIn( 'id', $uniqueCategoryIds )
                     ->whereNull( 'deleted_at' )
                     ->get();
 
-                // Convert to MPCategory model instances
                 $categories = $categoryData->map( function( $item ) {
                     $category = new MPCategory();
                     $category->setConnection('mysql');
@@ -555,7 +506,9 @@ class MerchantFrontendController extends Controller
                 $categories = collect();
             }
         } else {
-            $categories = Category::where('status', 'active')->get();
+            $categories = PublicApiCache::remember( 'tenant:' . $tenantId . ':categories', function () {
+                return Category::where('status', 'active')->get();
+            } );
         }
 
         return response()->json($categories);
@@ -763,82 +716,54 @@ class MerchantFrontendController extends Controller
 
     public function cmsFront()
     {
-        $contentServices = ServiceContent::orderBy('order', 'asc')->get();
-        $banners = Banner::orderBy('order', 'asc')->get();
-        $offers = Offer::latest()->get();
-        $cms = CmsSetting::first();
-        $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
+        $tenantId = (string) tenant()->id;
+        $payload = PublicApiCache::remember( 'tenant:' . $tenantId . ':cms', function () {
+            $contentServices = ServiceContent::orderBy('order', 'asc')->get();
+            $banners = Banner::orderBy('order', 'asc')->get();
+            $offers = Offer::latest()->get();
+            $cms = CmsSetting::first();
+            $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
 
-        $website_visits = $package_info?->website_visits;
-        $already_visits = $package_info?->already_visits;
-        $has_website = $package_info?->has_website;
-        $has_custom_domain = $package_info?->has_custom_domain;
+            return [
+                'content_services' => $contentServices,
+                'banners' => $banners,
+                'cms' => $cms,
+                'offers' => $offers,
+                'populer_section_category_id_1' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' ),
+                'populer_section_category_id_2' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' ),
+                'populer_section_category_id_3' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' ),
+                'populer_section_category_id_4' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_4' ),
+                'populer_section_subcategory_id_1' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_1' ),
+                'populer_section_subcategory_id_2' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_2' ),
+                'populer_section_subcategory_id_3' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_3' ),
+                'populer_section_subcategory_id_4' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_4' ),
+                'recomended_category_id_1' => $this->resolveCmsCategory( $cms, 'recomended_category_id_1' ),
+                'recomended_category_id_2' => $this->resolveCmsCategory( $cms, 'recomended_category_id_2' ),
+                'recomended_category_id_3' => $this->resolveCmsCategory( $cms, 'recomended_category_id_3' ),
+                'recomended_category_id_4' => $this->resolveCmsCategory( $cms, 'recomended_category_id_4' ),
+                'recomended_sub_category_id_1' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_1' ),
+                'recomended_sub_category_id_2' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_2' ),
+                'recomended_sub_category_id_3' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_3' ),
+                'recomended_sub_category_id_4' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_4' ),
+                'best_setting_category_id_1' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_1' ),
+                'best_setting_category_id_2' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_2' ),
+                'best_setting_category_id_3' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_3' ),
+                'best_setting_category_id_4' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_4' ),
+                'best_setting_sub_category_id_1' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_1' ),
+                'best_setting_sub_category_id_2' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_2' ),
+                'best_setting_sub_category_id_3' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_3' ),
+                'best_setting_sub_category_id_4' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_4' ),
+                'best_category_id' => $this->resolveCmsCategory( $cms, 'best_category_id' ),
+                'best_sub_category_id' => $this->resolveCmsSubcategory( $cms, 'best_sub_category_id' ),
+                'website_visits' => $package_info?->website_visits,
+                'already_visits' => $package_info?->already_visits,
+                'has_website' => $package_info?->has_website,
+                'has_custom_domain' => $package_info?->has_custom_domain,
+                'tenant_type' => tenant()->type,
+            ];
+        } );
 
-        $populer_section_category_id_1 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' );
-        $populer_section_category_id_2 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' );
-        $populer_section_category_id_3 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' );
-        $populer_section_category_id_4 = $this->resolveCmsCategory( $cms, 'populer_section_category_id_4' );
-        $populer_section_subcategory_id_1 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_1' );
-        $populer_section_subcategory_id_2 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_2' );
-        $populer_section_subcategory_id_3 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_3' );
-        $populer_section_subcategory_id_4 = $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_4' );
-
-        $recomended_category_id_1 = $this->resolveCmsCategory( $cms, 'recomended_category_id_1' );
-        $recomended_category_id_2 = $this->resolveCmsCategory( $cms, 'recomended_category_id_2' );
-        $recomended_category_id_3 = $this->resolveCmsCategory( $cms, 'recomended_category_id_3' );
-        $recomended_category_id_4 = $this->resolveCmsCategory( $cms, 'recomended_category_id_4' );
-        $recomended_sub_category_id_1 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_1' );
-        $recomended_sub_category_id_2 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_2' );
-        $recomended_sub_category_id_3 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_3' );
-        $recomended_sub_category_id_4 = $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_4' );
-
-        $best_setting_category_id_1 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_1' );
-        $best_setting_category_id_2 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_2' );
-        $best_setting_category_id_3 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_3' );
-        $best_setting_category_id_4 = $this->resolveCmsCategory( $cms, 'best_setting_category_id_4' );
-        $best_setting_sub_category_id_1 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_1' );
-        $best_setting_sub_category_id_2 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_2' );
-        $best_setting_sub_category_id_3 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_3' );
-        $best_setting_sub_category_id_4 = $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_4' );
-        $best_category_id = $this->resolveCmsCategory( $cms, 'best_category_id' );
-        $best_sub_category_id = $this->resolveCmsSubcategory( $cms, 'best_sub_category_id' );
-        return response()->json([
-            'content_services' => $contentServices,
-            'banners' => $banners,
-            'cms' => $cms,
-            'offers' => $offers,
-            'populer_section_category_id_1' => $populer_section_category_id_1,
-            'populer_section_category_id_2' => $populer_section_category_id_2,
-            'populer_section_category_id_3' => $populer_section_category_id_3,
-            'populer_section_category_id_4' => $populer_section_category_id_4,
-            'populer_section_subcategory_id_1' => $populer_section_subcategory_id_1,
-            'populer_section_subcategory_id_2' => $populer_section_subcategory_id_2,
-            'populer_section_subcategory_id_3' => $populer_section_subcategory_id_3,
-            'populer_section_subcategory_id_4' => $populer_section_subcategory_id_4,
-            'recomended_category_id_1' => $recomended_category_id_1,
-            'recomended_category_id_2' => $recomended_category_id_2,
-            'recomended_category_id_3' => $recomended_category_id_3,
-            'recomended_category_id_4' => $recomended_category_id_4,
-            'recomended_sub_category_id_1' => $recomended_sub_category_id_1,
-            'recomended_sub_category_id_2' => $recomended_sub_category_id_2,
-            'recomended_sub_category_id_3' => $recomended_sub_category_id_3,
-            'recomended_sub_category_id_4' => $recomended_sub_category_id_4,
-            'best_setting_category_id_1' => $best_setting_category_id_1,
-            'best_setting_category_id_2' => $best_setting_category_id_2,
-            'best_setting_category_id_3' => $best_setting_category_id_3,
-            'best_setting_category_id_4' => $best_setting_category_id_4,
-            'best_setting_sub_category_id_1' => $best_setting_sub_category_id_1,
-            'best_setting_sub_category_id_2' => $best_setting_sub_category_id_2,
-            'best_setting_sub_category_id_3' => $best_setting_sub_category_id_3,
-            'best_setting_sub_category_id_4' => $best_setting_sub_category_id_4,
-            'best_category_id' => $best_category_id,
-            'best_sub_category_id' => $best_sub_category_id,
-            'website_visits' => $website_visits,
-            'already_visits' => $already_visits,
-            'has_website' => $has_website,
-            'has_custom_domain' => $has_custom_domain,
-            'tenant_type' => tenant()->type,
-        ]);
+        return response()->json( $payload );
     }
 
     public function productsFilter( Request $request, $sub_category_id ) {
@@ -1049,5 +974,34 @@ class MerchantFrontendController extends Controller
             'status' => 200,
             'categories' => $categories,
         ]);
+    }
+
+    private function configureMerchantConnection( string $tenantId ): ?string
+    {
+        $tenant = Tenant::on( 'mysql' )->find( $tenantId );
+        if ( ! $tenant ) {
+            return null;
+        }
+
+        $connectionName = 'tenant_' . $tenant->id;
+        $databaseName   = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+
+        config( [
+            'database.connections.' . $connectionName => [
+                'driver'    => 'mysql',
+                'host'      => config( 'database.connections.mysql.host' ),
+                'port'      => config( 'database.connections.mysql.port' ),
+                'database'  => $databaseName,
+                'username'  => config( 'database.connections.mysql.username' ),
+                'password'  => config( 'database.connections.mysql.password' ),
+                'charset'   => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'strict'    => false,
+            ],
+        ] );
+
+        DB::purge( $connectionName );
+
+        return $connectionName;
     }
 }
