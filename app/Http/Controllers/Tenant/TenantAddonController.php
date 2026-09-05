@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 class TenantAddonController extends Controller
 {
     /**
-     * List addons for the current tenant, filtered by tenant type (dropshipper | merchant).
+     * List addons for the current tenant type, plus shared (for_tenant = all).
      */
     public function index( Request $request ): JsonResponse
     {
@@ -27,7 +27,7 @@ class TenantAddonController extends Controller
 
         $query = Addon::on( 'mysql' )
             ->with( 'features' )
-            ->where( 'for_tenant', $tenantType )
+            ->whereIn( 'for_tenant', [ $tenantType, 'all' ] )
             ->latest( 'id' );
 
         if ( $request->filled( 'addon_type' ) ) {
@@ -92,7 +92,7 @@ class TenantAddonController extends Controller
     {
         $tenantType = $this->tenantTypeOrFail();
 
-        if ( $addon->for_tenant !== $tenantType ) {
+        if ( ! $this->addonAvailableForTenant( $addon, $tenantType ) ) {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'Addon not available for this tenant type.',
@@ -206,7 +206,7 @@ class TenantAddonController extends Controller
     {
         $tenantType = $this->tenantTypeOrFail();
 
-        if ( $addon->for_tenant !== $tenantType ) {
+        if ( ! $this->addonAvailableForTenant( $addon, $tenantType ) ) {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'Addon not available for this tenant type.',
@@ -227,6 +227,11 @@ class TenantAddonController extends Controller
             'message' => 'Addon deactivated successfully.',
             'data'    => $installation,
         ] );
+    }
+
+    private function addonAvailableForTenant( Addon $addon, string $tenantType ): bool
+    {
+        return in_array( $addon->for_tenant, [ $tenantType, 'all' ], true );
     }
 
     private function tenantTypeOrFail(): string
