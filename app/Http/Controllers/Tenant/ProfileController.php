@@ -14,7 +14,12 @@ use App\Models\UserSubscription;
 use App\Models\CmsSetting;
 use App\Models\TenantCustomDomain;
 use App\Models\TenantInstalledAddon;
+use App\Models\Product;
+use App\Models\ProductDetails;
+use App\Models\PosSales;
+use App\Models\VendorService;
 use App\Services\CustomDomainService;
+use Illuminate\Support\Facades\Schema;
 
 class ProfileController extends Controller
 {
@@ -28,6 +33,8 @@ class ProfileController extends Controller
 
         $cmsSetting = CmsSetting::on('tenant')->first(['theme']);
 
+        $usage = $this->tenantSegmentUsage( $usersubscription );
+
         $addons = TenantInstalledAddon::on( 'mysql' )
             ->with( [ 'addon.features' ] )
             ->where( 'tenant_id', tenant()->id )
@@ -37,11 +44,22 @@ class ProfileController extends Controller
             ->flatMap( function ( TenantInstalledAddon $installation ) {
                 return $installation->addon?->features ?? collect();
             } )
-            ->map( fn ( $feature ) => [
-                'key'        => $feature->key,
-                'value'      => $feature->value,
-                'visibility' => $feature->visibility,
-            ] )
+            ->map( function ( $feature ) use ( $usage ) {
+                $key = strtolower( trim( (string) $feature->key ) );
+
+                $row = [
+                    'key'        => $feature->key,
+                    'value'      => $feature->value,
+                    'visibility' => $feature->visibility,
+                ];
+
+                if ( isset( $usage[ $key ] ) ) {
+                    $row['used']  = $usage[ $key ]['used'];
+                    $row['limit'] = $usage[ $key ]['limit'];
+                }
+
+                return $row;
+            } )
             ->values();
 
         return response()->json([
@@ -50,7 +68,141 @@ class ProfileController extends Controller
             'usersubscription' => $usersubscription,
             'cms_setting' => $cmsSetting,
             'addons' => $addons,
+            'usage' => $usage,
         ]);
+    }
+
+    /**
+     * Current tenant usage vs package limits for subscription/addon segments.
+     *
+     * @return array<string, array{used: int, limit: int|null}>
+     */
+    private function tenantSegmentUsage( ?UserSubscription $subscription ): array
+    {
+        $ownerId = vendorId();
+        $userId  = Auth::id();
+
+        $productQtyUsed = 0;
+        $productRequestUsed = 0;
+        $productApproveUsed = 0;
+        $affiliateRequestUsed = 0;
+        $posSaleQtyUsed = 0;
+
+        try {
+            $productQtyUsed = Product::on( 'tenant' )->count();
+            $productRequestUsed = ProductDetails::on( 'tenant' )
+                ->when( $userId, fn ( $q ) => $q->where( 'user_id', $userId ) )
+                ->count();
+            $productApproveUsed = ProductDetails::on( 'tenant' )
+                ->when( $userId, fn ( $q ) => $q->where( 'user_id', $userId ) )
+                ->where( 'status', 1 )
+                ->count();
+            $affiliateRequestUsed = ProductDetails::on( 'tenant' )
+                ->when( $ownerId, fn ( $q ) => $q->where( 'vendor_id', $ownerId ) )
+                ->where( 'status', 1 )
+                ->count();
+
+            if ( Schema::connection( 'tenant' )->hasTable( 'pos_sales' ) ) {
+                $posSaleQtyUsed = PosSales::on( 'tenant' )
+                    ->when( $ownerId, fn ( $q ) => $q->where( 'vendor_id', $ownerId ) )
+                    ->count();
+            }
+        } catch ( \Throwable $e ) {
+            // Tenant tables may be unavailable during partial setup.
+        }
+
+        $serviceCreateUsed = VendorService::on( 'mysql' )
+            ->where( 'tenant_id', tenant()->id )
+            ->count();
+
+        $addonBonus = $this->addonFeatureBonuses( (string) tenant()->id );
+
+        $limit = function ( string $field ) use ( $subscription, $addonBonus ): ?int {
+            if ( ! $subscription ) {
+                return $addonBonus[ $field ] ?? null;
+            }
+
+            $base = $subscription->{$field} ?? null;
+            $base = $base === null ? null : (int) $base;
+            $bonus = (int) ( $addonBonus[ $field ] ?? 0 );
+
+            if ( $base === null && $bonus === 0 ) {
+                return null;
+            }
+
+            return ( $base ?? 0 ) + $bonus;
+        };
+
+        return [
+            'website_visits'    => [
+                'used'  => (int) ( $subscription?->already_visits ?? 0 ),
+                'limit' => $limit( 'website_visits' ),
+            ],
+            'product_request'   => [
+                'used'  => $productRequestUsed,
+                'limit' => $limit( 'product_request' ),
+            ],
+            'product_approve'   => [
+                'used'  => $productApproveUsed,
+                'limit' => $limit( 'product_approve' ),
+            ],
+            'product_qty'       => [
+                'used'  => $productQtyUsed,
+                'limit' => $limit( 'product_qty' ),
+            ],
+            'service_create'    => [
+                'used'  => $serviceCreateUsed,
+                'limit' => $limit( 'service_create' ),
+            ],
+            'pos_sale_qty'      => [
+                'used'  => $posSaleQtyUsed,
+                'limit' => $limit( 'pos_sale_qty' ),
+            ],
+            'affiliate_request' => [
+                'used'  => $affiliateRequestUsed,
+                'limit' => $limit( 'affiliate_request' ),
+            ],
+        ];
+    }
+
+    /**
+     * Sum numeric feature values from active addons for known segment keys.
+     *
+     * @return array<string, int>
+     */
+    private function addonFeatureBonuses( string $tenantId ): array
+    {
+        $keys = [
+            'website_visits',
+            'product_request',
+            'product_approve',
+            'product_qty',
+            'service_create',
+            'pos_sale_qty',
+            'affiliate_request',
+        ];
+
+        $bonuses = array_fill_keys( $keys, 0 );
+
+        $installations = TenantInstalledAddon::on( 'mysql' )
+            ->with( [ 'addon.features' ] )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->get();
+
+        foreach ( $installations as $installation ) {
+            foreach ( $installation->addon?->features ?? [] as $feature ) {
+                $key = strtolower( trim( (string) $feature->key ) );
+                if ( ! array_key_exists( $key, $bonuses ) ) {
+                    continue;
+                }
+                if ( is_numeric( $feature->value ) ) {
+                    $bonuses[ $key ] += max( 0, (int) $feature->value );
+                }
+            }
+        }
+
+        return $bonuses;
     }
 
     public function TenantUpdateProfile(Request $request)
