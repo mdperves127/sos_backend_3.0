@@ -33,7 +33,16 @@ class ProfileController extends Controller
             ->where( 'tenant_id', tenant()->id )
             ->where( 'status', 'active' )
             ->latest( 'activated_at' )
-            ->get();
+            ->get()
+            ->flatMap( function ( TenantInstalledAddon $installation ) {
+                return $installation->addon?->features ?? collect();
+            } )
+            ->map( fn ( $feature ) => [
+                'key'        => $feature->key,
+                'value'      => $feature->value,
+                'visibility' => $feature->visibility,
+            ] )
+            ->values();
 
         return response()->json([
             'status' => 200,
