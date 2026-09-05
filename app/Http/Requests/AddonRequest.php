@@ -25,6 +25,7 @@ class AddonRequest extends FormRequest
             'addon_type'  => ['required', 'in:membership,system'],
             'price'       => ['required', 'numeric', 'min:0'],
             'for_tenant'       => ['required', 'in:dropshipper,merchant,all'],
+            'status'           => ['required', 'in:active,inactive'],
             'short_description'=> ['nullable', 'string', 'max:500'],
             'description'      => ['nullable', 'string'],
             'features'         => ['nullable', 'array'],

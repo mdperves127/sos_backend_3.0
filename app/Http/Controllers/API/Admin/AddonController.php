@@ -25,6 +25,10 @@ class AddonController extends Controller
             $query->where( 'for_tenant', $request->input( 'for_tenant' ) );
         }
 
+        if ( $request->filled( 'status' ) ) {
+            $query->where( 'status', $request->input( 'status' ) );
+        }
+
         // Prefer ?limit= when provided; otherwise fall back to ?per_page= (default 10).
         $pageSize = $request->filled( 'limit' )
             ? (int) $request->input( 'limit' )

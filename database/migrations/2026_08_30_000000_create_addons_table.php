@@ -15,6 +15,7 @@ return new class extends Migration
             $table->enum( 'addon_type', ['membership', 'system'] );
             $table->decimal( 'price', 12, 2 )->default( 0 );
             $table->enum( 'for_tenant', ['dropshipper', 'merchant', 'all'] );
+            $table->enum( 'status', ['active', 'inactive'] )->default( 'active' );
             $table->string( 'short_description' )->nullable();
             $table->text( 'description' )->nullable();
             $table->softDeletes();

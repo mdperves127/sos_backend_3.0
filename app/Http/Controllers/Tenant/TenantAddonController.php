@@ -27,6 +27,7 @@ class TenantAddonController extends Controller
 
         $query = Addon::on( 'mysql' )
             ->with( 'features' )
+            ->where( 'status', 'active' )
             ->whereIn( 'for_tenant', [ $tenantType, 'all' ] )
             ->latest( 'id' );
 
@@ -96,6 +97,13 @@ class TenantAddonController extends Controller
             return response()->json( [
                 'status'  => 404,
                 'message' => 'Addon not available for this tenant type.',
+            ], 404 );
+        }
+
+        if ( $addon->status !== 'active' ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Addon is not active.',
             ], 404 );
         }
 
