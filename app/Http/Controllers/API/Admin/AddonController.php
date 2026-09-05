@@ -25,7 +25,12 @@ class AddonController extends Controller
             $query->where( 'for_tenant', $request->input( 'for_tenant' ) );
         }
 
-        $perPage = min( max( (int) $request->input( 'per_page', 10 ), 1 ), 100 );
+        // Prefer ?limit= when provided; otherwise fall back to ?per_page= (default 10).
+        $pageSize = $request->filled( 'limit' )
+            ? (int) $request->input( 'limit' )
+            : (int) $request->input( 'per_page', 10 );
+
+        $perPage = min( max( $pageSize, 1 ), 100 );
 
         return response()->json( [
             'status' => 200,

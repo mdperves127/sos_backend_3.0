@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string( 'photo' )->nullable();
             $table->enum( 'addon_type', ['membership', 'system'] );
             $table->decimal( 'price', 12, 2 )->default( 0 );
-            $table->enum( 'for_tenant', ['dropshipper', 'merchant'] );
+            $table->enum( 'for_tenant', ['dropshipper', 'merchant', 'all'] );
             $table->string( 'short_description' )->nullable();
             $table->text( 'description' )->nullable();
             $table->softDeletes();
