@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\CmsSetting;
 use App\Models\TenantCustomDomain;
+use App\Models\TenantInstalledAddon;
 use App\Services\CustomDomainService;
 
 class ProfileController extends Controller
@@ -27,11 +28,19 @@ class ProfileController extends Controller
 
         $cmsSetting = CmsSetting::on('tenant')->first(['theme']);
 
+        $addons = TenantInstalledAddon::on( 'mysql' )
+            ->with( [ 'addon.features' ] )
+            ->where( 'tenant_id', tenant()->id )
+            ->where( 'status', 'active' )
+            ->latest( 'activated_at' )
+            ->get();
+
         return response()->json([
             'status' => 200,
             'user' => $user,
             'usersubscription' => $usersubscription,
             'cms_setting' => $cmsSetting,
+            'addons' => $addons,
         ]);
     }
 
