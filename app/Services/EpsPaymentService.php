@@ -13,7 +13,7 @@ class EpsPaymentService
     private static ?string $cachedToken = null;
 
     private static ?Carbon $cachedTokenExpiresAt = null;
-    public static function gateway( float $price, string $traxId, string $type, string $successUrl, string $tenantType ): object
+    public static function gateway( float $price, string $traxId, string $type, string $successUrl, string $tenantType, ?array $customer = null ): object
     {
         self::ensureConfigured();
 
@@ -27,9 +27,15 @@ class EpsPaymentService
             'success_url'             => $successUrl,
             'fail_url'                => $failUrl,
             'cancel_url'              => $cancelUrl,
-            'customer_name'           => $user?->name ?? 'Customer',
-            'customer_email'          => $user?->email ?? 'customer@example.com',
-            'customer_phone'          => $user?->number ?? '01700000000',
+            'customer_name'           => $customer['name']
+                ?? $user?->name
+                ?? 'Customer',
+            'customer_email'          => $customer['email']
+                ?? $user?->email
+                ?? 'customer@example.com',
+            'customer_phone'          => $customer['phone']
+                ?? $user?->number
+                ?? '01700000000',
             'product_name'            => $type,
             'value_a'                 => $type,
             'value_b'                 => $tenantType,
@@ -137,6 +143,7 @@ class EpsPaymentService
             str_contains( $type, 'renew' ) => 'renew',
             str_contains( $type, 'subscription' ) => 'subscription',
             str_contains( $type, 'addon' ) => 'addon',
+            str_contains( $type, 'checkout' ) => 'checkout',
             default => null,
         };
     }

@@ -14,6 +14,7 @@ use App\Http\Controllers\PublicPathaoWebhookController;
 use App\Http\Controllers\PublicRedxWebhookController;
 use App\Http\Controllers\PublicSteadfastWebhookController;
 use App\Http\Controllers\Tenant\AamarpayController as TenantAamarpayController;
+use App\Http\Controllers\Tenant\UddoktaPayController as TenantUddoktaPayController;
 use App\Http\Controllers\AdvertiseController;
 use App\Http\Controllers\API\Admin\AdminAdvertiseController;
 use App\Http\Controllers\API\Admin\TenantMaterialController;
@@ -183,6 +184,14 @@ Route::prefix( 'eps/{tenant}' )->middleware( 'initializeTenancyFromRoute' )->gro
         Route::match( ['get', 'post'], 'fail', [TenantAamarpayController::class, 'fail'] );
         Route::match( ['get', 'post'], 'cancel', [TenantAamarpayController::class, 'cancel'] );
     } );
+} );
+
+// UddoktaPay storefront product checkout callbacks (path tenancy like EPS).
+// Docs: https://uddoktapay.readme.io/reference/overview
+Route::prefix( 'uddoktapay/{tenant}' )->middleware( 'initializeTenancyFromRoute' )->group( function () {
+    Route::match( ['get', 'post'], 'product-checkout-success', [TenantUddoktaPayController::class, 'productCheckoutSuccess'] );
+    Route::match( ['get', 'post'], 'product-checkout-cancel', [TenantUddoktaPayController::class, 'productCheckoutCancel'] );
+    Route::post( 'product-checkout-webhook', [TenantUddoktaPayController::class, 'productCheckoutWebhook'] );
 } );
 
 Route::post( '/contact-store', [ContactController::class, 'store'] );

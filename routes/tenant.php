@@ -19,6 +19,8 @@ use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\AbandonedCartController;
+use App\Http\Controllers\API\FraudCheckController;
 use App\Http\Controllers\API\Vendor\DamageController;
 use App\Http\Controllers\API\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
@@ -258,6 +260,9 @@ Route::middleware( [
             Route::post( 'status-bulk', [VendorOrderController::class, 'productOrderStatusBulk'] );
             Route::post( 'send-to-courier-bulk', [VendorOrderController::class, 'sendToCourierBulk'] );
             Route::post( 'send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
+            Route::get( 'edit/{id}', [VendorOrderController::class, 'editOrder'] );
+            Route::match( ['PUT', 'PATCH', 'POST'], 'update/{id}', [VendorOrderController::class, 'updateOrder'] );
+            Route::get( 'edit-history/{id}', [VendorOrderController::class, 'editHistory'] );
         } );
 
         Route::prefix( 'tenant-product-manual-order' )->group( function () {
@@ -390,6 +395,13 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
             Route::get( 'status/{id}', [CustomerController::class, 'status'] );
         } );
+
+        // Leftover storefront carts (incomplete checkout) for merchant dashboard
+        Route::get( 'tenant-abandoned-cart', [AbandonedCartController::class, 'index'] );
+
+        // Courier fraud check by phone (FraudBD)
+        Route::post( 'fraud-check', [FraudCheckController::class, 'check'] )
+            ->middleware( 'throttle:fraud-check' );
 
         Route::prefix( 'tenant-order-source' )->group( function () {
             Route::get( '/', [SaleOrderResourceController::class, 'index'] );

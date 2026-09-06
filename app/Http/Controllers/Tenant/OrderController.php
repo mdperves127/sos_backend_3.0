@@ -14,7 +14,12 @@ use App\Enums\Status;
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
 use App\Services\TenantCouponService;
+use App\Services\AamarPayService;
+use App\Services\EpsPaymentService;
+use App\Services\UddoktaPayService;
+use App\Helper\RedirectHelper;
 use App\Models\TenantCoupon;
+use App\Models\PaymentStore;
 
 class OrderController extends Controller
 {
@@ -33,7 +38,7 @@ class OrderController extends Controller
         }
 
         $requestedCartId = (int) $request->input( 'cart_id', 0 );
-        $paymentType = $request->input( 'payment_type', 'aamarpay' );
+        $paymentType = $this->normalizePaymentType( $request->input( 'payment_type', 'COD' ) );
         $couponContext = $this->resolveCheckoutCouponContext(
             $request->input( 'coupon_code' ),
             $this->estimateGuestCheckoutTotal( $checkoutEntries, $requestedCartId, $requestDatas, $shippingTemplate ),
@@ -42,6 +47,34 @@ class OrderController extends Controller
         );
         if ( isset( $couponContext['error'] ) ) {
             return responsejson( $couponContext['error'], 'fail' );
+        }
+
+        if ( $this->isGatewayPaymentType( $paymentType ) ) {
+            $prepared = $this->prepareGuestCheckoutsForPayment(
+                $request,
+                $checkoutEntries,
+                $requestedCartId,
+                $requestDatas,
+                $shippingTemplate
+            );
+
+            if ( $prepared['items'] === [] ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => $prepared['failed'][0]['message'] ?? 'Checkout failed',
+                    'failed'  => $prepared['failed'],
+                ], 400 );
+            }
+
+            return $this->initiateFrontendGatewayPayment(
+                $paymentType,
+                $prepared['items'],
+                $prepared['payable'],
+                0,
+                'website-guest',
+                $couponContext,
+                is_array( $shippingTemplate ) ? $shippingTemplate : (array) $shippingTemplate
+            );
         }
 
         $placed = 0;
@@ -55,7 +88,7 @@ class OrderController extends Controller
             $entryDatas = $entry['datas'];
             $createdGuestCart = false;
 
-            if ( !$tenantId ) {
+            if ( ! $tenantId ) {
                 $failed[] = [
                     'cart_id' => $cart?->id,
                     'message' => 'Missing tenant information',
@@ -69,10 +102,10 @@ class OrderController extends Controller
                 $cart = null;
             }
 
-            if ( !$cart ) {
+            if ( ! $cart ) {
                 $productId = $explicitProductId ?: $this->resolveGuestProductId( $request, null, $tenantId, $entryDatas );
 
-                if ( !$productId ) {
+                if ( ! $productId ) {
                     $failed[] = [
                         'message' => 'Product information is missing for guest checkout.',
                     ];
@@ -85,7 +118,7 @@ class OrderController extends Controller
                     fn( $query ) => $query->where( ['id' => $productId, 'status' => 'active'] )
                 );
 
-                if ( !$product ) {
+                if ( ! $product ) {
                     $failed[] = [
                         'message' => 'Product currently not available',
                     ];
@@ -117,7 +150,7 @@ class OrderController extends Controller
                 fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
             );
 
-            if ( !$product ) {
+            if ( ! $product ) {
                 if ( $createdGuestCart ) {
                     $cart->delete();
                 }
@@ -233,7 +266,7 @@ class OrderController extends Controller
         $user = auth()->user();
         $requestDatas = $request->input( 'datas', [] );
         $shippingTemplate = $requestDatas[0] ?? [];
-        $paymentType = $request->input( 'payment_type', 'aamarpay' );
+        $paymentType = $this->normalizePaymentType( $request->input( 'payment_type', 'COD' ) );
 
         $carts = Cart::query()
             ->where( 'user_id', $user->id )
@@ -245,7 +278,7 @@ class OrderController extends Controller
         }
 
         $requestedCart = $carts->firstWhere( 'id', (int) $request->cart_id );
-        if ( !$requestedCart ) {
+        if ( ! $requestedCart ) {
             return responsejson( 'Cart not found or missing tenant information', 'fail' );
         }
 
@@ -259,13 +292,40 @@ class OrderController extends Controller
             return responsejson( $couponContext['error'], 'fail' );
         }
 
+        if ( $this->isGatewayPaymentType( $paymentType ) ) {
+            $prepared = $this->prepareAuthenticatedCheckoutsForPayment(
+                $carts,
+                (int) $request->cart_id,
+                $requestDatas,
+                $shippingTemplate
+            );
+
+            if ( $prepared['items'] === [] ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => $prepared['failed'][0]['message'] ?? 'Checkout failed',
+                    'failed'  => $prepared['failed'],
+                ], 400 );
+            }
+
+            return $this->initiateFrontendGatewayPayment(
+                $paymentType,
+                $prepared['items'],
+                $prepared['payable'],
+                (int) $user->id,
+                'website',
+                $couponContext,
+                is_array( $shippingTemplate ) ? $shippingTemplate : (array) $shippingTemplate
+            );
+        }
+
         $placed = 0;
         $failed = [];
         $couponApplied = false;
         $placedOrderIds = [];
 
         foreach ( $carts as $cart ) {
-            if ( !$cart->tenant_id ) {
+            if ( ! $cart->tenant_id ) {
                 $failed[] = [
                     'cart_id' => $cart->id,
                     'message' => 'Missing tenant information',
@@ -279,7 +339,7 @@ class OrderController extends Controller
                 fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
             );
 
-            if ( !$product ) {
+            if ( ! $product ) {
                 $failed[] = [
                     'cart_id' => $cart->id,
                     'message' => 'Product currently not available',
@@ -1376,5 +1436,462 @@ class OrderController extends Controller
         }
 
         return $total;
+    }
+
+    private function normalizePaymentType( ?string $paymentType ): string
+    {
+        $type = strtolower( trim( (string) $paymentType ) );
+
+        return match ( $type ) {
+            'eps', 'aamarpay' => 'eps',
+            'uddoktapay'      => 'uddoktapay',
+            'my-wallet'       => 'my-wallet',
+            'cod'             => 'COD',
+            default           => $type !== '' ? $type : 'COD',
+        };
+    }
+
+    private function isGatewayPaymentType( string $paymentType ): bool
+    {
+        return in_array( $paymentType, ['eps', 'aamarpay', 'uddoktapay'], true );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $couponContext
+     * @param  array<string, mixed>  $customer
+     */
+    private function initiateFrontendGatewayPayment(
+        string $paymentType,
+        array $items,
+        float $payable,
+        int $userId,
+        string $orderMedia,
+        array $couponContext,
+        array $customer = []
+    ) {
+        if ( $paymentType === 'uddoktapay' ) {
+            return $this->initiateFrontendUddoktaPayPayment(
+                $items,
+                $payable,
+                $userId,
+                $orderMedia,
+                $couponContext,
+                $customer
+            );
+        }
+
+        return $this->initiateFrontendEpsPayment(
+            $items,
+            $payable,
+            $userId,
+            $orderMedia,
+            $couponContext,
+            $customer
+        );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $couponContext
+     * @param  array<string, mixed>  $customer
+     */
+    private function initiateFrontendUddoktaPayPayment(
+        array $items,
+        float $payable,
+        int $userId,
+        string $orderMedia,
+        array $couponContext,
+        array $customer = []
+    ) {
+        if ( $payable <= 0 ) {
+            return responsejson( 'Payable amount must be greater than zero for UddoktaPay payment.', 'fail' );
+        }
+
+        $first = $items[0];
+        $trx   = uniqid( 'udp', true );
+        $trx   = preg_replace( '/[^A-Za-z0-9]/', '', $trx ) ?: uniqid();
+
+        $coupon = $couponContext['coupon'] ?? null;
+        $storefrontTenantId = function_exists( 'tenant' ) && tenant()
+            ? (string) tenant()->id
+            : null;
+
+        if ( ! $storefrontTenantId ) {
+            return responsejson( 'Tenant context is required for UddoktaPay product checkout.', 'fail' );
+        }
+
+        $successUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-success' );
+        $cancelUrl  = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-cancel' );
+        $webhookUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-webhook' );
+
+        try {
+            $gateway = UddoktaPayService::gateway(
+                $payable,
+                $trx,
+                [
+                    'name'  => $customer['name'] ?? null,
+                    'email' => $customer['email'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                ],
+                $successUrl,
+                $cancelUrl,
+                $webhookUrl,
+                [
+                    'tenant_id' => $storefrontTenantId,
+                ]
+            );
+        } catch ( \Throwable $e ) {
+            return responsejson( $e->getMessage(), 'fail' );
+        }
+
+        PaymentStore::on( 'mysql' )->create( [
+            'payment_gateway' => 'uddoktapay',
+            'trxid'           => $trx,
+            'status'          => 'pending',
+            'last_status'     => 'pending',
+            'order_media'     => $orderMedia,
+            'payment_type'    => 'checkout',
+            'info'            => RedirectHelper::appendPaymentReturnUrl( [
+                'cartid'               => $first['cart_id'],
+                'productid'            => $first['product_id'],
+                'totalqty'             => $first['totalqty'],
+                'userid'               => $userId,
+                'datas'                => $first['datas'],
+                'tenant_id'            => $first['tenant_id'],
+                'storefront_tenant_id' => $storefrontTenantId,
+                'placing_tenant_id'    => $storefrontTenantId,
+                'order_media'          => $orderMedia,
+                'checkouts'            => $items,
+                'coupon_id'            => $coupon?->id,
+                'coupon_discount'      => (float) ( $couponContext['discount'] ?? 0 ),
+                'invoice_id'           => $gateway->invoice_id ?? null,
+                'customer'             => [
+                    'name'  => $customer['name'] ?? null,
+                    'email' => $customer['email'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                ],
+            ] ),
+        ] );
+
+        return response()->json( [
+            'status'       => 200,
+            'result'       => $gateway->result ?? 'true',
+            'payment_url'  => $gateway->payment_url ?? null,
+            'payment_type' => 'uddoktapay',
+            'trxid'        => $trx,
+            'amount'       => $payable,
+            'message'      => 'Redirect to UddoktaPay payment gateway.',
+        ] );
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $items
+     * @param  array<string, mixed>  $couponContext
+     * @param  array<string, mixed>  $customer
+     */
+    private function initiateFrontendEpsPayment(
+        array $items,
+        float $payable,
+        int $userId,
+        string $orderMedia,
+        array $couponContext,
+        array $customer = []
+    ) {
+        if ( $payable <= 0 ) {
+            return responsejson( 'Payable amount must be greater than zero for EPS payment.', 'fail' );
+        }
+
+        $first = $items[0];
+        $trx   = uniqid( 'eps', true );
+        $trx   = preg_replace( '/[^A-Za-z0-9]/', '', $trx ) ?: uniqid();
+
+        $coupon = $couponContext['coupon'] ?? null;
+        $storefrontTenantId = function_exists( 'tenant' ) && tenant()
+            ? (string) tenant()->id
+            : null;
+
+        PaymentStore::on( 'mysql' )->create( [
+            'payment_gateway' => 'aamarpay',
+            'trxid'           => $trx,
+            'status'          => 'pending',
+            'last_status'     => 'pending',
+            'order_media'     => $orderMedia,
+            'payment_type'    => 'checkout',
+            'info'            => RedirectHelper::appendPaymentReturnUrl( [
+                // Backward-compatible single-item fields (first checkout).
+                'cartid'               => $first['cart_id'],
+                'productid'            => $first['product_id'],
+                'totalqty'             => $first['totalqty'],
+                'userid'               => $userId,
+                'datas'                => $first['datas'],
+                // Merchant DB for the product/order row.
+                'tenant_id'            => $first['tenant_id'],
+                // Tenant storefront that started checkout (EPS callback + redirect).
+                'storefront_tenant_id' => $storefrontTenantId,
+                'placing_tenant_id'    => $storefrontTenantId,
+                'order_media'          => $orderMedia,
+                'checkouts'            => $items,
+                'coupon_id'            => $coupon?->id,
+                'coupon_discount'      => (float) ( $couponContext['discount'] ?? 0 ),
+                'customer'             => [
+                    'name'  => $customer['name'] ?? null,
+                    'email' => $customer['email'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                ],
+            ] ),
+        ] );
+
+        if ( ! $storefrontTenantId ) {
+            return responsejson( 'Tenant context is required for EPS product checkout.', 'fail' );
+        }
+
+        // Tenant EPS callback only — not /api/user (central/admin) callbacks.
+        $successUrl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
+        $gateway    = AamarPayService::gateway(
+            $payable,
+            $trx,
+            'Product Checkout',
+            $successUrl,
+            'tenant',
+            [
+                'name'  => $customer['name'] ?? null,
+                'email' => $customer['email'] ?? null,
+                'phone' => $customer['phone'] ?? null,
+            ]
+        );
+
+        return response()->json( [
+            'status'       => 200,
+            'result'       => $gateway->result ?? 'true',
+            'payment_url'  => $gateway->payment_url ?? null,
+            'payment_type' => 'eps',
+            'trxid'        => $trx,
+            'amount'       => $payable,
+            'message'      => 'Redirect to EPS payment gateway.',
+        ] );
+    }
+
+    /**
+     * @return array{items: array<int, array<string, mixed>>, payable: float, failed: array<int, array<string, mixed>>}
+     */
+    private function prepareAuthenticatedCheckoutsForPayment(
+        $carts,
+        int $requestedCartId,
+        array $requestDatas,
+        array $shippingTemplate
+    ): array {
+        $items  = [];
+        $failed = [];
+        $payable = 0.0;
+
+        foreach ( $carts as $cart ) {
+            if ( ! $cart->tenant_id ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Missing tenant information',
+                ];
+                continue;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $cart->tenant_id,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( ! $product ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Product currently not available',
+                ];
+                continue;
+            }
+
+            $checkoutDatas = $this->resolveCheckoutDatasForCart(
+                $cart,
+                $requestedCartId,
+                $requestDatas,
+                $shippingTemplate
+            );
+
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
+
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
+
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );
+            if ( $validationError ) {
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => $validationError,
+                ];
+                continue;
+            }
+
+            $lineAdvance = (float) $cart->advancepayment * (float) $totalqty;
+            $lineTotal   = $this->computeLineOrderAmount( $cart, $checkoutDatas, $totalqty );
+            $linePayable = $lineAdvance > 0 ? $lineAdvance : $lineTotal;
+
+            $items[] = [
+                'cart_id'   => $cart->id,
+                'product_id'=> $product->id,
+                'totalqty'  => $totalqty,
+                'tenant_id' => $cart->tenant_id,
+                'datas'     => $checkoutDatas,
+                'payable'   => $linePayable,
+            ];
+            $payable += $linePayable;
+        }
+
+        return [
+            'items'   => $items,
+            'payable' => $payable,
+            'failed'  => $failed,
+        ];
+    }
+
+    /**
+     * @return array{items: array<int, array<string, mixed>>, payable: float, failed: array<int, array<string, mixed>>}
+     */
+    private function prepareGuestCheckoutsForPayment(
+        Request $request,
+        array $checkoutEntries,
+        int $requestedCartId,
+        $requestDatas,
+        array $shippingTemplate
+    ): array {
+        $items   = [];
+        $failed  = [];
+        $payable = 0.0;
+
+        foreach ( $checkoutEntries as $entry ) {
+            $cart       = $entry['cart'];
+            $tenantId   = $entry['tenant_id'];
+            $entryDatas = $entry['datas'];
+            $createdGuestCart = false;
+
+            if ( ! $tenantId ) {
+                $failed[] = [
+                    'cart_id' => $cart?->id,
+                    'message' => 'Missing tenant information',
+                ];
+                continue;
+            }
+
+            $explicitProductId = $this->resolveExplicitGuestProductId( $request, $entryDatas );
+
+            if ( $cart && $explicitProductId && (int) $cart->product_id !== (int) $explicitProductId ) {
+                $cart = null;
+            }
+
+            if ( ! $cart ) {
+                $productId = $explicitProductId ?: $this->resolveGuestProductId( $request, null, $tenantId, $entryDatas );
+
+                if ( ! $productId ) {
+                    $failed[] = [ 'message' => 'Product information is missing for guest checkout.' ];
+                    continue;
+                }
+
+                $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                    $tenantId,
+                    Product::class,
+                    fn( $query ) => $query->where( ['id' => $productId, 'status' => 'active'] )
+                );
+
+                if ( ! $product ) {
+                    $failed[] = [ 'message' => 'Product currently not available' ];
+                    continue;
+                }
+
+                $guestCart = $this->createGuestCheckoutCart(
+                    $request,
+                    $product,
+                    $tenantId,
+                    $entryDatas,
+                    $entry['purchase_type'] ?? null
+                );
+
+                if ( isset( $guestCart['error'] ) ) {
+                    $failed[] = [ 'message' => $guestCart['error'] ];
+                    continue;
+                }
+
+                $cart = $guestCart['cart'];
+                $createdGuestCart = true;
+            }
+
+            $product = CrossTenantQueryService::getSingleRecordFromTenant(
+                $tenantId,
+                Product::class,
+                fn( $query ) => $query->where( ['id' => $cart->product_id, 'status' => 'active'] )
+            );
+
+            if ( ! $product ) {
+                if ( $createdGuestCart ) {
+                    $cart->delete();
+                }
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => 'Product currently not available',
+                ];
+                continue;
+            }
+
+            $checkoutDatas = $createdGuestCart
+                ? $entryDatas->toArray()
+                : $this->resolveGuestCheckoutDatasForCart(
+                    $cart,
+                    $requestedCartId,
+                    $requestDatas,
+                    $shippingTemplate
+                );
+
+            $checkoutDatas = collect( $checkoutDatas )
+                ->map( fn( $data ) => $this->mergeCheckoutPayloadWithCart( $cart, $shippingTemplate, (array) $data ) )
+                ->values()
+                ->all();
+
+            $checkoutDatas = $this->normalizeCheckoutDataVariants(
+                $checkoutDatas,
+                (int) ( $cart->product_qty ?? 0 )
+            );
+
+            $totalqty = $this->resolveCheckoutTotalQty( $checkoutDatas, (int) ( $cart->product_qty ?? 0 ), $cart );
+
+            $validationError = $this->validateCartForCheckout( $cart, $product, $totalqty, $checkoutDatas, true );
+            if ( $validationError ) {
+                if ( $createdGuestCart ) {
+                    $cart->delete();
+                }
+                $failed[] = [
+                    'cart_id' => $cart->id,
+                    'message' => $validationError,
+                ];
+                continue;
+            }
+
+            $lineAdvance = (float) $cart->advancepayment * (float) $totalqty;
+            $lineTotal   = $this->computeLineOrderAmount( $cart, $checkoutDatas, $totalqty );
+            $linePayable = $lineAdvance > 0 ? $lineAdvance : $lineTotal;
+
+            $items[] = [
+                'cart_id'    => $cart->id,
+                'product_id' => $product->id,
+                'totalqty'   => $totalqty,
+                'tenant_id'  => $tenantId,
+                'datas'      => $checkoutDatas,
+                'payable'    => $linePayable,
+            ];
+            $payable += $linePayable;
+        }
+
+        return [
+            'items'   => $items,
+            'payable' => $payable,
+            'failed'  => $failed,
+        ];
     }
 }

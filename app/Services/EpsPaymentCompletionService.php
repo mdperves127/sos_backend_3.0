@@ -47,6 +47,7 @@ class EpsPaymentCompletionService
             in_array( $type, ['subscription', 'subscription-success'], true ) => $this->completeSubscription( $payment, $verification ),
             in_array( $type, ['renew', 'renew-success'], true ) => $this->completeRenew( $payment, $verification ),
             in_array( $type, ['addon', 'addon-success'], true ) => AddonActivationService::completeFromPayment( $payment, $verification ),
+            in_array( $type, ['checkout', 'product-checkout-success', 'product checkout'], true ) => $this->completeProductCheckout( $payment ),
             default => throw new RuntimeException( 'Unsupported payment type: ' . ( $type ?: 'unknown' ) ),
         };
     }
@@ -127,11 +128,13 @@ class EpsPaymentCompletionService
                 'subscription',
                 'renew',
                 'addon',
+                'checkout',
                 'recharge-success',
                 'recharge-success-for-us',
                 'subscription-success',
                 'renew-success',
                 'addon-success',
+                'product-checkout-success',
             ] )
             ->where( 'created_at', '>=', now()->subHours( max( 1, $hours ) ) )
             ->orderBy( 'id' )
@@ -140,7 +143,14 @@ class EpsPaymentCompletionService
             ->filter( function ( PaymentStore $payment ) use ( $tenantId ) {
                 $info = is_array( $payment->info ) ? $payment->info : [];
 
-                return (string) ( $info['tenant_id'] ?? '' ) === (string) $tenantId;
+                $paymentTenant = (string) (
+                    $info['storefront_tenant_id']
+                    ?? $info['placing_tenant_id']
+                    ?? $info['tenant_id']
+                    ?? ''
+                );
+
+                return $paymentTenant === (string) $tenantId;
             } );
 
         foreach ( $payments as $payment ) {
@@ -441,6 +451,113 @@ class EpsPaymentCompletionService
         if ( ( $payload['data'] ?? null ) === 'fail' ) {
             throw new RuntimeException( (string) ( $payload['message'] ?? 'Renew failed' ) );
         }
+    }
+
+    /**
+     * Complete a verified storefront product checkout PaymentStore (EPS / UddoktaPay / etc.).
+     */
+    public function completeStoredProductCheckout( PaymentStore $payment ): string
+    {
+        if ( ( $payment->status ?? null ) === 'completed' ) {
+            return $this->redirectForPayment( $payment, 'Payment already completed' );
+        }
+
+        return $this->completeProductCheckout( $payment );
+    }
+
+    private function completeProductCheckout( PaymentStore $payment ): string
+    {
+        $info = is_array( $payment->info ) ? $payment->info : [];
+
+        $checkouts = [];
+        if ( ! empty( $info['checkouts'] ) && is_array( $info['checkouts'] ) ) {
+            $checkouts = $info['checkouts'];
+        } elseif ( ! empty( $info['cartid'] ) ) {
+            $checkouts = [[
+                'cart_id'    => $info['cartid'],
+                'product_id' => $info['productid'],
+                'totalqty'   => $info['totalqty'],
+                'tenant_id'  => $info['tenant_id'] ?? null,
+                'datas'      => $info['datas'] ?? [],
+            ]];
+        }
+
+        if ( $checkouts === [] ) {
+            throw new RuntimeException( 'Checkout payload missing for product payment.' );
+        }
+
+        $coupon          = null;
+        $couponDiscount  = (float) ( $info['coupon_discount'] ?? 0 );
+        $couponApplied   = false;
+
+        if ( ! empty( $info['coupon_id'] ) ) {
+            $coupon = \App\Models\TenantCoupon::on( 'mysql' )->find( $info['coupon_id'] );
+        }
+
+        $orderMedia = $info['order_media'] ?? $payment->order_media ?? 'website';
+        $userId     = (int) ( $info['userid'] ?? 0 );
+        $placed     = 0;
+        $errors     = [];
+        $paymentLabel = match ( (string) ( $payment->payment_gateway ?? '' ) ) {
+            'uddoktapay' => 'uddoktapay',
+            default      => 'eps',
+        };
+
+        foreach ( $checkouts as $item ) {
+            // Merchant/product tenant DB — never the admin/central connection.
+            $merchantTenantId = $item['tenant_id'] ?? ( $info['tenant_id'] ?? null );
+
+            $response = ProductCheckoutService::store(
+                $item['cart_id'],
+                $item['product_id'],
+                $item['totalqty'],
+                $userId,
+                $item['datas'] ?? [],
+                $paymentLabel,
+                $merchantTenantId,
+                $info['placing_tenant_id'] ?? $info['storefront_tenant_id'] ?? null,
+                $orderMedia,
+                ( ! $couponApplied && $coupon ) ? $coupon : null,
+                ( ! $couponApplied && $coupon ) ? $couponDiscount : 0
+            );
+
+            $payload = method_exists( $response, 'getContent' )
+                ? json_decode( $response->getContent(), true )
+                : null;
+
+            if ( ( $payload['status'] ?? null ) === 200 ) {
+                $placed++;
+                if ( $coupon && ! $couponApplied ) {
+                    $couponApplied = true;
+                }
+                continue;
+            }
+
+            $errors[] = $payload['message'] ?? 'Checkout failed';
+        }
+
+        if ( $placed < 1 ) {
+            throw new RuntimeException( $errors[0] ?? 'Product checkout failed after payment.' );
+        }
+
+        $payment->update( [
+            'status'      => 'completed',
+            'last_status' => 'completed',
+        ] );
+
+        // Always return to the tenant storefront (never admin panel).
+        $storefrontTenantId = $info['storefront_tenant_id']
+            ?? $info['placing_tenant_id']
+            ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null )
+            ?? $info['tenant_id']
+            ?? ( $checkouts[0]['tenant_id'] ?? null );
+
+        $base = rtrim( RedirectHelper::getPaymentRedirectUrl(
+            $storefrontTenantId,
+            $info['return_url'] ?? null
+        ), '/' ) . '/';
+
+        return $base . '?message=' . urlencode( 'Product purchase successfully' );
     }
 
     private function redirectForPayment( PaymentStore $payment, string $message ): string

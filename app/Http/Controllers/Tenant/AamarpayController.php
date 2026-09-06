@@ -76,30 +76,25 @@ class AamarpayController extends Controller
         if ( ! $response ) {
             return redirect( $this->frontendBase() . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::where( 'trxid', $response['mer_txnid'] )->first();
+
+        $data = PaymentStore::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
 
         if ( ! $data ) {
             return redirect( $this->frontendBase() . '?message=Payment not found' );
         }
-        $info = $data->info;
 
-        ProductCheckoutService::store(
-            $info['cartid'],
-            $info['productid'],
-            $info['totalqty'],
-            $info['userid'],
-            $info['datas'],
-            'aamarpay',
-            $info['tenant_id'] ?? null,
-            $info['placing_tenant_id'] ?? null,
-            $info['order_media'] ?? $data->order_media ?? null
-        );
+        if ( ( $data->status ?? null ) === 'completed' ) {
+            return redirect( $this->frontendBase( is_array( $data->info ) ? $data->info : [] )
+                . '?message=' . urlencode( 'Payment already completed' ) );
+        }
 
-        $data->update( ['status' => 'completed', 'last_status' => 'completed'] );
-
-        $user = User::find( $info['userid'] );
-        $path = paymentredirect( $user->role_as );
-        $url  = $this->frontendBase( $info ) . $path . '?message=Product purchase successfully';
+        try {
+            $url = app( EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'checkout' );
+        } catch ( \Throwable $e ) {
+            return redirect( $this->frontendBase( is_array( $data->info ) ? $data->info : [] )
+                . '?message=' . urlencode( $e->getMessage() ) );
+        }
 
         return redirect( $url );
     }

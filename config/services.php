@@ -104,4 +104,19 @@ return [
         'webhook_secret' => env( 'REDX_WEBHOOK_SECRET', '' ),
     ],
 
+    // https://uddoktapay.readme.io/reference/overview
+    'uddoktapay' => [
+        'base_url'          => env( 'UDDOKTAPAY_BASE_URL', 'https://sandbox.uddoktapay.com' ),
+        'api_key'           => env( 'UDDOKTAPAY_API_KEY', '' ),
+        // Public Laravel host used in success/cancel/webhook callback URLs.
+        'callback_base_url' => env( 'UDDOKTAPAY_CALLBACK_BASE_URL', env( 'APP_URL' ) ),
+    ],
+
+    // FraudBD courier fraud check — https://www.fraudbd.com/api-documentation
+    'fraud' => [
+        'api_url' => env( 'FRAUD_API_URL', 'https://fraudbd.com' ),
+        'api_key' => env( 'FRAUD_API_KEY', '' ),
+        'timeout' => (int) env( 'FRAUD_API_TIMEOUT', 20 ),
+    ],
+
 ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Vendor;
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductOrderRequest;
+use App\Http\Requests\OrderEditRequest;
 use App\Models\CourierCredential;
 use App\Models\Customer;
 use App\Models\DeliveryAndPickupAddress;
@@ -16,6 +17,7 @@ use App\Models\ProductVariant;
 use App\Models\CmsSetting;
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\OrderEditService;
 use App\Services\PathaoService;
 use App\Services\ProductOrderService;
 use App\Services\RedxService;
@@ -25,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class OrderController extends Controller {
     //
@@ -834,6 +837,106 @@ class OrderController extends Controller {
             'logo'   => $logo,
             'order'  => $order,
         ] );
+    }
+
+    /**
+     * Merchant order edit payload (unmasked customer fields).
+     */
+    public function editOrder( $id, OrderEditService $orderEditService )
+    {
+        try {
+            $orderEditService->assertCanEdit();
+            $payload = $orderEditService->getEditableOrder( (int) $id, (int) vendorId() );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Order loaded for edit',
+                'data'    => $payload,
+            ] );
+        } catch ( Throwable $e ) {
+            $status = $e->getMessage() === 'Order not found' ? 404 : 403;
+
+            return response()->json( [
+                'status'  => $status,
+                'message' => $e->getMessage(),
+            ], $status === 404 ? 404 : 403 );
+        }
+    }
+
+    /**
+     * Atomically update an existing merchant order + write audit history.
+     */
+    public function updateOrder( OrderEditRequest $request, $id, OrderEditService $orderEditService )
+    {
+        try {
+            $orderEditService->assertCanEdit();
+
+            $order = $orderEditService->update(
+                (int) $id,
+                (int) vendorId(),
+                $request->validated(),
+                (int) Auth::id()
+            );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Order updated successfully.',
+                'data'    => [
+                    'order'  => $order,
+                    'items'  => $orderEditService->resolveCurrentItems( $order ),
+                    'totals' => [
+                        'product_amount'  => (float) ( $order->product_amount ?? 0 ),
+                        'sale_discount'   => (float) ( $order->sale_discount ?? 0 ),
+                        'delivery_charge' => (float) ( $order->delivery_charge ?? 0 ),
+                        'paid_amount'     => (float) ( $order->paid_amount ?? 0 ),
+                        'due_amount'      => (float) ( $order->due_amount ?? 0 ),
+                        'qty'             => (int) ( $order->qty ?? 0 ),
+                    ],
+                ],
+            ] );
+        } catch ( Throwable $e ) {
+            $message = $e->getMessage();
+            $status  = 400;
+
+            if ( $message === 'Order not found' ) {
+                $status = 404;
+            } elseif ( str_contains( $message, 'permission' ) || $message === 'Unauthorized' ) {
+                $status = 403;
+            }
+
+            return response()->json( [
+                'status'  => $status,
+                'message' => $message,
+            ], $status );
+        }
+    }
+
+    /**
+     * Immutable order edit history / audit log.
+     */
+    public function editHistory( $id, OrderEditService $orderEditService )
+    {
+        try {
+            $orderEditService->assertCanEdit();
+            $history = $orderEditService->history(
+                (int) $id,
+                (int) vendorId(),
+                (int) request( 'limit', request( 'per_page', 20 ) )
+            );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Order edit history',
+                'data'    => $history,
+            ] );
+        } catch ( Throwable $e ) {
+            $status = $e->getMessage() === 'Order not found' ? 404 : 403;
+
+            return response()->json( [
+                'status'  => $status,
+                'message' => $e->getMessage(),
+            ], $status === 404 ? 404 : 403 );
+        }
     }
 
 }
