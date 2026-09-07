@@ -12,6 +12,10 @@ use App\Http\Requests\ProductAddToCartRequest;
 use App\Models\CartDetails;
 use App\Models\DeliveryCharge;
 use App\Models\ProductDetails;
+use App\Models\ProductBundle;
+use App\Models\ProductPreOrder;
+use App\Services\ProductPreOrderService;
+use Illuminate\Validation\ValidationException;
 
 
 class CartController extends Controller
@@ -41,7 +45,23 @@ class CartController extends Controller
 
         // $totalqty = collect( request( 'qty' ) )->sum();
 
-        if ( request( 'purchase_type' ) == 'single' || ( request( 'purchase_type' ) == 'bulk' && $getproduct->is_connect_bulk_single == 1 ) ) {
+        $isPreOrder = ProductPreOrderService::isPreOrderProduct( $getproduct );
+        $merchantConnection = null;
+        if ( request( 'tenant_id' ) ) {
+            $merchantTenant = \App\Models\Tenant::on( 'mysql' )->find( request( 'tenant_id' ) );
+            if ( $merchantTenant ) {
+                $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+            }
+        }
+
+        if ( $isPreOrder ) {
+            try {
+                ProductPreOrderService::assertSlotsAvailable( $getproduct, (int) $totalqty, $merchantConnection );
+            } catch ( ValidationException $e ) {
+                $msg = collect( $e->errors() )->flatten()->first() ?: 'Pre-order not available';
+                return responsejson( $msg, 'fail' );
+            }
+        } elseif ( request( 'purchase_type' ) == 'single' || ( request( 'purchase_type' ) == 'bulk' && $getproduct->is_connect_bulk_single == 1 ) ) {
             if ( (int) $getproduct->qty < $totalqty ) {
                 return responsejson( 'Quantity not available', 'fail' );
             }
@@ -101,6 +121,40 @@ class CartController extends Controller
             $totaladvancepayment = $advancepayment * $totalqty;
         }
 
+        $preOrderPaymentType = null;
+        if ( $isPreOrder ) {
+            $settings = null;
+            if ( $merchantConnection ) {
+                $settings = ProductPreOrder::on( $merchantConnection )
+                    ->where( 'product_id', $getproduct->id )
+                    ->where( 'status', 'active' )
+                    ->first();
+            }
+            if ( ! $settings ) {
+                $settings = ProductPreOrderService::activeSettingsForProduct( (int) $getproduct->id );
+            }
+
+            if ( ! $settings ) {
+                return responsejson( 'Pre-order is not available for this product.', 'fail' );
+            }
+
+            try {
+                $resolved = ProductPreOrderService::resolvePayment(
+                    $getproduct,
+                    $settings,
+                    (string) request( 'pre_order_payment', request( 'pre_order_payment_type', 'advance' ) ),
+                    (float) $product_price
+                );
+            } catch ( ValidationException $e ) {
+                $msg = collect( $e->errors() )->flatten()->first() ?: 'Invalid pre-order payment.';
+                return responsejson( $msg, 'fail' );
+            }
+
+            $advancepayment      = $resolved['advance_payment'];
+            $totaladvancepayment = $advancepayment * $totalqty;
+            $preOrderPaymentType = $resolved['payment_type'];
+        }
+
         if ( Cart::where( 'product_id', $product_id )->where( 'user_id', $user_id )->exists() ) {
             return response()->json( [
                 'status'  => 409,
@@ -125,7 +179,8 @@ class CartController extends Controller
                 $totalproductprice,
                 $total_affiliate_commission,
                 $advancepayment,
-                $totaladvancepayment
+                $totaladvancepayment,
+                $preOrderPaymentType
             ) {
                 $cart->user_id                    = $user_id;
                 $cart->product_id                 = $product_id;
@@ -140,6 +195,7 @@ class CartController extends Controller
                 $cart->advancepayment             = $advancepayment;
                 $cart->totaladvancepayment        = $totaladvancepayment;
                 $cart->tenant_id                  = request('tenant_id');
+                $cart->pre_order_payment_type     = $preOrderPaymentType;
             } );
 
             if ( !$cartitem ) {
@@ -185,10 +241,80 @@ class CartController extends Controller
             'message' => 'Added to Cart',
         ] );
     }
+
+    /**
+     * Add an active product bundle to the storefront cart (merchant tenants only).
+     */
+    public function addBundleToCart( Request $request )
+    {
+        if ( ! function_exists( 'tenant' ) || ! tenant() || tenant( 'type' ) !== 'merchant' ) {
+            return response()->json( [
+                'status'  => 403,
+                'message' => 'Bundles are only available on merchant storefronts.',
+            ], 403 );
+        }
+
+        $request->validate( [
+            'bundle_id' => ['required', 'integer', 'min:1'],
+            'qty'       => ['nullable', 'integer', 'min:1'],
+        ] );
+
+        $qty = max( 1, (int) $request->input( 'qty', 1 ) );
+        $bundle = ProductBundle::active()
+            ->with( 'items' )
+            ->find( (int) $request->bundle_id );
+
+        if ( ! $bundle || $bundle->items->count() < 2 ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Bundle not found.',
+            ], 404 );
+        }
+
+        $userId = auth()->id();
+        if ( Cart::where( 'user_id', $userId )->where( 'bundle_id', $bundle->id )->exists() ) {
+            return response()->json( [
+                'status'  => 409,
+                'message' => $bundle->name . ' already added to cart.',
+            ] );
+        }
+
+        $firstProductId = (int) $bundle->items->first()->product_id;
+        $unitPrice      = (float) $bundle->bundle_price;
+
+        $cart = Cart::create( [
+            'user_id'                    => $userId,
+            'product_id'                 => $firstProductId,
+            'bundle_id'                  => $bundle->id,
+            'product_price'              => $unitPrice,
+            'vendor_id'                  => vendorId(),
+            'amount'                     => 0,
+            'category_id'                => $bundle->category_id,
+            'product_qty'                => $qty,
+            'totalproductprice'          => $unitPrice * $qty,
+            'total_affiliate_commission' => 0,
+            'purchase_type'              => 'single',
+            'advancepayment'             => 0,
+            'totaladvancepayment'        => 0,
+            'tenant_id'                  => tenant()->id,
+        ] );
+
+        CartDetails::create( [
+            'cart_id' => $cart->id,
+            'qty'     => $qty,
+        ] );
+
+        return response()->json( [
+            'status'  => 201,
+            'message' => 'Bundle added to Cart',
+            'cart_id' => $cart->id,
+        ] );
+    }
+
     public function cart(Request $request)
     {
         $cart = Cart::where( 'user_id', auth()->id() )
-            ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] )
+            ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit', 'bundle.items.product:id,name,image,sku'] )
             ->get();
 
         if ( $this->isDropshipperStorefront() ) {
@@ -305,7 +431,19 @@ class CartController extends Controller
             ], 422 );
         }
 
-        if ( $cart->purchase_type === 'single' || ( $cart->purchase_type === 'bulk' && $product->is_connect_bulk_single == 1 ) ) {
+        if ( ProductPreOrderService::isPreOrderProduct( $product ) ) {
+            try {
+                $conn = null;
+                $merchantTenant = \App\Models\Tenant::on( 'mysql' )->find( $cart->tenant_id );
+                if ( $merchantTenant ) {
+                    $conn = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+                }
+                ProductPreOrderService::assertSlotsAvailable( $product, $totalqty, $conn );
+            } catch ( ValidationException $e ) {
+                $msg = collect( $e->errors() )->flatten()->first() ?: 'Pre-order not available';
+                return responsejson( $msg, 'fail' );
+            }
+        } elseif ( $cart->purchase_type === 'single' || ( $cart->purchase_type === 'bulk' && $product->is_connect_bulk_single == 1 ) ) {
             if ( (int) $product->qty < $totalqty ) {
                 return responsejson( 'Quantity not available', 'fail' );
             }

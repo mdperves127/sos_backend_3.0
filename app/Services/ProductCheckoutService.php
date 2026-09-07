@@ -15,11 +15,16 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Tenant;
 use App\Models\TenantCoupon;
+use App\Models\ProductBundle;
 use App\Services\CrossTenantQueryService;
 use App\Services\TenantCouponService;
+use App\Services\BundleInventoryService;
 use App\Service\Vendor\ProductVariantService;
+use App\Services\ProductPreOrderService;
+use App\Models\ProductPreOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Class ProductCheckoutService.
@@ -66,6 +71,33 @@ class ProductCheckoutService {
                     ] );
                 }
 
+            $bundle = null;
+            if ( ! empty( $cart->bundle_id ) ) {
+                $bundle = ProductBundle::on( $connectionName )
+                    ->with( 'items' )
+                    ->where( 'id', $cart->bundle_id )
+                    ->where( 'status', 'active' )
+                    ->first();
+
+                if ( ! $bundle ) {
+                    // Same-connection fallback for merchant storefront carts.
+                    $bundle = ProductBundle::with( 'items' )
+                        ->where( 'id', $cart->bundle_id )
+                        ->where( 'status', 'active' )
+                        ->first();
+                }
+
+                if ( ! $bundle || $bundle->items->isEmpty() ) {
+                    return response()->json( [
+                        'status'  => 404,
+                        'message' => 'Bundle not found or inactive',
+                    ] );
+                }
+
+                // Orders.product_id is required — use first component product.
+                $productid = (int) $bundle->items->first()->product_id;
+            }
+
             // Get product from product's tenant database (request tenant - cart->tenant_id)
             $product = CrossTenantQueryService::getSingleRecordFromTenant(
                 $merchantTenantId,
@@ -91,7 +123,14 @@ class ProductCheckoutService {
                 $variants = is_array( $data['variants'] ?? null ) ? $data['variants'] : [];
                 $totalqty = self::resolveLineQuantity( $data, $variants, (int) $totalquantity );
 
-                $is_unlimited = ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) ? 0 : 1;
+                $isPreOrderProduct = ProductPreOrderService::isPreOrderProduct( $product );
+                $preOrderSettings  = null;
+
+                $is_unlimited = $bundle
+                    ? 0
+                    : ( $isPreOrderProduct
+                        ? 1
+                        : ( ( $cart->purchase_type == 'single' || $product->is_connect_bulk_single == 1 ) ? 0 : 1 ) );
 
                 // Get vendor balance from product's tenant database using CrossTenantQueryService connection
                 $vendor_balance = DB::connection($connectionName)->table('users')
@@ -179,6 +218,21 @@ class ProductCheckoutService {
                 $order->city                = $data['city'] ?? null;
                 $order->address             = $data['address'];
                 $order->variants            = $variants;
+                if ( $bundle ) {
+                    $order->variants = array_values( array_merge(
+                        is_array( $variants ) ? $variants : [],
+                        [[
+                            'is_bundle'    => true,
+                            'bundle_id'    => $bundle->id,
+                            'bundle_name'  => $bundle->name,
+                            'bundle_price' => (float) $bundle->bundle_price,
+                            'components'   => $bundle->items->map( fn ( $item ) => [
+                                'product_id' => (int) $item->product_id,
+                                'quantity'   => (int) $item->quantity,
+                            ] )->values()->all(),
+                        ]]
+                    ) );
+                }
                 $order->afi_amount          = $afi_amount;
                 $order->profit_amount       = $profit_amount;
                 $order->product_amount      = $totalAmount;
@@ -189,6 +243,12 @@ class ProductCheckoutService {
                 $order->totaladvancepayment = $totaladvancepayment;
                 $order->is_unlimited        = $is_unlimited;
                 $order->delivery_charge     = $deliveryCharge;
+                $order->paid_amount         = $totaladvancepayment;
+                if ( $isPreOrderProduct && ! $bundle ) {
+                    $order->is_pre_order = true;
+                    $order->pre_order_payment_type = $cart->pre_order_payment_type
+                        ?? ( abs( (float) $cart->advancepayment - (float) $cart->product_price ) < 0.01 ? 'full' : 'advance' );
+                }
                 if ( $saleDiscount > 0 && $tenantCoupon instanceof TenantCoupon ) {
                     $order->sale_discount = $saleDiscount;
                     $order->coupon_code   = $tenantCoupon->code;
@@ -200,19 +260,51 @@ class ProductCheckoutService {
                     $order->tenant_id = $resolvedPlacingTenantId;
                 }
 
-                DB::connection( $connectionName )->transaction( function () use (
-                    $connectionName,
-                    $productid,
-                    $totalqty,
-                    $variants,
-                    $cart,
-                    $product,
-                    $order,
-                    $orderMedia
-                ) {
-                    $order->save();
-                    self::decreaseProductStock( $connectionName, $productid, $totalqty, $variants, $cart, $product, $orderMedia );
-                } );
+                try {
+                    DB::connection( $connectionName )->transaction( function () use (
+                        $connectionName,
+                        $productid,
+                        $totalqty,
+                        $variants,
+                        $cart,
+                        $product,
+                        $order,
+                        $orderMedia,
+                        $bundle,
+                        $isPreOrderProduct,
+                        &$preOrderSettings
+                    ) {
+                        if ( $isPreOrderProduct && ! $bundle ) {
+                            $preOrderSettings = ProductPreOrderService::reserveQuantity(
+                                $connectionName,
+                                (int) $productid,
+                                (int) $totalqty
+                            );
+                            $order->expected_delivery_date = optional( $preOrderSettings->expected_delivery_date )->format( 'Y-m-d' );
+                        }
+
+                        $order->save();
+
+                        if ( $bundle ) {
+                            BundleInventoryService::decrementForSaleOnConnection(
+                                $connectionName,
+                                $bundle,
+                                (int) $totalqty,
+                                (int) ( $product->user_id ?? $product->vendor_id ?? 0 ) ?: null
+                            );
+                        } else {
+                            self::decreaseProductStock( $connectionName, $productid, $totalqty, $variants, $cart, $product, $orderMedia );
+                        }
+                    } );
+                } catch ( ValidationException $e ) {
+                    $message = collect( $e->errors() )->flatten()->first() ?: 'Pre-order checkout failed.';
+
+                    return response()->json( [
+                        'status'  => 400,
+                        'message' => $message,
+                        'errors'  => $e->errors(),
+                    ], 400 );
+                }
 
                 $savedOrders[] = [
                     'id'       => (int) $order->id,
@@ -249,6 +341,10 @@ class ProductCheckoutService {
                     $afi_amount,
                     $orderMedia
                 );
+
+                if ( $isPreOrderProduct && ! $bundle && $customerUserId ) {
+                    ProductPreOrderService::notifyCustomer( (int) $customerUserId, $order, 'placed' );
+                }
             }
 
             $paymentHistoryUserId = $userid > 0 ? $userid : 1;
@@ -399,6 +495,10 @@ class ProductCheckoutService {
     }
 
     private static function shouldDecreaseStock( Cart $cart, object $product, ?string $orderMedia ): bool {
+        if ( ProductPreOrderService::isPreOrderProduct( $product ) ) {
+            return false;
+        }
+
         $purchaseType = trim( (string) ( $cart->purchase_type ?? '' ) );
 
         if ( $purchaseType === '' ) {

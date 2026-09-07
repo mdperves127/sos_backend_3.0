@@ -53,6 +53,16 @@ class Product extends Model {
         return $this->hasMany( Order::class, 'product_id', 'id' );
     }
 
+    public function preOrderSettings()
+    {
+        return $this->hasOne( ProductPreOrder::class, 'product_id' );
+    }
+
+    public function isPreOrderEnabled(): bool
+    {
+        return (string) ( $this->pre_order ?? '0' ) === '1';
+    }
+
     function pendingproduct() {
         return $this->hasOne( PendingProduct::class, 'product_id' );
     }

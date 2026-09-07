@@ -19,6 +19,12 @@ class Kernel extends ConsoleKernel
         $schedule->command( 'command:low-stock' )->everyMinute();
         // Credit EPS payments even if the browser return URL hit the SPA 404.
         $schedule->command( 'eps:complete-pending' )->everyMinute()->withoutOverlapping();
+        // POS partial-payment due reminders (before / due / overdue).
+        $schedule->command( 'pos:due-reminder' )->dailyAt( '09:00' )->withoutOverlapping();
+        // POS installment reminders (before / due / overdue) — separate from due management.
+        $schedule->command( 'pos:installment-reminder' )->dailyAt( '09:05' )->withoutOverlapping();
+        // Pre-order expected delivery reminders for authenticated customers.
+        $schedule->command( 'preorder:delivery-reminder' )->dailyAt( '09:10' )->withoutOverlapping();
     }
 
     /**

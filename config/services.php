@@ -119,4 +119,9 @@ return [
         'timeout' => (int) env( 'FRAUD_API_TIMEOUT', 20 ),
     ],
 
+    // POS due reminders (days before due_date for "before" notification)
+    'pos_due' => [
+        'reminder_days_before' => (int) env( 'POS_DUE_REMINDER_DAYS_BEFORE', 1 ),
+    ],
+
 ];

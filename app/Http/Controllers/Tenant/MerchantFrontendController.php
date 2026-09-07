@@ -28,6 +28,9 @@ use App\Models\News;
 use App\Models\NCategory;
 use App\Models\UserSubscription;
 use App\Models\ProductRating;
+use App\Models\ProductBundle;
+use App\Models\ProductPreOrder;
+use App\Services\ProductPreOrderService;
 
 
 class MerchantFrontendController extends Controller
@@ -121,8 +124,40 @@ class MerchantFrontendController extends Controller
                 $product->setAttribute( 'discount_price', null );
             }
 
+            $this->attachPreOrderMeta( $product );
+
             return $product;
         } )->values();
+    }
+
+    private function attachPreOrderMeta( $product ): void
+    {
+        if ( ! is_object( $product ) || ! isset( $product->id ) ) {
+            return;
+        }
+
+        if ( ! ProductPreOrderService::isPreOrderProduct( $product ) ) {
+            $product->setAttribute( 'is_pre_order', false );
+            $product->setAttribute( 'pre_order_info', null );
+
+            return;
+        }
+
+        $settings = null;
+        if ( method_exists( $product, 'relationLoaded' ) && $product->relationLoaded( 'preOrderSettings' ) ) {
+            $settings = $product->preOrderSettings;
+        } else {
+            $connection = method_exists( $product, 'getConnectionName' )
+                ? $product->getConnectionName()
+                : null;
+            $query = $connection
+                ? ProductPreOrder::on( $connection )
+                : ProductPreOrder::query();
+            $settings = $query->where( 'product_id', $product->id )->first();
+        }
+
+        $product->setAttribute( 'is_pre_order', true );
+        $product->setAttribute( 'pre_order_info', ProductPreOrderService::publicPayload( $settings, $product ) );
     }
 
     private function jsonProducts( $products ) {
@@ -322,6 +357,127 @@ class MerchantFrontendController extends Controller
         return response()->json( $this->paginateProductCollection( $request, $products ) );
     }
 
+    /**
+     * Active product bundles for merchant storefront (not mixed into normal products).
+     */
+    public function bundles( Request $request )
+    {
+        if ( ! function_exists( 'tenant' ) || ! tenant() || tenant( 'type' ) !== 'merchant' ) {
+            return response()->json( [
+                'data' => [],
+                'total' => 0,
+                'message' => 'Bundles are only available on merchant storefronts.',
+            ] );
+        }
+
+        $query = ProductBundle::active()
+            ->with( [
+                'category:id,name',
+                'subcategory:id,name,category_id',
+                'items.product:id,name,image,sku,selling_price,discount_price',
+            ] )
+            ->when( $request->filled( 'category_id' ), function ( $q ) use ( $request ) {
+                $ids = array_filter( array_map( 'trim', explode( ',', (string) $request->get( 'category_id' ) ) ) );
+                if ( $ids !== [] ) {
+                    $q->whereIn( 'category_id', $ids );
+                }
+            } )
+            ->when( $request->filled( 'sub_category_id' ), fn ( $q ) => $q->where( 'subcategory_id', $request->get( 'sub_category_id' ) ) )
+            ->when( $request->filled( 'subcategory_id' ), fn ( $q ) => $q->where( 'subcategory_id', $request->get( 'subcategory_id' ) ) )
+            ->latest();
+
+        $bundles = $query->get()->map( function ( ProductBundle $bundle ) {
+            $regular = $bundle->calculateRegularPrice();
+
+            return [
+                'id'             => $bundle->id,
+                'name'           => $bundle->name,
+                'type'           => 'bundle',
+                'category_id'    => $bundle->category_id,
+                'subcategory_id' => $bundle->subcategory_id,
+                'category'       => $bundle->category,
+                'subcategory'    => $bundle->subcategory,
+                'bundle_price'   => (float) $bundle->bundle_price,
+                'regular_price'  => $regular,
+                'savings'        => round( max( 0, $regular - (float) $bundle->bundle_price ), 2 ),
+                'items'          => $bundle->items->map( function ( $item ) {
+                    $unit = $item->product
+                        ? (float) ( $item->product->discount_price ?: $item->product->selling_price ?: 0 )
+                        : 0;
+
+                    return [
+                        'product_id' => (int) $item->product_id,
+                        'quantity'   => (int) $item->quantity,
+                        'unit_price' => $unit,
+                        'product'    => $item->product ? [
+                            'id'    => $item->product->id,
+                            'name'  => $item->product->name,
+                            'image' => $item->product->image,
+                            'sku'   => $item->product->sku,
+                        ] : null,
+                    ];
+                } )->values(),
+            ];
+        } );
+
+        return response()->json( $this->paginateProductCollection( $request, $bundles ) );
+    }
+
+    public function bundle( $id )
+    {
+        if ( ! function_exists( 'tenant' ) || ! tenant() || tenant( 'type' ) !== 'merchant' ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Bundle not found',
+            ], 404 );
+        }
+
+        $bundle = ProductBundle::active()
+            ->with( [
+                'category:id,name',
+                'subcategory:id,name,category_id',
+                'items.product:id,name,image,sku,selling_price,discount_price',
+            ] )
+            ->find( $id );
+
+        if ( ! $bundle ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Bundle not found',
+            ], 404 );
+        }
+
+        $regular = $bundle->calculateRegularPrice();
+
+        return response()->json( [
+            'status' => 200,
+            'bundle' => [
+                'id'             => $bundle->id,
+                'name'           => $bundle->name,
+                'type'           => 'bundle',
+                'category_id'    => $bundle->category_id,
+                'subcategory_id' => $bundle->subcategory_id,
+                'category'       => $bundle->category,
+                'subcategory'    => $bundle->subcategory,
+                'bundle_price'   => (float) $bundle->bundle_price,
+                'regular_price'  => $regular,
+                'savings'        => round( max( 0, $regular - (float) $bundle->bundle_price ), 2 ),
+                'items'          => $bundle->items->map( function ( $item ) {
+                    $unit = $item->product
+                        ? (float) ( $item->product->discount_price ?: $item->product->selling_price ?: 0 )
+                        : 0;
+
+                    return [
+                        'product_id' => (int) $item->product_id,
+                        'quantity'   => (int) $item->quantity,
+                        'unit_price' => $unit,
+                        'product'    => $item->product,
+                    ];
+                } )->values(),
+            ],
+        ] );
+    }
+
     public function product( Request $request, $slug )
     {
         $reviewConnection = null;
@@ -376,6 +532,7 @@ class MerchantFrontendController extends Controller
                             'productImage',
                             'productdetails',
                             'vendor',
+                            'preOrderSettings',
                             'productVariant.size',
                             'productVariant.unit',
                             'productVariant.color',
@@ -422,6 +579,7 @@ class MerchantFrontendController extends Controller
                     'productImage',
                     'productdetails',
                     'vendor',
+                    'preOrderSettings',
                     'productVariant.size',
                     'productVariant.unit',
                     'productVariant.color',
@@ -446,6 +604,7 @@ class MerchantFrontendController extends Controller
         }
 
         $reviewPayload = $this->buildProductReviewPayload( $product->id, $reviewConnection );
+        $this->attachPreOrderMeta( $product );
 
         return response()->json([
             'product' => $product,

@@ -10,6 +10,7 @@ use App\Models\OrderDeliveryToCourier;
 use App\Models\OrderDetails;
 use App\Models\PendingBalance;
 use App\Models\Product;
+use App\Models\ProductBundle;
 use App\Models\ProductVariant;
 use App\Service\Vendor\ProductVariantService;
 use App\Models\User;
@@ -20,6 +21,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Tenant;
+use App\Services\ProductPreOrderService;
 
 /**
  * Class ProductOrderService.
@@ -68,6 +70,15 @@ class ProductOrderService {
                 'message' => 'Invalid order status.',
             ], 422 ),
         };
+    }
+
+    protected static function notifyPreOrderStatus( $order, string $event = 'status_changed' ): void
+    {
+        if ( ! (bool) ( $order->is_pre_order ?? false ) ) {
+            return;
+        }
+
+        ProductPreOrderService::notifyCustomer( (int) ( $order->user_id ?? 0 ), $order->fresh(), $event );
     }
 
     /**
@@ -278,7 +289,9 @@ class ProductOrderService {
                     self::affiliateBalanceback( $order );
                 }
 
-                self::quantityadded( $order );
+                if ( ! self::restoreBundleStockIfNeeded( $order ) ) {
+                    self::quantityadded( $order );
+                }
             }
 
             if ( $order->wc_order_no != null ) {
@@ -286,6 +299,15 @@ class ProductOrderService {
                 if ( $wcOrderNo ) {
                     $data = self::wocommerceOrderStatusUpdate( $order->id, 'cancel', 'cancelled' );
                 }
+            }
+
+            if ( (bool) ( $order->is_pre_order ?? false ) ) {
+                ProductPreOrderService::releaseQuantity(
+                    $order->getConnectionName() ?: config( 'database.default' ),
+                    (int) $order->product_id,
+                    (int) $order->qty
+                );
+                ProductPreOrderService::notifyCustomer( (int) ( $order->user_id ?? 0 ), $order, 'cancelled' );
             }
 
             DB::commit();
@@ -335,6 +357,8 @@ class ProductOrderService {
                 $data = self::wocommerceOrderStatusUpdate( $order->id, 'pending', 'pending' );
             }
         }
+
+        self::notifyPreOrderStatus( $order, 'confirmed' );
 
         return self::response( 'Order pending successfull!' );
     }
@@ -415,6 +439,8 @@ class ProductOrderService {
                 $data = self::wocommerceOrderStatusUpdate( $order->id, 'ready', 'processing' );
             }
         }
+
+        self::notifyPreOrderStatus( $order, 'ready' );
 
         return self::response( 'Order ready successfull!' );
     }
@@ -1238,6 +1264,8 @@ class ProductOrderService {
             }
         }
 
+        self::notifyPreOrderStatus( $order, 'status_changed' );
+
         return self::response( 'Order processing successfull!' );
     }
 
@@ -1261,6 +1289,53 @@ class ProductOrderService {
         self::affiliateBalanceback( $order );
 
         return self::response( 'Order retrun successfull!' );
+    }
+
+    /**
+     * Restore component stock when a cancelled order was a product bundle.
+     */
+    static function restoreBundleStockIfNeeded( $order ): bool
+    {
+        if ( (int) ( $order->is_unlimited ?? 0 ) === 1 ) {
+            return false;
+        }
+
+        $variants = Order::normalizeVariants( $order->variants );
+        $meta     = null;
+
+        foreach ( $variants as $row ) {
+            $row = (array) $row;
+            if ( ! empty( $row['is_bundle'] ) && ! empty( $row['bundle_id'] ) ) {
+                $meta = $row;
+                break;
+            }
+        }
+
+        if ( ! $meta ) {
+            return false;
+        }
+
+        $bundle = ProductBundle::with( 'items' )->find( (int) $meta['bundle_id'] );
+        if ( ! $bundle ) {
+            return false;
+        }
+
+        $soldQty = (int) ( $order->qty ?? 1 );
+        foreach ( $bundle->items as $item ) {
+            $qty = max( 1, (int) $item->quantity ) * max( 1, $soldQty );
+            ProductVariantService::incrementStockOnConnection(
+                $order->getConnectionName(),
+                (int) $item->product_id,
+                null,
+                null,
+                null,
+                $qty,
+                null,
+                (int) ( $order->vendor_id ?? 0 ) ?: null
+            );
+        }
+
+        return true;
     }
 
     static function quantityadded( $order ) {
@@ -1344,6 +1419,8 @@ class ProductOrderService {
                 $data = self::wocommerceOrderStatusUpdate( $order->id, 'delevered', 'completed' );
             }
         }
+
+        self::notifyPreOrderStatus( $order, 'status_changed' );
 
         return self::response( 'Order delivered successfully' );
     }

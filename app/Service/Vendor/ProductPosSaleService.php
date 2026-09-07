@@ -30,7 +30,7 @@ class ProductPosSaleService {
                 $endDate   = request( 'end_date' );
                 return $q->whereBetween( 'sale_date', [$startDate, $endDate] );
             } )
-            ->select( 'id', 'barcode', 'total_price', 'sale_date', 'payment_status', 'due_amount', 'customer_id', 'source_id', 'exchange_qty' )
+            ->select( 'id', 'barcode', 'total_price', 'sale_date', 'payment_status', 'due_amount', 'paid_amount', 'customer_id', 'source_id', 'exchange_qty', 'note' )
             ->latest()
             ->with( [
                 'customer' => function ( $query ) {
@@ -43,6 +43,8 @@ class ProductPosSaleService {
                         }] );
                 },
                 'source',
+                'dueRecord',
+                'installments',
             ] )
             ->paginate( 10 )
             ->withQueryString();
@@ -54,6 +56,10 @@ class ProductPosSaleService {
                 ->unique()
                 ->values();
 
+            $sale->is_installment = $sale->relationLoaded( 'installments' )
+                ? $sale->installments->isNotEmpty()
+                : $sale->installments()->exists();
+
             return $sale;
         } );
 
@@ -63,8 +69,9 @@ class ProductPosSaleService {
 
     public static function show( $id ) {
         $saleShow = PosSales::whereId( $id )
+            ->where( 'vendor_id', vendorId() )
             ->with( ['saleDetails' => function ( $query ) {
-                $query->select( 'id', 'pos_sales_id', 'product_id', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total', 'status' )->with( 'product', 'color', 'size', 'unit' );
+                $query->select( 'id', 'pos_sales_id', 'product_id', 'bundle_id', 'bundle_name', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total', 'status' )->with( 'product', 'color', 'size', 'unit' );
             }] )
             ->with( ['customer' => function ( $query ) {
                 $query->select( 'id', 'customer_name', 'phone', 'email', 'address' );
@@ -72,9 +79,115 @@ class ProductPosSaleService {
             ->with( ['user' => function ( $query ) {
                 $query->select( 'id', 'name' );
             }] )
-            ->select( 'id', 'customer_id', 'vendor_id', 'user_id', 'barcode', 'payment_id', 'sale_date', 'source_id', 'paid_amount', 'total_price', 'due_amount', 'sale_discount', 'discount_type', 'total_qty', 'payment_status', 'change_amount', 'note' )
+            ->with( ['payments' => function ( $query ) {
+                $query->select( 'id', 'pos_sales_id', 'user_id', 'payment_method_id', 'invoice_no', 'date', 'paid_amount', 'due_amount', 'created_at' )
+                    ->with( [
+                        'paymentMethod:id,payment_method_name',
+                        'user:id,name',
+                    ] );
+            }] )
+            ->with( 'dueRecord' )
+            ->with( [
+                'installments' => function ( $query ) {
+                    $query->orderBy( 'installment_number' )
+                        ->with( [
+                            'payments' => function ( $q ) {
+                                $q->latest( 'id' )->with( [
+                                    'paymentMethod:id,payment_method_name',
+                                    'user:id,name',
+                                ] );
+                            },
+                        ] );
+                },
+            ] )
+            ->select(
+                'id', 'customer_id', 'vendor_id', 'user_id', 'barcode', 'payment_id', 'sale_date', 'source_id',
+                'paid_amount', 'total_price', 'due_amount', 'sale_discount', 'discount_type', 'total_qty',
+                'payment_status', 'change_amount', 'note'
+            )
             ->first();
+
+        if ( $saleShow && $saleShow->installments->isNotEmpty() ) {
+            $saleShow->is_installment = true;
+            $saleShow->installment_plan = PosInstallmentService::planSummary( $saleShow );
+        } else {
+            $saleShow && ( $saleShow->is_installment = false );
+        }
+
         return $saleShow;
+    }
+
+    /**
+     * Aggregated due summary for one customer (reuses PosSales + CustomerPayment).
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function customerDueSummary( int $customerId ): ?array
+    {
+        $vendorId = vendorId();
+        $customer = \App\Models\Customer::where( 'id', $customerId )
+            ->where( 'vendor_id', $vendorId )
+            ->select( 'id', 'customer_name', 'phone', 'email', 'address' )
+            ->first();
+
+        if ( ! $customer ) {
+            return null;
+        }
+
+        $openSales = PosSales::where( 'vendor_id', $vendorId )
+            ->where( 'customer_id', $customerId )
+            ->where( 'due_amount', '>', 0 )
+            ->where( 'payment_status', 'due' )
+            ->whereDoesntHave( 'installments' )
+            ->with( 'dueRecord' )
+            ->select(
+                'id', 'barcode', 'sale_date', 'total_price', 'paid_amount', 'due_amount',
+                'payment_status', 'note'
+            )
+            ->latest( 'id' )
+            ->get();
+
+        $payments = CustomerPayment::where( 'vendor_id', $vendorId )
+            ->where( 'customer_id', $customerId )
+            ->select( 'id', 'pos_sales_id', 'invoice_no', 'date', 'payment_method_id', 'paid_amount', 'due_amount', 'user_id', 'created_at' )
+            ->with( [
+                'paymentMethod:id,payment_method_name',
+                'user:id,name',
+                'posSale:id,barcode',
+            ] )
+            ->latest( 'id' )
+            ->get();
+
+        $totalDue = round( (float) $openSales->sum( 'due_amount' ), 2 );
+        $totalPaidOnOpen = round( (float) $openSales->sum( 'paid_amount' ), 2 );
+        $totalOrderAmount = round( (float) $openSales->sum( 'total_price' ), 2 );
+
+        return [
+            'customer'       => $customer,
+            'total_due'      => $totalDue,
+            'total_paid'     => $totalPaidOnOpen,
+            'remaining_due'  => $totalDue,
+            'open_orders'    => $openSales->map( function ( PosSales $sale ) {
+                return [
+                    'id'             => $sale->id,
+                    'invoice'        => $sale->barcode,
+                    'sale_date'      => $sale->sale_date,
+                    'total_price'    => (float) $sale->total_price,
+                    'paid_amount'    => (float) $sale->paid_amount,
+                    'due_amount'     => (float) $sale->due_amount,
+                    'due_date'       => optional( $sale->dueRecord?->due_date )->format( 'Y-m-d' ),
+                    'due_note'       => $sale->dueRecord?->due_note,
+                    'note'           => $sale->note,
+                    'due_status'     => $sale->due_status,
+                    'payment_status' => $sale->payment_status,
+                ];
+            } )->values(),
+            'payment_history'=> $payments,
+            'summary'        => [
+                'open_order_count' => $openSales->count(),
+                'order_total'      => $totalOrderAmount,
+            ],
+        ];
     }
 
     public static function productSaleDetails( $product_ids, $saleId, $status ) {
@@ -130,11 +243,18 @@ class ProductPosSaleService {
         //  dd($customerPayment);
         if ( $customerPayment['partial_payment'] == 1 ) {
             $data = PosSales::find( $customerPayment['id'] );
-            $data->decrement( 'due_amount', $customerPayment['partial_payment_amount'] );
-            if ( $data->due_amount == 0 ) {
+            $amount = (float) $customerPayment['partial_payment_amount'];
+            $data->decrement( 'due_amount', $amount );
+            $data->increment( 'paid_amount', $amount );
+            $data->refresh();
+            if ( (float) $data->due_amount <= 0 ) {
+                $data->due_amount     = 0;
                 $data->payment_status = 'paid';
+                $data->save();
+                \App\Models\PosSaleDue::where( 'pos_sales_id', $data->id )->delete();
+            } else {
+                $data->save();
             }
-            $data->save();
         }
         $payment                    = new CustomerPayment();
         $payment->user_id           = Auth::id();
@@ -143,9 +263,11 @@ class ProductPosSaleService {
         $payment->pos_sales_id      = $customerPayment['id'];
         $payment->payment_method_id = $customerPayment['partial_payment'] == 1 ? $customerPayment['payment_method'] : $customerPayment['payment_id'];
         $payment->invoice_no        = $customerPayment['barcode'];
-        $payment->date              = $customerPayment['sale_date'];
+        $payment->date              = $customerPayment['sale_date'] ?: date( 'Y-m-d' );
         $payment->paid_amount       = $customerPayment['partial_payment'] == 1 ? $customerPayment['partial_payment_amount'] : $customerPayment['paid_amount'];
-        $payment->due_amount        = $customerPayment['partial_payment'] == 0 ? $customerPayment['due_amount'] : $customerPayment['due_amount'] - $customerPayment['partial_payment_amount'];
+        $payment->due_amount        = $customerPayment['partial_payment'] == 0
+            ? $customerPayment['due_amount']
+            : max( 0, (float) $customerPayment['due_amount'] - (float) $customerPayment['partial_payment_amount'] );
         $payment->vendor_id         = vendorId();
         $payment->save();
 

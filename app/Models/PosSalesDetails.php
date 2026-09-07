@@ -14,6 +14,10 @@ class PosSalesDetails extends Model {
         return $this->belongsTo( Product::class, 'product_id' )->select( 'id', 'name' );
     }
 
+    public function bundle() {
+        return $this->belongsTo( ProductBundle::class, 'bundle_id' );
+    }
+
     public function size() {
         return $this->belongsTo( Size::class, 'size_id' )->select( 'id', 'name' );
     }

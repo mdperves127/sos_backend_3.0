@@ -26,6 +26,11 @@ class CustomerPayment extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function posSale()
     {
         return $this->belongsTo(PosSales::class, 'pos_sales_id');

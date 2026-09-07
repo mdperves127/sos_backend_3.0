@@ -31,7 +31,10 @@ use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\ProductPreOrderController;
+use App\Http\Controllers\API\Vendor\ProductBundleController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
+use App\Http\Controllers\API\Vendor\PosInstallmentController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ReportController;
@@ -136,6 +139,8 @@ Route::middleware( [
         Route::get('products', [MerchantFrontendController::class, 'products']);
         Route::get('product/{slug}', [MerchantFrontendController::class, 'product']);
         Route::get('product/{slug}/reviews', [ProductReviewController::class, 'forProduct']);
+        Route::get('bundles', [MerchantFrontendController::class, 'bundles']);
+        Route::get('bundle/{id}', [MerchantFrontendController::class, 'bundle']);
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
@@ -162,6 +167,7 @@ Route::middleware( [
             Route::delete('wishlist/{id}', [WishListController::class, 'deleteWishlist']);
 
             Route::post('add-to-cart', [TenantCartController::class, 'addToCart']);
+            Route::post('add-bundle-to-cart', [TenantCartController::class, 'addBundleToCart']);
             Route::get('cart', [TenantCartController::class, 'cart']);
             Route::put('cart/{id}/quantity', [TenantCartController::class, 'updateQuantity']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
@@ -240,6 +246,27 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
             Route::get( '/{status?}', [ProductManageController::class, 'VendorProduct'] );
 
+        } );
+
+        // Product pre-order management
+        Route::prefix( 'tenant-product-pre-order' )->group( function () {
+            Route::get( '/', [ProductPreOrderController::class, 'index'] );
+            Route::get( 'orders', [ProductPreOrderController::class, 'orders'] );
+            Route::get( 'product/{product_id}', [ProductPreOrderController::class, 'show'] );
+            Route::match( ['POST', 'PUT', 'PATCH'], 'product/{product_id}', [ProductPreOrderController::class, 'updateSettings'] );
+            Route::post( 'collect-due/{order_id}', [ProductPreOrderController::class, 'collectDue'] );
+        } );
+
+        // Merchant product bundles (combo offers)
+        Route::prefix( 'tenant-product-bundle' )->group( function () {
+            Route::get( '/', [ProductBundleController::class, 'index'] );
+            Route::get( 'create', [ProductBundleController::class, 'create'] );
+            Route::post( 'store', [ProductBundleController::class, 'store'] );
+            Route::get( 'show/{id}', [ProductBundleController::class, 'show'] );
+            Route::get( 'edit/{id}', [ProductBundleController::class, 'edit'] );
+            Route::post( 'update/{id}', [ProductBundleController::class, 'update'] );
+            Route::delete( 'delete/{id}', [ProductBundleController::class, 'destroy'] );
+            Route::get( 'status/{id}', [ProductBundleController::class, 'status'] );
         } );
 
         Route::prefix( 'tenant-product-order' )->group( function () {
@@ -555,9 +582,20 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [ProductPosSaleController::class, 'destroy'] );
             Route::get( 'product/select/{barcode}', [ProductPosSaleController::class, 'productSelect'] ); //Product select
             Route::get( 'scan', [ProductPosSaleController::class, 'scan'] ); //Product select
+            Route::get( 'bundle/select/{id}', [ProductPosSaleController::class, 'bundleSelect'] );
             //Partial payment
             Route::post( 'add-payment/{sales_id}', [ProductPosSaleController::class, 'addPayment'] );
+            Route::match( ['POST', 'PUT', 'PATCH'], 'update-due/{id}', [ProductPosSaleController::class, 'updateDue'] );
+            Route::get( 'customer-dues/{customer_id}', [ProductPosSaleController::class, 'customerDues'] );
             Route::get( 'payment-history', [ProductPosSaleController::class, 'paymentHistory'] );
+
+            // Installment management (separate from due management)
+            Route::get( 'installments', [PosInstallmentController::class, 'index'] );
+            Route::get( 'installments/order/{sale_id}', [PosInstallmentController::class, 'show'] );
+            Route::get( 'installments/{installment_id}', [PosInstallmentController::class, 'showInstallment'] );
+            Route::post( 'installments/{installment_id}/add-payment', [PosInstallmentController::class, 'addPayment'] );
+            Route::get( 'installments/{installment_id}/payment-history', [PosInstallmentController::class, 'paymentHistory'] );
+            Route::get( 'customer-installments/{customer_id}', [PosInstallmentController::class, 'customerInstallments'] );
         } );
 
         Route::prefix( 'tenant-barcode' )->group( function () {

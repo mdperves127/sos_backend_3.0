@@ -20,6 +20,10 @@ class Cart extends Model {
         return $this->belongsTo( User::class, 'user_id', 'id' );
     }
 
+    public function bundle() {
+        return $this->belongsTo( ProductBundle::class, 'bundle_id' );
+    }
+
     public function colors() {
         return $this->belongsToMany( 'App\Models\Color' )->withTimestamps();
     }
