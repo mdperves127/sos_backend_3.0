@@ -31,6 +31,7 @@ use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\MediaController;
 use App\Http\Controllers\API\Vendor\ProductPreOrderController;
 use App\Http\Controllers\API\Vendor\ProductBundleController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
@@ -203,6 +204,14 @@ Route::middleware( [
         Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
 
         Route::get( 'tenant-dashboard/statistics', [TenantDashboardController::class, 'statistics'] );
+
+        // Media library (tenant media picker / uploads)
+        Route::prefix( 'media' )->group( function () {
+            Route::get( '/', [MediaController::class, 'index'] );
+            Route::post( 'upload', [MediaController::class, 'upload'] );
+            Route::get( '{id}', [MediaController::class, 'show'] );
+            Route::delete( '{id}', [MediaController::class, 'destroy'] );
+        } );
 
         // Marketplace routes for category, subcategory & brand
 
