@@ -32,6 +32,7 @@ use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
 use App\Http\Controllers\API\Vendor\MediaController;
+use App\Http\Controllers\API\Vendor\PageBuilderController;
 use App\Http\Controllers\API\Vendor\ProductPreOrderController;
 use App\Http\Controllers\API\Vendor\ProductBundleController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
@@ -153,6 +154,7 @@ Route::middleware( [
         Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
         Route::get('pages', [PageController::class, 'index']);
         Route::get('page/{url}', [PageController::class, 'showByUrl'])->where('url', '.*');
+        Route::get('page-builder/lookup', [PageBuilderController::class, 'publicLookup']);
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 
@@ -211,6 +213,18 @@ Route::middleware( [
             Route::post( 'upload', [MediaController::class, 'upload'] );
             Route::get( '{id}', [MediaController::class, 'show'] );
             Route::delete( '{id}', [MediaController::class, 'destroy'] );
+        } );
+
+        // Page builder (block-based pages)
+        Route::prefix( 'page-builder' )->group( function () {
+            Route::get( '/', [PageBuilderController::class, 'index'] );
+            Route::get( 'lookup', [PageBuilderController::class, 'lookup'] );
+            Route::post( '/', [PageBuilderController::class, 'store'] );
+            Route::get( '{id}', [PageBuilderController::class, 'show'] );
+            Route::match( ['PUT', 'PATCH'], '{id}', [PageBuilderController::class, 'update'] );
+            Route::match( ['PUT', 'PATCH'], '{id}/status', [PageBuilderController::class, 'updateStatus'] );
+            Route::post( '{id}/duplicate', [PageBuilderController::class, 'duplicate'] );
+            Route::delete( '{id}', [PageBuilderController::class, 'destroy'] );
         } );
 
         // Marketplace routes for category, subcategory & brand
