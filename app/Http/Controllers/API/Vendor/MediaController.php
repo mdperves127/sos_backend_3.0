@@ -20,8 +20,6 @@ class MediaController extends Controller
         'video/mp4',
     ];
 
-    private const UPLOAD_DIR = 'uploads/media';
-
     /**
      * GET /api/media
      * Query: page, limit|per_page, search, mimeType
@@ -138,7 +136,8 @@ class MediaController extends Controller
         $mimeType     = strtolower( (string) ( $file->getMimeType() ?: 'application/octet-stream' ) );
         $size         = (int) $file->getSize();
 
-        $storedPath = fileUpload( $file, self::UPLOAD_DIR );
+        $uploadDir  = Media::tenantUploadDirectory(); // uploads/media/{tenant_id}
+        $storedPath = fileUpload( $file, $uploadDir );
         $fileName   = basename( $storedPath );
 
         $media = Media::create( [
@@ -155,7 +154,7 @@ class MediaController extends Controller
             'status'  => 200,
             'success' => true,
             'message' => 'Media uploaded successfully.',
-            'data'    => $media->toApiArray(),
+            'data'    => $media->fresh()->toApiArray(),
         ], 201 );
     }
 

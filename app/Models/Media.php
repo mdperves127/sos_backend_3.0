@@ -22,7 +22,15 @@ class Media extends Model
 
     public function getUrlAttribute(): string
     {
-        $path = ltrim( (string) $this->path, '/' );
+        return self::absoluteUrl( (string) $this->path );
+    }
+
+    /**
+     * Build a public URL on the current tenant host (not central APP_URL / tenancy asset proxy).
+     */
+    public static function absoluteUrl( string $path ): string
+    {
+        $path = ltrim( $path, '/' );
 
         if ( $path === '' ) {
             return '';
@@ -32,7 +40,45 @@ class Media extends Model
             return $path;
         }
 
-        return asset( $path );
+        $base = self::tenantPublicBaseUrl();
+
+        return rtrim( $base, '/' ) . '/' . $path;
+    }
+
+    public static function tenantPublicBaseUrl(): string
+    {
+        // API is initialized by tenant domain — use that host for public file URLs.
+        if ( function_exists( 'request' ) && request() ) {
+            $host = request()->getSchemeAndHttpHost();
+            if ( is_string( $host ) && $host !== '' ) {
+                return rtrim( $host, '/' );
+            }
+        }
+
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            $domain = tenant()->domains()->first();
+            if ( $domain && ! empty( $domain->domain ) ) {
+                $scheme = ( function_exists( 'request' ) && request() )
+                    ? request()->getScheme()
+                    : 'https';
+
+                return $scheme . '://' . $domain->domain;
+            }
+        }
+
+        return rtrim( (string) config( 'app.url' ), '/' );
+    }
+
+    public static function tenantUploadDirectory(): string
+    {
+        $tenantId = ( function_exists( 'tenant' ) && tenant() )
+            ? (string) tenant()->id
+            : 'shared';
+
+        // Sanitize for filesystem safety.
+        $tenantId = preg_replace( '/[^A-Za-z0-9_\-]/', '_', $tenantId ) ?: 'shared';
+
+        return 'uploads/media/' . $tenantId;
     }
 
     /**
