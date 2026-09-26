@@ -24,10 +24,12 @@ class PageBuilder extends Model
     public const PAGE_TYPES = [
         'STANDARD',
         'SERVICE',
-        'LOCATION',
-        'LANDING',
-        'CATEGORY',
+        'SERVICE_DETAILS',
+        'SHOP',
+        'SHOP_DETAILS',
         'BLOG',
+        'BLOG_DETAILS',
+        'CHECKOUT',
     ];
 
     public const STATUSES = [
