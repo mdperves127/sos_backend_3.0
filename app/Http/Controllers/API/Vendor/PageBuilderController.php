@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Models\PageBuilder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -320,10 +323,13 @@ class PageBuilderController extends Controller
             ], 404 );
         }
 
+        $data = $page->toApiArray();
+        $data['blocks'] = $this->enrichBlocksWithApiData( $data['blocks'] ?? [] );
+
         return response()->json( [
             'status'  => 200,
             'success' => true,
-            'data'    => $page->toApiArray(),
+            'data'    => $data,
         ] );
     }
 
@@ -351,11 +357,190 @@ class PageBuilderController extends Controller
             ], 404 );
         }
 
+        $data = $page->toApiArray();
+        $data['blocks'] = $this->enrichBlocksWithApiData( $data['blocks'] ?? [] );
+
         return response()->json( [
             'status'  => 200,
             'success' => true,
-            'data'    => $page->toApiArray(),
+            'data'    => $data,
         ] );
+    }
+
+    /**
+     * Resolve block apiName endpoints and attach matching records as data.items.
+     *
+     * @param  array<int, mixed>  $blocks
+     * @return array<int, mixed>
+     */
+    private function enrichBlocksWithApiData( array $blocks ): array
+    {
+        foreach ( $blocks as $index => $block ) {
+            if ( ! is_array( $block ) ) {
+                continue;
+            }
+
+            $data = $block['data'] ?? null;
+            if ( ! is_array( $data ) ) {
+                continue;
+            }
+
+            $apiName = $data['apiName'] ?? null;
+            if ( ! is_string( $apiName ) || trim( $apiName ) === '' ) {
+                continue;
+            }
+
+            $blocks[ $index ]['data']['items'] = $this->resolveApiNameData( $apiName, $data );
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * @param  array<string, mixed>  $blockData
+     * @return array<int, mixed>
+     */
+    private function resolveApiNameData( string $apiName, array $blockData ): array
+    {
+        $resource = $this->normalizeApiResource( $apiName );
+        if ( $resource === null ) {
+            return [];
+        }
+
+        $frontend = app( MerchantFrontendController::class );
+
+        $response = match ( $resource ) {
+            'categories'    => $frontend->categories(),
+            'brands'        => $frontend->brands(),
+            'subcategories' => $frontend->subcategories(),
+            'colors'        => $frontend->colors(),
+            'size', 'sizes' => $frontend->size(),
+            default         => null,
+        };
+
+        if ( ! $response instanceof JsonResponse ) {
+            return [];
+        }
+
+        $decoded = json_decode( $response->getContent(), true );
+        $items   = collect( is_array( $decoded ) ? $decoded : [] );
+
+        $selectedIds = collect( $blockData['selectedIds'] ?? [] )
+            ->filter( fn ( $id ) => $id !== null && $id !== '' )
+            ->map( fn ( $id ) => (string) $id )
+            ->values();
+
+        if ( $selectedIds->isNotEmpty() ) {
+            $byId = $items->keyBy( fn ( $item ) => (string) ( is_array( $item ) ? ( $item['id'] ?? '' ) : '' ) );
+            $items = $selectedIds
+                ->map( fn ( string $id ) => $byId->get( $id ) )
+                ->filter()
+                ->values();
+        }
+
+        $queryEnabled = (bool) ( $blockData['queryEnabled'] ?? false );
+        $query        = is_array( $blockData['query'] ?? null ) ? $blockData['query'] : [];
+
+        if ( $queryEnabled ) {
+            $items = $this->applyBlockQueryFilters( $items, $query );
+        }
+
+        return $items->values()->all();
+    }
+
+    private function normalizeApiResource( string $apiName ): ?string
+    {
+        $normalized = strtolower( trim( $apiName ) );
+        $normalized = preg_replace( '#^/+#', '', $normalized ) ?? $normalized;
+        $normalized = preg_replace( '#^api/+#', '', $normalized ) ?? $normalized;
+
+        if ( str_starts_with( $normalized, 'tenant-frontend/' ) ) {
+            $normalized = substr( $normalized, strlen( 'tenant-frontend/' ) );
+        }
+
+        $normalized = trim( $normalized, '/' );
+
+        $allowed = [
+            'categories',
+            'brands',
+            'subcategories',
+            'colors',
+            'size',
+            'sizes',
+        ];
+
+        return in_array( $normalized, $allowed, true ) ? $normalized : null;
+    }
+
+    /**
+     * @param  Collection<int, mixed>  $items
+     * @param  array<string, mixed>    $query
+     * @return Collection<int, mixed>
+     */
+    private function applyBlockQueryFilters( Collection $items, array $query ): Collection
+    {
+        $search = isset( $query['search'] ) && is_string( $query['search'] )
+            ? trim( $query['search'] )
+            : '';
+
+        if ( $search !== '' ) {
+            $needle = Str::lower( $search );
+            $items  = $items->filter( function ( $item ) use ( $needle ) {
+                if ( ! is_array( $item ) ) {
+                    return false;
+                }
+
+                $haystacks = [
+                    $item['name'] ?? null,
+                    $item['slug'] ?? null,
+                    $item['heading'] ?? null,
+                    $item['title'] ?? null,
+                ];
+
+                foreach ( $haystacks as $value ) {
+                    if ( is_string( $value ) && str_contains( Str::lower( $value ), $needle ) ) {
+                        return true;
+                    }
+                }
+
+                return false;
+            } )->values();
+        }
+
+        $status = isset( $query['status'] ) ? strtolower( (string) $query['status'] ) : 'all';
+        if ( $status !== '' && $status !== 'all' ) {
+            $items = $items->filter( function ( $item ) use ( $status ) {
+                if ( ! is_array( $item ) ) {
+                    return false;
+                }
+
+                return strtolower( (string) ( $item['status'] ?? '' ) ) === $status;
+            } )->values();
+        }
+
+        $featured = isset( $query['featured'] ) ? strtolower( (string) $query['featured'] ) : 'all';
+        if ( $featured !== '' && $featured !== 'all' ) {
+            $wantFeatured = in_array( $featured, [ '1', 'true', 'yes', 'featured' ], true );
+            $items        = $items->filter( function ( $item ) use ( $wantFeatured ) {
+                if ( ! is_array( $item ) || ! array_key_exists( 'featured', $item ) ) {
+                    return ! $wantFeatured;
+                }
+
+                $value = $item['featured'];
+                $isFeatured = $value === true || $value === 1 || $value === '1' || $value === 'true';
+
+                return $wantFeatured ? $isFeatured : ! $isFeatured;
+            } )->values();
+        }
+
+        $page  = max( 1, (int) ( $query['page'] ?? 1 ) );
+        $limit = (int) ( $query['limit'] ?? 0 );
+
+        if ( $limit > 0 ) {
+            $items = $items->slice( ( $page - 1 ) * $limit, $limit )->values();
+        }
+
+        return $items;
     }
 
     /**
