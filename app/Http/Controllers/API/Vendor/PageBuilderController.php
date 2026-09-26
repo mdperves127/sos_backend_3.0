@@ -298,11 +298,42 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * Public storefront: published page by path.
+     * Public storefront: published page by path query (?path=).
      */
     public function publicLookup( Request $request )
     {
         $path = $this->normalizePath( (string) $request->query( 'path', '' ) );
+
+        $page = PageBuilder::where( 'status', 'PUBLISHED' )
+            ->where( function ( $q ) use ( $path ) {
+                $q->where( 'path', $path )
+                    ->orWhere( 'path', '/' . ltrim( $path, '/' ) );
+            } )
+            ->first();
+
+        if ( ! $page ) {
+            return response()->json( [
+                'status'  => 404,
+                'success' => false,
+                'message' => 'Page not found.',
+                'data'    => null,
+            ], 404 );
+        }
+
+        return response()->json( [
+            'status'  => 200,
+            'success' => true,
+            'data'    => $page->toApiArray(),
+        ] );
+    }
+
+    /**
+     * Public storefront: published page by path.
+     * GET /tenant-frontend/{slug}  (slug = page_builders.path)
+     */
+    public function publicShow( string $slug )
+    {
+        $path = $this->normalizePath( $slug );
 
         $page = PageBuilder::where( 'status', 'PUBLISHED' )
             ->where( function ( $q ) use ( $path ) {
