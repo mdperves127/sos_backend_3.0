@@ -401,10 +401,7 @@ class PageBuilderController extends Controller
             return null;
         }
 
-        $data = $page->toApiArray();
-        $data['blocks'] = $this->enrichBlocksWithApiData( $data['blocks'] ?? [] );
-
-        return $data;
+        return $page->toApiArray();
     }
 
     /**
