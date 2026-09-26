@@ -357,11 +357,71 @@ class MerchantFrontendController extends Controller
         $payload = $this->paginateProductCollection( $request, $products );
 
         if ( ! $request->attributes->get( 'page_builder_skip', false ) ) {
-            $payload['page_builder'] = app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
+            $pageBuilder = app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
                 ->resolvePublishedShopPageData();
+
+            $payload['page_builder'] = $pageBuilder;
+
+            $needFields = $this->extractPageBuilderNeedFields( $pageBuilder );
+            if ( $needFields !== [] ) {
+                $payload['data'] = $this->projectProductNeedFields( $payload['data'], $needFields );
+            }
         }
 
         return response()->json( $payload );
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $pageBuilder
+     * @return array<int, string>
+     */
+    private function extractPageBuilderNeedFields( ?array $pageBuilder ): array
+    {
+        if ( ! $pageBuilder ) {
+            return [];
+        }
+
+        foreach ( $pageBuilder['blocks'] ?? [] as $block ) {
+            if ( ! is_array( $block ) ) {
+                continue;
+            }
+
+            $fields = $block['data']['needFields'] ?? null;
+            if ( ! is_array( $fields ) || $fields === [] ) {
+                continue;
+            }
+
+            return array_values( array_filter( $fields, fn ( $field ) => is_string( $field ) && trim( $field ) !== '' ) );
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  mixed                $products
+     * @param  array<int, string>   $fields
+     * @return array<int, array<string, mixed>>
+     */
+    private function projectProductNeedFields( $products, array $fields ): array
+    {
+        return collect( $products )->map( function ( $product ) use ( $fields ) {
+            if ( $product instanceof \Illuminate\Database\Eloquent\Model ) {
+                $item = $product->toArray();
+            } elseif ( is_array( $product ) ) {
+                $item = $product;
+            } elseif ( is_object( $product ) ) {
+                $item = (array) $product;
+            } else {
+                return [];
+            }
+
+            $projected = [];
+            foreach ( $fields as $field ) {
+                $projected[ $field ] = $item[ $field ] ?? null;
+            }
+
+            return $projected;
+        } )->values()->all();
     }
 
     /**
