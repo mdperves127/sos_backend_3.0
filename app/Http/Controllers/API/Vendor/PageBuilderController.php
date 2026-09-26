@@ -489,7 +489,7 @@ class PageBuilderController extends Controller
             $items = $this->pickItemsByIds( $items, $productIds );
 
             if ( ! $queryEnabled ) {
-                return $items->values()->all();
+                return $this->projectNeededFields( $items, $blockData['needFields'] ?? null );
             }
         } else {
             if ( $brandIds->isNotEmpty() ) {
@@ -528,7 +528,40 @@ class PageBuilderController extends Controller
             $items = $this->applyBlockQueryFilters( $items, $query );
         }
 
-        return $items->values()->all();
+        return $this->projectNeededFields( $items, $blockData['needFields'] ?? null );
+    }
+
+    /**
+     * Keep only the fields listed in needFields (plus id when available).
+     *
+     * @param  Collection<int, mixed>  $items
+     * @param  mixed                   $needFields
+     * @return array<int, mixed>
+     */
+    private function projectNeededFields( Collection $items, $needFields ): array
+    {
+        $fields = collect( is_array( $needFields ) ? $needFields : [] )
+            ->filter( fn ( $field ) => is_string( $field ) && trim( $field ) !== '' )
+            ->map( fn ( string $field ) => trim( $field ) )
+            ->unique()
+            ->values();
+
+        if ( $fields->isEmpty() ) {
+            return $items->values()->all();
+        }
+
+        return $items->map( function ( $item ) use ( $fields ) {
+            if ( ! is_array( $item ) ) {
+                return $item;
+            }
+
+            $projected = [];
+            foreach ( $fields as $field ) {
+                $projected[ $field ] = $item[ $field ] ?? null;
+            }
+
+            return $projected;
+        } )->values()->all();
     }
 
     private function normalizeApiResource( string $apiName ): ?string
