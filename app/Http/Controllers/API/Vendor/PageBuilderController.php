@@ -368,46 +368,6 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * Published shop page-builder payload with block api data resolved.
-     * Matches /shop, /shop-page, and other /shop* paths (plus page_type SHOP).
-     *
-     * @return array<string, mixed>|null
-     */
-    public function resolvePublishedShopPageData(): ?array
-    {
-        $page = PageBuilder::where( 'status', 'PUBLISHED' )
-            ->where( function ( $q ) {
-                $q->where( 'page_type', 'SHOP' )
-                    ->orWhere( 'path', '/shop' )
-                    ->orWhere( 'path', 'shop' )
-                    ->orWhere( 'path', '/shop-page' )
-                    ->orWhere( 'path', 'shop-page' )
-                    ->orWhere( 'path', 'like', '/shop/%' )
-                    ->orWhere( 'path', 'like', '/shop-%' )
-                    ->orWhere( 'path', 'like', 'shop/%' )
-                    ->orWhere( 'path', 'like', 'shop-%' );
-            } )
-            ->orderByRaw( "CASE
-                WHEN path IN ('/shop', 'shop') THEN 0
-                WHEN path IN ('/shop-page', 'shop-page') THEN 1
-                WHEN page_type = 'SHOP' THEN 2
-                ELSE 3
-            END" )
-            ->orderBy( 'sort_order' )
-            ->orderByDesc( 'id' )
-            ->first();
-
-        if ( ! $page ) {
-            return null;
-        }
-
-        $data = $page->toApiArray();
-        $data['blocks'] = $this->enrichBlocksWithApiData( $data['blocks'] ?? [] );
-
-        return $data;
-    }
-
-    /**
      * Resolve block apiName endpoints and attach matching records as data.items.
      *
      * @param  array<int, mixed>  $blocks
@@ -515,8 +475,7 @@ class PageBuilderController extends Controller
             $requestParams['category_id'] = $categoryIds->implode( ',' );
         }
 
-        $request = Request::create( '/tenant-frontend/products', 'GET', $requestParams );
-        $request->attributes->set( 'page_builder_skip', true );
+        $request  = Request::create( '/tenant-frontend/products', 'GET', $requestParams );
         $response = app( MerchantFrontendController::class )->products( $request );
 
         if ( ! $response instanceof JsonResponse ) {
