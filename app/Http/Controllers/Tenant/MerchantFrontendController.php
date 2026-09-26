@@ -354,7 +354,14 @@ class MerchantFrontendController extends Controller
             $products = $productQuery->get();
         }
 
-        return response()->json( $this->paginateProductCollection( $request, $products ) );
+        $payload = $this->paginateProductCollection( $request, $products );
+
+        if ( ! $request->attributes->get( 'page_builder_skip', false ) ) {
+            $payload['page_builder'] = app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
+                ->resolvePublishedShopPageData();
+        }
+
+        return response()->json( $payload );
     }
 
     /**
