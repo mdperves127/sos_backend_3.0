@@ -368,8 +368,9 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * Published shop page-builder payload with block api data resolved.
-     * Matches /shop, /shop-page, and other /shop* paths (plus page_type SHOP).
+     * Published shop listing page-builder payload (no block items).
+     * Matches /shop, /shop-page, and other /shop* list paths (plus page_type SHOP).
+     * Excludes shop-details pages.
      *
      * @return array<string, mixed>|null
      */
@@ -387,11 +388,49 @@ class PageBuilderController extends Controller
                     ->orWhere( 'path', 'like', 'shop/%' )
                     ->orWhere( 'path', 'like', 'shop-%' );
             } )
+            ->where( function ( $q ) {
+                $q->whereNull( 'page_type' )
+                    ->orWhere( 'page_type', '!=', 'SHOP_DETAILS' );
+            } )
+            ->where( 'path', 'not like', '%shop-details%' )
+            ->where( 'path', 'not like', '%shop_details%' )
             ->orderByRaw( "CASE
                 WHEN path IN ('/shop', 'shop') THEN 0
                 WHEN path IN ('/shop-page', 'shop-page') THEN 1
                 WHEN page_type = 'SHOP' THEN 2
                 ELSE 3
+            END" )
+            ->orderBy( 'sort_order' )
+            ->orderByDesc( 'id' )
+            ->first();
+
+        if ( ! $page ) {
+            return null;
+        }
+
+        return $page->toApiArray();
+    }
+
+    /**
+     * Published shop-details page-builder payload (no block items).
+     * Matches /shop-details and page_type SHOP_DETAILS.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function resolvePublishedShopDetailsPageData(): ?array
+    {
+        $page = PageBuilder::where( 'status', 'PUBLISHED' )
+            ->where( function ( $q ) {
+                $q->where( 'page_type', 'SHOP_DETAILS' )
+                    ->orWhere( 'path', '/shop-details' )
+                    ->orWhere( 'path', 'shop-details' )
+                    ->orWhere( 'path', 'like', '%shop-details%' )
+                    ->orWhere( 'path', 'like', '%shop_details%' );
+            } )
+            ->orderByRaw( "CASE
+                WHEN path IN ('/shop-details', 'shop-details') THEN 0
+                WHEN page_type = 'SHOP_DETAILS' THEN 1
+                ELSE 2
             END" )
             ->orderBy( 'sort_order' )
             ->orderByDesc( 'id' )

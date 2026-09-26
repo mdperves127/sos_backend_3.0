@@ -617,6 +617,8 @@ class MerchantFrontendController extends Controller
             'product' => $product,
             'related_products' => $related_products,
             'reviews' => $reviewPayload,
+            'page_builder' => app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
+                ->resolvePublishedShopDetailsPageData(),
         ]);
     }
 
