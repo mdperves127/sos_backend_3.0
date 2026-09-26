@@ -407,6 +407,10 @@ class PageBuilderController extends Controller
             return [];
         }
 
+        if ( $resource === 'products' ) {
+            return $this->resolveProductsData( $blockData );
+        }
+
         $frontend = app( MerchantFrontendController::class );
 
         $response = match ( $resource ) {
@@ -425,21 +429,100 @@ class PageBuilderController extends Controller
         $decoded = json_decode( $response->getContent(), true );
         $items   = collect( is_array( $decoded ) ? $decoded : [] );
 
-        $selectedIds = collect( $blockData['selectedIds'] ?? [] )
-            ->filter( fn ( $id ) => $id !== null && $id !== '' )
-            ->map( fn ( $id ) => (string) $id )
-            ->values();
+        $selectedIds = $this->normalizeIdList( $blockData['selectedIds'] ?? [] );
 
         if ( $selectedIds->isNotEmpty() ) {
-            $byId = $items->keyBy( fn ( $item ) => (string) ( is_array( $item ) ? ( $item['id'] ?? '' ) : '' ) );
-            $items = $selectedIds
-                ->map( fn ( string $id ) => $byId->get( $id ) )
-                ->filter()
-                ->values();
+            $items = $this->pickItemsByIds( $items, $selectedIds );
         }
 
         $queryEnabled = (bool) ( $blockData['queryEnabled'] ?? false );
         $query        = is_array( $blockData['query'] ?? null ) ? $blockData['query'] : [];
+
+        if ( $queryEnabled ) {
+            $items = $this->applyBlockQueryFilters( $items, $query );
+        }
+
+        return $items->values()->all();
+    }
+
+    /**
+     * Resolve tenant-frontend/products for product blocks.
+     * Prefer productIds when set; otherwise filter by category/brand/subcategory + optional query.
+     *
+     * @param  array<string, mixed>  $blockData
+     * @return array<int, mixed>
+     */
+    private function resolveProductsData( array $blockData ): array
+    {
+        $productIds = $this->normalizeIdList( $blockData['productIds'] ?? [] );
+        if ( $productIds->isEmpty() ) {
+            $productIds = $this->normalizeIdList( $blockData['selectedIds'] ?? [] );
+        }
+
+        $categoryIds    = $this->normalizeIdList( $blockData['categoryIds'] ?? [] );
+        $brandIds       = $this->normalizeIdList( $blockData['brandIds'] ?? [] );
+        $subcategoryIds = $this->normalizeIdList( $blockData['subcategoryIds'] ?? [] );
+        $queryEnabled   = (bool) ( $blockData['queryEnabled'] ?? false );
+        $query          = is_array( $blockData['query'] ?? null ) ? $blockData['query'] : [];
+
+        $requestParams = [
+            'page'  => 1,
+            'limit' => 100000,
+        ];
+
+        // When picking explicit products, skip category narrowing so IDs are not dropped.
+        if ( $productIds->isEmpty() && $categoryIds->isNotEmpty() ) {
+            $requestParams['category_id'] = $categoryIds->implode( ',' );
+        }
+
+        $request  = Request::create( '/tenant-frontend/products', 'GET', $requestParams );
+        $response = app( MerchantFrontendController::class )->products( $request );
+
+        if ( ! $response instanceof JsonResponse ) {
+            return [];
+        }
+
+        $decoded = json_decode( $response->getContent(), true );
+        $items   = collect( is_array( $decoded['data'] ?? null ) ? $decoded['data'] : [] );
+
+        if ( $productIds->isNotEmpty() ) {
+            $items = $this->pickItemsByIds( $items, $productIds );
+
+            if ( ! $queryEnabled ) {
+                return $items->values()->all();
+            }
+        } else {
+            if ( $brandIds->isNotEmpty() ) {
+                $items = $items->filter( function ( $item ) use ( $brandIds ) {
+                    if ( ! is_array( $item ) ) {
+                        return false;
+                    }
+
+                    $candidates = [
+                        (string) ( $item['brand_id'] ?? '' ),
+                        (string) ( $item['market_place_brand_id'] ?? '' ),
+                    ];
+
+                    return $brandIds->intersect( $candidates )->isNotEmpty();
+                } )->values();
+            }
+
+            if ( $subcategoryIds->isNotEmpty() ) {
+                $items = $items->filter( function ( $item ) use ( $subcategoryIds ) {
+                    if ( ! is_array( $item ) ) {
+                        return false;
+                    }
+
+                    $candidates = [
+                        (string) ( $item['subcategory_id'] ?? '' ),
+                        (string) ( $item['sub_category_id'] ?? '' ),
+                        (string) ( $item['market_place_subcategory_id'] ?? '' ),
+                    ];
+
+                    return $subcategoryIds->intersect( $candidates )->isNotEmpty();
+                } )->values();
+            }
+        }
 
         if ( $queryEnabled ) {
             $items = $this->applyBlockQueryFilters( $items, $query );
@@ -461,6 +544,7 @@ class PageBuilderController extends Controller
         $normalized = trim( $normalized, '/' );
 
         $allowed = [
+            'products',
             'categories',
             'brands',
             'subcategories',
@@ -470,6 +554,33 @@ class PageBuilderController extends Controller
         ];
 
         return in_array( $normalized, $allowed, true ) ? $normalized : null;
+    }
+
+    /**
+     * @param  mixed  $ids
+     * @return Collection<int, string>
+     */
+    private function normalizeIdList( $ids ): Collection
+    {
+        return collect( is_array( $ids ) ? $ids : [] )
+            ->filter( fn ( $id ) => $id !== null && $id !== '' )
+            ->map( fn ( $id ) => (string) $id )
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, mixed>  $items
+     * @param  Collection<int, string> $ids
+     * @return Collection<int, mixed>
+     */
+    private function pickItemsByIds( Collection $items, Collection $ids ): Collection
+    {
+        $byId = $items->keyBy( fn ( $item ) => (string) ( is_array( $item ) ? ( $item['id'] ?? '' ) : '' ) );
+
+        return $ids
+            ->map( fn ( string $id ) => $byId->get( $id ) )
+            ->filter()
+            ->values();
     }
 
     /**
@@ -495,6 +606,7 @@ class PageBuilderController extends Controller
                     $item['slug'] ?? null,
                     $item['heading'] ?? null,
                     $item['title'] ?? null,
+                    $item['uniqid'] ?? null,
                 ];
 
                 foreach ( $haystacks as $value ) {
@@ -522,12 +634,20 @@ class PageBuilderController extends Controller
         if ( $featured !== '' && $featured !== 'all' ) {
             $wantFeatured = in_array( $featured, [ '1', 'true', 'yes', 'featured' ], true );
             $items        = $items->filter( function ( $item ) use ( $wantFeatured ) {
-                if ( ! is_array( $item ) || ! array_key_exists( 'featured', $item ) ) {
+                if ( ! is_array( $item ) ) {
+                    return false;
+                }
+
+                $value = $item['featured'] ?? $item['is_feature'] ?? $item['is_featured'] ?? null;
+                if ( $value === null ) {
                     return ! $wantFeatured;
                 }
 
-                $value = $item['featured'];
-                $isFeatured = $value === true || $value === 1 || $value === '1' || $value === 'true';
+                $isFeatured = $value === true
+                    || $value === 1
+                    || $value === '1'
+                    || $value === 'true'
+                    || $value === 'yes';
 
                 return $wantFeatured ? $isFeatured : ! $isFeatured;
             } )->values();
