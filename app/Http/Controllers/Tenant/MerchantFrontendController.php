@@ -117,6 +117,10 @@ class MerchantFrontendController extends Controller
      */
     private function normalizeProductPrices( $products ) {
         return collect( $products )->map( function ( $product ) {
+            if ( ! $product instanceof \Illuminate\Database\Eloquent\Model ) {
+                return $product;
+            }
+
             if (
                 $product->discount_price !== null
                 && (float) $product->discount_price === (float) $product->selling_price
