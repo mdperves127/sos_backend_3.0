@@ -25,7 +25,7 @@ class ProductRequest extends FormRequest {
      */
     public function rules() {
         return [
-            'payment_type'           => ['required', Rule::in( ['aamarpay', 'my-wallet', 'COD'] )],
+            'payment_type'           => ['required', Rule::in( ['aamarpay', 'eps', 'uddoktapay', 'my-wallet', 'COD'] )],
             'cart_id'                => ['required', function ( $attribute, $value, $fail ) {
                 $cartQuery = Cart::where( 'id', $value );
 

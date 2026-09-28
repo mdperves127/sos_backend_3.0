@@ -15,11 +15,13 @@ use App\Rules\SubCategorydRule;
 use App\Services\Vendor\VariantApiService;
 use App\Service\Vendor\ProductService;
 use App\Service\Vendor\ProductVariantService;
+use App\Services\ProductPreOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProductManageController extends Controller {
 
@@ -69,6 +71,12 @@ class ProductManageController extends Controller {
             'supplier_id'                            => ['nullable', 'integer'],
             'is_show_website'                        => ['nullable', 'integer', 'in:0,1'],
             'is_stock_show'                          => ['nullable', 'integer', 'in:0,1'],
+            'pre_order'                              => ['nullable', Rule::in( ['0', '1', 0, 1] )],
+            'expected_delivery_date'                 => ['nullable', 'date'],
+            'pre_order_quantity_limit'               => ['nullable', 'integer', 'min:1'],
+            'pre_order_advance_amount'               => ['nullable', 'numeric', 'min:0'],
+            'pre_order_payment_options'              => ['nullable', Rule::in( ['advance', 'full', 'both'] )],
+            'pre_order_status'                       => ['nullable', Rule::in( ['active', 'closed'] )],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -257,6 +265,16 @@ class ProductManageController extends Controller {
             $product->save();
             ProductVariantService::syncFromProductVariantsJson( $product, null, false );
 
+            try {
+                $this->syncProductPreOrderSettings( $product, $request );
+            } catch ( ValidationException $e ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => 'Validation error',
+                    'errors'  => $e->errors(),
+                ], 400 );
+            }
+
             $productId = $product->id;
 
             if ( $request->hasFile( 'images' ) ) {
@@ -293,6 +311,7 @@ class ProductManageController extends Controller {
             $product->load( [
                 'vendor:id,name,email', 'brand', 'category:id,name', 'subcategory:id,name', 'productImage',
                 'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name',
+                'preOrderSettings',
                 'productVariant' => function ( $q ) {
                     $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
                 },
@@ -325,6 +344,12 @@ class ProductManageController extends Controller {
             'supplier_id'                            => ['nullable', 'integer'],
             'is_show_website'                        => ['nullable', 'integer', 'in:0,1'],
             'is_stock_show'                          => ['nullable', 'integer', 'in:0,1'],
+            'pre_order'                              => ['nullable', Rule::in( ['0', '1', 0, 1] )],
+            'expected_delivery_date'                 => ['nullable', 'date'],
+            'pre_order_quantity_limit'               => ['nullable', 'integer', 'min:1'],
+            'pre_order_advance_amount'               => ['nullable', 'numeric', 'min:0'],
+            'pre_order_payment_options'              => ['nullable', Rule::in( ['advance', 'full', 'both'] )],
+            'pre_order_status'                       => ['nullable', Rule::in( ['active', 'closed'] )],
             'meta_keyword'                           => ['nullable', 'array'],
             'tags'                                   => ['nullable', 'array'],
 
@@ -552,6 +577,15 @@ class ProductManageController extends Controller {
 
                 $product->update();
                 ProductVariantService::syncFromProductVariantsJson( $product, null, true );
+                try {
+                    $this->syncProductPreOrderSettings( $product, $request );
+                } catch ( ValidationException $e ) {
+                    return response()->json( [
+                        'status'  => 400,
+                        'message' => 'Validation error',
+                        'errors'  => $e->errors(),
+                    ], 400 );
+                }
 
                 return response()->json( [
                     'status'  => 200,
@@ -675,5 +709,40 @@ class ProductManageController extends Controller {
         }
 
         return $product;
+    }
+
+    /**
+     * Persist dedicated pre-order settings when merchant configures them on product create/update.
+     */
+    private function syncProductPreOrderSettings( Product $product, Request $request ): void
+    {
+        $hasPreOrderPayload = $request->exists( 'pre_order' )
+            || $request->exists( 'expected_delivery_date' )
+            || $request->exists( 'pre_order_quantity_limit' )
+            || $request->exists( 'pre_order_advance_amount' )
+            || $request->exists( 'pre_order_payment_options' )
+            || $request->exists( 'pre_order_status' );
+
+        if ( ! $hasPreOrderPayload ) {
+            return;
+        }
+
+        $advance = $request->input(
+            'pre_order_advance_amount',
+            $request->input( 'advance_amount', $request->input( 'advance_payment' ) )
+        );
+
+        try {
+            ProductPreOrderService::saveSettings( $product, [
+                'pre_order'              => $request->input( 'pre_order', $product->pre_order ),
+                'expected_delivery_date' => $request->input( 'expected_delivery_date' ),
+                'quantity_limit'         => $request->input( 'pre_order_quantity_limit', $request->input( 'quantity_limit' ) ),
+                'advance_amount'         => $advance,
+                'payment_options'        => $request->input( 'pre_order_payment_options', $request->input( 'payment_options', 'both' ) ),
+                'status'                 => $request->input( 'pre_order_status' ),
+            ] );
+        } catch ( ValidationException $e ) {
+            throw $e;
+        }
     }
 }

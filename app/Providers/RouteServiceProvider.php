@@ -85,5 +85,15 @@ class RouteServiceProvider extends ServiceProvider
 
             return Limit::perMinute( $writeLimit )->by( 'ip-write:' . $ip );
         });
+
+        // FraudBD lookups — keep below provider limits (docs: ~60/min).
+        RateLimiter::for( 'fraud-check', function ( Request $request ) {
+            $limit = max( 5, (int) env( 'FRAUD_API_RATE_LIMIT', 20 ) );
+            $key   = $request->user()
+                ? 'fraud-user:' . $request->user()->id
+                : 'fraud-ip:' . $request->ip();
+
+            return Limit::perMinute( $limit )->by( $key );
+        } );
     }
 }

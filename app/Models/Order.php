@@ -54,6 +54,10 @@ class Order extends Model {
         return $this->hasMany( OrderDetails::class )->with( 'size', 'unit', 'color', 'product' );
     }
 
+    function editHistories() {
+        return $this->hasMany( OrderEditHistory::class )->latest( 'id' );
+    }
+
     function vendor() {
         return $this->belongsTo( User::class, 'vendor_id', 'id' );
     }

@@ -11,16 +11,21 @@ use App\Models\CustomerPayment;
 use App\Models\ExchangeSaleProduct;
 use App\Models\PaymentMethod;
 use App\Models\PosSales;
+use App\Models\PosSaleDue;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ProductBundle;
 use App\Models\SaleOrderResource;
 use App\Models\VendorInfo;
+use App\Service\Vendor\PosInstallmentService;
 use App\Service\Vendor\ProductPosSaleService;
 use App\Service\Vendor\ProductVariantService;
+use App\Services\BundleInventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class ProductPosSaleController extends Controller {
 
@@ -74,7 +79,41 @@ class ProductPosSaleController extends Controller {
             'data'     => $variantApiData,
             'barcode'  => barcode( 10 ),
             'products' => $product,
+            'bundles'  => $this->activeBundlesForPos( request( 'category_id' ), request( 'search' ) ),
             'video'    => 'test.mp4',
+        ] );
+    }
+
+    public function bundleSelect( $id )
+    {
+        $bundle = ProductBundle::active()
+            ->with( [
+                'items.product:id,name,image,sku,selling_price,discount_price,qty',
+                'category:id,name',
+                'subcategory:id,name',
+            ] )
+            ->find( $id );
+
+        if ( ! $bundle ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Bundle not found.',
+            ], 404 );
+        }
+
+        $regular = $bundle->calculateRegularPrice();
+
+        return response()->json( [
+            'status' => 200,
+            'bundle' => [
+                'id'            => $bundle->id,
+                'name'          => $bundle->name,
+                'type'          => 'bundle',
+                'bundle_price'  => (float) $bundle->bundle_price,
+                'regular_price' => $regular,
+                'category_id'   => $bundle->category_id,
+                'items'         => $bundle->items,
+            ],
         ] );
     }
 
@@ -148,19 +187,30 @@ class ProductPosSaleController extends Controller {
     public function store( Request $request ) {
         // Validation rules
         $rules = [
-            'customer_id'   => 'required|exists:customers,id',
-            'barcode'       => 'required', // Add your validation rules for barcode
-            'source_id'     => 'required|exists:sale_order_resources,id',
-            'payment_id'    => 'required|exists:payment_methods,id',
-            'paid_amount'   => 'required|numeric|min:0',
-            'total_qty'     => 'required|numeric|min:1',
-            'total_price'   => 'required|numeric|min:0',
-            'due_amount'    => 'required|numeric|min:0',
-            'sale_discount' => 'required|numeric|min:0',
-            'discount_type' => 'required|in:flat,percentage',
-            'product_id'    => 'required|array',
-            'note'          => 'nullable|string|max:1000',
-            // Add validation rules for other fields as needed
+            'customer_id'          => 'required|exists:customers,id',
+            'barcode'              => 'required',
+            'source_id'            => 'required|exists:sale_order_resources,id',
+            'payment_id'           => 'required|exists:payment_methods,id',
+            'paid_amount'          => 'required|numeric|min:0',
+            'total_qty'            => 'required|numeric|min:1',
+            'total_price'          => 'required|numeric|min:0',
+            'due_amount'           => 'required|numeric|min:0',
+            'sale_discount'        => 'required|numeric|min:0',
+            'discount_type'        => 'required|in:flat,percentage',
+            'product_id'           => 'nullable|array',
+            'bundles'              => 'nullable|array',
+            'bundles.*.bundle_id'  => 'required_with:bundles|integer|min:1',
+            'bundles.*.qty'        => 'required_with:bundles|integer|min:1',
+            'bundles.*.rate'       => 'nullable|numeric|min:0',
+            'bundles.*.sub_total'  => 'nullable|numeric|min:0',
+            'note'                 => 'nullable|string|max:1000',
+            'due_date'             => 'nullable|date',
+            'due_note'             => 'nullable|string|max:2000',
+            'payment_mode'         => 'nullable|in:normal,due,installment',
+            'installments'         => 'nullable|array|min:1',
+            'installments.*.installment_number' => 'nullable|integer|min:1',
+            'installments.*.amount'             => 'required_with:installments|numeric|min:0.01',
+            'installments.*.due_date'           => 'required_with:installments|date',
         ];
 
         // Custom messages for validation errors
@@ -182,27 +232,52 @@ class ProductPosSaleController extends Controller {
             ] );
         }
 
-        // $getmembershipdetails = getmembershipdetails();
+        $productIds = is_array( $request->product_id ) ? $request->product_id : [];
+        $bundles    = is_array( $request->bundles ) ? $request->bundles : [];
 
-        // $productecreateqty = $getmembershipdetails?->pos_sale_qty;
+        if ( $productIds === [] && $bundles === [] ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Add at least one product or bundle.',
+            ], 400 );
+        }
 
-        // if ( $productecreateqty == null ) {
-        //     return responsejson( 'You do not have permission for pos sale', 'fail' );
-        // }
+        $paidAmount = (float) $request->paid_amount;
+        $totalPrice = (float) $request->total_price;
+        $dueAmount  = max( 0, round( $totalPrice - $paidAmount, 2 ) );
+        // Prefer client due_amount when provided and consistent; otherwise recalculate.
+        if ( $request->filled( 'due_amount' ) ) {
+            $clientDue = round( (float) $request->due_amount, 2 );
+            if ( abs( $clientDue - $dueAmount ) < 0.01 ) {
+                $dueAmount = $clientDue;
+            }
+        }
 
-        $totalcreatedproduct = PosSales::where( 'vendor_id', vendorId() )->count();
+        $isFullyPaid   = $dueAmount <= 0 || $totalPrice <= $paidAmount;
+        $isInstallment = $request->input( 'payment_mode' ) === 'installment'
+            || ( is_array( $request->installments ) && count( $request->installments ) > 0 );
 
-        // if ( Auth::user()->is_employee == null && ismembershipexists() != 1 ) {
-        //     return responsejson( 'You do not have a membership', 'fail' );
-        // }
-
-        // if ( Auth::user()->is_employee == null && isactivemembership() != 1 ) {
-        //     return responsejson( 'Membership expired!', 'fail' );
-        // }
-
-        // if ( $productecreateqty <= $totalcreatedproduct ) {
-        //     return responsejson( 'You can not create invoice more than ' . $productecreateqty . '.', 'fail' );
-        // }
+        $installmentSchedule = [];
+        if ( $isInstallment ) {
+            try {
+                $installmentSchedule = PosInstallmentService::validateSchedule(
+                    is_array( $request->installments ) ? $request->installments : [],
+                    $totalPrice
+                );
+            } catch ( ValidationException $e ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => 'Validation error',
+                    'errors'  => $e->errors(),
+                ], 400 );
+            }
+        } elseif ( ! $isFullyPaid && ! $request->filled( 'due_date' ) ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Due date is required for partial payments.',
+                'errors'  => ['due_date' => ['Due date is required when payment is partial.']],
+            ], 400 );
+        }
 
         $sale                 = new PosSales();
         $sale->customer_id    = $request->customer_id;
@@ -211,38 +286,125 @@ class ProductPosSaleController extends Controller {
         $sale->user_id        = Auth::id();
         $sale->sale_date      = $request->sale_date;
         $sale->payment_id     = $request->payment_id;
-        $sale->paid_amount    = $request->paid_amount;
+        $sale->paid_amount    = $paidAmount;
         $sale->total_qty      = $request->total_qty;
-        $sale->total_price    = $request->total_price;
-        $sale->due_amount     = $request->due_amount;
+        $sale->total_price    = $totalPrice;
+        $sale->due_amount     = $isFullyPaid ? 0 : $dueAmount;
         $sale->sale_discount  = $request->sale_discount;
         $sale->discount_type  = $request->discount_type;
         $sale->sale_date      = date( 'Y-m-d' );
-        $sale->payment_status = $request->total_price <= $request->paid_amount ? 'paid' : 'due';
+        $sale->payment_status = $isFullyPaid ? 'paid' : 'due';
         $sale->vendor_id      = vendorId();
         $sale->change_amount  = $request->change_amount;
         $sale->note           = $request->note;
         $sale->save();
 
-        //For product sale details
-        $product_ids = $request->product_id;
-        $status      = 'normal';
-        ProductPosSaleService::productSaleDetails( $product_ids, $sale->id, $status );
+        // Installment plans use installments table — never mix with pos_sale_dues.
+        if ( $isInstallment ) {
+            PosSaleDue::where( 'pos_sales_id', $sale->id )->delete();
+            PosInstallmentService::createPlan( $sale, $installmentSchedule );
+            if ( $paidAmount > 0 ) {
+                PosInstallmentService::applyInitialPayment( $sale, $paidAmount, (int) $request->payment_id );
+            }
+            $sale->refresh();
+            PosInstallmentService::syncSaleFromInstallments( $sale );
+        } elseif ( ! $isFullyPaid ) {
+            PosSaleDue::updateOrCreate(
+                ['pos_sales_id' => $sale->id],
+                [
+                    'due_date' => $request->due_date,
+                    'due_note' => $request->due_note,
+                ]
+            );
+        } else {
+            PosSaleDue::where( 'pos_sales_id', $sale->id )->delete();
+        }
 
-        //For variant stock manage
-        $variant = $request->all();
-        ProductPosSaleService::productVariants( $product_ids, $variant );
+        // Normal product lines
+        if ( $productIds !== [] ) {
+            $status = 'normal';
+            ProductPosSaleService::productSaleDetails( $productIds, $sale->id, $status );
+            ProductPosSaleService::productVariants( $productIds, $request->all() );
+        }
+
+        // Bundle lines: preserve bundle identity + deduct component stock
+        foreach ( $bundles as $bundleRow ) {
+            $bundle = ProductBundle::active()->with( 'items' )->find( (int) ( $bundleRow['bundle_id'] ?? 0 ) );
+            if ( ! $bundle || $bundle->items->isEmpty() ) {
+                continue;
+            }
+
+            $soldQty  = max( 1, (int) ( $bundleRow['qty'] ?? 1 ) );
+            $rate     = isset( $bundleRow['rate'] )
+                ? (float) $bundleRow['rate']
+                : (float) $bundle->bundle_price;
+            $subTotal = isset( $bundleRow['sub_total'] )
+                ? (float) $bundleRow['sub_total']
+                : round( $rate * $soldQty, 2 );
+            $firstProductId = (int) $bundle->items->first()->product_id;
+
+            $detail               = new \App\Models\PosSalesDetails();
+            $detail->pos_sales_id = $sale->id;
+            $detail->product_id   = $firstProductId;
+            $detail->bundle_id    = $bundle->id;
+            $detail->bundle_name  = $bundle->name;
+            $detail->unit_id      = null;
+            $detail->size_id      = null;
+            $detail->color_id     = null;
+            $detail->qty          = $soldQty;
+            $detail->rate         = $rate;
+            $detail->sub_total    = $subTotal;
+            $detail->status       = 'bundle';
+            $detail->save();
+
+            BundleInventoryService::decrementForSale( $bundle, $soldQty, vendorId() );
+        }
 
         if ( $request->paid_amount > 0 ) {
             $sale['partial_payment'] = 0;
             ProductPosSaleService::customerPayment( $sale );
         }
 
+        $sale->refresh();
+
         return response()->json( [
-            'status'  => 200,
-            'message' => 'Product successfully Sale!',
-            'sale_id' => $sale->id,
+            'status'         => 200,
+            'message'        => 'Product successfully Sale!',
+            'sale_id'        => $sale->id,
+            'is_installment' => $isInstallment,
+            'installments'   => $isInstallment
+                ? PosInstallmentService::planSummary( $sale->fresh() )
+                : null,
         ] );
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function activeBundlesForPos( $categoryId = null, $search = null )
+    {
+        return ProductBundle::active()
+            ->with( [
+                'items.product:id,name,image,sku,selling_price,discount_price',
+            ] )
+            ->when( $categoryId, fn ( $q ) => $q->where( 'category_id', $categoryId ) )
+            ->when( $search, fn ( $q ) => $q->where( 'name', 'like', '%' . $search . '%' ) )
+            ->latest()
+            ->get()
+            ->map( function ( ProductBundle $bundle ) {
+                $regular = $bundle->calculateRegularPrice();
+
+                return [
+                    'id'            => $bundle->id,
+                    'name'          => $bundle->name,
+                    'type'          => 'bundle',
+                    'category_id'   => $bundle->category_id,
+                    'bundle_price'  => (float) $bundle->bundle_price,
+                    'regular_price' => $regular,
+                    'selling_price' => (float) $bundle->bundle_price,
+                    'items_count'   => $bundle->items->count(),
+                ];
+            } );
     }
 
     public function show( $id ) {
@@ -336,7 +498,7 @@ class ProductPosSaleController extends Controller {
     }
 
     public function addPayment( $id ) {
-        $sale = PosSales::find( $id );
+        $sale = PosSales::where( 'id', $id )->where( 'vendor_id', vendorId() )->first();
 
         if ( $sale == null ) {
             return response()->json( [
@@ -345,14 +507,34 @@ class ProductPosSaleController extends Controller {
             ] );
         }
 
-        if ( $sale->payment_status == 'paid' ) {
+        if ( $sale->isInstallmentOrder() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'This order uses installment payments. Record payment against a specific installment instead.',
+            ], 400 );
+        }
+
+        if ( $sale->payment_status == 'paid' || (float) $sale->due_amount <= 0 ) {
             return response()->json( [
                 'status'  => 200,
                 'message' => 'There are no outstanding payments. Thank you!',
             ] );
         }
 
-        if ( $sale->due_amount < request()->amount ) {
+        $validator = Validator::make( request()->all(), [
+            'amount'            => 'required|numeric|min:0.01',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Validation error',
+                'errors'  => $validator->errors(),
+            ], 400 );
+        }
+
+        if ( (float) $sale->due_amount < (float) request()->amount ) {
             return response()->json( [
                 'status'  => 400,
                 'message' => 'The amount you entered exceeds the due amount.',
@@ -362,11 +544,116 @@ class ProductPosSaleController extends Controller {
         $sale['partial_payment']        = 1;
         $sale['partial_payment_amount'] = request()->amount;
         $sale['payment_method']         = request()->payment_method_id;
+        $sale['sale_date']              = date( 'Y-m-d' );
         ProductPosSaleService::customerPayment( $sale );
+
+        $sale->refresh();
+        $sale->load( 'dueRecord' );
 
         return response()->json( [
             'status'  => 200,
             'message' => 'Payment successfully complete !',
+            'data'    => [
+                'id'             => $sale->id,
+                'paid_amount'    => (float) $sale->paid_amount,
+                'due_amount'     => (float) $sale->due_amount,
+                'payment_status' => $sale->payment_status,
+                'due_status'     => $sale->due_status,
+                'due_date'       => optional( $sale->dueRecord?->due_date )->format( 'Y-m-d' ),
+                'due_note'       => $sale->dueRecord?->due_note,
+            ],
+        ] );
+    }
+
+    /**
+     * Update due date / due note on an open POS due sale (pos_sale_dues table).
+     */
+    public function updateDue( Request $request, $id )
+    {
+        $sale = PosSales::where( 'id', $id )->where( 'vendor_id', vendorId() )->first();
+
+        if ( ! $sale ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Invoice not found.',
+            ], 404 );
+        }
+
+        if ( $sale->isInstallmentOrder() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'This order uses installment payments. Due management is not available for installment orders.',
+            ], 400 );
+        }
+
+        if ( (float) $sale->due_amount <= 0 || $sale->payment_status === 'paid' ) {
+            PosSaleDue::where( 'pos_sales_id', $sale->id )->delete();
+
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'This sale has no outstanding due.',
+            ], 400 );
+        }
+
+        $validator = Validator::make( $request->all(), [
+            'due_date' => 'nullable|date',
+            'due_note' => 'nullable|string|max:2000',
+            'note'     => 'nullable|string|max:1000',
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'message' => 'Validation error',
+                'errors'  => $validator->errors(),
+            ], 400 );
+        }
+
+        $due = PosSaleDue::firstOrNew( ['pos_sales_id' => $sale->id] );
+
+        if ( $request->filled( 'due_date' ) ) {
+            $due->due_date = $request->due_date;
+        }
+        if ( $request->has( 'due_note' ) ) {
+            $due->due_note = $request->due_note;
+        }
+        $due->save();
+
+        if ( $request->has( 'note' ) ) {
+            $sale->note = $request->note;
+            $sale->save();
+        }
+
+        $sale->load( 'dueRecord' );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Due details updated successfully.',
+            'data'    => [
+                'id'         => $sale->id,
+                'due_date'   => optional( $sale->dueRecord?->due_date )->format( 'Y-m-d' ),
+                'due_note'   => $sale->dueRecord?->due_note,
+                'note'       => $sale->note,
+                'due_status' => $sale->due_status,
+                'due_amount' => (float) $sale->due_amount,
+            ],
+        ] );
+    }
+
+    public function customerDues( $customerId )
+    {
+        $summary = ProductPosSaleService::customerDueSummary( (int) $customerId );
+
+        if ( ! $summary ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Customer not found.',
+            ], 404 );
+        }
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => $summary,
         ] );
     }
 

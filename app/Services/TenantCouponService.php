@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 class TenantCouponService
 {
     /**
-     * @return array{coupon: TenantCoupon, discount_amount: float, payable_amount: float}|array{error: string}
+     * @return array{coupon: TenantCoupon, discount_amount: float, payable_amount: float, discount_type: string}|array{error: string}
      */
     public static function validateForCheckout(
         string $code,
@@ -71,31 +71,58 @@ class TenantCouponService
             }
         }
 
-        $discount = self::calculateDiscount( $coupon, $orderAmount );
-        $payable  = max( 0, round( $orderAmount - $discount, 2 ) );
+        $discountType = self::normalizeDiscountType( (string) $coupon->discount_type );
+        $discount     = self::calculateDiscount( $coupon, $orderAmount );
+        $payable      = max( 0, round( $orderAmount - $discount, 2 ) );
+
+        // Ensure API consumers always see a valid type (repairs legacy empty/"fixed" values in response).
+        $coupon->setAttribute( 'discount_type', $discountType );
 
         return [
             'coupon'          => $coupon,
+            'discount_type'   => $discountType,
             'discount_amount' => $discount,
             'payable_amount'  => $payable,
         ];
     }
 
+    /**
+     * Normalize incoming/stored discount type to: flat | percentage
+     */
+    public static function normalizeDiscountType( ?string $type ): string
+    {
+        $type = strtolower( trim( (string) $type ) );
+
+        return match ( $type ) {
+            'flat', 'fixed', 'fix', 'amount' => 'flat',
+            'percentage', 'percent', 'perchentage', '%' => 'percentage',
+            default => 'percentage',
+        };
+    }
+
+    public static function isFlatDiscount( ?string $type ): bool
+    {
+        return self::normalizeDiscountType( $type ) === 'flat';
+    }
+
     public static function calculateDiscount( TenantCoupon $coupon, float $orderAmount ): float
     {
-        $orderAmount = (float) $orderAmount;
+        $orderAmount = max( 0, (float) $orderAmount );
+        $value       = (float) $coupon->discount_value;
 
-        if ( $coupon->discount_type === 'fixed' ) {
-            $discount = (float) $coupon->discount_value;
+        if ( self::isFlatDiscount( $coupon->discount_type ) ) {
+            $discount = $value;
         } else {
-            $discount = ( $orderAmount / 100 ) * (float) $coupon->discount_value;
+            // percentage: discount_value is percent (e.g. 10 = 10%)
+            $discount = ( $orderAmount * $value ) / 100;
         }
 
-        if ( (float) $coupon->max_discount_amount > 0 ) {
-            $discount = min( $discount, (float) $coupon->max_discount_amount );
+        $maxDiscount = (float) ( $coupon->max_discount_amount ?? 0 );
+        if ( $maxDiscount > 0 ) {
+            $discount = min( $discount, $maxDiscount );
         }
 
-        return round( min( $discount, $orderAmount ), 2 );
+        return round( min( max( 0, $discount ), $orderAmount ), 2 );
     }
 
     public static function recordUsage(

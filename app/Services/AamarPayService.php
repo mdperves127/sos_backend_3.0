@@ -8,8 +8,15 @@ namespace App\Services;
  */
 class AamarPayService
 {
-    static function gateway( $price, $traxId, $type, $successUrl, $tenant_type )
+    static function gateway( $price, $traxId, $type, $successUrl, $tenant_type, ?array $customer = null )
     {
-        return EpsPaymentService::gateway( (float) $price, (string) $traxId, (string) $type, $successUrl, (string) $tenant_type );
+        return EpsPaymentService::gateway(
+            (float) $price,
+            (string) $traxId,
+            (string) $type,
+            $successUrl,
+            (string) $tenant_type,
+            $customer
+        );
     }
 }

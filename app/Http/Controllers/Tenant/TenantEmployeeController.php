@@ -99,7 +99,7 @@ class TenantEmployeeController extends Controller {
             'edit_product', 'reject_product',
             'category', 'sub_category', 'brand',
             'warehouse', 'unit', 'color', 'variation',
-            'order', 'add_order', 'all_order', 'hold_order', 'pending_order', 'receive_order',
+            'order', 'add_order', 'edit_order', 'all_order', 'hold_order', 'pending_order', 'receive_order',
             'delivery_processing', 'delivery_order', 'cancel_order', 'customer',
             'pos_sale', 'add_pos_sale', 'all_pos_sale', 'payment_history_pos_sale',
             'supplier', 'purchase', 'add_purchase', 'all_purchase', 'payment_history_purchase',

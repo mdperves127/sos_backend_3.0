@@ -19,6 +19,8 @@ use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
 use App\Http\Controllers\API\Vendor\CourierCredentialController;
 use App\Http\Controllers\API\Vendor\CustomerController;
+use App\Http\Controllers\API\Vendor\AbandonedCartController;
+use App\Http\Controllers\API\FraudCheckController;
 use App\Http\Controllers\API\Vendor\DamageController;
 use App\Http\Controllers\API\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\API\Vendor\DeliveryAndPickupAddressController;
@@ -29,7 +31,12 @@ use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\MediaController;
+use App\Http\Controllers\API\Vendor\PageBuilderController;
+use App\Http\Controllers\API\Vendor\ProductPreOrderController;
+use App\Http\Controllers\API\Vendor\ProductBundleController;
 use App\Http\Controllers\API\Vendor\ProductPosSaleController;
+use App\Http\Controllers\API\Vendor\PosInstallmentController;
 use App\Http\Controllers\API\Vendor\ProductPurchaseController;
 use App\Http\Controllers\API\Vendor\ProductStatusController;
 use App\Http\Controllers\API\Vendor\ReportController;
@@ -134,6 +141,8 @@ Route::middleware( [
         Route::get('products', [MerchantFrontendController::class, 'products']);
         Route::get('product/{slug}', [MerchantFrontendController::class, 'product']);
         Route::get('product/{slug}/reviews', [ProductReviewController::class, 'forProduct']);
+        Route::get('bundles', [MerchantFrontendController::class, 'bundles']);
+        Route::get('bundle/{id}', [MerchantFrontendController::class, 'bundle']);
         Route::get('categories', [MerchantFrontendController::class, 'categories']);
         Route::get('subcategories', [MerchantFrontendController::class, 'subcategories']);
         Route::get('brands', [MerchantFrontendController::class, 'brands']);
@@ -145,6 +154,8 @@ Route::middleware( [
         Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
         Route::get('pages', [PageController::class, 'index']);
         Route::get('page/{url}', [PageController::class, 'showByUrl'])->where('url', '.*');
+        Route::get('page-builder/lookup', [PageBuilderController::class, 'publicLookup']);
+        Route::get('page-builder/{slug}', [PageBuilderController::class, 'publicShow']);
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 
@@ -160,6 +171,7 @@ Route::middleware( [
             Route::delete('wishlist/{id}', [WishListController::class, 'deleteWishlist']);
 
             Route::post('add-to-cart', [TenantCartController::class, 'addToCart']);
+            Route::post('add-bundle-to-cart', [TenantCartController::class, 'addBundleToCart']);
             Route::get('cart', [TenantCartController::class, 'cart']);
             Route::put('cart/{id}/quantity', [TenantCartController::class, 'updateQuantity']);
             Route::delete('cart/{id}', [TenantCartController::class, 'deleteCart']);
@@ -195,6 +207,26 @@ Route::middleware( [
         Route::get('tenant/customers', [TenantAuthController::class, 'customers']);
 
         Route::get( 'tenant-dashboard/statistics', [TenantDashboardController::class, 'statistics'] );
+
+        // Media library (tenant media picker / uploads)
+        Route::prefix( 'media' )->group( function () {
+            Route::get( '/', [MediaController::class, 'index'] );
+            Route::post( 'upload', [MediaController::class, 'upload'] );
+            Route::get( '{id}', [MediaController::class, 'show'] );
+            Route::delete( '{id}', [MediaController::class, 'destroy'] );
+        } );
+
+        // Page builder (block-based pages)
+        Route::prefix( 'page-builder' )->group( function () {
+            Route::get( '/', [PageBuilderController::class, 'index'] );
+            Route::get( 'lookup', [PageBuilderController::class, 'lookup'] );
+            Route::post( '/', [PageBuilderController::class, 'store'] );
+            Route::get( '{id}', [PageBuilderController::class, 'show'] );
+            Route::match( ['PUT', 'PATCH'], '{id}', [PageBuilderController::class, 'update'] );
+            Route::match( ['PUT', 'PATCH'], '{id}/status', [PageBuilderController::class, 'updateStatus'] );
+            Route::post( '{id}/duplicate', [PageBuilderController::class, 'duplicate'] );
+            Route::delete( '{id}', [PageBuilderController::class, 'destroy'] );
+        } );
 
         // Marketplace routes for category, subcategory & brand
 
@@ -240,6 +272,27 @@ Route::middleware( [
 
         } );
 
+        // Product pre-order management
+        Route::prefix( 'tenant-product-pre-order' )->group( function () {
+            Route::get( '/', [ProductPreOrderController::class, 'index'] );
+            Route::get( 'orders', [ProductPreOrderController::class, 'orders'] );
+            Route::get( 'product/{product_id}', [ProductPreOrderController::class, 'show'] );
+            Route::match( ['POST', 'PUT', 'PATCH'], 'product/{product_id}', [ProductPreOrderController::class, 'updateSettings'] );
+            Route::post( 'collect-due/{order_id}', [ProductPreOrderController::class, 'collectDue'] );
+        } );
+
+        // Merchant product bundles (combo offers)
+        Route::prefix( 'tenant-product-bundle' )->group( function () {
+            Route::get( '/', [ProductBundleController::class, 'index'] );
+            Route::get( 'create', [ProductBundleController::class, 'create'] );
+            Route::post( 'store', [ProductBundleController::class, 'store'] );
+            Route::get( 'show/{id}', [ProductBundleController::class, 'show'] );
+            Route::get( 'edit/{id}', [ProductBundleController::class, 'edit'] );
+            Route::post( 'update/{id}', [ProductBundleController::class, 'update'] );
+            Route::delete( 'delete/{id}', [ProductBundleController::class, 'destroy'] );
+            Route::get( 'status/{id}', [ProductBundleController::class, 'status'] );
+        } );
+
         Route::prefix( 'tenant-product-order' )->group( function () {
             Route::get( 'all-orders', [VendorOrderController::class, 'AllOrders'] );
             Route::get( 'order/view/{id}', [VendorOrderController::class, 'orderView'] );
@@ -258,6 +311,9 @@ Route::middleware( [
             Route::post( 'status-bulk', [VendorOrderController::class, 'productOrderStatusBulk'] );
             Route::post( 'send-to-courier-bulk', [VendorOrderController::class, 'sendToCourierBulk'] );
             Route::post( 'send-to-courier/{id}', [VendorOrderController::class, 'sendToCourier'] );
+            Route::get( 'edit/{id}', [VendorOrderController::class, 'editOrder'] );
+            Route::match( ['PUT', 'PATCH', 'POST'], 'update/{id}', [VendorOrderController::class, 'updateOrder'] );
+            Route::get( 'edit-history/{id}', [VendorOrderController::class, 'editHistory'] );
         } );
 
         Route::prefix( 'tenant-product-manual-order' )->group( function () {
@@ -390,6 +446,13 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [CustomerController::class, 'destroy'] );
             Route::get( 'status/{id}', [CustomerController::class, 'status'] );
         } );
+
+        // Leftover storefront carts (incomplete checkout) for merchant dashboard
+        Route::get( 'tenant-abandoned-cart', [AbandonedCartController::class, 'index'] );
+
+        // Courier fraud check by phone (FraudBD)
+        Route::post( 'fraud-check', [FraudCheckController::class, 'check'] )
+            ->middleware( 'throttle:fraud-check' );
 
         Route::prefix( 'tenant-order-source' )->group( function () {
             Route::get( '/', [SaleOrderResourceController::class, 'index'] );
@@ -543,9 +606,20 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [ProductPosSaleController::class, 'destroy'] );
             Route::get( 'product/select/{barcode}', [ProductPosSaleController::class, 'productSelect'] ); //Product select
             Route::get( 'scan', [ProductPosSaleController::class, 'scan'] ); //Product select
+            Route::get( 'bundle/select/{id}', [ProductPosSaleController::class, 'bundleSelect'] );
             //Partial payment
             Route::post( 'add-payment/{sales_id}', [ProductPosSaleController::class, 'addPayment'] );
+            Route::match( ['POST', 'PUT', 'PATCH'], 'update-due/{id}', [ProductPosSaleController::class, 'updateDue'] );
+            Route::get( 'customer-dues/{customer_id}', [ProductPosSaleController::class, 'customerDues'] );
             Route::get( 'payment-history', [ProductPosSaleController::class, 'paymentHistory'] );
+
+            // Installment management (separate from due management)
+            Route::get( 'installments', [PosInstallmentController::class, 'index'] );
+            Route::get( 'installments/order/{sale_id}', [PosInstallmentController::class, 'show'] );
+            Route::get( 'installments/{installment_id}', [PosInstallmentController::class, 'showInstallment'] );
+            Route::post( 'installments/{installment_id}/add-payment', [PosInstallmentController::class, 'addPayment'] );
+            Route::get( 'installments/{installment_id}/payment-history', [PosInstallmentController::class, 'paymentHistory'] );
+            Route::get( 'customer-installments/{customer_id}', [PosInstallmentController::class, 'customerInstallments'] );
         } );
 
         Route::prefix( 'tenant-barcode' )->group( function () {

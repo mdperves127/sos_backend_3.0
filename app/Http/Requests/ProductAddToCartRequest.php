@@ -75,6 +75,10 @@ class ProductAddToCartRequest extends FormRequest {
                         return;
                     }
 
+                    if ( (string) ( $getproduct->pre_order ?? '0' ) === '1' ) {
+                        return;
+                    }
+
                     if ( request( 'purchase_type' ) == 'bulk' ) {
                         if ( $getproduct->is_connect_bulk_single == 1 ) {
                             if ( (int) $getproduct->qty < (int) $value ) {
@@ -90,6 +94,8 @@ class ProductAddToCartRequest extends FormRequest {
                     }
                 },
             ],
+            'pre_order_payment' => ['nullable', Rule::in( ['advance', 'full'] )],
+            'pre_order_payment_type' => ['nullable', Rule::in( ['advance', 'full'] )],
             'tenant_id'       => [
                 Rule::requiredIf( fn () => ! $this->isDropshipperStorefront() ),
                 'nullable',

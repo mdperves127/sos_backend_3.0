@@ -59,35 +59,38 @@ class AamarpayController extends Controller
 
     function productcheckoutsuccess()
     {
+        // Product checkout belongs to tenant storefronts. Prefer tenant completion
+        // and always redirect back to the tenant frontend — never the admin panel.
         $response = $this->verifiedEpsTransaction();
 
         if ( ! $response ) {
             return redirect( config( 'app.redirecturl' ) . '?message=Payment verification failed' );
         }
-        $data = PaymentStore::where('trxid', $response['mer_txnid'])->first();
 
-        if (!$data) {
-            return false;
+        $data = \App\Models\PaymentStore::on( 'mysql' )->where( 'trxid', $response['mer_txnid'] )->first();
+
+        if ( ! $data ) {
+            return redirect( config( 'app.redirecturl' ) . '?message=Payment not found' );
         }
-        $info = $data->info;
 
-        // PaymentHistoryService::store($data->trxid, $response['amount'], 'Ammarpay', 'Payment Checkout', '-', '', $info['userid']);
-        ProductCheckoutService::store(
-            $info['cartid'],
-            $info['productid'],
-            $info['totalqty'],
-            $info['userid'],
-            $info['datas'],
-            'aamarpay',
-            $info['tenant_id'] ?? null,
-            $info['placing_tenant_id'] ?? null,
-            $info['order_media'] ?? $data->order_media ?? null
-        );
+        try {
+            $url = app( \App\Services\EpsPaymentCompletionService::class )
+                ->completeByTransactionId( $response['mer_txnid'], 'checkout' );
+        } catch ( \Throwable $e ) {
+            $info = is_array( $data->info ) ? $data->info : [];
+            $tenantId = $info['storefront_tenant_id']
+                ?? $info['placing_tenant_id']
+                ?? $info['tenant_id']
+                ?? null;
+            $base = \App\Helper\RedirectHelper::getPaymentRedirectUrl(
+                $tenantId,
+                $info['return_url'] ?? null
+            );
 
-        $user = User::find($info['userid']);
-        $path = paymentredirect($user->role_as);
-        $url = config('app.redirecturl') . $path . '?message=Product purchase successfully';
-        return redirect($url);
+            return redirect( rtrim( $base, '/' ) . '/?message=' . urlencode( $e->getMessage() ) );
+        }
+
+        return redirect( $url );
     }
 
     function renewsuccess()

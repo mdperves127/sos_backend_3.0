@@ -18,13 +18,19 @@ class TenantRegistrationRequest extends FormRequest
 
     /**
      * Accept legacy `number` field as phone (admin/frontend payloads).
+     * Normalize to BD local format: 01XXXXXXXXX (11 digits).
      */
     protected function prepareForValidation(): void
     {
         $phone = $this->input( 'phone', $this->input( 'number' ) );
 
         if ( is_string( $phone ) ) {
-            $phone = preg_replace( '/\s+/', '', $phone );
+            $phone = preg_replace( '/[\s\-\(\)]+/', '', $phone );
+
+            // +8801XXXXXXXXX or 8801XXXXXXXXX → 01XXXXXXXXX
+            if ( preg_match( '/^\+?880(1[3-9]\d{8})$/', $phone, $matches ) ) {
+                $phone = $matches[1];
+            }
         }
 
         if ( $phone !== null && $phone !== '' ) {
@@ -45,7 +51,13 @@ class TenantRegistrationRequest extends FormRequest
             'company_name' => 'required|string|max:255',
             'domain'       => 'required|string|max:255|regex:/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$/',
             'email'        => 'required|email|max:255|unique:mysql.tenants,email',
-            'phone'        => 'required|string|max:20|unique:mysql.tenants,phone',
+            'phone'        => [
+                'required',
+                'string',
+                'size:11',
+                'regex:/^01[3-9][0-9]{8}$/',
+                'unique:mysql.tenants,phone',
+            ],
             'number'       => 'nullable|string|max:20',
             'address'      => 'nullable|string|max:500',
             'owner_name'   => 'required|string|max:255',
@@ -124,9 +136,10 @@ class TenantRegistrationRequest extends FormRequest
             'email.unique' => 'This email is already registered.',
 
             'phone.required' => 'Phone number is required.',
-            'phone.string' => 'Phone must be a string.',
-            'phone.max' => 'Phone number cannot exceed 20 characters.',
-            'phone.unique' => 'This phone number is already registered.',
+            'phone.string'   => 'Phone must be a string.',
+            'phone.size'     => 'Phone number must be exactly 11 digits.',
+            'phone.regex'    => 'Phone number must be a valid Bangladeshi mobile number (01XXXXXXXXX).',
+            'phone.unique'   => 'This phone number is already registered.',
 
             'address.string' => 'Address must be a string.',
             'address.max' => 'Address cannot exceed 500 characters.',
