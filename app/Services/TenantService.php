@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Str;
 use App\Mail\TenantWelcomeMail;
+use App\Support\RegistrationTimer;
 use App\Models\Tenant;
 use Stancl\Tenancy\Database\Models\Domain;
 use Exception;
@@ -83,6 +84,7 @@ class TenantService
                 $this->cleanupFailedTenant( $tenantId );
                 throw $e;
             }
+            RegistrationTimer::mark( 'create_tenant_user_ms' );
 
             \Log::info('TenantService: Tenant created with password in session', [
                 'tenant_id' => $tenant->id,
@@ -99,6 +101,7 @@ class TenantService
             ]);
 
             // Create the domain
+            RegistrationTimer::mark( 'after_tenant_logging_ms' );
             try {
                 $domainModel = Domain::create([
                     'domain' => $domain,
@@ -108,6 +111,7 @@ class TenantService
                 $this->cleanupFailedTenant( $tenantId );
                 throw $e;
             }
+            RegistrationTimer::mark( 'domain_record_ms' );
 
             // Extract subdomain part for cPanel API (just the subdomain, not the full domain)
             $subdomainPart = $data['domain'];
@@ -140,7 +144,7 @@ class TenantService
                         'full_domain'    => $domain,
                         'environment'    => config( 'app.env' ),
                     ] );
-                    $subdomainResult = $this->cpanelService->createSubdomain( $subdomainPart );
+                    $subdomainResult = $this->cpanelService->createSubdomain( $subdomainPart, true );
 
                     \Log::info( 'TenantService: Subdomain creation result', [
                         'subdomain_result' => $subdomainResult,
@@ -167,8 +171,15 @@ class TenantService
                     'error' => 'Exception during subdomain creation: ' . $e->getMessage()
                 ];
             }
+            RegistrationTimer::mark( 'cpanel_subdomain_ms' );
 
-            $welcomeEmail = $this->sendWelcomeEmail( $tenant, $domain );
+            $welcomeEmail = $this->scheduleWelcomeEmail( $tenant, $domain );
+            RegistrationTimer::mark( 'welcome_email_schedule_ms' );
+
+            // Registered last so the timing log and welcome email run before the PHP-FPM reload.
+            if ( (int) ( $subdomainResult['status'] ?? 0 ) === 1 && ! empty( $subdomainResult['subdomain'] ) ) {
+                $this->cpanelService->setPhpVersionAfterResponse( (string) $subdomainResult['subdomain'] );
+            }
 
             return [
                 'tenant' => $tenant,
@@ -182,6 +193,33 @@ class TenantService
         } catch (Exception $e) {
             throw new Exception('Failed to create tenant: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Send the welcome email once the HTTP response has been flushed, so SMTP latency
+     * never delays registration. Delivery failures are still logged by sendWelcomeEmail().
+     *
+     * @return array{sent: bool, error: string|null, queued: bool}
+     */
+    protected function scheduleWelcomeEmail( Tenant $tenant, string $domainUrl ): array
+    {
+        if ( empty( $tenant->email ) ) {
+            return $this->sendWelcomeEmail( $tenant, $domainUrl ) + [ 'queued' => false ];
+        }
+
+        $requestId = RegistrationTimer::requestId();
+        app()->terminating( function () use ( $tenant, $domainUrl, $requestId ) {
+            $startedAt = microtime( true );
+            $result    = $this->sendWelcomeEmail( $tenant, $domainUrl );
+
+            \Log::info( 'registration.welcome_email_after_response', [
+                'request_id' => $requestId,
+                'sent'       => $result['sent'],
+                'ms'         => (int) round( ( microtime( true ) - $startedAt ) * 1000 ),
+            ] );
+        } );
+
+        return [ 'sent' => false, 'error' => null, 'queued' => true ];
     }
 
     /**

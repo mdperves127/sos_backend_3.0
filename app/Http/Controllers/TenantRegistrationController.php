@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TenantRegistrationRequest;
 use App\Services\TenantService;
 use App\Services\CustomDomainService;
+use App\Support\RegistrationTimer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -60,7 +61,7 @@ class TenantRegistrationController extends Controller
             $result = $this->tenantService->createTenant( $data );
             // dd($result);
 
-            return response()->json([
+            $response = response()->json([
                 'success' => true,
                 'message' => 'Tenant registered successfully',
                 'data' => [
@@ -73,6 +74,7 @@ class TenantRegistrationController extends Controller
                     'domain_url' => $result['domain_url'],
                     'welcome_email_sent' => $result['welcome_email']['sent'] ?? false,
                     'welcome_email_error' => $result['welcome_email']['error'] ?? null,
+                    'welcome_email_queued' => $result['welcome_email']['queued'] ?? false,
                     'subdomain' => [
                         'status'  => $result['subdomain']['status'] ?? 0,
                         'message' => $result['subdomain']['message']
@@ -83,8 +85,13 @@ class TenantRegistrationController extends Controller
                     ],
                 ]
             ], 201);
+            RegistrationTimer::mark( 'response_build_ms' );
+
+            return $response;
 
         } catch (\Exception $e) {
+            RegistrationTimer::mark( 'failed_at_ms' );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to register tenant',

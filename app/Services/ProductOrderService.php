@@ -294,6 +294,8 @@ class ProductOrderService {
                 }
             }
 
+            self::cancelUnsettledCommission( $order );
+
             if ( $order->wc_order_no != null ) {
                 $wcOrderNo = explode( "-", $order->wc_order_no )[1];
                 if ( $wcOrderNo ) {
@@ -1288,6 +1290,8 @@ class ProductOrderService {
         // affiliate balance back
         self::affiliateBalanceback( $order );
 
+        self::cancelUnsettledCommission( $order );
+
         return self::response( 'Order retrun successfull!' );
     }
 
@@ -1486,41 +1490,89 @@ class ProductOrderService {
         return $media === '' || $media === 'null' || in_array( $media, ['dropshipper', 'Affiliator'], true );
     }
 
+    /**
+     * Settle the dropshipper commission once: the pending balance row is locked, so repeated
+     * status updates, retries and courier webhooks cannot credit (or charge the fee) twice.
+     */
     protected static function creditDropshipperCommission( Order $order, PendingBalance $affiliateData ): bool {
-        $amount = (float) $affiliateData->amount;
-        if ( $amount <= 0 ) {
-            $affiliateData->update( ['status' => 'success'] );
+        $connection = $order->getConnectionName() ?: config( 'database.default' );
+
+        return DB::connection( $connection )->transaction( function () use ( $order, $affiliateData, $connection ) {
+            $pending = PendingBalance::on( $connection )->whereKey( $affiliateData->id )->lockForUpdate()->first();
+
+            if ( ! $pending || $pending->status === 'cancel' ) {
+                return false;
+            }
+
+            if ( $pending->status === 'success' ) {
+                return true;
+            }
+
+            $fee = PlatformFeeService::calculate( $order->tenant_id, (float) $pending->amount );
+
+            if ( $fee['gross'] > 0 ) {
+                $dropshipperTenant = Tenant::on( 'mysql' )->find( $order->tenant_id );
+                if ( ! $dropshipperTenant ) {
+                    return false;
+                }
+
+                DB::connection( 'mysql' )->transaction( function () use ( $dropshipperTenant, $fee, $order ) {
+                    if ( $fee['net'] > 0 ) {
+                        $dropshipperTenant->increment( 'balance', $fee['net'] );
+                    }
+
+                    $context = [
+                        'entity_type' => 'tenant',
+                        'tenant_id'   => $dropshipperTenant->id,
+                        'user_id'     => $order->affiliator_id,
+                    ];
+
+                    PaymentHistoryService::store( uniqid(), $fee['gross'], 'My wallet', 'Product commission', '+', '', $dropshipperTenant->id, $context );
+
+                    if ( $fee['amount'] > 0 ) {
+                        PaymentHistoryService::store( uniqid(), $fee['amount'], 'My wallet', 'Platform fee (order ' . $order->order_id . ')', '-', '', $dropshipperTenant->id, $context );
+                    }
+                } );
+            }
+
+            self::recordSettlementSnapshot( $order, $connection, $fee );
+
+            $pending->update( ['status' => 'success'] );
 
             return true;
-        }
-
-        $dropshipperTenant = Tenant::on( 'mysql' )->find( $order->tenant_id );
-        if ( !$dropshipperTenant ) {
-            return false;
-        }
-
-        DB::connection( 'mysql' )->transaction( function () use ( $dropshipperTenant, $amount, $order, $affiliateData ) {
-            $dropshipperTenant->increment( 'balance', $amount );
-
-            PaymentHistoryService::store(
-                uniqid(),
-                $amount,
-                'My wallet',
-                'Product commission',
-                '+',
-                '',
-                $dropshipperTenant->id,
-                [
-                    'entity_type' => 'tenant',
-                    'tenant_id'   => $dropshipperTenant->id,
-                    'user_id'     => $order->affiliator_id,
-                ]
-            );
-
-            $affiliateData->update( ['status' => 'success'] );
         } );
+    }
 
-        return true;
+    /**
+     * @param  array{type: string, rate: float, amount: float, source: string, gross: float, net: float}  $fee
+     */
+    protected static function recordSettlementSnapshot( Order $order, string $connection, array $fee ): void {
+        if ( ! Schema::connection( $connection )->hasColumn( 'orders', 'platform_fee_settled_at' ) ) {
+            return;
+        }
+
+        DB::connection( $connection )->table( 'orders' )->where( 'id', $order->id )->update( [
+            'platform_fee_type'        => $fee['type'],
+            'platform_fee_rate'        => $fee['rate'],
+            'platform_fee_source'      => $fee['source'],
+            'platform_fee_amount'      => $fee['amount'],
+            'dropshipper_gross_amount' => $fee['gross'],
+            'dropshipper_net_amount'   => $fee['net'],
+            'platform_fee_settled_at'  => now(),
+        ] );
+    }
+
+    /**
+     * An unsettled commission can never be credited once the order is cancelled/returned.
+     */
+    protected static function cancelUnsettledCommission( $order ): void {
+        if ( ! self::pendingBalanceTableExists() ) {
+            return;
+        }
+
+        PendingBalance::where( 'order_id', $order->id )
+            ->where( 'status', 'pending' )
+            ->update( ['status' => 'cancel'] );
     }
 
     protected static function pendingBalanceTableExists() {

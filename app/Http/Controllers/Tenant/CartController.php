@@ -593,7 +593,7 @@ class CartController extends Controller
             $productDetail = $productDetailQuery->first();
 
             $cartItem->profit_amount                 = $productDetail?->profit_amount ?? 0;
-            $cartItem->total_profit_amount           = (int) ( $productDetail?->profit_amount ?? 0 ) * (int) $cartItem->product_qty;
+            $cartItem->total_profit_amount           = round( (float) ( $productDetail?->profit_amount ?? 0 ) * (int) $cartItem->product_qty, 2 );
             $cartItem->dropshipper_product_detail_id = $productDetail?->id;
             $cartItem->dropshipper_uniqid            = $productDetail?->uniqid;
 

@@ -305,7 +305,7 @@ class PosInstallmentService
     {
         $vendorId = vendorId();
 
-        return PosSales::where( 'vendor_id', $vendorId )
+        $paginator = PosSales::where( 'vendor_id', $vendorId )
             ->whereHas( 'installments' )
             ->when( request()->filled( 'search' ), function ( $query ) {
                 $search = request()->input( 'search' );

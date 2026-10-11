@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Support\RegistrationTimer;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 
 class CpanelService
 {
@@ -12,9 +14,33 @@ class CpanelService
      * @param string $subdomain
      * @return array
      */
-    public function createSubdomain($subdomain)
+    public function createSubdomain($subdomain, bool $deferPhpVersion = false)
     {
-        return $this->createSubdomainViaCpanel( $subdomain );
+        return $this->createSubdomainViaCpanel( $subdomain, $deferPhpVersion );
+    }
+
+    /**
+     * Apply the subdomain PHP version once the HTTP response has been sent.
+     * LangPHP/php_set_vhost_versions reloads the account's PHP-FPM pool, which can
+     * stall or kill the worker that is still serving the request.
+     */
+    public function setPhpVersionAfterResponse( string $subdomain ): void
+    {
+        $mainDomain = $this->credentials()['main_domain'];
+        $phpVersion = (string) config( 'cpanel.php_version', 'ea-php82' );
+        $requestId  = RegistrationTimer::requestId();
+
+        app()->terminating( function () use ( $subdomain, $mainDomain, $phpVersion, $requestId ) {
+            $startedAt = microtime( true );
+            $result    = $this->setPhpVersionForSubdomain( $subdomain, $mainDomain, $phpVersion );
+
+            \Log::info( 'registration.php_version_after_response', [
+                'request_id' => $requestId,
+                'vhost'      => $subdomain . '.' . $mainDomain,
+                'status'     => $result['status'] ?? 0,
+                'ms'         => (int) round( ( microtime( true ) - $startedAt ) * 1000 ),
+            ] );
+        } );
     }
 
     /**
@@ -51,7 +77,7 @@ class CpanelService
      * @param string $subdomain Bare subdomain label (e.g. "myshop"), not the FQDN
      * @return array
      */
-    private function createSubdomainViaCpanel($subdomain)
+    private function createSubdomainViaCpanel($subdomain, bool $deferPhpVersion = false)
     {
         try {
             $creds      = $this->credentials();
@@ -110,7 +136,9 @@ class CpanelService
 
             if ( $success || $alreadyExists ) {
                 $phpVersion       = (string) config( 'cpanel.php_version', 'ea-php82' );
-                $phpVersionResult = $this->setPhpVersionForSubdomain( $subdomain, $mainDomain, $phpVersion );
+                $phpVersionResult = $deferPhpVersion
+                    ? [ 'status' => 0, 'message' => 'PHP version ' . $phpVersion . ' will be applied after the response' ]
+                    : $this->setPhpVersionForSubdomain( $subdomain, $mainDomain, $phpVersion );
 
                 \Log::info( 'cPanel subdomain creation: PHP version setting result', [
                     'subdomain'          => $subdomain,
@@ -242,6 +270,12 @@ class CpanelService
 
         $configured = (string) config( 'tenancy.database.prefix', '' );
         $cpanelUser = (string) config( 'cpanel.user', '' );
+        $cacheKey   = 'cpanel:mysql_prefix:' . md5( $cpanelUser );
+
+        $remembered = Cache::get( $cacheKey );
+        if ( is_string( $remembered ) && $remembered !== '' ) {
+            return $cachedPrefix = $remembered;
+        }
 
         try {
             $result = $this->cpanelExecute( 'Mysql/get_restrictions' );
@@ -251,6 +285,7 @@ class CpanelService
 
             if ( is_string( $prefix ) && $prefix !== '' ) {
                 $cachedPrefix = $prefix;
+                Cache::put( $cacheKey, $prefix, now()->addDay() );
                 \Log::info( 'cPanel MySQL prefix resolved', [
                     'prefix'           => $prefix,
                     'configured'       => $configured,
@@ -429,8 +464,14 @@ class CpanelService
      */
     private function cpanelExecute( string $path, array $query = [] ): array
     {
-        $creds = $this->credentials();
+        static $workingHost = null;
+
+        $creds        = $this->credentials();
+        $hostCacheKey = 'cpanel:working_host:' . md5( $creds['user'] . '|' . $creds['host'] . '|' . $creds['port'] );
+        $workingHost ??= Cache::get( $hostCacheKey );
+
         $hosts = array_values( array_unique( array_filter( [
+            $workingHost,
             $creds['host'],
             '127.0.0.1',
             'localhost',
@@ -445,6 +486,11 @@ class CpanelService
             $result = $this->cpanelExecuteAgainstHost( $host, $path, $query );
 
             if ( $this->isUsableCpanelPayload( $result ) ) {
+                if ( $workingHost !== $host ) {
+                    $workingHost = $host;
+                    Cache::put( $hostCacheKey, $host, now()->addHours( 6 ) );
+                }
+
                 if ( $host !== $creds['host'] ) {
                     \Log::info( 'cPanel API succeeded via fallback host', [
                         'configured_host' => $creds['host'],
@@ -503,16 +549,25 @@ class CpanelService
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_TIMEOUT        => 45,
-            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 3,
             CURLOPT_ENCODING       => '',
         ] );
 
-        $response  = curl_exec( $ch );
-        $httpCode  = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        $curlError = curl_error( $ch );
+        $callStartedAt = microtime( true );
+        $response      = curl_exec( $ch );
+        $httpCode      = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+        $curlError     = curl_error( $ch );
         curl_close( $ch );
+
+        RegistrationTimer::cpanelCall(
+            $path,
+            $host,
+            $httpCode,
+            $callStartedAt,
+            $response !== false && $curlError === '' && is_array( json_decode( (string) $response, true ) )
+        );
 
         if ( $response === false || $curlError !== '' ) {
             return [

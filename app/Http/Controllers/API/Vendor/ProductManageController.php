@@ -15,6 +15,7 @@ use App\Rules\SubCategorydRule;
 use App\Services\Vendor\VariantApiService;
 use App\Service\Vendor\ProductService;
 use App\Service\Vendor\ProductVariantService;
+use App\Services\DropshipperAccessService;
 use App\Services\ProductPreOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -428,6 +429,7 @@ class ProductManageController extends Controller {
             $product = Product::find( $id );
 
             if ( $product ) {
+                $previousCategoryId = (int) $product->category_id;
 
                 $product->category_id    = $request->input( 'category_id' );
                 $product->sku            = $request->input( 'sku' );
@@ -577,6 +579,16 @@ class ProductManageController extends Controller {
 
                 $product->update();
                 ProductVariantService::syncFromProductVariantsJson( $product, null, true );
+
+                // A private product leaving a category also leaves that category's assignments.
+                if ( tenant() && $previousCategoryId !== (int) $product->category_id && (int) ( $product->is_private ?? 0 ) === 1 ) {
+                    DropshipperAccessService::revokeInaccessibleListings(
+                        tenant()->id,
+                        $product->getConnectionName() ?: config( 'database.default' ),
+                        [(object) $product->only( ['id', 'category_id', 'is_private'] )]
+                    );
+                }
+
                 try {
                     $this->syncProductPreOrderSettings( $product, $request );
                 } catch ( ValidationException $e ) {

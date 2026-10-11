@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\RegistrationTimer;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class TenantRegistrationRequest extends FormRequest
 {
@@ -22,6 +24,10 @@ class TenantRegistrationRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        RegistrationTimer::start( $this->header( 'X-Request-Id' ) );
+        DB::connection( 'mysql' )->getPdo();
+        RegistrationTimer::mark( 'db_connect_ms' );
+
         $phone = $this->input( 'phone', $this->input( 'number' ) );
 
         if ( is_string( $phone ) ) {
@@ -92,6 +98,11 @@ class TenantRegistrationRequest extends FormRequest
                 $validator->errors()->add('domain', 'A tenant with this domain name already exists.');
             }
         });
+    }
+
+    protected function passedValidation(): void
+    {
+        RegistrationTimer::mark( 'validation_ms' );
     }
 
     private function resolveFullDomain( string $domain ): string

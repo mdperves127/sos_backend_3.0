@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Tenant;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use App\Enums\Status;
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
@@ -433,6 +434,13 @@ class OrderController extends Controller
     }
 
     private function validateCartForCheckout( Cart $cart, $product, int $totalqty, array $checkoutDatas = [], bool $lenientStock = false ): ?string {
+        if ( tenant() && tenant()->type === 'dropshipper' && $cart->tenant_id ) {
+            $merchantConnection = DropshipperAccessService::merchantConnection( $cart->tenant_id );
+            if ( ! $merchantConnection || ! DropshipperAccessService::canAccessProduct( $merchantConnection, (string) tenant()->id, $product ) ) {
+                return 'This product is no longer available.';
+            }
+        }
+
         if ( $cart->purchase_type == 'single' && $product->selling_type == 'bulk' ) {
             return 'Something is wrong delete the cart.';
         }

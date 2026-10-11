@@ -24,6 +24,7 @@ use App\Services\ProductPreOrderService;
 use App\Models\ProductPreOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -118,6 +119,17 @@ class ProductCheckoutService {
             $couponAppliedInStore = false;
             $savedOrders          = [];
 
+            $dropshipperDetail = self::resolveDropshipperProductDetail(
+                $orderMedia,
+                $resolvedPlacingTenantId,
+                $merchantTenantId,
+                $productid
+            );
+            $unitProfitAmount = $dropshipperDetail
+                ? DropshipperPricingService::unitMargin( $product, $dropshipperDetail )
+                : 0.0;
+            $hasPriceSnapshot = Schema::connection( $connectionName )->hasColumn( 'orders', 'dropshipper_selling_price' );
+
             foreach ( $datas as $data ) {
                 $data     = (array) $data;
                 $variants = is_array( $data['variants'] ?? null ) ? $data['variants'] : [];
@@ -139,13 +151,7 @@ class ProductCheckoutService {
 
                 $afi_amount = $totalqty * $cart->amount;
 
-                $unitProfitAmount = self::resolveDropshipperProfitAmount(
-                    $orderMedia,
-                    $resolvedPlacingTenantId,
-                    $merchantTenantId,
-                    $productid
-                );
-                $profit_amount = $unitProfitAmount * $totalqty;
+                $profit_amount = round( $unitProfitAmount * $totalqty, 2 );
 
                 $vendorBalanceValue = ($vendor_balance && property_exists($vendor_balance, 'balance'))
                     ? $vendor_balance->balance
@@ -235,6 +241,10 @@ class ProductCheckoutService {
                 }
                 $order->afi_amount          = $afi_amount;
                 $order->profit_amount       = $profit_amount;
+                if ( $hasPriceSnapshot && $dropshipperDetail ) {
+                    $order->dropshipper_base_price    = round( (float) convertfloat( $cart->product_price ), 2 );
+                    $order->dropshipper_selling_price = round( $order->dropshipper_base_price + $unitProfitAmount, 2 );
+                }
                 $order->product_amount      = $totalAmount;
                 $order->due_amount          = $totalDue;
                 $order->status              = $status;
@@ -660,16 +670,16 @@ class ProductCheckoutService {
     }
 
     /**
-     * Unit profit set by the dropshipper on their product_details profile.
+     * Active product_details row of the placing dropshipper (holds their selling price / margin).
      */
-    private static function resolveDropshipperProfitAmount(
+    private static function resolveDropshipperProductDetail(
         ?string $orderMedia,
         string|int|null $placingTenantId,
         string|int|null $merchantTenantId,
         $productId
-    ): float {
+    ): ?object {
         if ( ! in_array( $orderMedia, ['dropshipper', 'Affiliator'], true ) ) {
-            return 0.0;
+            return null;
         }
 
         // Prefer current tenant product_details when checkout runs inside dropshipper context
@@ -681,12 +691,12 @@ class ProductCheckoutService {
                 ->first();
 
             if ( $detail ) {
-                return (float) ( $detail->profit_amount ?? 0 );
+                return $detail;
             }
         }
 
         if ( ! $placingTenantId ) {
-            return 0.0;
+            return null;
         }
 
         $detail = CrossTenantQueryService::getSingleRecordFromTenant(
@@ -702,6 +712,6 @@ class ProductCheckoutService {
             }
         );
 
-        return (float) ( $detail->profit_amount ?? 0 );
+        return $detail ?: null;
     }
 }

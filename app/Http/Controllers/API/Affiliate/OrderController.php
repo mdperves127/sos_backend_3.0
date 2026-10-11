@@ -15,6 +15,7 @@ use App\Services\AamarPayService;
 use App\Services\EpsPaymentService;
 use App\Helper\RedirectHelper;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,12 @@ class OrderController extends Controller {
 
         if ( !$product ) {
             return responsejson( 'Product currently not available!' );
+        }
+
+        // Re-check private-product access before any wallet debit or payment starts.
+        $merchantConnection = DropshipperAccessService::merchantConnection( $cart->tenant_id );
+        if ( !$merchantConnection || !DropshipperAccessService::canAccessProduct( $merchantConnection, (string) tenant()->id, $product ) ) {
+            return responsejson( 'You no longer have access to this product. Please remove it from your cart.', 'fail' );
         }
 
         if ( $cart->purchase_type == 'single' ) {

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 
 class ProductStatusController extends Controller {
 
@@ -25,10 +26,14 @@ class ProductStatusController extends Controller {
                 return [$item->tenant_id . '_' . $item->product_id => true];
             });
 
+        $dropshipperTenantId = tenant() ? (string) tenant()->id : null;
+
         // Query products across ALL vendor tenants
         $products = CrossTenantQueryService::queryAllTenants(
             Product::class,
-            function ($query) {
+            function ($query) use ($dropshipperTenantId) {
+                DropshipperAccessService::applyMarketplaceVisibility($query, $dropshipperTenantId);
+
                 return $query
                     ->where('status', 'active')
                     ->where('is_affiliate', '1')
@@ -562,35 +567,77 @@ class ProductStatusController extends Controller {
 
 
 
-        // Get product from the specific tenant's database
-        $existproduct = CrossTenantQueryService::getSingleFromTenant(
-            $tenant_id,
-            Product::class,
-            function ( $query ) use ( $id ) {
-                $query->where( 'id', $id )
-                      ->where( 'status', 'active' );
-            }
-        );
+        $dropshipper = tenant();
+        if ( ! DropshipperAccessService::isEligibleDropshipper( $dropshipper ) ) {
+            return response()->json( [
+                'status'  => 403,
+                'message' => 'Only approved dropshipper accounts can request products.',
+            ], 403 );
+        }
+
+        $merchantConnection = DropshipperAccessService::merchantConnection( $tenant_id );
+        $existproduct       = $merchantConnection
+            ? DropshipperAccessService::accessibleProduct( $tenant_id, (string) $dropshipper->id, (int) $id )
+            : null;
 
         if ( ! $existproduct ) {
             return $this->response( 'Product not fount' );
         }
 
-        $product             = new ProductDetails();
-        $product->status     = 2;
-        $product->product_id = $existproduct->id;
-        $product->vendor_id  = 0;
-        $product->user_id    = 0;
-        $product->reason     = request( 'reason' );
-        $product->tenant_id  = $tenant_id;
-        $product->uniqid     = uniqid();
-        $product->save();
+        $autoApprove = DropshipperAccessService::shouldAutoApprove( $merchantConnection, (string) $dropshipper->id, $existproduct );
+        $newStatus   = $autoApprove ? DropshipperAccessService::DETAIL_ACTIVE : DropshipperAccessService::DETAIL_PENDING;
+
+        $result = DB::connection( ( new ProductDetails() )->getConnectionName() )->transaction( function () use ( $tenant_id, $existproduct, $newStatus ) {
+            $existing = ProductDetails::query()
+                ->where( 'tenant_id', (string) $tenant_id )
+                ->where( 'product_id', $existproduct->id )
+                ->lockForUpdate()
+                ->orderByRaw( 'FIELD(status, 1, 2, 3)' )
+                ->first();
+
+            if ( $existing && (int) $existing->status === DropshipperAccessService::DETAIL_ACTIVE ) {
+                return ['duplicate' => true, 'message' => 'This product is already in your store.', 'detail' => $existing];
+            }
+
+            if ( $existing && (int) $existing->status === DropshipperAccessService::DETAIL_PENDING ) {
+                if ( $newStatus === DropshipperAccessService::DETAIL_PENDING ) {
+                    return ['duplicate' => true, 'message' => 'A request for this product is already pending.', 'detail' => $existing];
+                }
+            }
+
+            // Re-use a rejected/pending row instead of creating a duplicate request.
+            $product = $existing ?: new ProductDetails();
+            if ( ! $existing ) {
+                $product->product_id = $existproduct->id;
+                $product->vendor_id  = 0;
+                $product->user_id    = 0;
+                $product->tenant_id  = $tenant_id;
+                $product->uniqid     = uniqid();
+            }
+            $product->status = $newStatus;
+            $product->reason = request( 'reason' );
+            $product->save();
+
+            return ['duplicate' => false, 'detail' => $product];
+        } );
+
+        if ( $result['duplicate'] ) {
+            return response()->json( [
+                'status'                => 409,
+                'message'               => $result['message'],
+                'product_detail_status' => (int) $result['detail']->status,
+            ], 409 );
+        }
 
         // $user = User::where( 'id', $product->vendor_id )->first();
         // Notification::send( $user, new AffiliateProductRequestNotification( $user, $product ) );
         return response()->json( [
-            'status'  => 200,
-            'message' => 'Product Request Successfully Please Wait',
+            'status'                => 200,
+            'message'               => $autoApprove
+                ? 'Product added to your store.'
+                : 'Product Request Successfully Please Wait',
+            'auto_approved'         => $autoApprove,
+            'product_detail_status' => (int) $result['detail']->status,
         ] );
     }
 }

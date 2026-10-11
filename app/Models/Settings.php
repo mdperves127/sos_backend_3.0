@@ -134,5 +134,7 @@ class Settings extends Model {
         'f_feature_image_6',
         'f_feature_image_7',
         'f_feature_image_8',
+        'dropship_fee_type',
+        'dropship_fee_value',
     ];
 }

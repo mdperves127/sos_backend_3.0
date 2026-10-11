@@ -10,6 +10,7 @@ use App\Models\ProductDetails;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -319,15 +320,38 @@ class RequestProductController extends Controller {
         $validatedData = $request->validated();
 
 
-        $tenant = Tenant::on( 'mysql' )->find( $tenant_id );
+        $tenant     = Tenant::on( 'mysql' )->find( $tenant_id );
+        $merchantId = (string) tenant()->id;
 
-        $data = CrossTenantQueryService::getSingleFromTenant(
-            $tenant_id,
-            ProductDetails::class,
-            function ( $query ) use ( $id ) {
-                $query->where( 'id', $id );
+        // Only requests addressed to this merchant can be approved/rejected by it.
+        $data = $tenant && $tenant->type === 'dropshipper'
+            ? CrossTenantQueryService::getSingleFromTenant(
+                $tenant_id,
+                ProductDetails::class,
+                function ( $query ) use ( $id, $merchantId ) {
+                    $query->where( 'id', $id )->where( 'tenant_id', $merchantId );
+                }
+            )
+            : null;
+
+        if ( $data && (int) request( 'status' ) === DropshipperAccessService::DETAIL_ACTIVE ) {
+            $product = Product::query()->find( $data->product_id );
+            $connection = ( new Product() )->getConnectionName();
+
+            if ( ! $product ) {
+                return response()->json( [
+                    'status'  => 404,
+                    'message' => 'Product not found',
+                ], 404 );
             }
-        );
+
+            if ( ! DropshipperAccessService::canAccessProduct( $connection, (string) $tenant_id, $product ) ) {
+                return response()->json( [
+                    'status'  => 422,
+                    'message' => 'This product is private. Assign it to this dropshipper before approving.',
+                ], 422 );
+            }
+        }
 
         if ( $data ) {
 

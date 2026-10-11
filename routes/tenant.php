@@ -76,6 +76,7 @@ use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\MessageController as TenantMessageController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
+use App\Http\Controllers\Tenant\DropshipperAssignmentController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
@@ -766,6 +767,14 @@ Route::middleware( [
             Route::post( 'request/product-update/{tenant_id}/{id}', [RequestProductController::class, 'RequestUpdate'] );
             Route::get( 'membership-expire-product', [RequestProductController::class, 'membershipexpireactiveproduct'] );
             Route::get( 'membership-expire-product-count', [RequestProductController::class, 'membershipexpireactiveproductCount'] );
+
+            Route::get( 'assignable-dropshippers', [DropshipperAssignmentController::class, 'dropshippers'] );
+            Route::get( 'assignments', [DropshipperAssignmentController::class, 'index'] );
+            Route::post( 'assignments', [DropshipperAssignmentController::class, 'store'] );
+            Route::post( 'assignments/{id}/revoke', [DropshipperAssignmentController::class, 'revoke'] );
+            Route::get( 'product-settings/{productId}', [DropshipperAssignmentController::class, 'productSettings'] );
+            Route::post( 'product-settings/{productId}', [DropshipperAssignmentController::class, 'updateProductSettings'] );
+            Route::post( 'category-settings/{categoryId}', [DropshipperAssignmentController::class, 'updateCategorySettings'] );
             } );
 
         //supportbox route
