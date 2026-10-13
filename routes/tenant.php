@@ -769,6 +769,7 @@ Route::middleware( [
             Route::get( 'membership-expire-product-count', [RequestProductController::class, 'membershipexpireactiveproductCount'] );
 
             Route::get( 'assignable-dropshippers', [DropshipperAssignmentController::class, 'dropshippers'] );
+            Route::get( 'assignable-dropshippers/{tenantId}', [DropshipperAssignmentController::class, 'dropshipper'] );
             Route::get( 'assignments', [DropshipperAssignmentController::class, 'index'] );
             Route::post( 'assignments', [DropshipperAssignmentController::class, 'store'] );
             Route::post( 'assignments/{id}/revoke', [DropshipperAssignmentController::class, 'revoke'] );

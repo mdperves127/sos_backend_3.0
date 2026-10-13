@@ -90,6 +90,35 @@ class DropshipperAssignmentController extends Controller {
     }
 
     /**
+     * Look up one dropshipper by exact tenant ID (minimal public fields only).
+     */
+    public function dropshipper( $tenantId ) {
+        if ( $denied = $this->guard( 'active_request' ) ) {
+            return $denied;
+        }
+
+        $tenant = Tenant::on( 'mysql' )
+            ->where( 'type', 'dropshipper' )
+            ->where( 'id', (string) $tenantId )
+            ->first();
+
+        if ( ! $tenant ) {
+            return response()->json( ['status' => 404, 'message' => 'Dropshipper not found.'], 404 );
+        }
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => [
+                'id'           => $tenant->id,
+                'company_name' => $tenant->company_name,
+                'domain'       => $tenant->domains()->first()?->domain,
+                'status'       => $tenant->getAttribute( 'status' ),
+                'assignable'   => DropshipperAccessService::isEligibleDropshipper( $tenant ),
+            ],
+        ] );
+    }
+
+    /**
      * type=product          one product
      * type=category         whole category (also covers products added to it later)
      * type=category_products every eligible product currently in the category (snapshot)
