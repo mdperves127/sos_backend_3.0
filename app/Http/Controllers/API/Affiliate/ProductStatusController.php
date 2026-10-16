@@ -233,7 +233,13 @@ class ProductStatusController extends Controller {
         $search  = request( 'search' );
         $orderId = request( 'order_id' );
 
-        // Step 1: Get all ProductDetails where status = 2 from current tenant's database
+        // Include merchant-assigned products and products from assigned categories
+        // alongside manually requested active listings.
+        if ( tenant() && tenant()->type === 'dropshipper' ) {
+            DropshipperAccessService::ensureAssignedListings( (string) tenant()->id );
+        }
+
+        // Step 1: Get all ProductDetails where status = 1 from current tenant's database
         $query = ProductDetails::where( 'status', 1 );
 
         // Filter by order_id if provided

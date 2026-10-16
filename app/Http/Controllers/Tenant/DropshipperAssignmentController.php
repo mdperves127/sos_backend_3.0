@@ -223,8 +223,10 @@ class DropshipperAssignmentController extends Controller {
             }
         } );
 
-        // Assigned access is immediate: approve requests already waiting for these products.
+        // Assigned access is immediate: approve pending requests and create active listings
+        // for product / category assignments so they appear in the dropshipper active list.
         $summary['approved_pending_requests'] = DropshipperAccessService::approvePendingRequests( tenant()->id, $dropshipperId, $productIds );
+        $summary['ensured_listings']          = DropshipperAccessService::ensureListingsForProducts( tenant()->id, $dropshipperId, $productIds );
 
         return response()->json( [
             'status'  => 200,

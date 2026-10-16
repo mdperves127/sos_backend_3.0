@@ -294,6 +294,174 @@ class DropshipperAccessService {
     }
 
     /**
+     * Product IDs this dropshipper may use via active assignments on one merchant DB
+     * (direct product assignments + products in assigned categories).
+     *
+     * @return array<int, int>
+     */
+    public static function assignedProductIds( string $merchantConnection, string $dropshipperTenantId ): array {
+        if ( ! self::supportsAccessControl( $merchantConnection ) ) {
+            return [];
+        }
+
+        $assignments = DB::connection( $merchantConnection )
+            ->table( 'dropshipper_product_assignments' )
+            ->where( 'dropshipper_tenant_id', $dropshipperTenantId )
+            ->where( 'status', DropshipperProductAssignment::STATUS_ACTIVE )
+            ->get( ['assignable_type', 'product_id', 'category_id'] );
+
+        if ( $assignments->isEmpty() ) {
+            return [];
+        }
+
+        $productIds  = [];
+        $categoryIds = [];
+
+        foreach ( $assignments as $assignment ) {
+            if ( $assignment->assignable_type === DropshipperProductAssignment::TYPE_PRODUCT && $assignment->product_id ) {
+                $productIds[] = (int) $assignment->product_id;
+            }
+
+            if ( $assignment->assignable_type === DropshipperProductAssignment::TYPE_CATEGORY && $assignment->category_id ) {
+                $categoryIds[] = (int) $assignment->category_id;
+            }
+        }
+
+        if ( $categoryIds !== [] ) {
+            $fromCategories = DB::connection( $merchantConnection )
+                ->table( 'products' )
+                ->whereIn( 'category_id', array_values( array_unique( $categoryIds ) ) )
+                ->where( 'status', 'active' )
+                ->where( 'is_affiliate', '1' )
+                ->pluck( 'id' )
+                ->map( fn ( $id ) => (int) $id )
+                ->all();
+
+            $productIds = array_merge( $productIds, $fromCategories );
+        }
+
+        $productIds = array_values( array_unique( array_filter( $productIds ) ) );
+        if ( $productIds === [] ) {
+            return [];
+        }
+
+        // Keep only sellable marketplace products that still exist.
+        return DB::connection( $merchantConnection )
+            ->table( 'products' )
+            ->whereIn( 'id', $productIds )
+            ->where( 'status', 'active' )
+            ->where( 'is_affiliate', '1' )
+            ->pluck( 'id' )
+            ->map( fn ( $id ) => (int) $id )
+            ->all();
+    }
+
+    /**
+     * Create or activate dropshipper product_details rows for assigned merchant products.
+     * Used when a merchant assigns access and when the dropshipper opens "active products".
+     */
+    public static function ensureListingsForProducts(
+        string|int $merchantTenantId,
+        string $dropshipperTenantId,
+        array $productIds
+    ): int {
+        $productIds = array_values( array_unique( array_filter( array_map( 'intval', $productIds ) ) ) );
+        if ( $productIds === [] ) {
+            return 0;
+        }
+
+        $dropshipper = Tenant::on( 'mysql' )->find( $dropshipperTenantId );
+        if ( ! self::isEligibleDropshipper( $dropshipper ) ) {
+            return 0;
+        }
+
+        try {
+            $connection = CrossTenantQueryService::connectionForTenant( $dropshipper );
+            $merchantId = (string) $merchantTenantId;
+            $changed    = 0;
+
+            DB::connection( $connection )->transaction( function () use ( $connection, $merchantId, $productIds, &$changed ) {
+                foreach ( $productIds as $productId ) {
+                    $existing = ProductDetails::on( $connection )
+                        ->where( 'tenant_id', $merchantId )
+                        ->where( 'product_id', $productId )
+                        ->lockForUpdate()
+                        ->orderByRaw( 'FIELD(status, 1, 2, 3)' )
+                        ->first();
+
+                    if ( $existing && (int) $existing->status === self::DETAIL_ACTIVE ) {
+                        continue;
+                    }
+
+                    if ( $existing ) {
+                        $existing->status = self::DETAIL_ACTIVE;
+                        $existing->reason = null;
+                        $existing->save();
+                        $changed++;
+                        continue;
+                    }
+
+                    ProductDetails::on( $connection )->create( [
+                        'product_id' => $productId,
+                        'vendor_id'  => 0,
+                        'user_id'    => 0,
+                        'tenant_id'  => $merchantId,
+                        'uniqid'     => uniqid(),
+                        'status'     => self::DETAIL_ACTIVE,
+                    ] );
+                    $changed++;
+                }
+            } );
+
+            return $changed;
+        } catch ( \Throwable $e ) {
+            Log::warning( 'dropship.ensure_listings_failed', [
+                'merchant_tenant_id'    => (string) $merchantTenantId,
+                'dropshipper_tenant_id' => $dropshipperTenantId,
+                'message'               => $e->getMessage(),
+            ] );
+
+            return 0;
+        }
+    }
+
+    /**
+     * Sync every merchant assignment (product + category) into the dropshipper's active listings.
+     */
+    public static function ensureAssignedListings( string $dropshipperTenantId ): int {
+        $dropshipper = Tenant::on( 'mysql' )->find( $dropshipperTenantId );
+        if ( ! self::isEligibleDropshipper( $dropshipper ) ) {
+            return 0;
+        }
+
+        $changed   = 0;
+        $merchants = Tenant::on( 'mysql' )->where( 'type', 'merchant' )->get( ['id'] );
+
+        foreach ( $merchants as $merchant ) {
+            try {
+                $connection = CrossTenantQueryService::connectionForTenant( $merchant );
+                $productIds = self::assignedProductIds( $connection, $dropshipperTenantId );
+
+                if ( $productIds === [] ) {
+                    continue;
+                }
+
+                $changed += self::ensureListingsForProducts( $merchant->id, $dropshipperTenantId, $productIds );
+            } catch ( \Throwable $e ) {
+                Log::warning( 'dropship.ensure_assigned_listings_merchant_failed', [
+                    'merchant_tenant_id'    => (string) $merchant->id,
+                    'dropshipper_tenant_id' => $dropshipperTenantId,
+                    'message'               => $e->getMessage(),
+                ] );
+            } finally {
+                DB::setDefaultConnection( 'mysql' );
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
      * After products become private (or an assignment is revoked), drop listings of every
      * dropshipper that no longer has access to them.
      *

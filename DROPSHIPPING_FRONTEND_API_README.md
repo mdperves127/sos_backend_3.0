@@ -21,7 +21,7 @@ Labels used in this document:
 | Product requests (apply, pending, approve or reject) | Both | CONFIRMED |
 | Dropshipper custom selling price with merchant rules (min, max, fixed, on/off) | Merchant sets the rules; the dropshipper sets the price | CONFIRMED |
 | Platform fee on delivery, plus an earnings snapshot on the order | Admin config; read by merchant and dropshipper | CONFIRMED |
-| A dedicated "my private products" list for dropshippers | Dropshipper | **NOT IMPLEMENTED** (see §12) |
+| Assigned products / category products on the dropshipper active list | Dropshipper | CONFIRMED (included in D5) |
 
 > **Migrations are required.** Run the new tenant and central migrations (`php artisan migrate` and `php artisan tenants:migrate`) before the features work. Until then, the merchant endpoints return `503` with `"Dropshipping access controls are not available yet. Please run tenant migrations."`
 
@@ -163,7 +163,7 @@ All endpoints below require merchant authentication. The new endpoints (marked *
 | D2 | GET | `/api/tenant-dropshipper/single/product/{tenant_id}/{id}` | Product detail plus `dropshipper_pricing` |
 | D3 | POST | `/api/tenant-dropshipper/request/product/{tenant_id}/{id}` | Request or add a product (auto-approval aware) |
 | D4 | GET | `/api/tenant-dropshipper/request/pending/product` | My pending requests |
-| D5 | GET | `/api/tenant-dropshipper/request/active/product` | My active listings |
+| D5 | GET | `/api/tenant-dropshipper/request/active/product` | My active listings (requested + assigned product/category) |
 | D6 | GET | `/api/tenant-dropshipper/request/reject/product` | My rejected or revoked requests |
 | D7 | POST | `/api/tenant-dropshipper/single/product/add-profit/{id}` | Set my selling price or margin |
 | D8 | POST | `/api/tenant-dropshipper/add-to-cart` | Add to cart (re-checks access) |
@@ -986,8 +986,8 @@ Work that needs a missing backend endpoint is listed in §12.
 
 | Item | Status | Frontend workaround |
 |---|---|---|
-| Dedicated "private products assigned to me" endpoint for dropshippers | **NOT IMPLEMENTED** | Filter D1 rows by `is_private == 1`. Products already requested are excluded from D1; use D4–D6 for those |
-| Dropshipper can see which assignments they have | **NOT IMPLEMENTED** | None. Only the merchant can list assignments |
+| Dedicated "private products assigned to me" endpoint for dropshippers | Covered by D5 | D5 syncs merchant product + category assignments into active listings; no separate endpoint |
+| Dropshipper can see which assignments they have | **NOT IMPLEMENTED** | None. Only the merchant can list assignments; D5 shows the resulting products |
 | Re-requesting a rejected or revoked product from the marketplace | Limited: D1 hides any product with an existing request row | D3 works if the frontend knows the `tenant_id`/`id` (for example, from the rejected list D6) |
 | Endpoint showing the current fee rule to dropshippers before delivery | **NOT IMPLEMENTED** | Show the fee only from the order snapshot after delivery |
 | Earnings summary aggregating fees | **NOT IMPLEMENTED** | Sum the order fields client-side for display only, or show per-order values |
