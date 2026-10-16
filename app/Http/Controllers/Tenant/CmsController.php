@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\CmsSetting;
+use App\Support\HeaderFooterConfig;
+use App\Support\PublicApiCache;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class CmsController extends Controller
 {
@@ -15,6 +20,78 @@ class CmsController extends Controller
             'status' => true,
             'data' => $data
         ]);
+    }
+
+    /**
+     * GET /api/tenant/cms/header-footer
+     */
+    public function headerFooter()
+    {
+        $cms = CmsSetting::first();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'OK',
+            'data'    => HeaderFooterConfig::forAdminResponse( $cms?->header_footer ),
+        ] );
+    }
+
+    /**
+     * POST /api/tenant/cms/header-footer
+     *
+     * Frontend sends the complete four-key configuration; the previous
+     * header or footer is replaced by whatever is submitted (no template history).
+     */
+    public function saveHeaderFooter( Request $request )
+    {
+        $validator = Validator::make( $request->all(), [
+            'active_header' => ['required', Rule::in( HeaderFooterConfig::TEMPLATES )],
+            'active_footer' => ['required', Rule::in( HeaderFooterConfig::TEMPLATES )],
+            'header'        => ['required', 'array'],
+            'footer'        => ['required', 'array'],
+        ] );
+
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Validation error',
+                'errors'  => $validator->errors()->toArray(),
+                'data'    => null,
+            ], 400 );
+        }
+
+        $payload = HeaderFooterConfig::buildForStorage( $validator->validated() );
+
+        $saved = DB::transaction( function () use ( $payload ) {
+            $cms = CmsSetting::query()->lockForUpdate()->first();
+
+            if ( ! $cms ) {
+                return null;
+            }
+
+            $cms->header_footer = $payload;
+            $cms->save();
+
+            return HeaderFooterConfig::forAdminResponse( $cms->fresh()->header_footer );
+        } );
+
+        if ( $saved === null ) {
+            return response()->json( [
+                'status'  => 404,
+                'success' => false,
+                'message' => 'CMS settings not found.',
+                'data'    => null,
+            ], 404 );
+        }
+
+        PublicApiCache::bump();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Header and footer saved.',
+            'data'    => $saved,
+        ] );
     }
 
     public function update(Request $request)
@@ -207,8 +284,12 @@ class CmsController extends Controller
             'f_feature_image_4',
             'f_feature_image_5',
             'f_feature_image_6',
-            'f_feature_image_8'
-
+            'f_feature_image_8',
+            'header_footer',
+            'active_header',
+            'active_footer',
+            'header',
+            'footer',
         ]));
         $data->save();
 

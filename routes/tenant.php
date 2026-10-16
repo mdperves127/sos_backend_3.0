@@ -817,6 +817,8 @@ Route::middleware( [
         Route::prefix('tenant')->group(function () {
             Route::get('cms', [CmsController::class, 'index']);
             Route::post('cms', [CmsController::class, 'update']);
+            Route::get('cms/header-footer', [CmsController::class, 'headerFooter']);
+            Route::post('cms/header-footer', [CmsController::class, 'saveHeaderFooter']);
 
             Route::get('banner', [BannerController::class, 'index']);
             Route::post('banner', [BannerController::class, 'store']);

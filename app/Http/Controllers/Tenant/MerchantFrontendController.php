@@ -956,12 +956,18 @@ class MerchantFrontendController extends Controller
             $offers = Offer::latest()->get();
             $cms = CmsSetting::first();
             $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
+            $headerFooter = \App\Support\HeaderFooterConfig::forFrontend( $cms?->header_footer );
 
             return [
                 'content_services' => $contentServices,
                 'banners' => $banners,
                 'cms' => $cms,
                 'offers' => $offers,
+                'active_header' => $headerFooter['active_header'],
+                'active_footer' => $headerFooter['active_footer'],
+                'header' => $headerFooter['header'],
+                'footer' => $headerFooter['footer'],
+
                 'populer_section_category_id_1' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' ),
                 'populer_section_category_id_2' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' ),
                 'populer_section_category_id_3' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' ),
