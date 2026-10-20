@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
+use App\Models\CmsSetting;
 use App\Models\PageBuilder;
+use App\Support\HeaderFooterConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -375,6 +377,27 @@ class PageBuilderController extends Controller
             'status'  => 200,
             'success' => true,
             'data'    => $data,
+        ] );
+    }
+
+    /**
+     * Public storefront layouts: active header & footer from tenant CMS.
+     * GET /tenant-frontend/layouts
+     */
+    public function publicLayouts()
+    {
+        $cms          = CmsSetting::first();
+        $headerFooter = HeaderFooterConfig::forFrontend( $cms?->header_footer );
+
+        return response()->json( [
+            'status'  => 200,
+            'success' => true,
+            'data'    => [
+                'active_header' => $headerFooter['active_header'],
+                'active_footer' => $headerFooter['active_footer'],
+                'header'        => $headerFooter['header'],
+                'footer'        => $headerFooter['footer'],
+            ],
         ] );
     }
 
