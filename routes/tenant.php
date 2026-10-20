@@ -156,7 +156,7 @@ Route::middleware( [
         Route::get('pages', [PageController::class, 'index']);
         Route::get('page/{url}', [PageController::class, 'showByUrl'])->where('url', '.*');
         Route::get('page-builder/lookup', [PageBuilderController::class, 'publicLookup']);
-        Route::get('page-builder/{slug}', [PageBuilderController::class, 'publicShow']);
+        Route::get('page-builder', [PageBuilderController::class, 'publicShow']);
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 

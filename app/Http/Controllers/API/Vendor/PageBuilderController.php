@@ -334,17 +334,33 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * Public storefront: published page by path.
-     * GET /tenant-frontend/{slug}  (slug = page_builders.path)
+     * Public storefront: published page by query.
+     * GET /tenant-frontend/page-builder?slug=shop
+     * Also accepts ?path= as an alias (matches page_builders.path / slug).
      */
-    public function publicShow( string $slug )
+    public function publicShow( Request $request )
     {
-        $path = $this->normalizePath( $slug );
+        $raw = (string) $request->query( 'slug', $request->query( 'path', '' ) );
+        $raw = trim( $raw );
+
+        if ( $raw === '' ) {
+            return response()->json( [
+                'status'  => 422,
+                'success' => false,
+                'message' => 'The slug query parameter is required.',
+                'data'    => null,
+            ], 422 );
+        }
+
+        $path = $this->normalizePath( $raw );
 
         $page = PageBuilder::where( 'status', 'PUBLISHED' )
-            ->where( function ( $q ) use ( $path ) {
+            ->where( function ( $q ) use ( $path, $raw ) {
                 $q->where( 'path', $path )
-                    ->orWhere( 'path', '/' . ltrim( $path, '/' ) );
+                    ->orWhere( 'path', '/' . ltrim( $path, '/' ) )
+                    ->orWhere( 'slug', $raw )
+                    ->orWhere( 'slug', $path )
+                    ->orWhere( 'slug', ltrim( $path, '/' ) );
             } )
             ->first();
 
