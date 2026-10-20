@@ -525,13 +525,32 @@ class MerchantFrontendController extends Controller
 
             $payload['page_builder'] = $pageBuilder;
 
-            $needFields = $this->extractPageBuilderNeedFields( $pageBuilder );
-            if ( $needFields !== [] ) {
-                $payload['data'] = $this->projectProductNeedFields( $payload['data'], $needFields );
-            }
+            // Always project to the storefront catalog shape so merchant and
+            // dropshipper tenants return the same data keys (even when page_builder is null).
+            $needFields          = $this->extractPageBuilderNeedFields( $pageBuilder );
+            $payload['data']     = $this->projectProductNeedFields( $payload['data'], $needFields );
         }
 
         return response()->json( $payload );
+    }
+
+    /**
+     * Default public catalog fields (matches typical shop1 needFields).
+     *
+     * @return array<int, string>
+     */
+    private function defaultStorefrontNeedFields(): array
+    {
+        return [
+            'slug',
+            'name',
+            'short_description',
+            'selling_price',
+            'original_price',
+            'discount_type',
+            'discount_rate',
+            'image',
+        ];
     }
 
     /**
@@ -541,8 +560,10 @@ class MerchantFrontendController extends Controller
     private function extractPageBuilderNeedFields( ?array $pageBuilder ): array
     {
         if ( ! $pageBuilder ) {
-            return [];
+            return $this->defaultStorefrontNeedFields();
         }
+
+        $fallback = [];
 
         foreach ( $pageBuilder['blocks'] ?? [] as $block ) {
             if ( ! is_array( $block ) ) {
@@ -554,10 +575,29 @@ class MerchantFrontendController extends Controller
                 continue;
             }
 
-            return array_values( array_filter( $fields, fn ( $field ) => is_string( $field ) && trim( $field ) !== '' ) );
+            $normalized = array_values( array_filter(
+                $fields,
+                fn ( $field ) => is_string( $field ) && trim( $field ) !== ''
+            ) );
+
+            if ( $normalized === [] ) {
+                continue;
+            }
+
+            $type = strtolower( (string) ( $block['type'] ?? '' ) );
+            if (
+                str_starts_with( $type, 'shop' )
+                || str_starts_with( $type, 'product' )
+            ) {
+                return $normalized;
+            }
+
+            if ( $fallback === [] ) {
+                $fallback = $normalized;
+            }
         }
 
-        return [];
+        return $fallback !== [] ? $fallback : $this->defaultStorefrontNeedFields();
     }
 
     /**
@@ -576,6 +616,15 @@ class MerchantFrontendController extends Controller
                 $item = (array) $product;
             } else {
                 return [];
+            }
+
+            // Dropshipper custom selling price should surface as selling_price in the catalog.
+            if (
+                array_key_exists( 'dropshipper_selling_price', $item )
+                && $item['dropshipper_selling_price'] !== null
+                && $item['dropshipper_selling_price'] !== ''
+            ) {
+                $item['selling_price'] = $item['dropshipper_selling_price'];
             }
 
             $projected = [];
