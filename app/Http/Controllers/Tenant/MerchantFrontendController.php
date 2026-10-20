@@ -235,84 +235,115 @@ class MerchantFrontendController extends Controller
             return [];
         }
 
-        if ( is_array( $value ) ) {
-            return array_values( array_filter( array_map( static fn ( $id ) => trim( (string) $id ), $value ), static fn ( $id ) => $id !== '' ) );
+        $parts = is_array( $value )
+            ? array_map( static fn ( $id ) => trim( (string) $id ), $value )
+            : array_map( 'trim', explode( ',', (string) $value ) );
+
+        $ignored = ['', 'all', 'null', 'undefined', 'none'];
+
+        return array_values( array_filter(
+            $parts,
+            static fn ( $id ) => ! in_array( strtolower( $id ), $ignored, true )
+        ) );
+    }
+
+    /**
+     * First present request value among keys (handles empty-string keys from the frontend).
+     */
+    private function requestFirstFilled( Request $request, array $keys ): mixed {
+        foreach ( $keys as $key ) {
+            if ( ! $request->exists( $key ) ) {
+                continue;
+            }
+            $value = $request->get( $key );
+            if ( $value === null || $value === '' ) {
+                continue;
+            }
+            if ( is_array( $value ) && $value === [] ) {
+                continue;
+            }
+
+            return $value;
         }
 
-        return array_values( array_filter( array_map( 'trim', explode( ',', (string) $value ) ), static fn ( $id ) => $id !== '' ) );
+        return null;
     }
 
     /**
      * Apply the same storefront filters for merchant and dropshipper catalogs.
-     * Dropshipper category/brand/subcategory filters use marketplace IDs (as returned by
-     * /tenant-frontend/categories|brands|subcategories).
+     * Match both local and marketplace IDs so dropshipper shops keep working whether
+     * the frontend sends marketplace IDs or legacy local IDs.
      */
     private function applyStorefrontProductFilters( $query, Request $request, bool $forDropshipper = false ) {
         $categoryIds = $this->parseStorefrontIdList(
-            $request->get( 'category_id', $request->get( 'categoryIds' ) )
+            $this->requestFirstFilled( $request, ['category_id', 'categoryIds'] )
         );
         $subcategoryIds = $this->parseStorefrontIdList(
-            $request->get( 'sub_category_id', $request->get( 'subcategory_id', $request->get( 'subcategoryIds' ) ) )
+            $this->requestFirstFilled( $request, ['sub_category_id', 'subcategory_id', 'subcategoryIds'] )
         );
         $brandIds = $this->parseStorefrontIdList(
-            $request->get( 'brand_id', $request->get( 'brandIds' ) )
+            $this->requestFirstFilled( $request, ['brand_id', 'brandIds'] )
         );
         $productIds = $this->parseStorefrontIdList(
-            $request->get( 'product_id', $request->get( 'productIds' ) )
+            $this->requestFirstFilled( $request, ['product_id', 'productIds'] )
         );
-        $minPrice = $request->get( 'min_price' );
-        $maxPrice = $request->get( 'max_price' );
-        $colorId  = $request->get( 'color_id' );
-        $sizeId   = $request->get( 'size_id' );
-        $search   = trim( (string) $request->get( 'search', '' ) );
+        $minPrice = $this->requestFirstFilled( $request, ['min_price'] );
+        $maxPrice = $this->requestFirstFilled( $request, ['max_price'] );
+        $colorId  = $this->requestFirstFilled( $request, ['color_id'] );
+        $sizeId   = $this->requestFirstFilled( $request, ['size_id'] );
+        $search   = trim( (string) ( $this->requestFirstFilled( $request, ['search'] ) ?? '' ) );
 
         if ( $productIds !== [] ) {
             $query->whereIn( 'id', $productIds );
         }
 
         if ( $categoryIds !== [] ) {
-            if ( $forDropshipper ) {
-                $query->whereIn( 'market_place_category_id', $categoryIds );
-            } else {
-                $query->where( function ( $q ) use ( $categoryIds ) {
+            $query->where( function ( $q ) use ( $categoryIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    // Prefer marketplace IDs (dropshipper category API), still accept local IDs.
+                    $q->whereIn( 'market_place_category_id', $categoryIds )
+                        ->orWhereIn( 'category_id', $categoryIds );
+                } else {
                     $q->whereIn( 'category_id', $categoryIds )
                         ->orWhereIn( 'market_place_category_id', $categoryIds );
-                } );
-            }
+                }
+            } );
         }
 
         if ( $subcategoryIds !== [] ) {
-            if ( $forDropshipper ) {
-                $query->whereIn( 'market_place_subcategory_id', $subcategoryIds );
-            } else {
-                $query->where( function ( $q ) use ( $subcategoryIds ) {
+            $query->where( function ( $q ) use ( $subcategoryIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    $q->whereIn( 'market_place_subcategory_id', $subcategoryIds )
+                        ->orWhereIn( 'subcategory_id', $subcategoryIds );
+                } else {
                     $q->whereIn( 'subcategory_id', $subcategoryIds )
                         ->orWhereIn( 'market_place_subcategory_id', $subcategoryIds );
-                } );
-            }
+                }
+            } );
         }
 
         if ( $brandIds !== [] ) {
-            if ( $forDropshipper ) {
-                $query->whereIn( 'market_place_brand_id', $brandIds );
-            } else {
-                $query->where( function ( $q ) use ( $brandIds ) {
+            $query->where( function ( $q ) use ( $brandIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    $q->whereIn( 'market_place_brand_id', $brandIds )
+                        ->orWhereIn( 'brand_id', $brandIds );
+                } else {
                     $q->whereIn( 'brand_id', $brandIds )
                         ->orWhereIn( 'market_place_brand_id', $brandIds );
-                } );
-            }
+                }
+            } );
         }
 
         // SQL price filter uses merchant catalog price. Dropshipper selling price is
         // re-checked after meta attach in filterProductCollectionByPrice().
-        if ( ( $minPrice !== null && $minPrice !== '' ) || ( $maxPrice !== null && $maxPrice !== '' ) ) {
+        if ( $minPrice !== null || $maxPrice !== null ) {
             $query->where( function ( $q ) use ( $minPrice, $maxPrice ) {
                 $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [(float) ( $minPrice ?? 0 )] )
                     ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [(float) ( $maxPrice ?? 999999999 )] );
             } );
         }
 
-        if ( $colorId ) {
+        if ( $colorId !== null && (int) $colorId > 0 ) {
             $query->whereExists( function ( $q ) use ( $colorId ) {
                 $q->select( DB::raw( 1 ) )
                     ->from( 'product_variants' )
@@ -322,7 +353,7 @@ class MerchantFrontendController extends Controller
             } );
         }
 
-        if ( $sizeId ) {
+        if ( $sizeId !== null && (int) $sizeId > 0 ) {
             $query->whereExists( function ( $q ) use ( $sizeId ) {
                 $q->select( DB::raw( 1 ) )
                     ->from( 'product_variants' )
@@ -363,10 +394,10 @@ class MerchantFrontendController extends Controller
      * Re-apply price bounds using dropshipper selling price when present.
      */
     private function filterProductCollectionByPrice( $products, Request $request ) {
-        $minPrice = $request->get( 'min_price' );
-        $maxPrice = $request->get( 'max_price' );
+        $minPrice = $this->requestFirstFilled( $request, ['min_price'] );
+        $maxPrice = $this->requestFirstFilled( $request, ['max_price'] );
 
-        if ( ( $minPrice === null || $minPrice === '' ) && ( $maxPrice === null || $maxPrice === '' ) ) {
+        if ( $minPrice === null && $maxPrice === null ) {
             return collect( $products )->values();
         }
 
@@ -444,10 +475,11 @@ class MerchantFrontendController extends Controller
                     continue;
                 }
 
+                // Keep prior dropshipper visibility (is_show_website only) — do not require
+                // status=active here; some merchant catalogs use other status values.
                 $productQuery = $this->applyWebsiteVisibleProductFilter(
                     Product::on( $connectionName )
                         ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                        ->where( 'status', 'active' )
                         ->whereIn( 'id', $approvedIds )
                 );
 
@@ -456,6 +488,10 @@ class MerchantFrontendController extends Controller
                 try {
                     $found = $productQuery->get()->keyBy( 'id' );
                 } catch ( \Exception $e ) {
+                    \Log::warning( 'dropshipper.storefront_products_query_failed', [
+                        'merchant_tenant_id' => (string) $storedTenantId,
+                        'message'            => $e->getMessage(),
+                    ] );
                     continue;
                 }
 
