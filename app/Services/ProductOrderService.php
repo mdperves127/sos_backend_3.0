@@ -1187,8 +1187,6 @@ class ProductOrderService {
             'recipient_name',
             'recipient_phone',
             'recipient_address',
-            'recipient_city',
-            'recipient_zone',
             'delivery_type',
             'item_type',
             'item_quantity',
@@ -1196,6 +1194,8 @@ class ProductOrderService {
             'amount_to_collect',
             'item_description',
         ];
+        // recipient_city / recipient_zone / recipient_area are optional;
+        // PathaoService::newOrder only includes them when present.
 
         foreach ( $requiredCourierFields as $field ) {
             $value = $courierOrder->{$field} ?? null;
