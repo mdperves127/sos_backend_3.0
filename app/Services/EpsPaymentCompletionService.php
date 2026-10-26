@@ -22,34 +22,39 @@ class EpsPaymentCompletionService
      */
     public function completeByTransactionId( string $merchantTransactionId, ?string $hint = null ): string
     {
-        $verification = EpsPaymentService::verifyTransaction( $merchantTransactionId );
+        return TenantPaymentGatewayService::withCredentialsForTransaction(
+            $merchantTransactionId,
+            function () use ( $merchantTransactionId, $hint ) {
+                $verification = EpsPaymentService::verifyTransaction( $merchantTransactionId );
 
-        if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
-            throw new RuntimeException( 'EPS transaction is not successful.' );
-        }
+                if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
+                    throw new RuntimeException( 'EPS transaction is not successful.' );
+                }
 
-        $payment = PaymentStore::on( 'mysql' )
-            ->where( 'trxid', $merchantTransactionId )
-            ->first();
+                $payment = PaymentStore::on( 'mysql' )
+                    ->where( 'trxid', $merchantTransactionId )
+                    ->first();
 
-        if ( ! $payment ) {
-            throw new RuntimeException( 'Payment record not found for transaction: ' . $merchantTransactionId );
-        }
+                if ( ! $payment ) {
+                    throw new RuntimeException( 'Payment record not found for transaction: ' . $merchantTransactionId );
+                }
 
-        if ( ( $payment->status ?? null ) === 'completed' ) {
-            return $this->redirectForPayment( $payment, 'Payment already completed' );
-        }
+                if ( ( $payment->status ?? null ) === 'completed' ) {
+                    return $this->redirectForPayment( $payment, 'Payment already completed' );
+                }
 
-        $type = $hint ?: (string) ( $payment->payment_type ?? '' );
+                $type = $hint ?: (string) ( $payment->payment_type ?? '' );
 
-        return match ( true ) {
-            in_array( $type, ['recharge', 'recharge-success', 'recharge-success-for-us'], true ) => $this->completeRecharge( $payment, $verification ),
-            in_array( $type, ['subscription', 'subscription-success'], true ) => $this->completeSubscription( $payment, $verification ),
-            in_array( $type, ['renew', 'renew-success'], true ) => $this->completeRenew( $payment, $verification ),
-            in_array( $type, ['addon', 'addon-success'], true ) => AddonActivationService::completeFromPayment( $payment, $verification ),
-            in_array( $type, ['checkout', 'product-checkout-success', 'product checkout'], true ) => $this->completeProductCheckout( $payment ),
-            default => throw new RuntimeException( 'Unsupported payment type: ' . ( $type ?: 'unknown' ) ),
-        };
+                return match ( true ) {
+                    in_array( $type, ['recharge', 'recharge-success', 'recharge-success-for-us'], true ) => $this->completeRecharge( $payment, $verification ),
+                    in_array( $type, ['subscription', 'subscription-success'], true ) => $this->completeSubscription( $payment, $verification ),
+                    in_array( $type, ['renew', 'renew-success'], true ) => $this->completeRenew( $payment, $verification ),
+                    in_array( $type, ['addon', 'addon-success'], true ) => AddonActivationService::completeFromPayment( $payment, $verification ),
+                    in_array( $type, ['checkout', 'product-checkout-success', 'product checkout'], true ) => $this->completeProductCheckout( $payment ),
+                    default => throw new RuntimeException( 'Unsupported payment type: ' . ( $type ?: 'unknown' ) ),
+                };
+            }
+        );
     }
 
     /**
@@ -70,18 +75,20 @@ class EpsPaymentCompletionService
             return true;
         }
 
-        $verification = EpsPaymentService::verifyTransaction( $merchantTransactionId );
+        try {
+            $this->completeByTransactionId(
+                $merchantTransactionId,
+                $hint ?: (string) ( $payment->payment_type ?? null )
+            );
 
-        if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
-            return false;
+            return true;
+        } catch ( RuntimeException $e ) {
+            if ( str_contains( strtolower( $e->getMessage() ), 'not successful' ) ) {
+                return false;
+            }
+
+            throw $e;
         }
-
-        $this->completeByTransactionId(
-            $merchantTransactionId,
-            $hint ?: (string) ( $payment->payment_type ?? null )
-        );
-
-        return true;
     }
 
     /**
@@ -159,15 +166,12 @@ class EpsPaymentCompletionService
             }
 
             try {
-                $verification = EpsPaymentService::verifyTransaction( (string) $payment->trxid );
-                if ( ! EpsPaymentService::isSuccessful( $verification ) ) {
-                    continue;
-                }
-
-                $this->completeByTransactionId(
+                if ( ! $this->tryCompleteIfSuccessful(
                     (string) $payment->trxid,
                     (string) ( $payment->payment_type ?? 'recharge' )
-                );
+                ) ) {
+                    continue;
+                }
                 $completed++;
             } catch ( Throwable $e ) {
                 Log::warning( 'EPS pending tenant complete skipped', [

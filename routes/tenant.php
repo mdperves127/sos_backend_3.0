@@ -81,6 +81,7 @@ use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 use App\Http\Controllers\Tenant\CmsController;
+use App\Http\Controllers\Tenant\PaymentGatewaySettingController;
 use App\Http\Controllers\Tenant\BannerController;
 use App\Http\Controllers\Tenant\ConversationController as TenantConversationController;
 use App\Http\Controllers\Tenant\ContentServiceController;
@@ -150,6 +151,7 @@ Route::middleware( [
         Route::get('size', [MerchantFrontendController::class, 'size']);
         Route::get('colors', [MerchantFrontendController::class, 'colors']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
+        Route::get('payment-gateways', [MerchantFrontendController::class, 'paymentGateways']);
         Route::get('news', [MerchantFrontendController::class, 'newsFront']);
         Route::get('news/{slug}', [MerchantFrontendController::class, 'newsDetail']);
         Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
@@ -748,6 +750,14 @@ Route::middleware( [
 
         Route::post( 'recharge', [RechargeController::class, 'recharge'] );
         Route::get( 'payment-gateway/status', [RechargeController::class, 'gatewayStatus'] );
+
+        // Per-tenant EPS / UddoktaPay credentials (product checkout).
+        Route::prefix( 'tenant/payment-gateways' )->group( function () {
+            Route::get( '/', [PaymentGatewaySettingController::class, 'index'] );
+            Route::get( '{gateway}', [PaymentGatewaySettingController::class, 'show'] );
+            Route::match( ['post', 'put', 'patch'], '{gateway}', [PaymentGatewaySettingController::class, 'upsert'] );
+            Route::delete( '{gateway}', [PaymentGatewaySettingController::class, 'destroy'] );
+        } );
         Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
         Route::get( 'tenant-withdraw-history/{status?}', [WithdrawController::class, 'index'] );

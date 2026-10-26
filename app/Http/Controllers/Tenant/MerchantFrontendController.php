@@ -1212,6 +1212,30 @@ class MerchantFrontendController extends Controller
         return response()->json( $payload );
     }
 
+    /**
+     * Public storefront: which product-checkout gateways are usable (no secrets).
+     * GET /api/tenant-frontend/payment-gateways
+     */
+    public function paymentGateways()
+    {
+        $gateways = collect( \App\Services\TenantPaymentGatewayService::publicStatusAll() )
+            ->map( function ( array $row ) {
+                return [
+                    'gateway'    => $row['gateway'],
+                    'enabled'    => (bool) ( $row['enabled'] ?? false ),
+                    'configured' => (bool) ( $row['configured'] ?? false ),
+                    'usable'     => (bool) ( $row['usable'] ?? false ),
+                ];
+            } )
+            ->values()
+            ->all();
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => $gateways,
+        ] );
+    }
+
     public function productsFilter( Request $request, $sub_category_id ) {
         $products = collect();
 

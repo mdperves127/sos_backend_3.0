@@ -81,8 +81,16 @@ class PublicEpsController extends Controller
         $sig      = (string) ( $request->query( 'sig', $request->input( 'sig', '' ) ) );
         $depth    = (int) $request->query( 'depth', $request->input( 'depth', 0 ) );
 
-        if ( $merchantTransactionId === ''
-            || ! hash_equals( EpsPaymentService::pollSignature( $merchantTransactionId, $callback ), $sig ) ) {
+        if ( $merchantTransactionId === '' ) {
+            return response( 'forbidden', 403 );
+        }
+
+        $sigValid = \App\Services\TenantPaymentGatewayService::withCredentialsForTransaction(
+            $merchantTransactionId,
+            fn () => hash_equals( EpsPaymentService::pollSignature( $merchantTransactionId, $callback ), $sig )
+        );
+
+        if ( ! $sigValid ) {
             return response( 'forbidden', 403 );
         }
 
@@ -111,7 +119,10 @@ class PublicEpsController extends Controller
 
         // Still pending — chain another process (covers slow bank confirmations).
         if ( $depth < 4 ) {
-            EpsPaymentService::firePollRequest( $merchantTransactionId, $callback, $depth + 1 );
+            \App\Services\TenantPaymentGatewayService::withCredentialsForTransaction(
+                $merchantTransactionId,
+                fn () => EpsPaymentService::firePollRequest( $merchantTransactionId, $callback, $depth + 1 )
+            );
         }
 
         return response( 'pending', 200 );

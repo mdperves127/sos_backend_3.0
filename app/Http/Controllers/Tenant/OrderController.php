@@ -16,9 +16,12 @@ use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
 use App\Services\TenantCouponService;
 use App\Services\AamarPayService;
+use App\Services\EpsConfig;
 use App\Services\EpsPaymentService;
+use App\Services\TenantPaymentGatewayService;
 use App\Services\UddoktaPayService;
 use App\Helper\RedirectHelper;
+use App\Models\PaymentGatewaySetting;
 use App\Models\TenantCoupon;
 use App\Models\PaymentStore;
 
@@ -1534,6 +1537,11 @@ class OrderController extends Controller
         $webhookUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-webhook' );
 
         try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_UDDOKTAPAY,
+                $storefrontTenantId
+            );
+
             $gateway = UddoktaPayService::gateway(
                 $payable,
                 $trx,
@@ -1551,6 +1559,8 @@ class OrderController extends Controller
             );
         } catch ( \Throwable $e ) {
             return responsejson( $e->getMessage(), 'fail' );
+        } finally {
+            UddoktaPayService::clearRuntimeCredentials();
         }
 
         PaymentStore::on( 'mysql' )->create( [
@@ -1656,18 +1666,31 @@ class OrderController extends Controller
 
         // Tenant EPS callback only — not /api/user (central/admin) callbacks.
         $successUrl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
-        $gateway    = AamarPayService::gateway(
-            $payable,
-            $trx,
-            'Product Checkout',
-            $successUrl,
-            'tenant',
-            [
-                'name'  => $customer['name'] ?? null,
-                'email' => $customer['email'] ?? null,
-                'phone' => $customer['phone'] ?? null,
-            ]
-        );
+
+        try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_EPS,
+                $storefrontTenantId
+            );
+
+            $gateway = AamarPayService::gateway(
+                $payable,
+                $trx,
+                'Product Checkout',
+                $successUrl,
+                'tenant',
+                [
+                    'name'  => $customer['name'] ?? null,
+                    'email' => $customer['email'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                ]
+            );
+        } catch ( \Throwable $e ) {
+            return responsejson( $e->getMessage(), 'fail' );
+        } finally {
+            EpsConfig::clearRuntimeCredentials();
+            EpsPaymentService::clearTokenCache();
+        }
 
         return response()->json( [
             'status'       => 200,
