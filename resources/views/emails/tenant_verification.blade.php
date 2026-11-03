@@ -5,6 +5,9 @@
 ])
 
 @section('content')
+    <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#334155;">
+        Hello{{ ! empty($userName) ? ', ' . $userName : '' }},
+    </p>
     <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#334155;">
         Thank you for registering. Please confirm your email with the verification code below to complete setup.
     </p>
@@ -21,6 +24,10 @@
             </td>
         </tr>
     </table>
+
+    <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#64748b;">
+        This code expires in {{ (int) ($expiresMinutes ?? 5) }} minutes.
+    </p>
 
     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#64748b;">
         Enter this code on the registration screen. Do not share it with anyone.

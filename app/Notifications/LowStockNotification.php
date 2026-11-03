@@ -3,24 +3,26 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class LowStockNotification extends Notification
 {
     use Queueable;
-    protected $product , $user;
+
+    protected $product;
+
+    protected $user;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($product, $user)
+    public function __construct( $product, $user )
     {
         $this->product = $product;
-        $this->user = $user;
+        $this->user    = $user;
     }
 
     /**
@@ -29,7 +31,7 @@ class LowStockNotification extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
         return ['mail'];
     }
@@ -42,12 +44,17 @@ class LowStockNotification extends Notification
      */
     public function toMail( $notifiable )
     {
+        $data = [
+            'product' => $this->product,
+            'user'    => $this->user,
+        ];
+
         return ( new MailMessage )
             ->subject( 'Low stock alert' )
-            ->view( 'emails.low_stock', [
-                'product' => $this->product,
-                'user'    => $this->user,
-            ] );
+            ->view( [
+                'html' => 'emails.low_stock',
+                'text' => 'emails.text.low_stock',
+            ], $data );
     }
 
     /**
@@ -56,7 +63,7 @@ class LowStockNotification extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray( $notifiable )
     {
         return [
             //

@@ -3,21 +3,24 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class UserVerifyNotification extends Notification
 {
     use Queueable;
+
     public $user;
+
+    /** Matches AuthController user verification OTP window (addMinutes(5)). */
+    private const OTP_TTL_MINUTES = 5;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($user)
+    public function __construct( $user )
     {
         $this->user = $user;
     }
@@ -28,7 +31,7 @@ class UserVerifyNotification extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
         return ['mail'];
     }
@@ -39,18 +42,20 @@ class UserVerifyNotification extends Notification
      * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail( $notifiable )
     {
-        // return (new MailMessage)
-        //             ->line('The introduction to the notification.')
-        //             ->action('Notification Action', url('/'))
-        //             ->line('Thank you for using our application!');
-
         $user = $this->user;
+        $data = [
+            'user'           => $user,
+            'expiresMinutes' => self::OTP_TTL_MINUTES,
+        ];
 
         return ( new MailMessage )
             ->subject( 'Verify your email' )
-            ->view( 'emails.user_verification', compact( 'user' ) );
+            ->view( [
+                'html' => 'emails.user_verification',
+                'text' => 'emails.text.user_verification',
+            ], $data );
     }
 
     /**
@@ -59,7 +64,7 @@ class UserVerifyNotification extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray( $notifiable )
     {
         return [
             //

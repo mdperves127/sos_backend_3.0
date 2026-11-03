@@ -76,7 +76,8 @@ class ForgotPasswordController extends Controller
             $user['verify_code'] = $token;
             SmsService::sendSms($user);
         }else{
-            Mail::to($user->email)->send(new ResetPasswordMail($token));
+            // Expiry must match API\ResetPasswordController (addMinutes(5)).
+            Mail::to($user->email)->send(new ResetPasswordMail($token, $user->name, 5));
         }
 
 

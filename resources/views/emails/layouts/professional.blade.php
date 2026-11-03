@@ -40,7 +40,7 @@
                     <tr>
                         <td style="padding:20px 32px;background-color:#f8fafc;border-top:1px solid #e2e8f0;">
                             <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#64748b;">
-                                This message was sent by {{ config('app.name', 'Affsell') }}. If you did not request this, you can safely ignore this email.
+                                This is a transactional message from {{ config('app.name', 'Affsell') }}. If you did not request this, you can safely ignore this email.
                             </p>
                             <p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;">
                                 &copy; {{ date('Y') }} {{ config('app.name', 'Affsell') }}. All rights reserved.
