@@ -30,6 +30,7 @@ use App\Models\UserSubscription;
 use App\Models\ProductRating;
 use App\Models\ProductBundle;
 use App\Models\ProductPreOrder;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\ProductPreOrderService;
 
 
@@ -884,6 +885,7 @@ class MerchantFrontendController extends Controller
 
         $reviewPayload = $this->buildProductReviewPayload( $product->id, $reviewConnection );
         $this->attachPreOrderMeta( $product );
+        $this->attachVariantPricingMeta( $product );
 
         return response()->json([
             'product' => $product,
@@ -892,6 +894,58 @@ class MerchantFrontendController extends Controller
             'page_builder' => app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
                 ->resolvePublishedShopDetailsPageData(),
         ]);
+    }
+
+    /**
+     * Expose per-variant sell price on storefront product detail for frontend selection UI.
+     * - rate/price: stored variant price (0 = use product price)
+     * - effective_price: price the customer pays for that variant
+     */
+    private function attachVariantPricingMeta( $product ): void {
+        if ( ! $product ) {
+            return;
+        }
+
+        $fallback = ProductVariantService::productFallbackPrice( $product );
+
+        if ( $product->relationLoaded( 'productVariant' ) ) {
+            $product->productVariant->each( function ( $variant ) use ( $fallback, $product ) {
+                $rate = (float) ( $variant->rate ?? 0 );
+                $variant->setAttribute( 'price', $rate );
+                $variant->setAttribute(
+                    'effective_price',
+                    ProductVariantService::resolveVariantUnitPrice( $variant, $product )
+                );
+                $variant->setAttribute( 'product_fallback_price', $fallback );
+            } );
+        }
+
+        $variantsJson = is_array( $product->variants ) ? $product->variants : [];
+        if ( $variantsJson === [] ) {
+            return;
+        }
+
+        $product->variants = array_map( function ( $variant ) use ( $fallback, $product ) {
+            $variant = (array) $variant;
+            $rate    = ProductVariantService::resolveRateFromPayload( $variant );
+            if ( $rate <= 0 && isset( $variant['id'] ) ) {
+                // Prefer DB relation rate when JSON is stale.
+                $matched = null;
+                if ( $product->relationLoaded( 'productVariant' ) ) {
+                    $matched = $product->productVariant->firstWhere( 'id', (int) $variant['id'] );
+                }
+                if ( $matched ) {
+                    $rate = (float) ( $matched->rate ?? 0 );
+                }
+            }
+
+            $variant['rate']                   = $rate;
+            $variant['price']                  = $rate;
+            $variant['effective_price']        = $rate > 0 ? $rate : $fallback;
+            $variant['product_fallback_price'] = $fallback;
+
+            return $variant;
+        }, $variantsJson );
     }
 
     public function categories()
