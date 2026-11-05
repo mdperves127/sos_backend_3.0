@@ -104,8 +104,10 @@ class ProductManageController extends Controller {
 
             //For Affiliate
             // 'qty' => ['required_if:is_affiliate,1', 'integer', new MinIf('is_affiliate', 1)],
-            // 'variants' => ['nullable', 'array'],
-            // 'variants.*.qty' => ['required_with:variants', 'integer', 'min:0'],
+            'variants'                               => ['nullable', 'array'],
+            'variants.*.qty'                         => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.rate'                        => ['nullable', 'numeric', 'min:0'],
+            'variants.*.price'                       => ['nullable', 'numeric', 'min:0'],
 
             'selling_details'                        => ['required_if:selling_type,bulk,both', 'array'],
             'selling_details.*.min_bulk_qty'         => ['required', 'integer', 'min:0'],
@@ -314,7 +316,7 @@ class ProductManageController extends Controller {
                 'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name',
                 'preOrderSettings',
                 'productVariant' => function ( $q ) {
-                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
+                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate' )->with( 'product', 'color', 'size', 'unit' );
                 },
             ] );
 
@@ -377,6 +379,8 @@ class ProductManageController extends Controller {
             // 'qty' => ['required_if:is_affiliate,1', 'integer', new MinIf('is_affiliate', 1)],
             'variants'                               => ['nullable', 'array'],
             'variants.*.qty'                         => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.rate'                        => ['nullable', 'numeric', 'min:0'],
+            'variants.*.price'                       => ['nullable', 'numeric', 'min:0'],
             'selling_details'                        => ['required_if:selling_type,bulk', 'array'],
             'selling_details.*.min_bulk_qty'         => ['required_if:is_affiliate,1', 'required_if:selling_type,bulk', 'integer', 'min:0'],
             'selling_details.*.min_bulk_price'       => ['required_if:is_affiliate,1', 'required_if:selling_type,bulk', 'numeric', 'min:1'],

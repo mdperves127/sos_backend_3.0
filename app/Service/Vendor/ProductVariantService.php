@@ -18,6 +18,124 @@ class ProductVariantService {
         return $intValue === 0 ? null : $intValue;
     }
 
+    /**
+     * Product-level sell price used when a variant has no separate price (rate <= 0).
+     */
+    public static function productFallbackPrice( object $product ): float {
+        if ( isset( $product->discount_price ) && $product->discount_price !== null && $product->discount_price !== '' ) {
+            return (float) $product->discount_price;
+        }
+
+        return (float) ( $product->selling_price ?? 0 );
+    }
+
+    /**
+     * Accept `price` or `rate` from tenant panel payloads. Non-negative; 0 means "use product price".
+     */
+    public static function resolveRateFromPayload( array $variant ): float {
+        if ( array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '' ) {
+            return max( 0, (float) $variant['price'] );
+        }
+
+        if ( array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '' ) {
+            return max( 0, (float) $variant['rate'] );
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Unit sell price for a selected variant, falling back to product price when rate is missing/zero.
+     */
+    public static function resolveVariantUnitPrice( ?object $variant, object $product ): float {
+        $fallback = self::productFallbackPrice( $product );
+
+        if ( ! $variant ) {
+            return $fallback;
+        }
+
+        $rate = (float) ( $variant->rate ?? 0 );
+
+        return $rate > 0 ? $rate : $fallback;
+    }
+
+    /**
+     * Build cart unit/total pricing for single-purchase lines that may mix variants.
+     *
+     * @param  array<int, array<string, mixed>>|\Illuminate\Support\Collection  $cartItems
+     * @return array{product_price: float, total_product_price: float, total_qty: int}
+     */
+    public static function lineTotalsFromCartItems( object $product, $cartItems, ?string $connectionName = null ): array {
+        $items   = collect( $cartItems );
+        $totalQty = 0;
+        $totalAmount = 0.0;
+        $fallback = self::productFallbackPrice( $product );
+
+        if ( $items->isEmpty() ) {
+            return [
+                'product_price'       => $fallback,
+                'total_product_price' => 0.0,
+                'total_qty'           => 0,
+            ];
+        }
+
+        $variantIds = $items
+            ->map( function ( $item ) {
+                $item = (array) $item;
+
+                return (int) ( $item['variant_id'] ?? 0 );
+            } )
+            ->filter( fn ( $id ) => $id > 0 )
+            ->unique()
+            ->values()
+            ->all();
+
+        $ratesById = [];
+
+        if ( $variantIds !== [] ) {
+            if ( $connectionName ) {
+                $ratesById = DB::connection( $connectionName )
+                    ->table( 'product_variants' )
+                    ->where( 'product_id', $product->id )
+                    ->whereIn( 'id', $variantIds )
+                    ->pluck( 'rate', 'id' )
+                    ->map( fn ( $rate ) => (float) $rate )
+                    ->all();
+            } else {
+                $ratesById = ProductVariant::query()
+                    ->where( 'product_id', $product->id )
+                    ->whereIn( 'id', $variantIds )
+                    ->pluck( 'rate', 'id' )
+                    ->map( fn ( $rate ) => (float) $rate )
+                    ->all();
+            }
+        }
+
+        foreach ( $items as $item ) {
+            $item = (array) $item;
+            $qty  = max( 0, (int) ( $item['qty'] ?? 0 ) );
+
+            if ( $qty <= 0 ) {
+                continue;
+            }
+
+            $variantId = (int) ( $item['variant_id'] ?? 0 );
+            $rate      = $variantId > 0 ? (float) ( $ratesById[$variantId] ?? 0 ) : 0.0;
+            $unitPrice = $rate > 0 ? $rate : $fallback;
+
+            $totalQty    += $qty;
+            $totalAmount += $unitPrice * $qty;
+        }
+
+        $unitPrice = $totalQty > 0 ? ( $totalAmount / $totalQty ) : $fallback;
+
+        return [
+            'product_price'       => round( $unitPrice, 2 ),
+            'total_product_price' => round( $totalAmount, 2 ),
+            'total_qty'           => $totalQty,
+        ];
+    }
+
     public static function resolveAttributeId( ?array $variant, string $key, ?string $flatKey = null ): ?int {
         if ( ! is_array( $variant ) ) {
             return null;
@@ -258,6 +376,7 @@ class ProductVariantService {
                 $sizeId  = self::resolveSizeId( $variant );
                 $colorId = self::resolveAttributeId( $variant, 'color', 'color_id' );
                 $qty     = max( 0, (int) ( $variant['qty'] ?? 0 ) );
+                $rate    = self::resolveRateFromPayload( $variant );
 
                 $existing = null;
 
@@ -277,6 +396,7 @@ class ProductVariantService {
                     $existing->unit_id  = $unitId;
                     $existing->size_id  = $sizeId;
                     $existing->color_id = $colorId;
+                    $existing->rate     = $rate;
 
                     if ( ! $preserveExistingStock ) {
                         $existing->qty = $qty;
@@ -291,7 +411,7 @@ class ProductVariantService {
                         'size_id'    => $sizeId,
                         'color_id'   => $colorId,
                         'qty'        => $qty,
-                        'rate'       => (float) ( $variant['rate'] ?? 0 ),
+                        'rate'       => $rate,
                     ] );
                 }
 
@@ -299,6 +419,8 @@ class ProductVariantService {
                 $variant['id']         = $existing->id;
                 $variant['variant_id'] = $existing->id;
                 $variant['qty']        = max( 0, (int) $existing->qty );
+                $variant['rate']       = (float) $existing->rate;
+                $variant['price']      = (float) $existing->rate;
                 $variant['unit_id']    = $existing->unit_id;
                 $variant['size_id']    = $existing->size_id;
                 $variant['color_id']   = $existing->color_id;
@@ -541,7 +663,7 @@ class ProductVariantService {
 
         $dbVariants = DB::connection( $connectionName )->table( 'product_variants' )
             ->where( 'product_id', $productId )
-            ->get( ['id', 'unit_id', 'size_id', 'color_id', 'qty'] );
+            ->get( ['id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate'] );
 
         if ( $dbVariants->isEmpty() ) {
             return;
@@ -572,6 +694,8 @@ class ProductVariantService {
                     $jsonVariant['id']         = $dbVariant->id;
                     $jsonVariant['variant_id'] = $dbVariant->id;
                     $jsonVariant['qty']        = max( 0, (int) $dbVariant->qty );
+                    $jsonVariant['rate']       = (float) ( $dbVariant->rate ?? 0 );
+                    $jsonVariant['price']      = (float) ( $dbVariant->rate ?? 0 );
                     $jsonVariant['unit_id']    = $dbVariant->unit_id;
                     $jsonVariant['size_id']    = $dbVariant->size_id;
                     $jsonVariant['color_id']   = $dbVariant->color_id;
@@ -589,6 +713,8 @@ class ProductVariantService {
                     'size_id'    => $dbVariant->size_id,
                     'color_id'   => $dbVariant->color_id,
                     'qty'        => max( 0, (int) $dbVariant->qty ),
+                    'rate'       => (float) ( $dbVariant->rate ?? 0 ),
+                    'price'      => (float) ( $dbVariant->rate ?? 0 ),
                 ];
             }
         }
@@ -600,7 +726,7 @@ class ProductVariantService {
 
     public static function syncJsonFromDb( Product $product ): void {
         $dbVariants = ProductVariant::where( 'product_id', $product->id )
-            ->get( ['id', 'unit_id', 'size_id', 'color_id', 'qty'] );
+            ->get( ['id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate'] );
 
         if ( $dbVariants->isEmpty() ) {
             return;
@@ -620,6 +746,8 @@ class ProductVariantService {
                     $jsonVariant['id']         = $dbVariant->id;
                     $jsonVariant['variant_id'] = $dbVariant->id;
                     $jsonVariant['qty']        = max( 0, (int) $dbVariant->qty );
+                    $jsonVariant['rate']       = (float) ( $dbVariant->rate ?? 0 );
+                    $jsonVariant['price']      = (float) ( $dbVariant->rate ?? 0 );
                     $jsonVariant['unit_id']    = $dbVariant->unit_id;
                     $jsonVariant['size_id']    = $dbVariant->size_id;
                     $jsonVariant['color_id']   = $dbVariant->color_id;
@@ -638,6 +766,8 @@ class ProductVariantService {
                     'size_id'    => $dbVariant->size_id,
                     'color_id'   => $dbVariant->color_id,
                     'qty'        => max( 0, (int) $dbVariant->qty ),
+                    'rate'       => (float) ( $dbVariant->rate ?? 0 ),
+                    'price'      => (float) ( $dbVariant->rate ?? 0 ),
                 ];
                 $usedDbIds[] = $dbVariant->id;
             }

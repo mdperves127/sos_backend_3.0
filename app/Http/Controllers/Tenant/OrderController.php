@@ -9,6 +9,7 @@ use App\Models\CartDetails;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Tenant;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\CrossTenantQueryService;
 use App\Services\DropshipperAccessService;
 use App\Enums\Status;
@@ -1049,7 +1050,7 @@ class OrderController extends Controller
 
         $normalizedDatas = $this->normalizeCheckoutDataVariants( $datas->toArray(), $totalqty );
 
-        $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+        $productPrice = ProductVariantService::productFallbackPrice( $product );
         $affiliateCommission = 0;
         $totalProductPrice = 0;
         $totalAffiliateCommission = 0;
@@ -1057,7 +1058,34 @@ class OrderController extends Controller
         $totalAdvancePayment = 0;
 
         if ( $purchaseType === 'single' ) {
-            $totalProductPrice = $productPrice * $totalqty;
+            $merchantConnection = null;
+            $merchantTenant     = Tenant::on( 'mysql' )->find( $tenantId );
+            if ( $merchantTenant ) {
+                $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+            }
+
+            $variantLineItems = collect( $normalizedDatas[0]['variants'] ?? [] )
+                ->map( fn ( $variant ) => [
+                    'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                    'qty'        => (int) ( $variant['qty'] ?? $totalqty ),
+                ] )
+                ->all();
+
+            if ( $variantLineItems !== [] ) {
+                $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                    $product,
+                    $variantLineItems,
+                    $merchantConnection
+                );
+                if ( $variantTotals['total_qty'] > 0 ) {
+                    $productPrice      = $variantTotals['product_price'];
+                    $totalProductPrice = $variantTotals['total_product_price'];
+                } else {
+                    $totalProductPrice = $productPrice * $totalqty;
+                }
+            } else {
+                $totalProductPrice = $productPrice * $totalqty;
+            }
 
             if ( $product->single_advance_payment_type == 'percent' ) {
                 $advancePayment = ( $productPrice / 100 ) * $product->advance_payment;
@@ -1407,7 +1435,31 @@ class OrderController extends Controller
                     continue;
                 }
 
-                $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+                $merchantConnection = null;
+                $merchantTenant     = Tenant::on( 'mysql' )->find( $tenantId );
+                if ( $merchantTenant ) {
+                    $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+                }
+
+                $variantLineItems = collect( $checkoutDatas[0]['variants'] ?? [] )
+                    ->map( fn ( $variant ) => [
+                        'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                        'qty'        => (int) ( $variant['qty'] ?? $totalqty ),
+                    ] )
+                    ->all();
+
+                $productPrice = ProductVariantService::productFallbackPrice( $product );
+                if ( $variantLineItems !== [] ) {
+                    $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                        $product,
+                        $variantLineItems,
+                        $merchantConnection
+                    );
+                    if ( $variantTotals['total_qty'] > 0 ) {
+                        $productPrice = $variantTotals['product_price'];
+                    }
+                }
+
                 $previewCart  = new Cart( [
                     'product_price' => $productPrice,
                     'product_qty'   => $totalqty,
