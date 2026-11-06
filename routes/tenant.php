@@ -14,6 +14,7 @@ use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\Tenant\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
+use App\Http\Controllers\API\VariantAttributeController;
 use App\Http\Controllers\API\Vendor\BarcodeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
@@ -392,13 +393,24 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [ColorController::class, 'destroy'] );
         } );
 
-        //size route
+        // Legacy size route (kept for existing Size CRUD consumers)
         Route::prefix( 'tenant-variant' )->group( function () {
             Route::get( '/', [SizeController::class, 'index'] );
             Route::post( 'store', [SizeController::class, 'store'] );
             Route::get( 'edit/{id}', [SizeController::class, 'edit'] );
             Route::post( 'update/{id}', [SizeController::class, 'update'] );
             Route::delete( 'delete/{id}', [SizeController::class, 'destroy'] );
+        } );
+
+        // Variant attributes: name + multiple values (e.g. Size => s,m,l,xl)
+        Route::prefix( 'tenant-variants' )->group( function () {
+            Route::get( '/', [VariantAttributeController::class, 'index'] );
+            Route::post( 'store', [VariantAttributeController::class, 'store'] );
+            Route::get( 'edit/{id}', [VariantAttributeController::class, 'edit'] );
+            Route::post( 'update/{id}', [VariantAttributeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [VariantAttributeController::class, 'destroy'] );
+            Route::post( '{id}/values', [VariantAttributeController::class, 'addValues'] );
+            Route::delete( '{id}/values/{valueId}', [VariantAttributeController::class, 'deleteValue'] );
         } );
 
         //Units Route
