@@ -189,7 +189,9 @@ class StorefrontCheckoutService
                     );
                     $order->address         = $customer['address'] ?? ( $formData['values']['address'] ?? null );
                     $order->additional_note = $customer['notes'] ?? ( $formData['values']['notes'] ?? null );
-                    $order->city            = $customer['city'] ?? null;
+                    $order->city            = self::nullableString(
+                        $customer['city'] ?? ( $formData['values']['city'] ?? null )
+                    );
                     $order->variants        = array_map( fn ( $line ) => [
                         'variant_id'      => $line['variant_id'],
                         'id'              => $line['variant_id'],
@@ -829,8 +831,13 @@ class StorefrontCheckoutService
 
     private static function nullableEmail( mixed $email ): ?string
     {
-        $email = is_string( $email ) ? trim( $email ) : '';
+        return self::nullableString( $email );
+    }
 
-        return $email !== '' ? $email : null;
+    private static function nullableString( mixed $value ): ?string
+    {
+        $value = is_string( $value ) ? trim( $value ) : '';
+
+        return $value !== '' ? $value : null;
     }
 }

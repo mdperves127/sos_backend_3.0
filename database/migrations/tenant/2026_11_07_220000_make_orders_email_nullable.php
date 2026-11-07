@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table( 'orders', function ( Blueprint $table ) {
             $table->string( 'email' )->nullable()->change();
+            $table->string( 'city' )->nullable()->change();
         } );
     }
 
@@ -17,6 +18,7 @@ return new class extends Migration
     {
         Schema::table( 'orders', function ( Blueprint $table ) {
             $table->string( 'email' )->nullable( false )->change();
+            $table->string( 'city' )->nullable( false )->change();
         } );
     }
 };
