@@ -184,7 +184,9 @@ class StorefrontCheckoutService
                     $order->product_id      = $product->id;
                     $order->name            = $customer['name'] ?? ( $formData['values']['name'] ?? null );
                     $order->phone           = $customer['phone'] ?? ( $formData['values']['phone'] ?? null );
-                    $order->email           = $customer['email'] ?? ( $formData['values']['email'] ?? null );
+                    $order->email           = self::nullableEmail(
+                        $customer['email'] ?? ( $formData['values']['email'] ?? null )
+                    );
                     $order->address         = $customer['address'] ?? ( $formData['values']['address'] ?? null );
                     $order->additional_note = $customer['notes'] ?? ( $formData['values']['notes'] ?? null );
                     $order->city            = $customer['city'] ?? null;
@@ -362,7 +364,7 @@ class StorefrontCheckoutService
             }
 
             $type = $field['type'] ?? 'text';
-            if ( $type === 'email' && ! filter_var( $value, FILTER_VALIDATE_EMAIL ) ) {
+            if ( $type === 'email' && trim( (string) $value ) !== '' && ! filter_var( $value, FILTER_VALIDATE_EMAIL ) ) {
                 $errors["form_data.values.$id"] = ["{$label} must be a valid email"];
             }
             if ( $type === 'phone' && strlen( preg_replace( '/\D+/', '', (string) $value ) ?? '' ) < 10 ) {
@@ -823,5 +825,12 @@ class StorefrontCheckoutService
         } while ( $exists );
 
         return $orderId;
+    }
+
+    private static function nullableEmail( mixed $email ): ?string
+    {
+        $email = is_string( $email ) ? trim( $email ) : '';
+
+        return $email !== '' ? $email : null;
     }
 }

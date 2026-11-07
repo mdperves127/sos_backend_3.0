@@ -719,7 +719,7 @@ class OrderController extends Controller
     private function normalizeGuestDatas( Request $request ) {
         return collect( $request->input( 'datas', [] ) )->map( function ( $data ) {
             $email = isset( $data['email'] ) ? trim( (string) $data['email'] ) : '';
-            $data['email'] = $email !== '' ? $email : 'guest@gmail.com';
+            $data['email'] = $email !== '' ? $email : null;
 
             return $data;
         } );
