@@ -30,6 +30,8 @@ use App\Models\UserSubscription;
 use App\Models\ProductRating;
 use App\Models\ProductBundle;
 use App\Models\ProductPreOrder;
+use App\Models\VariantAttribute;
+use App\Models\VariantAttributeValue;
 use App\Service\Vendor\ProductVariantService;
 use App\Services\ProductPreOrderService;
 
@@ -897,9 +899,10 @@ class MerchantFrontendController extends Controller
     }
 
     /**
-     * Expose per-variant sell price on storefront product detail for frontend selection UI.
-     * - rate/price: stored variant price (0 = use product price)
-     * - effective_price: price the customer pays for that variant
+     * Expose storefront variant selection data:
+     * - variants[] with rate/price/effective_price/qty/options
+     * - has_variants
+     * - variant_attributes[] (resolved names + values for picker UI)
      */
     private function attachVariantPricingMeta( $product ): void {
         if ( ! $product ) {
@@ -907,6 +910,7 @@ class MerchantFrontendController extends Controller
         }
 
         $fallback = ProductVariantService::productFallbackPrice( $product );
+        $meta     = $this->getProductTabMeta( $product );
 
         if ( $product->relationLoaded( 'productVariant' ) ) {
             $product->productVariant->each( function ( $variant ) use ( $fallback, $product ) {
@@ -921,31 +925,194 @@ class MerchantFrontendController extends Controller
         }
 
         $variantsJson = is_array( $product->variants ) ? $product->variants : [];
-        if ( $variantsJson === [] ) {
-            return;
+
+        // Rebuild combination list from DB rows when JSON is empty but variants exist.
+        if ( $variantsJson === [] && $product->relationLoaded( 'productVariant' ) && $product->productVariant->isNotEmpty() ) {
+            $variantsJson = $product->productVariant->map( function ( $dbVariant ) use ( $fallback ) {
+                $rate = (float) ( $dbVariant->rate ?? 0 );
+
+                return [
+                    'id'                     => (int) $dbVariant->id,
+                    'variant_id'             => (int) $dbVariant->id,
+                    'key'                    => null,
+                    'label'                  => null,
+                    'sku'                    => null,
+                    'image'                  => null,
+                    'qty'                    => max( 0, (int) ( $dbVariant->qty ?? 0 ) ),
+                    'options'                => [],
+                    'unit_id'                => $dbVariant->unit_id,
+                    'size_id'                => $dbVariant->size_id,
+                    'color_id'               => $dbVariant->color_id,
+                    'rate'                   => $rate,
+                    'price'                  => $rate,
+                    'effective_price'        => $rate > 0 ? $rate : $fallback,
+                    'product_fallback_price' => $fallback,
+                ];
+            } )->values()->all();
         }
 
         $product->variants = array_map( function ( $variant ) use ( $fallback, $product ) {
             $variant = (array) $variant;
             $rate    = ProductVariantService::resolveRateFromPayload( $variant );
-            if ( $rate <= 0 && isset( $variant['id'] ) ) {
-                // Prefer DB relation rate when JSON is stale.
-                $matched = null;
-                if ( $product->relationLoaded( 'productVariant' ) ) {
-                    $matched = $product->productVariant->firstWhere( 'id', (int) $variant['id'] );
-                }
-                if ( $matched ) {
-                    $rate = (float) ( $matched->rate ?? 0 );
+            $matched = null;
+
+            if ( isset( $variant['id'] ) || isset( $variant['variant_id'] ) ) {
+                $variantId = (int) ( $variant['variant_id'] ?? $variant['id'] );
+                if ( $variantId > 0 && $product->relationLoaded( 'productVariant' ) ) {
+                    $matched = $product->productVariant->firstWhere( 'id', $variantId );
                 }
             }
 
+            if ( $rate <= 0 && $matched ) {
+                $rate = (float) ( $matched->rate ?? 0 );
+            }
+
+            // Live stock from product_variants when available.
+            if ( $matched ) {
+                $variant['qty'] = max( 0, (int) ( $matched->qty ?? 0 ) );
+            } else {
+                $variant['qty'] = max( 0, (int) ( $variant['qty'] ?? 0 ) );
+            }
+
+            $variant['id']                     = (int) ( $variant['variant_id'] ?? $variant['id'] ?? 0 ) ?: null;
+            $variant['variant_id']             = $variant['id'];
             $variant['rate']                   = $rate;
             $variant['price']                  = $rate;
             $variant['effective_price']        = $rate > 0 ? $rate : $fallback;
             $variant['product_fallback_price'] = $fallback;
+            $variant['options']                = array_values( (array) ( $variant['options'] ?? [] ) );
 
             return $variant;
         }, $variantsJson );
+
+        $hasVariants = (int) ( $meta['has_variants'] ?? ( $product->variants !== [] ? 1 : 0 ) );
+        $product->setAttribute( 'has_variants', $hasVariants );
+        $product->setAttribute(
+            'variant_attributes',
+            $this->resolveStorefrontVariantAttributes( $product, $meta['variant_attributes'] ?? [] )
+        );
+
+        // Keep raw tab JSON out of the public product payload.
+        $product->makeHidden( ['request'] );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getProductTabMeta( $product ): array {
+        $raw = $product->getAttributes()['request'] ?? null;
+        if ( $raw === null || $raw === '' || $raw === 0 || $raw === '0' ) {
+            return [];
+        }
+
+        if ( is_array( $raw ) ) {
+            return $raw;
+        }
+
+        $decoded = json_decode( (string) $raw, true );
+
+        return is_array( $decoded ) ? $decoded : [];
+    }
+
+    /**
+     * Build picker-friendly attribute/value lists for the storefront.
+     *
+     * @param  array<int, mixed>  $configured
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveStorefrontVariantAttributes( $product, array $configured ): array {
+        $connection = method_exists( $product, 'getConnectionName' )
+            ? ( $product->getConnectionName() ?: config( 'database.default' ) )
+            : config( 'database.default' );
+
+        // Prefer configured meta from the price tab; otherwise derive from variant options.
+        if ( $configured === [] ) {
+            $derived = [];
+            foreach ( (array) $product->variants as $variant ) {
+                foreach ( (array) ( ( $variant['options'] ?? [] ) ) as $option ) {
+                    $option      = (array) $option;
+                    $attributeId = (int) ( $option['attribute_id'] ?? 0 );
+                    $valueId     = (int) ( $option['value_id'] ?? 0 );
+                    if ( $attributeId <= 0 || $valueId <= 0 ) {
+                        continue;
+                    }
+                    $derived[$attributeId]['attribute_id'] = $attributeId;
+                    $derived[$attributeId]['attribute_name'] = $option['attribute_name'] ?? null;
+                    $derived[$attributeId]['value_ids'][$valueId] = $valueId;
+                    $derived[$attributeId]['values'][$valueId] = [
+                        'value_id' => $valueId,
+                        'value'    => $option['value'] ?? null,
+                    ];
+                }
+            }
+
+            return array_values( array_map( function ( $row, $index ) {
+                return [
+                    'attribute_id'   => (int) $row['attribute_id'],
+                    'attribute_name' => $row['attribute_name'] ?? null,
+                    'sort_order'     => $index,
+                    'value_ids'      => array_values( $row['value_ids'] ?? [] ),
+                    'values'         => array_values( $row['values'] ?? [] ),
+                ];
+            }, $derived, array_keys( $derived ) ) );
+        }
+
+        $attributeIds = [];
+        $valueIds     = [];
+        foreach ( $configured as $row ) {
+            $row = (array) $row;
+            $attributeIds[] = (int) ( $row['attribute_id'] ?? 0 );
+            foreach ( (array) ( $row['value_ids'] ?? [] ) as $valueId ) {
+                $valueIds[] = (int) $valueId;
+            }
+        }
+
+        $attributeIds = array_values( array_filter( array_unique( $attributeIds ) ) );
+        $valueIds     = array_values( array_filter( array_unique( $valueIds ) ) );
+
+        $attributes = VariantAttribute::on( $connection )
+            ->whereIn( 'id', $attributeIds )
+            ->get( ['id', 'name', 'slug'] )
+            ->keyBy( 'id' );
+
+        $values = VariantAttributeValue::on( $connection )
+            ->whereIn( 'id', $valueIds )
+            ->get( ['id', 'variant_attribute_id', 'value', 'sort_order'] )
+            ->groupBy( 'variant_attribute_id' );
+
+        $resolved = [];
+        foreach ( $configured as $index => $row ) {
+            $row         = (array) $row;
+            $attributeId = (int) ( $row['attribute_id'] ?? 0 );
+            if ( $attributeId <= 0 ) {
+                continue;
+            }
+
+            $selectedValueIds = array_values( array_filter( array_map( 'intval', (array) ( $row['value_ids'] ?? [] ) ) ) );
+            $attributeValues  = collect( $values->get( $attributeId, [] ) )
+                ->whereIn( 'id', $selectedValueIds )
+                ->sortBy( 'sort_order' )
+                ->values()
+                ->map( function ( $value ) {
+                    return [
+                        'value_id' => (int) $value->id,
+                        'value'    => $value->value,
+                    ];
+                } )
+                ->all();
+
+            $resolved[] = [
+                'attribute_id'   => $attributeId,
+                'attribute_name' => optional( $attributes->get( $attributeId ) )->name,
+                'sort_order'     => (int) ( $row['sort_order'] ?? $index ),
+                'value_ids'      => $selectedValueIds,
+                'values'         => $attributeValues,
+            ];
+        }
+
+        usort( $resolved, fn ( $a, $b ) => ( $a['sort_order'] ?? 0 ) <=> ( $b['sort_order'] ?? 0 ) );
+
+        return $resolved;
     }
 
     public function categories()
