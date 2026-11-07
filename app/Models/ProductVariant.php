@@ -15,6 +15,11 @@ class ProductVariant extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'rate' => 'decimal:2',
+        'qty'  => 'integer',
+    ];
+
     public function color()
     {
         return $this->belongsTo(Color::class, 'color_id')->select('id', 'name');

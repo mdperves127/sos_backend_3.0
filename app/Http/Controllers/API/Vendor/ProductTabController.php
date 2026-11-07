@@ -199,9 +199,17 @@ class ProductTabController extends Controller
             return $this->notFound();
         }
 
-        // Multipart forms often send these as JSON strings — normalize before validation.
+        // Multipart forms send numbers as strings — coerce before validation/save.
+        $variants = ProductVariantService::normalizeVariantPriceFields(
+            $this->decodeArrayInput( $request->input( 'variants', [] ) )
+        );
+
         $request->merge( [
-            'variants'           => $this->decodeArrayInput( $request->input( 'variants', [] ) ),
+            'original_price'     => ProductVariantService::toDecimal( $request->input( 'original_price' ) ),
+            'selling_price'      => ProductVariantService::toDecimal( $request->input( 'selling_price' ) ),
+            'discount_price'     => ProductVariantService::toDecimal( $request->input( 'discount_price' ) ),
+            'alert_qty'          => ProductVariantService::toDecimal( $request->input( 'alert_qty' ) ),
+            'variants'           => $variants,
             'variant_attributes' => $this->decodeArrayInput( $request->input( 'variant_attributes', [] ) ),
         ] );
 
@@ -235,13 +243,11 @@ class ProductTabController extends Controller
             return $this->validationError( $validator );
         }
 
-        $product->original_price = (float) $request->input( 'original_price' );
-        $product->selling_price  = (float) $request->input( 'selling_price' );
-        $product->discount_price = $request->filled( 'discount_price' )
-            ? (float) $request->input( 'discount_price' )
-            : null;
-        $product->alert_qty = (float) $request->input( 'alert_qty' );
-        $product->discount_percentage = $product->discount_price
+        $product->original_price = ProductVariantService::toDecimal( $request->input( 'original_price' ) ) ?? 0;
+        $product->selling_price  = ProductVariantService::toDecimal( $request->input( 'selling_price' ) ) ?? 0;
+        $product->discount_price = ProductVariantService::toDecimal( $request->input( 'discount_price' ) );
+        $product->alert_qty      = ProductVariantService::toDecimal( $request->input( 'alert_qty' ) ) ?? 0;
+        $product->discount_percentage = $product->discount_price !== null
             ? percentage( $product->selling_price, $product->discount_price )
             : null;
 
@@ -611,14 +617,14 @@ class ProductTabController extends Controller
                 'color_id'   => $variant['color_id'] ?? null,
             ];
 
-            // Only set price/rate when the client explicitly sent them — otherwise
-            // sync must keep the existing product_variants.rate (do not force 0).
-            $hasPrice = array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '';
-            $hasRate  = array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '';
-            if ( $hasPrice || $hasRate ) {
-                $price         = $hasPrice ? $variant['price'] : $variant['rate'];
-                $row['price']  = max( 0, (float) $price );
-                $row['rate']   = $row['price'];
+            // Only set price/rate when the client explicitly sent a numeric value
+            // (multipart sends strings like "120" — coerce via toDecimal).
+            $price = ProductVariantService::toDecimal( $variant['price'] ?? null );
+            $rate  = ProductVariantService::toDecimal( $variant['rate'] ?? null );
+            if ( $price !== null || $rate !== null ) {
+                $amount        = $price ?? $rate;
+                $row['price']  = $amount;
+                $row['rate']   = $amount;
             }
 
             return $row;

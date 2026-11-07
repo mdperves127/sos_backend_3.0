@@ -30,15 +30,46 @@ class ProductVariantService {
     }
 
     /**
+     * Coerce multipart/form string prices into a non-negative decimal (2 places).
+     * Returns null when the value is missing/blank/non-numeric.
+     */
+    public static function toDecimal( mixed $value ): ?float {
+        if ( $value === null || $value === '' || is_bool( $value ) || is_array( $value ) || is_object( $value ) ) {
+            return null;
+        }
+
+        if ( is_string( $value ) ) {
+            $value = trim( $value );
+            // Strip currency noise / thousand separators: "$1,234.50" → "1234.50"
+            $value = preg_replace( '/[^0-9.\-]/', '', $value ) ?? '';
+            if ( $value === '' || $value === '-' || $value === '.' || $value === '-.' ) {
+                return null;
+            }
+        }
+
+        if ( ! is_numeric( $value ) ) {
+            return null;
+        }
+
+        return round( max( 0, (float) $value ), 2 );
+    }
+
+    /**
      * Accept `price` or `rate` from tenant panel payloads. Non-negative; 0 means "use product price".
      */
     public static function resolveRateFromPayload( array $variant ): float {
-        if ( array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '' ) {
-            return max( 0, (float) $variant['price'] );
+        if ( array_key_exists( 'price', $variant ) ) {
+            $price = self::toDecimal( $variant['price'] );
+            if ( $price !== null ) {
+                return $price;
+            }
         }
 
-        if ( array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '' ) {
-            return max( 0, (float) $variant['rate'] );
+        if ( array_key_exists( 'rate', $variant ) ) {
+            $rate = self::toDecimal( $variant['rate'] );
+            if ( $rate !== null ) {
+                return $rate;
+            }
         }
 
         return 0.0;
@@ -48,8 +79,52 @@ class ProductVariantService {
      * Whether the payload explicitly includes a variant unit price.
      */
     public static function payloadHasRate( array $variant ): bool {
-        return ( array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '' )
-            || ( array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '' );
+        if ( array_key_exists( 'price', $variant ) && self::toDecimal( $variant['price'] ) !== null ) {
+            return true;
+        }
+
+        return array_key_exists( 'rate', $variant ) && self::toDecimal( $variant['rate'] ) !== null;
+    }
+
+    /**
+     * Normalize price/rate/qty fields on a variants array (multipart strings → decimals).
+     *
+     * @param  array<int, mixed>  $variants
+     * @return array<int, array<string, mixed>>
+     */
+    public static function normalizeVariantPriceFields( array $variants ): array {
+        foreach ( $variants as $index => $variant ) {
+            $variant = (array) $variant;
+
+            if ( array_key_exists( 'price', $variant ) ) {
+                $price = self::toDecimal( $variant['price'] );
+                if ( $price !== null ) {
+                    $variant['price'] = $price;
+                    $variant['rate']  = $price;
+                } else {
+                    unset( $variant['price'] );
+                }
+            }
+
+            if ( array_key_exists( 'rate', $variant ) ) {
+                $rate = self::toDecimal( $variant['rate'] );
+                if ( $rate !== null ) {
+                    $variant['rate']  = $rate;
+                    $variant['price'] = $variant['price'] ?? $rate;
+                } else {
+                    unset( $variant['rate'] );
+                }
+            }
+
+            if ( array_key_exists( 'qty', $variant ) ) {
+                $qty = self::toDecimal( $variant['qty'] );
+                $variant['qty'] = $qty !== null ? (int) $qty : 0;
+            }
+
+            $variants[$index] = $variant;
+        }
+
+        return array_values( $variants );
     }
 
     /**
