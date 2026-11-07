@@ -12,15 +12,23 @@ class ResetPasswordMail extends Mailable
 
     protected $token;
 
+    protected ?string $userName;
+
+    protected int $expiresMinutes;
+
     /**
      * Create a new message instance.
      *
      * @param  string|int  $token
+     * @param  string|null  $userName
+     * @param  int  $expiresMinutes  Must match existing reset OTP validation window.
      * @return void
      */
-    public function __construct( $token )
+    public function __construct( $token, ?string $userName = null, int $expiresMinutes = 5 )
     {
         $this->token = $token;
+        $this->userName = $userName;
+        $this->expiresMinutes = $expiresMinutes;
     }
 
     /**
@@ -30,10 +38,14 @@ class ResetPasswordMail extends Mailable
      */
     public function build()
     {
+        $data = [
+            'token'          => $this->token,
+            'userName'       => $this->userName,
+            'expiresMinutes' => $this->expiresMinutes,
+        ];
+
         return $this->subject( 'Reset your password' )
-            ->view( 'emails.reset_password' )
-            ->with( [
-                'token' => $this->token,
-            ] );
+            ->view( 'emails.reset_password', $data )
+            ->text( 'emails.text.reset_password', $data );
     }
 }

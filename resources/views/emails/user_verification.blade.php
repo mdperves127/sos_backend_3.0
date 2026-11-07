@@ -25,6 +25,10 @@
         </tr>
     </table>
 
+    <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#64748b;">
+        This code expires in {{ (int) ($expiresMinutes ?? 5) }} minutes.
+    </p>
+
     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#64748b;">
         If you did not create an account, you can ignore this message.
     </p>

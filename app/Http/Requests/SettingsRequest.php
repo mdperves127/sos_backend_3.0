@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Services\PlatformFeeService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class SettingsRequest extends FormRequest
 {
@@ -127,6 +129,12 @@ class SettingsRequest extends FormRequest
             'f_feature_image_6'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
             'f_feature_image_7'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
             'f_feature_image_8'            => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp'],
+            'dropship_fee_type'            => ['sometimes', 'required', Rule::in( PlatformFeeService::GLOBAL_TYPES )],
+            'dropship_fee_value'           => ['sometimes', 'required', 'numeric', 'min:0', 'regex:/^\d{1,10}(\.\d{1,2})?$/', function ( $attribute, $value, $fail ) {
+                if ( $this->input( 'dropship_fee_type' ) === PlatformFeeService::TYPE_PERCENTAGE && (float) $value > 100 ) {
+                    $fail( 'Percentage platform fee cannot exceed 100.' );
+                }
+            }],
         ];
     }
 

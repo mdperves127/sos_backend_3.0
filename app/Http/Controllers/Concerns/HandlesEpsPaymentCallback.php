@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Services\EpsPaymentService;
+use App\Services\TenantPaymentGatewayService;
 
 trait HandlesEpsPaymentCallback
 {
@@ -15,7 +16,10 @@ trait HandlesEpsPaymentCallback
         }
 
         try {
-            $verification = EpsPaymentService::verifyTransaction( $merchantTransactionId );
+            $verification = TenantPaymentGatewayService::withCredentialsForTransaction(
+                $merchantTransactionId,
+                fn () => EpsPaymentService::verifyTransaction( $merchantTransactionId )
+            );
         } catch ( \Throwable ) {
             return null;
         }

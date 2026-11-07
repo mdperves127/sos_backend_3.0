@@ -9,7 +9,7 @@
         Hello{{ ! empty($user->name) ? ', ' . $user->name : '' }},
     </p>
     <p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#334155;">
-        The following product needs attention. Stock is low or depleted — restock soon to avoid missed orders.
+        The following product needs attention. Stock is low or depleted - restock soon to avoid missed orders.
     </p>
 
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border:1px solid #e2e8f0;">

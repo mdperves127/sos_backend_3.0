@@ -15,6 +15,31 @@ use RuntimeException;
  */
 class UddoktaPayService
 {
+    /**
+     * Request-scoped tenant credentials for product checkout (no platform fallback).
+     *
+     * @var array<string, mixed>|null
+     */
+    private static ?array $runtimeCredentials = null;
+
+    /**
+     * @param  array<string, mixed>  $credentials
+     */
+    public static function useRuntimeCredentials( array $credentials ): void
+    {
+        self::$runtimeCredentials = $credentials;
+    }
+
+    public static function clearRuntimeCredentials(): void
+    {
+        self::$runtimeCredentials = null;
+    }
+
+    public static function hasRuntimeCredentials(): bool
+    {
+        return is_array( self::$runtimeCredentials ) && self::$runtimeCredentials !== [];
+    }
+
     public static function gateway(
         float $amount,
         string $trxId,
@@ -136,11 +161,19 @@ class UddoktaPayService
 
     private static function baseUrl(): string
     {
+        if ( self::hasRuntimeCredentials() ) {
+            return rtrim( (string) ( self::$runtimeCredentials['base_url'] ?? '' ), '/' );
+        }
+
         return (string) config( 'services.uddoktapay.base_url', 'https://sandbox.uddoktapay.com' );
     }
 
     private static function apiKey(): string
     {
+        if ( self::hasRuntimeCredentials() ) {
+            return trim( (string) ( self::$runtimeCredentials['api_key'] ?? '' ) );
+        }
+
         return trim( (string) config( 'services.uddoktapay.api_key', '' ) );
     }
 
@@ -148,7 +181,9 @@ class UddoktaPayService
     {
         if ( self::apiKey() === '' || self::baseUrl() === '' ) {
             throw new RuntimeException(
-                'UddoktaPay is not configured. Set UDDOKTAPAY_API_KEY and UDDOKTAPAY_BASE_URL in .env.'
+                self::hasRuntimeCredentials()
+                    ? 'UddoktaPay is not configured for this store. Update payment gateway settings.'
+                    : 'UddoktaPay is not configured. Set tenant UddoktaPay credentials in payment gateway settings.'
             );
         }
     }

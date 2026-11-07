@@ -9,10 +9,43 @@ class EpsConfig
     public const MODE_LIVE = 'live';
 
     /**
+     * Request-scoped tenant credentials for product checkout (never platform fallback).
+     *
+     * @var array<string, mixed>|null
+     */
+    private static ?array $runtimeCredentials = null;
+
+    /**
+     * @param  array<string, mixed>  $credentials
+     */
+    public static function useRuntimeCredentials( array $credentials ): void
+    {
+        self::$runtimeCredentials = $credentials;
+    }
+
+    public static function clearRuntimeCredentials(): void
+    {
+        self::$runtimeCredentials = null;
+    }
+
+    public static function hasRuntimeCredentials(): bool
+    {
+        return is_array( self::$runtimeCredentials ) && self::$runtimeCredentials !== [];
+    }
+
+    /**
      * Active EPS mode: sandbox or live.
      */
     public static function mode(): string
     {
+        if ( self::hasRuntimeCredentials() ) {
+            $runtimeMode = strtolower( trim( (string) ( self::$runtimeCredentials['mode'] ?? '' ) ) );
+
+            if ( in_array( $runtimeMode, [self::MODE_SANDBOX, self::MODE_LIVE], true ) ) {
+                return $runtimeMode;
+            }
+        }
+
         $mode = strtolower( trim( (string) config( 'services.eps.mode', '' ) ) );
 
         if ( in_array( $mode, [self::MODE_SANDBOX, self::MODE_LIVE], true ) ) {
@@ -61,6 +94,15 @@ class EpsConfig
 
     public static function get( string $key ): mixed
     {
+        if ( self::hasRuntimeCredentials() && array_key_exists( $key, self::$runtimeCredentials ) ) {
+            return self::$runtimeCredentials[$key];
+        }
+
+        // Product-checkout runtime mode must not leak into platform .env credentials.
+        if ( self::hasRuntimeCredentials() ) {
+            return null;
+        }
+
         $mode  = self::mode();
         $value = config( "services.eps.credentials.{$mode}.{$key}" );
 

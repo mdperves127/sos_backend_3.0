@@ -30,6 +30,7 @@ use App\Models\UserSubscription;
 use App\Models\ProductRating;
 use App\Models\ProductBundle;
 use App\Models\ProductPreOrder;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\ProductPreOrderService;
 
 
@@ -117,6 +118,10 @@ class MerchantFrontendController extends Controller
      */
     private function normalizeProductPrices( $products ) {
         return collect( $products )->map( function ( $product ) {
+            if ( ! $product instanceof \Illuminate\Database\Eloquent\Model ) {
+                return $product;
+            }
+
             if (
                 $product->discount_price !== null
                 && (float) $product->discount_price === (float) $product->selling_price
@@ -216,24 +221,245 @@ class MerchantFrontendController extends Controller
 
     private function attachDropshipperProductMeta( $product, ProductDetails $productDetail ): void {
         $product->profit_amount                 = $productDetail->profit_amount;
+        $product->dropshipper_selling_price     = $productDetail->selling_price ?? null;
         $product->dropshipper_product_detail_id = $productDetail->id;
         $product->dropshipper_uniqid            = $productDetail->uniqid;
     }
 
+    /**
+     * Parse comma-separated or array filter IDs from the storefront request.
+     *
+     * @return array<int, string>
+     */
+    private function parseStorefrontIdList( mixed $value ): array {
+        if ( $value === null || $value === '' ) {
+            return [];
+        }
+
+        $parts = is_array( $value )
+            ? array_map( static fn ( $id ) => trim( (string) $id ), $value )
+            : array_map( 'trim', explode( ',', (string) $value ) );
+
+        $ignored = ['', 'all', 'null', 'undefined', 'none'];
+
+        return array_values( array_filter(
+            $parts,
+            static fn ( $id ) => ! in_array( strtolower( $id ), $ignored, true )
+        ) );
+    }
+
+    /**
+     * First present request value among keys (handles empty-string keys from the frontend).
+     */
+    private function requestFirstFilled( Request $request, array $keys ): mixed {
+        foreach ( $keys as $key ) {
+            if ( ! $request->exists( $key ) ) {
+                continue;
+            }
+            $value = $request->get( $key );
+            if ( $value === null || $value === '' ) {
+                continue;
+            }
+            if ( is_array( $value ) && $value === [] ) {
+                continue;
+            }
+
+            return $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Apply the same storefront filters for merchant and dropshipper catalogs.
+     * Match both local and marketplace IDs so dropshipper shops keep working whether
+     * the frontend sends marketplace IDs or legacy local IDs.
+     */
+    private function applyStorefrontProductFilters( $query, Request $request, bool $forDropshipper = false ) {
+        $categoryIds = $this->parseStorefrontIdList(
+            $this->requestFirstFilled( $request, ['category_id', 'categoryIds'] )
+        );
+        $subcategoryIds = $this->parseStorefrontIdList(
+            $this->requestFirstFilled( $request, ['sub_category_id', 'subcategory_id', 'subcategoryIds'] )
+        );
+        $brandIds = $this->parseStorefrontIdList(
+            $this->requestFirstFilled( $request, ['brand_id', 'brandIds'] )
+        );
+        $productIds = $this->parseStorefrontIdList(
+            $this->requestFirstFilled( $request, ['product_id', 'productIds'] )
+        );
+        $minPrice = $this->requestFirstFilled( $request, ['min_price'] );
+        $maxPrice = $this->requestFirstFilled( $request, ['max_price'] );
+        $colorId  = $this->requestFirstFilled( $request, ['color_id'] );
+        $sizeId   = $this->requestFirstFilled( $request, ['size_id'] );
+        $search   = trim( (string) ( $this->requestFirstFilled( $request, ['search'] ) ?? '' ) );
+
+        if ( $productIds !== [] ) {
+            $query->whereIn( 'id', $productIds );
+        }
+
+        if ( $categoryIds !== [] ) {
+            $query->where( function ( $q ) use ( $categoryIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    // Prefer marketplace IDs (dropshipper category API), still accept local IDs.
+                    $q->whereIn( 'market_place_category_id', $categoryIds )
+                        ->orWhereIn( 'category_id', $categoryIds );
+                } else {
+                    $q->whereIn( 'category_id', $categoryIds )
+                        ->orWhereIn( 'market_place_category_id', $categoryIds );
+                }
+            } );
+        }
+
+        if ( $subcategoryIds !== [] ) {
+            $query->where( function ( $q ) use ( $subcategoryIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    $q->whereIn( 'market_place_subcategory_id', $subcategoryIds )
+                        ->orWhereIn( 'subcategory_id', $subcategoryIds );
+                } else {
+                    $q->whereIn( 'subcategory_id', $subcategoryIds )
+                        ->orWhereIn( 'market_place_subcategory_id', $subcategoryIds );
+                }
+            } );
+        }
+
+        if ( $brandIds !== [] ) {
+            $query->where( function ( $q ) use ( $brandIds, $forDropshipper ) {
+                if ( $forDropshipper ) {
+                    $q->whereIn( 'market_place_brand_id', $brandIds )
+                        ->orWhereIn( 'brand_id', $brandIds );
+                } else {
+                    $q->whereIn( 'brand_id', $brandIds )
+                        ->orWhereIn( 'market_place_brand_id', $brandIds );
+                }
+            } );
+        }
+
+        // SQL price filter uses merchant catalog price. Dropshipper selling price is
+        // re-checked after meta attach in filterProductCollectionByPrice().
+        if ( $minPrice !== null || $maxPrice !== null ) {
+            $query->where( function ( $q ) use ( $minPrice, $maxPrice ) {
+                $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [(float) ( $minPrice ?? 0 )] )
+                    ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [(float) ( $maxPrice ?? 999999999 )] );
+            } );
+        }
+
+        if ( $colorId !== null && (int) $colorId > 0 ) {
+            $query->whereExists( function ( $q ) use ( $colorId ) {
+                $q->select( DB::raw( 1 ) )
+                    ->from( 'product_variants' )
+                    ->whereColumn( 'product_variants.product_id', 'products.id' )
+                    ->where( 'product_variants.color_id', (int) $colorId )
+                    ->whereNull( 'product_variants.deleted_at' );
+            } );
+        }
+
+        if ( $sizeId !== null && (int) $sizeId > 0 ) {
+            $query->whereExists( function ( $q ) use ( $sizeId ) {
+                $q->select( DB::raw( 1 ) )
+                    ->from( 'product_variants' )
+                    ->whereColumn( 'product_variants.product_id', 'products.id' )
+                    ->where( 'product_variants.size_id', (int) $sizeId )
+                    ->whereNull( 'product_variants.deleted_at' );
+            } );
+        }
+
+        if ( $search !== '' ) {
+            $query->where( function ( $q ) use ( $search ) {
+                $q->where( 'name', 'like', '%' . $search . '%' )
+                    ->orWhere( 'uniqid', 'like', '%' . $search . '%' )
+                    ->orWhere( 'sku', 'like', '%' . $search . '%' );
+            } );
+        }
+
+        return $query;
+    }
+
+    private function effectiveStorefrontPrice( $product ): float {
+        if (
+            is_object( $product )
+            && isset( $product->dropshipper_selling_price )
+            && $product->dropshipper_selling_price !== null
+            && $product->dropshipper_selling_price !== ''
+        ) {
+            return (float) $product->dropshipper_selling_price;
+        }
+
+        $discount = is_object( $product ) ? ( $product->discount_price ?? null ) : null;
+        $selling  = is_object( $product ) ? ( $product->selling_price ?? 0 ) : 0;
+
+        return (float) ( ( $discount !== null && $discount !== '' ) ? $discount : $selling );
+    }
+
+    /**
+     * Re-apply price bounds using dropshipper selling price when present.
+     */
+    private function filterProductCollectionByPrice( $products, Request $request ) {
+        $minPrice = $this->requestFirstFilled( $request, ['min_price'] );
+        $maxPrice = $this->requestFirstFilled( $request, ['max_price'] );
+
+        if ( $minPrice === null && $maxPrice === null ) {
+            return collect( $products )->values();
+        }
+
+        $min = (float) ( $minPrice ?? 0 );
+        $max = (float) ( $maxPrice ?? 999999999 );
+
+        return collect( $products )->filter( function ( $product ) use ( $min, $max ) {
+            $price = $this->effectiveStorefrontPrice( $product );
+
+            return $price >= $min && $price <= $max;
+        } )->values();
+    }
+
+    private function sortProductCollection( $products, Request $request ) {
+        $products = collect( $products );
+        $sort     = strtolower( (string) $request->get( 'sort', $request->get( 'sort_by', '' ) ) );
+        $order    = strtolower( (string) $request->get( 'order', $request->get( 'sort_order', 'asc' ) ) );
+        $desc     = in_array( $order, ['desc', 'high_to_low'], true )
+            || $request->boolean( 'high_to_low' )
+            || $sort === 'price_desc'
+            || $sort === 'high_to_low';
+
+        if ( $request->boolean( 'low_to_high' ) || $sort === 'price_asc' || $sort === 'low_to_high' ) {
+            $desc = false;
+            $sort = 'price';
+        }
+
+        if ( in_array( $sort, ['price', 'price_asc', 'price_desc', 'high_to_low', 'low_to_high'], true )
+            || $request->boolean( 'high_to_low' )
+            || $request->boolean( 'low_to_high' )
+        ) {
+            return $desc
+                ? $products->sortByDesc( fn ( $p ) => $this->effectiveStorefrontPrice( $p ) )->values()
+                : $products->sortBy( fn ( $p ) => $this->effectiveStorefrontPrice( $p ) )->values();
+        }
+
+        if ( $sort === 'name' ) {
+            return $desc
+                ? $products->sortByDesc( fn ( $p ) => strtolower( (string) ( $p->name ?? '' ) ) )->values()
+                : $products->sortBy( fn ( $p ) => strtolower( (string) ( $p->name ?? '' ) ) )->values();
+        }
+
+        if ( in_array( $sort, ['newest', 'latest', 'created_at'], true ) ) {
+            return $products->sortByDesc( function ( $p ) {
+                $value = $p->created_at ?? null;
+
+                return $value ? strtotime( (string) $value ) : 0;
+            } )->values();
+        }
+
+        // Default: keep insertion order (merchant query order / dropshipper detail order).
+        return $products->values();
+    }
+
     public function products(Request $request)
     {
-        // Get filter parameters
-        $categoryId = $request->get('category_id');
-        // Handle comma-separated category IDs
-        $categoryIds = $categoryId ? array_filter(array_map('trim', explode(',', $categoryId))) : [];
-        $minPrice = $request->get('min_price');
-        $maxPrice = $request->get('max_price');
-        $colorId = $request->get('color_id');
-        $sizeId = $request->get('size_id');
+        $isDropshipper = tenant() && tenant()->type === 'dropshipper';
 
-        if(tenant()->type == 'dropshipper') {
-            $allProductDetails = ProductDetails::where('status', 1)->get();
-            $products = collect();
+        if ( $isDropshipper ) {
+            $allProductDetails = ProductDetails::where( 'status', 1 )->get();
+            $products          = collect();
 
             foreach ( $allProductDetails->groupBy( 'tenant_id' ) as $storedTenantId => $details ) {
                 if ( ! $storedTenantId ) {
@@ -245,54 +471,28 @@ class MerchantFrontendController extends Controller
                     continue;
                 }
 
-                $productIds = $details->pluck( 'product_id' )->filter()->unique()->values();
-                if ( $productIds->isEmpty() ) {
+                $approvedIds = $details->pluck( 'product_id' )->filter()->unique()->values();
+                if ( $approvedIds->isEmpty() ) {
                     continue;
                 }
 
+                // Keep prior dropshipper visibility (is_show_website only) — do not require
+                // status=active here; some merchant catalogs use other status values.
                 $productQuery = $this->applyWebsiteVisibleProductFilter(
                     Product::on( $connectionName )
                         ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails', 'vendor' )
-                        ->whereIn( 'id', $productIds )
+                        ->whereIn( 'id', $approvedIds )
                 );
 
-                if ( !empty( $categoryIds ) ) {
-                    $productQuery->where( function( $q ) use ( $categoryIds ) {
-                        $q->whereIn( 'category_id', $categoryIds )
-                          ->orWhereIn( 'market_place_category_id', $categoryIds );
-                    } );
-                }
-
-                if ( $minPrice !== null || $maxPrice !== null ) {
-                    $productQuery->where( function( $q ) use ( $minPrice, $maxPrice ) {
-                        $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [$minPrice ?? 0] )
-                          ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [$maxPrice ?? 999999999] );
-                    } );
-                }
-
-                if ( $colorId ) {
-                    $productQuery->whereExists( function ( $q ) use ( $colorId ) {
-                        $q->select( DB::raw( 1 ) )
-                            ->from( 'product_variants' )
-                            ->whereColumn( 'product_variants.product_id', 'products.id' )
-                            ->where( 'product_variants.color_id', (int) $colorId )
-                            ->whereNull( 'product_variants.deleted_at' );
-                    } );
-                }
-
-                if ( $sizeId ) {
-                    $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
-                        $q->select( DB::raw( 1 ) )
-                            ->from( 'product_variants' )
-                            ->whereColumn( 'product_variants.product_id', 'products.id' )
-                            ->where( 'product_variants.size_id', (int) $sizeId )
-                            ->whereNull( 'product_variants.deleted_at' );
-                    } );
-                }
+                $this->applyStorefrontProductFilters( $productQuery, $request, true );
 
                 try {
                     $found = $productQuery->get()->keyBy( 'id' );
                 } catch ( \Exception $e ) {
+                    \Log::warning( 'dropshipper.storefront_products_query_failed', [
+                        'merchant_tenant_id' => (string) $storedTenantId,
+                        'message'            => $e->getMessage(),
+                    ] );
                     continue;
                 }
 
@@ -305,56 +505,20 @@ class MerchantFrontendController extends Controller
                 }
             }
 
+            $products = $this->filterProductCollectionByPrice( $products, $request );
         } else {
-            // Build query with filters for non-dropshippers
             $productQuery = $this->applyWebsiteVisibleProductFilter(
                 Product::where( 'status', 'active' )
                     ->with( 'category', 'subcategory', 'brand', 'productImage', 'productdetails' )
             );
 
-            // Apply category filter (support multiple categories)
-            if ( !empty( $categoryIds ) ) {
-                $productQuery->where( function( $q ) use ( $categoryIds ) {
-                    $q->whereIn( 'category_id', $categoryIds )
-                      ->orWhereIn( 'market_place_category_id', $categoryIds );
-                } );
-            }
-
-            // Apply price range filter
-            if ( $minPrice !== null || $maxPrice !== null ) {
-                $productQuery->where( function( $q ) use ( $minPrice, $maxPrice ) {
-                    // Use discount_price if available, otherwise selling_price
-                    $q->whereRaw( 'COALESCE(discount_price, selling_price) >= ?', [$minPrice ?? 0] )
-                      ->whereRaw( 'COALESCE(discount_price, selling_price) <= ?', [$maxPrice ?? 999999999] );
-                } );
-            }
-
-            // Apply color filter (product_variants has product_id, color_id; colors table: colors)
-            if ( $colorId ) {
-                $productQuery->whereExists( function ( $q ) use ( $colorId ) {
-                    $q->select( DB::raw( 1 ) )
-                        ->from( 'product_variants' )
-                        ->whereColumn( 'product_variants.product_id', 'products.id' )
-                        ->where( 'product_variants.color_id', (int) $colorId )
-                        ->whereNull( 'product_variants.deleted_at' );
-                } );
-            }
-
-            // Apply size filter (product_variants has product_id, size_id; sizes table: sizes)
-            if ( $sizeId ) {
-                $productQuery->whereExists( function ( $q ) use ( $sizeId ) {
-                    $q->select( DB::raw( 1 ) )
-                        ->from( 'product_variants' )
-                        ->whereColumn( 'product_variants.product_id', 'products.id' )
-                        ->where( 'product_variants.size_id', (int) $sizeId )
-                        ->whereNull( 'product_variants.deleted_at' );
-                } );
-            }
+            $this->applyStorefrontProductFilters( $productQuery, $request, false );
 
             $products = $productQuery->get();
         }
 
-        $payload = $this->paginateProductCollection( $request, $products );
+        $products = $this->sortProductCollection( $products, $request );
+        $payload  = $this->paginateProductCollection( $request, $products );
 
         if ( ! $request->attributes->get( 'page_builder_skip', false ) ) {
             $pageBuilder = app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
@@ -362,13 +526,32 @@ class MerchantFrontendController extends Controller
 
             $payload['page_builder'] = $pageBuilder;
 
-            $needFields = $this->extractPageBuilderNeedFields( $pageBuilder );
-            if ( $needFields !== [] ) {
-                $payload['data'] = $this->projectProductNeedFields( $payload['data'], $needFields );
-            }
+            // Always project to the storefront catalog shape so merchant and
+            // dropshipper tenants return the same data keys (even when page_builder is null).
+            $needFields          = $this->extractPageBuilderNeedFields( $pageBuilder );
+            $payload['data']     = $this->projectProductNeedFields( $payload['data'], $needFields );
         }
 
         return response()->json( $payload );
+    }
+
+    /**
+     * Default public catalog fields (matches typical shop1 needFields).
+     *
+     * @return array<int, string>
+     */
+    private function defaultStorefrontNeedFields(): array
+    {
+        return [
+            'slug',
+            'name',
+            'short_description',
+            'selling_price',
+            'original_price',
+            'discount_type',
+            'discount_rate',
+            'image',
+        ];
     }
 
     /**
@@ -378,8 +561,10 @@ class MerchantFrontendController extends Controller
     private function extractPageBuilderNeedFields( ?array $pageBuilder ): array
     {
         if ( ! $pageBuilder ) {
-            return [];
+            return $this->defaultStorefrontNeedFields();
         }
+
+        $fallback = [];
 
         foreach ( $pageBuilder['blocks'] ?? [] as $block ) {
             if ( ! is_array( $block ) ) {
@@ -391,10 +576,29 @@ class MerchantFrontendController extends Controller
                 continue;
             }
 
-            return array_values( array_filter( $fields, fn ( $field ) => is_string( $field ) && trim( $field ) !== '' ) );
+            $normalized = array_values( array_filter(
+                $fields,
+                fn ( $field ) => is_string( $field ) && trim( $field ) !== ''
+            ) );
+
+            if ( $normalized === [] ) {
+                continue;
+            }
+
+            $type = strtolower( (string) ( $block['type'] ?? '' ) );
+            if (
+                str_starts_with( $type, 'shop' )
+                || str_starts_with( $type, 'product' )
+            ) {
+                return $normalized;
+            }
+
+            if ( $fallback === [] ) {
+                $fallback = $normalized;
+            }
         }
 
-        return [];
+        return $fallback !== [] ? $fallback : $this->defaultStorefrontNeedFields();
     }
 
     /**
@@ -413,6 +617,15 @@ class MerchantFrontendController extends Controller
                 $item = (array) $product;
             } else {
                 return [];
+            }
+
+            // Dropshipper custom selling price should surface as selling_price in the catalog.
+            if (
+                array_key_exists( 'dropshipper_selling_price', $item )
+                && $item['dropshipper_selling_price'] !== null
+                && $item['dropshipper_selling_price'] !== ''
+            ) {
+                $item['selling_price'] = $item['dropshipper_selling_price'];
             }
 
             $projected = [];
@@ -672,6 +885,7 @@ class MerchantFrontendController extends Controller
 
         $reviewPayload = $this->buildProductReviewPayload( $product->id, $reviewConnection );
         $this->attachPreOrderMeta( $product );
+        $this->attachVariantPricingMeta( $product );
 
         return response()->json([
             'product' => $product,
@@ -680,6 +894,58 @@ class MerchantFrontendController extends Controller
             'page_builder' => app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
                 ->resolvePublishedShopDetailsPageData(),
         ]);
+    }
+
+    /**
+     * Expose per-variant sell price on storefront product detail for frontend selection UI.
+     * - rate/price: stored variant price (0 = use product price)
+     * - effective_price: price the customer pays for that variant
+     */
+    private function attachVariantPricingMeta( $product ): void {
+        if ( ! $product ) {
+            return;
+        }
+
+        $fallback = ProductVariantService::productFallbackPrice( $product );
+
+        if ( $product->relationLoaded( 'productVariant' ) ) {
+            $product->productVariant->each( function ( $variant ) use ( $fallback, $product ) {
+                $rate = (float) ( $variant->rate ?? 0 );
+                $variant->setAttribute( 'price', $rate );
+                $variant->setAttribute(
+                    'effective_price',
+                    ProductVariantService::resolveVariantUnitPrice( $variant, $product )
+                );
+                $variant->setAttribute( 'product_fallback_price', $fallback );
+            } );
+        }
+
+        $variantsJson = is_array( $product->variants ) ? $product->variants : [];
+        if ( $variantsJson === [] ) {
+            return;
+        }
+
+        $product->variants = array_map( function ( $variant ) use ( $fallback, $product ) {
+            $variant = (array) $variant;
+            $rate    = ProductVariantService::resolveRateFromPayload( $variant );
+            if ( $rate <= 0 && isset( $variant['id'] ) ) {
+                // Prefer DB relation rate when JSON is stale.
+                $matched = null;
+                if ( $product->relationLoaded( 'productVariant' ) ) {
+                    $matched = $product->productVariant->firstWhere( 'id', (int) $variant['id'] );
+                }
+                if ( $matched ) {
+                    $rate = (float) ( $matched->rate ?? 0 );
+                }
+            }
+
+            $variant['rate']                   = $rate;
+            $variant['price']                  = $rate;
+            $variant['effective_price']        = $rate > 0 ? $rate : $fallback;
+            $variant['product_fallback_price'] = $fallback;
+
+            return $variant;
+        }, $variantsJson );
     }
 
     public function categories()
@@ -951,12 +1217,18 @@ class MerchantFrontendController extends Controller
             $offers = Offer::latest()->get();
             $cms = CmsSetting::first();
             $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
+            $headerFooter = \App\Support\HeaderFooterConfig::forFrontend( $cms?->header_footer );
 
             return [
                 'content_services' => $contentServices,
                 'banners' => $banners,
                 'cms' => $cms,
                 'offers' => $offers,
+                'active_header' => $headerFooter['active_header'],
+                'active_footer' => $headerFooter['active_footer'],
+                'header' => $headerFooter['header'],
+                'footer' => $headerFooter['footer'],
+
                 'populer_section_category_id_1' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' ),
                 'populer_section_category_id_2' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' ),
                 'populer_section_category_id_3' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' ),
@@ -992,6 +1264,30 @@ class MerchantFrontendController extends Controller
         } );
 
         return response()->json( $payload );
+    }
+
+    /**
+     * Public storefront: which product-checkout gateways are usable (no secrets).
+     * GET /api/tenant-frontend/payment-gateways
+     */
+    public function paymentGateways()
+    {
+        $gateways = collect( \App\Services\TenantPaymentGatewayService::publicStatusAll() )
+            ->map( function ( array $row ) {
+                return [
+                    'gateway'    => $row['gateway'],
+                    'enabled'    => (bool) ( $row['enabled'] ?? false ),
+                    'configured' => (bool) ( $row['configured'] ?? false ),
+                    'usable'     => (bool) ( $row['usable'] ?? false ),
+                ];
+            } )
+            ->values()
+            ->all();
+
+        return response()->json( [
+            'status' => 200,
+            'data'   => $gateways,
+        ] );
     }
 
     public function productsFilter( Request $request, $sub_category_id ) {

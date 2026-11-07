@@ -251,13 +251,13 @@ class ProfileController extends Controller
         }
 
 
-        // if ($request->hasFile('image')) {
-        //     if (File::exists($data->image)) {
-        //         File::delete($data->image);
-        //     }
-        //     $image =  fileUpload($request->image, 'uploads/vendor');
-        //     $data->image = $image;
-        // }
+        if ($request->hasFile('image')) {
+            if (File::exists($data->image)) {
+                File::delete($data->image);
+            }
+            $image =  fileUpload($request->image, 'uploads/vendor');
+            $data->image = $image;
+        }
 
         $data->save();
         return response()->json([
@@ -311,6 +311,7 @@ class ProfileController extends Controller
             'owner_name' => 'required',
             'phone' => 'required|unique:mysql.tenants,phone,' . $tenant->id,
             'address' => 'required',
+            'image' => 'nullable|image|max:5120',
             'custom_domain' => 'nullable|string|max:255|unique:mysql.tenants,custom_domain,' . $tenant->id,
         ]);
         if ($validator->fails()) {
@@ -327,6 +328,13 @@ class ProfileController extends Controller
             'phone'        => $request->phone,
             'address'      => $request->address,
         ];
+
+        if ( $request->hasFile( 'image' ) ) {
+            if ( $tenant->image && File::exists( public_path( $tenant->image ) ) ) {
+                File::delete( public_path( $tenant->image ) );
+            }
+            $updateData['image'] = fileUpload( $request->file( 'image' ), 'uploads/shop' );
+        }
 
         if ( $request->filled( 'custom_domain' ) ) {
             $package = UserSubscription::on('mysql')
@@ -349,6 +357,7 @@ class ProfileController extends Controller
         return response()->json([
             "status" => 200,
             "message" => 'Sucessfully update',
+            'shop_info' => Tenant::on( 'mysql' )->where( 'id', tenant()->id )->first(),
         ]);
     }
 }

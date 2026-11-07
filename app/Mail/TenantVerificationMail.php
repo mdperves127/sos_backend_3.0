@@ -10,16 +10,25 @@ class TenantVerificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct( protected string $code )
-    {
+    /** Matches TenantVerificationService::OTP_TTL_MINUTES */
+    private const OTP_TTL_MINUTES = 5;
+
+    public function __construct(
+        protected string $code,
+        protected ?string $userName = null
+    ) {
     }
 
     public function build()
     {
+        $data = [
+            'token'          => $this->code,
+            'userName'       => $this->userName,
+            'expiresMinutes' => self::OTP_TTL_MINUTES,
+        ];
+
         return $this->subject( 'Verify your registration' )
-            ->view( 'emails.tenant_verification' )
-            ->with( [
-                'token' => $this->code,
-            ] );
+            ->view( 'emails.tenant_verification', $data )
+            ->text( 'emails.text.tenant_verification', $data );
     }
 }

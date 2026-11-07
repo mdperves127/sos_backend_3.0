@@ -13,6 +13,13 @@ class EpsPaymentService
     private static ?string $cachedToken = null;
 
     private static ?Carbon $cachedTokenExpiresAt = null;
+
+    public static function clearTokenCache(): void
+    {
+        self::$cachedToken = null;
+        self::$cachedTokenExpiresAt = null;
+    }
+
     public static function gateway( float $price, string $traxId, string $type, string $successUrl, string $tenantType, ?array $customer = null ): object
     {
         self::ensureConfigured();
@@ -688,6 +695,12 @@ class EpsPaymentService
     {
         if ( EpsConfig::isConfigured() ) {
             return;
+        }
+
+        if ( EpsConfig::hasRuntimeCredentials() ) {
+            throw new RuntimeException(
+                'EPS payment gateway credentials are incomplete for this store. Update payment gateway settings.'
+            );
         }
 
         throw new RuntimeException(

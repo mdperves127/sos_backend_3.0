@@ -15,7 +15,9 @@ use App\Rules\SubCategorydRule;
 use App\Services\Vendor\VariantApiService;
 use App\Service\Vendor\ProductService;
 use App\Service\Vendor\ProductVariantService;
+use App\Services\DropshipperAccessService;
 use App\Services\ProductPreOrderService;
+use App\Http\Controllers\API\Vendor\ProductTabController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -103,8 +105,10 @@ class ProductManageController extends Controller {
 
             //For Affiliate
             // 'qty' => ['required_if:is_affiliate,1', 'integer', new MinIf('is_affiliate', 1)],
-            // 'variants' => ['nullable', 'array'],
-            // 'variants.*.qty' => ['required_with:variants', 'integer', 'min:0'],
+            'variants'                               => ['nullable', 'array'],
+            'variants.*.qty'                         => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.rate'                        => ['nullable', 'numeric', 'min:0'],
+            'variants.*.price'                       => ['nullable', 'numeric', 'min:0'],
 
             'selling_details'                        => ['required_if:selling_type,bulk,both', 'array'],
             'selling_details.*.min_bulk_qty'         => ['required', 'integer', 'min:0'],
@@ -313,9 +317,11 @@ class ProductManageController extends Controller {
                 'productrating.affiliate:id,name', 'supplier:id,supplier_name,business_name', 'warehouse:id,name',
                 'preOrderSettings',
                 'productVariant' => function ( $q ) {
-                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )->with( 'product', 'color', 'size', 'unit' );
+                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate' )->with( 'product', 'color', 'size', 'unit' );
                 },
             ] );
+
+            ProductTabController::appendTabMetaToProduct( $product );
 
             return response()->json( [
                 'status'  => 200,
@@ -376,6 +382,8 @@ class ProductManageController extends Controller {
             // 'qty' => ['required_if:is_affiliate,1', 'integer', new MinIf('is_affiliate', 1)],
             'variants'                               => ['nullable', 'array'],
             'variants.*.qty'                         => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.rate'                        => ['nullable', 'numeric', 'min:0'],
+            'variants.*.price'                       => ['nullable', 'numeric', 'min:0'],
             'selling_details'                        => ['required_if:selling_type,bulk', 'array'],
             'selling_details.*.min_bulk_qty'         => ['required_if:is_affiliate,1', 'required_if:selling_type,bulk', 'integer', 'min:0'],
             'selling_details.*.min_bulk_price'       => ['required_if:is_affiliate,1', 'required_if:selling_type,bulk', 'numeric', 'min:1'],
@@ -428,6 +436,7 @@ class ProductManageController extends Controller {
             $product = Product::find( $id );
 
             if ( $product ) {
+                $previousCategoryId = (int) $product->category_id;
 
                 $product->category_id    = $request->input( 'category_id' );
                 $product->sku            = $request->input( 'sku' );
@@ -577,6 +586,16 @@ class ProductManageController extends Controller {
 
                 $product->update();
                 ProductVariantService::syncFromProductVariantsJson( $product, null, true );
+
+                // A private product leaving a category also leaves that category's assignments.
+                if ( tenant() && $previousCategoryId !== (int) $product->category_id && (int) ( $product->is_private ?? 0 ) === 1 ) {
+                    DropshipperAccessService::revokeInaccessibleListings(
+                        tenant()->id,
+                        $product->getConnectionName() ?: config( 'database.default' ),
+                        [(object) $product->only( ['id', 'category_id', 'is_private'] )]
+                    );
+                }
+
                 try {
                     $this->syncProductPreOrderSettings( $product, $request );
                 } catch ( ValidationException $e ) {

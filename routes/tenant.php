@@ -14,6 +14,7 @@ use App\Http\Controllers\API\CouponListController;
 use App\Http\Controllers\Tenant\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
+use App\Http\Controllers\API\VariantAttributeController;
 use App\Http\Controllers\API\Vendor\BarcodeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\ProductTabController;
 use App\Http\Controllers\API\Vendor\MediaController;
 use App\Http\Controllers\API\Vendor\PageBuilderController;
 use App\Http\Controllers\API\Vendor\ProductPreOrderController;
@@ -76,10 +78,12 @@ use App\Http\Controllers\Tenant\MerchantFrontendController;
 use App\Http\Controllers\Tenant\MessageController as TenantMessageController;
 use App\Http\Controllers\Tenant\NoteController;
 use App\Http\Controllers\Tenant\RequestProductController;
+use App\Http\Controllers\Tenant\DropshipperAssignmentController;
 use App\Http\Controllers\API\Vendor\OrderDeliveryController;
 use App\Http\Controllers\API\MarketplaceController;
 use App\Http\Controllers\Tenant\OrderController as TenantOrderController;
 use App\Http\Controllers\Tenant\CmsController;
+use App\Http\Controllers\Tenant\PaymentGatewaySettingController;
 use App\Http\Controllers\Tenant\BannerController;
 use App\Http\Controllers\Tenant\ConversationController as TenantConversationController;
 use App\Http\Controllers\Tenant\ContentServiceController;
@@ -149,13 +153,15 @@ Route::middleware( [
         Route::get('size', [MerchantFrontendController::class, 'size']);
         Route::get('colors', [MerchantFrontendController::class, 'colors']);
         Route::get('cms', [MerchantFrontendController::class, 'cmsFront']);
+        Route::get('payment-gateways', [MerchantFrontendController::class, 'paymentGateways']);
         Route::get('news', [MerchantFrontendController::class, 'newsFront']);
         Route::get('news/{slug}', [MerchantFrontendController::class, 'newsDetail']);
         Route::get('news-category', [MerchantFrontendController::class, 'newsCategory']);
         Route::get('pages', [PageController::class, 'index']);
         Route::get('page/{url}', [PageController::class, 'showByUrl'])->where('url', '.*');
         Route::get('page-builder/lookup', [PageBuilderController::class, 'publicLookup']);
-        Route::get('page-builder/{slug}', [PageBuilderController::class, 'publicShow']);
+        Route::get('page-builder', [PageBuilderController::class, 'publicShow']);
+        Route::get('layouts', [PageBuilderController::class, 'publicLayouts']);
 
         Route::get('search/item/{search}/{category_id?}', [MerchantFrontendController::class, 'searchItem']);
 
@@ -265,6 +271,15 @@ Route::middleware( [
             Route::get( 'edit-count', [ProductManageController::class, 'vendorProductEditCount'] );
             Route::get( 'edit/{id}', [ProductManageController::class, 'VendorProductEdit'] );
             Route::post( 'update/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
+
+            // Tab-wise create/update APIs (new UI). Keep monolithic store/update above for compatibility.
+            Route::post( 'info', [ProductTabController::class, 'storeInfo'] );
+            Route::post( 'info/{id}', [ProductTabController::class, 'updateInfo'] );
+            Route::post( 'price/{id}', [ProductTabController::class, 'updatePrice'] );
+            Route::post( 'shipping/{id}', [ProductTabController::class, 'updateShipping'] );
+            Route::post( 'affiliate/{id}', [ProductTabController::class, 'updateAffiliate'] );
+            Route::post( 'options/{id}', [ProductTabController::class, 'updateOptions'] );
+
             Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
             Route::match( ['POST', 'DELETE'], 'delete-bulk', [ProductManageController::class, 'VendorDeleteBulk'] );
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );
@@ -388,13 +403,24 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [ColorController::class, 'destroy'] );
         } );
 
-        //size route
+        // Legacy size route (kept for existing Size CRUD consumers)
         Route::prefix( 'tenant-variant' )->group( function () {
             Route::get( '/', [SizeController::class, 'index'] );
             Route::post( 'store', [SizeController::class, 'store'] );
             Route::get( 'edit/{id}', [SizeController::class, 'edit'] );
             Route::post( 'update/{id}', [SizeController::class, 'update'] );
             Route::delete( 'delete/{id}', [SizeController::class, 'destroy'] );
+        } );
+
+        // Variant attributes: name + multiple values (e.g. Size => s,m,l,xl)
+        Route::prefix( 'tenant-variants' )->group( function () {
+            Route::get( '/', [VariantAttributeController::class, 'index'] );
+            Route::post( 'store', [VariantAttributeController::class, 'store'] );
+            Route::get( 'edit/{id}', [VariantAttributeController::class, 'edit'] );
+            Route::post( 'update/{id}', [VariantAttributeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [VariantAttributeController::class, 'destroy'] );
+            Route::post( '{id}/values', [VariantAttributeController::class, 'addValues'] );
+            Route::delete( '{id}/values/{valueId}', [VariantAttributeController::class, 'deleteValue'] );
         } );
 
         //Units Route
@@ -746,6 +772,14 @@ Route::middleware( [
 
         Route::post( 'recharge', [RechargeController::class, 'recharge'] );
         Route::get( 'payment-gateway/status', [RechargeController::class, 'gatewayStatus'] );
+
+        // Per-tenant EPS / UddoktaPay credentials (product checkout).
+        Route::prefix( 'tenant/payment-gateways' )->group( function () {
+            Route::get( '/', [PaymentGatewaySettingController::class, 'index'] );
+            Route::get( '{gateway}', [PaymentGatewaySettingController::class, 'show'] );
+            Route::match( ['post', 'put', 'patch'], '{gateway}', [PaymentGatewaySettingController::class, 'upsert'] );
+            Route::delete( '{gateway}', [PaymentGatewaySettingController::class, 'destroy'] );
+        } );
         Route::get( 'transition-history', [HistoryController::class, 'index'] );
 
         Route::get( 'tenant-withdraw-history/{status?}', [WithdrawController::class, 'index'] );
@@ -766,6 +800,15 @@ Route::middleware( [
             Route::post( 'request/product-update/{tenant_id}/{id}', [RequestProductController::class, 'RequestUpdate'] );
             Route::get( 'membership-expire-product', [RequestProductController::class, 'membershipexpireactiveproduct'] );
             Route::get( 'membership-expire-product-count', [RequestProductController::class, 'membershipexpireactiveproductCount'] );
+
+            Route::get( 'assignable-dropshippers', [DropshipperAssignmentController::class, 'dropshippers'] );
+            Route::get( 'assignable-dropshippers/{tenantId}', [DropshipperAssignmentController::class, 'dropshipper'] );
+            Route::get( 'assignments', [DropshipperAssignmentController::class, 'index'] );
+            Route::post( 'assignments', [DropshipperAssignmentController::class, 'store'] );
+            Route::post( 'assignments/{id}/revoke', [DropshipperAssignmentController::class, 'revoke'] );
+            Route::get( 'product-settings/{productId}', [DropshipperAssignmentController::class, 'productSettings'] );
+            Route::post( 'product-settings/{productId}', [DropshipperAssignmentController::class, 'updateProductSettings'] );
+            Route::post( 'category-settings/{categoryId}', [DropshipperAssignmentController::class, 'updateCategorySettings'] );
             } );
 
         //supportbox route
@@ -807,6 +850,8 @@ Route::middleware( [
         Route::prefix('tenant')->group(function () {
             Route::get('cms', [CmsController::class, 'index']);
             Route::post('cms', [CmsController::class, 'update']);
+            Route::get('cms/header-footer', [CmsController::class, 'headerFooter']);
+            Route::post('cms/header-footer', [CmsController::class, 'saveHeaderFooter']);
 
             Route::get('banner', [BannerController::class, 'index']);
             Route::post('banner', [BannerController::class, 'store']);

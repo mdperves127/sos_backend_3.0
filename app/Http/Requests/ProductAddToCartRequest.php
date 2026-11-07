@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductDetails;
 use App\Models\Tenant;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -157,7 +158,7 @@ class ProductAddToCartRequest extends FormRequest {
             }
         }
 
-        return CrossTenantQueryService::getSingleRecordFromTenant(
+        $product = CrossTenantQueryService::getSingleRecordFromTenant(
             $this->input( 'tenant_id' ),
             Product::class,
             function ( $query ) {
@@ -169,6 +170,15 @@ class ProductAddToCartRequest extends FormRequest {
                 }
             }
         );
+
+        if ( $product && $this->isDropshipperStorefront() ) {
+            $connection = DropshipperAccessService::merchantConnection( $this->input( 'tenant_id' ) );
+            if ( ! $connection || ! DropshipperAccessService::canAccessProduct( $connection, (string) tenant()->id, $product ) ) {
+                return null;
+            }
+        }
+
+        return $product;
     }
 
 }

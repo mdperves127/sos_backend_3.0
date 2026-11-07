@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Helper\RedirectHelper;
 use App\Http\Controllers\Controller;
+use App\Models\PaymentGatewaySetting;
 use App\Models\PaymentStore;
 use App\Services\EpsPaymentCompletionService;
+use App\Services\TenantPaymentGatewayService;
 use App\Services\UddoktaPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -21,13 +23,25 @@ class UddoktaPayController extends Controller
             return redirect( $this->frontendBase() . '?message=' . urlencode( 'Missing UddoktaPay invoice id' ) );
         }
 
+        $storefrontTenantId = function_exists( 'tenant' ) && tenant()
+            ? (string) tenant()->id
+            : null;
+
+        $verification = null;
+
         try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_UDDOKTAPAY,
+                $storefrontTenantId
+            );
             $verification = UddoktaPayService::verifyPayment( $invoiceId );
         } catch ( Throwable $e ) {
             return redirect( $this->frontendBase() . '?message=' . urlencode( $e->getMessage() ) );
+        } finally {
+            UddoktaPayService::clearRuntimeCredentials();
         }
 
-        if ( ! UddoktaPayService::isSuccessful( $verification ) ) {
+        if ( ! is_array( $verification ) || ! UddoktaPayService::isSuccessful( $verification ) ) {
             return redirect( $this->frontendBase() . '?message=' . urlencode( 'Payment not completed' ) );
         }
 
@@ -37,20 +51,40 @@ class UddoktaPayController extends Controller
             : null;
 
         if ( ! $payment ) {
-            // Fallback: locate by stored invoice id.
+            // Fallback: locate by stored invoice id (scoped to this storefront when possible).
             $payment = PaymentStore::on( 'mysql' )
                 ->where( 'payment_gateway', 'uddoktapay' )
                 ->where( 'status', 'pending' )
                 ->get()
-                ->first( function ( PaymentStore $row ) use ( $invoiceId ) {
+                ->first( function ( PaymentStore $row ) use ( $invoiceId, $storefrontTenantId ) {
                     $info = is_array( $row->info ) ? $row->info : [];
 
-                    return (string) ( $info['invoice_id'] ?? '' ) === (string) $invoiceId;
+                    if ( (string) ( $info['invoice_id'] ?? '' ) !== (string) $invoiceId ) {
+                        return false;
+                    }
+
+                    if ( ! $storefrontTenantId ) {
+                        return true;
+                    }
+
+                    $owner = (string) (
+                        $info['storefront_tenant_id']
+                        ?? $info['placing_tenant_id']
+                        ?? ''
+                    );
+
+                    return $owner === '' || $owner === $storefrontTenantId;
                 } );
         }
 
         if ( ! $payment ) {
             return redirect( $this->frontendBase() . '?message=' . urlencode( 'Payment record not found' ) );
+        }
+
+        try {
+            TenantPaymentGatewayService::assertPaymentBelongsToCurrentTenant( $payment );
+        } catch ( Throwable $e ) {
+            return redirect( $this->frontendBase() . '?message=' . urlencode( $e->getMessage() ) );
         }
 
         $info = is_array( $payment->info ) ? $payment->info : [];
@@ -86,11 +120,26 @@ class UddoktaPayController extends Controller
 
     public function productCheckoutWebhook( Request $request )
     {
-        $headerKey = $request->header( 'RT-UDDOKTAPAY-API-KEY' )
-            ?? $request->header( 'rt-uddoktapay-api-key' );
+        $storefrontTenantId = function_exists( 'tenant' ) && tenant()
+            ? (string) tenant()->id
+            : null;
 
-        if ( ! UddoktaPayService::isValidWebhookApiKey( $headerKey ) ) {
+        try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_UDDOKTAPAY,
+                $storefrontTenantId
+            );
+
+            $headerKey = $request->header( 'RT-UDDOKTAPAY-API-KEY' )
+                ?? $request->header( 'rt-uddoktapay-api-key' );
+
+            if ( ! UddoktaPayService::isValidWebhookApiKey( $headerKey ) ) {
+                return response( 'Unauthorized Action', 401 );
+            }
+        } catch ( Throwable ) {
             return response( 'Unauthorized Action', 401 );
+        } finally {
+            UddoktaPayService::clearRuntimeCredentials();
         }
 
         $payload   = $request->all();
@@ -111,6 +160,12 @@ class UddoktaPayController extends Controller
 
         if ( ! $payment ) {
             return response( 'Payment not found', 404 );
+        }
+
+        try {
+            TenantPaymentGatewayService::assertPaymentBelongsToCurrentTenant( $payment );
+        } catch ( Throwable ) {
+            return response( 'Forbidden', 403 );
         }
 
         if ( ( $payment->status ?? null ) === 'completed' ) {

@@ -9,15 +9,20 @@ use App\Models\CartDetails;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Tenant;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use App\Enums\Status;
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
 use App\Services\TenantCouponService;
 use App\Services\AamarPayService;
+use App\Services\EpsConfig;
 use App\Services\EpsPaymentService;
+use App\Services\TenantPaymentGatewayService;
 use App\Services\UddoktaPayService;
 use App\Helper\RedirectHelper;
+use App\Models\PaymentGatewaySetting;
 use App\Models\TenantCoupon;
 use App\Models\PaymentStore;
 
@@ -433,6 +438,13 @@ class OrderController extends Controller
     }
 
     private function validateCartForCheckout( Cart $cart, $product, int $totalqty, array $checkoutDatas = [], bool $lenientStock = false ): ?string {
+        if ( tenant() && tenant()->type === 'dropshipper' && $cart->tenant_id ) {
+            $merchantConnection = DropshipperAccessService::merchantConnection( $cart->tenant_id );
+            if ( ! $merchantConnection || ! DropshipperAccessService::canAccessProduct( $merchantConnection, (string) tenant()->id, $product ) ) {
+                return 'This product is no longer available.';
+            }
+        }
+
         if ( $cart->purchase_type == 'single' && $product->selling_type == 'bulk' ) {
             return 'Something is wrong delete the cart.';
         }
@@ -1038,7 +1050,7 @@ class OrderController extends Controller
 
         $normalizedDatas = $this->normalizeCheckoutDataVariants( $datas->toArray(), $totalqty );
 
-        $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+        $productPrice = ProductVariantService::productFallbackPrice( $product );
         $affiliateCommission = 0;
         $totalProductPrice = 0;
         $totalAffiliateCommission = 0;
@@ -1046,7 +1058,34 @@ class OrderController extends Controller
         $totalAdvancePayment = 0;
 
         if ( $purchaseType === 'single' ) {
-            $totalProductPrice = $productPrice * $totalqty;
+            $merchantConnection = null;
+            $merchantTenant     = Tenant::on( 'mysql' )->find( $tenantId );
+            if ( $merchantTenant ) {
+                $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+            }
+
+            $variantLineItems = collect( $normalizedDatas[0]['variants'] ?? [] )
+                ->map( fn ( $variant ) => [
+                    'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                    'qty'        => (int) ( $variant['qty'] ?? $totalqty ),
+                ] )
+                ->all();
+
+            if ( $variantLineItems !== [] ) {
+                $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                    $product,
+                    $variantLineItems,
+                    $merchantConnection
+                );
+                if ( $variantTotals['total_qty'] > 0 ) {
+                    $productPrice      = $variantTotals['product_price'];
+                    $totalProductPrice = $variantTotals['total_product_price'];
+                } else {
+                    $totalProductPrice = $productPrice * $totalqty;
+                }
+            } else {
+                $totalProductPrice = $productPrice * $totalqty;
+            }
 
             if ( $product->single_advance_payment_type == 'percent' ) {
                 $advancePayment = ( $productPrice / 100 ) * $product->advance_payment;
@@ -1396,7 +1435,31 @@ class OrderController extends Controller
                     continue;
                 }
 
-                $productPrice = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+                $merchantConnection = null;
+                $merchantTenant     = Tenant::on( 'mysql' )->find( $tenantId );
+                if ( $merchantTenant ) {
+                    $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+                }
+
+                $variantLineItems = collect( $checkoutDatas[0]['variants'] ?? [] )
+                    ->map( fn ( $variant ) => [
+                        'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                        'qty'        => (int) ( $variant['qty'] ?? $totalqty ),
+                    ] )
+                    ->all();
+
+                $productPrice = ProductVariantService::productFallbackPrice( $product );
+                if ( $variantLineItems !== [] ) {
+                    $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                        $product,
+                        $variantLineItems,
+                        $merchantConnection
+                    );
+                    if ( $variantTotals['total_qty'] > 0 ) {
+                        $productPrice = $variantTotals['product_price'];
+                    }
+                }
+
                 $previewCart  = new Cart( [
                     'product_price' => $productPrice,
                     'product_qty'   => $totalqty,
@@ -1526,6 +1589,11 @@ class OrderController extends Controller
         $webhookUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-webhook' );
 
         try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_UDDOKTAPAY,
+                $storefrontTenantId
+            );
+
             $gateway = UddoktaPayService::gateway(
                 $payable,
                 $trx,
@@ -1543,6 +1611,8 @@ class OrderController extends Controller
             );
         } catch ( \Throwable $e ) {
             return responsejson( $e->getMessage(), 'fail' );
+        } finally {
+            UddoktaPayService::clearRuntimeCredentials();
         }
 
         PaymentStore::on( 'mysql' )->create( [
@@ -1648,18 +1718,31 @@ class OrderController extends Controller
 
         // Tenant EPS callback only — not /api/user (central/admin) callbacks.
         $successUrl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
-        $gateway    = AamarPayService::gateway(
-            $payable,
-            $trx,
-            'Product Checkout',
-            $successUrl,
-            'tenant',
-            [
-                'name'  => $customer['name'] ?? null,
-                'email' => $customer['email'] ?? null,
-                'phone' => $customer['phone'] ?? null,
-            ]
-        );
+
+        try {
+            TenantPaymentGatewayService::applyForProductCheckout(
+                PaymentGatewaySetting::GATEWAY_EPS,
+                $storefrontTenantId
+            );
+
+            $gateway = AamarPayService::gateway(
+                $payable,
+                $trx,
+                'Product Checkout',
+                $successUrl,
+                'tenant',
+                [
+                    'name'  => $customer['name'] ?? null,
+                    'email' => $customer['email'] ?? null,
+                    'phone' => $customer['phone'] ?? null,
+                ]
+            );
+        } catch ( \Throwable $e ) {
+            return responsejson( $e->getMessage(), 'fail' );
+        } finally {
+            EpsConfig::clearRuntimeCredentials();
+            EpsPaymentService::clearTokenCache();
+        }
 
         return response()->json( [
             'status'       => 200,

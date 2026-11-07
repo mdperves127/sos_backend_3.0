@@ -91,7 +91,8 @@ class ForgotPasswordController extends Controller
         );
 
         try {
-            Mail::to( $user->email )->send( new ResetPasswordMail( $token ) );
+            // Expiry must match Tenant\ResetPasswordController (addMinutes(15)).
+            Mail::to( $user->email )->send( new ResetPasswordMail( $token, $user->name, 15 ) );
         } catch ( \Throwable $e ) {
             Log::error( 'Tenant forgot password OTP send failed', [
                 'tenant_id' => tenant( 'id' ),

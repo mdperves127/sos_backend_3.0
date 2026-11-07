@@ -35,10 +35,9 @@
             </td>
             <td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#392D87;">
                 @php
-                    $displayDomain = str_ireplace( 'affsell.org', 'affsell.com', $domainUrl );
-                    $storeUrl = str_starts_with( $displayDomain, 'http' ) ? $displayDomain : 'https://' . $displayDomain;
+                    $storeUrl = str_starts_with( $domainUrl, 'http' ) ? $domainUrl : 'https://' . $domainUrl;
                 @endphp
-                <a href="{{ $storeUrl }}" style="color:#392D87;text-decoration:underline;">{{ $displayDomain }}</a>
+                <a href="{{ $storeUrl }}" style="color:#392D87;text-decoration:underline;">{{ $storeUrl }}</a>
             </td>
         </tr>
     </table>

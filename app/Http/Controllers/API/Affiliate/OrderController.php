@@ -15,6 +15,7 @@ use App\Services\AamarPayService;
 use App\Services\EpsPaymentService;
 use App\Helper\RedirectHelper;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use App\Services\ProductCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,12 @@ class OrderController extends Controller {
 
         if ( !$product ) {
             return responsejson( 'Product currently not available!' );
+        }
+
+        // Re-check private-product access before any wallet debit or payment starts.
+        $merchantConnection = DropshipperAccessService::merchantConnection( $cart->tenant_id );
+        if ( !$merchantConnection || !DropshipperAccessService::canAccessProduct( $merchantConnection, (string) tenant()->id, $product ) ) {
+            return responsejson( 'You no longer have access to this product. Please remove it from your cart.', 'fail' );
         }
 
         if ( $cart->purchase_type == 'single' ) {
@@ -130,18 +137,32 @@ class OrderController extends Controller {
                 'order_media'     => 'dropshipper',
                 'payment_type'    => 'checkout',
                 'info'            => RedirectHelper::appendPaymentReturnUrl( [
-                    'cartid'            => $cart->id,
-                    'productid'         => $product->id,
-                    'totalqty'          => $totalqty,
-                    'userid'            => $user->id,
-                    'datas'             => request( 'datas' ),
-                    'tenant_id'         => $cart->tenant_id,
-                    'placing_tenant_id' => $currentTenant->id,
-                    'order_media'       => 'dropshipper',
+                    'cartid'               => $cart->id,
+                    'productid'            => $product->id,
+                    'totalqty'             => $totalqty,
+                    'userid'               => $user->id,
+                    'datas'                => request( 'datas' ),
+                    'tenant_id'            => $cart->tenant_id,
+                    'storefront_tenant_id' => $currentTenant->id,
+                    'placing_tenant_id'    => $currentTenant->id,
+                    'order_media'          => 'dropshipper',
                 ] ),
                 ] );
             $successurl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
-            return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );
+
+            try {
+                \App\Services\TenantPaymentGatewayService::applyForProductCheckout(
+                    \App\Models\PaymentGatewaySetting::GATEWAY_EPS,
+                    (string) $currentTenant->id
+                );
+
+                return AamarPayService::gateway( $advancepayment, $trx, 'Product Checkout', $successurl, 'tenant' );
+            } catch ( \Throwable $e ) {
+                return responsejson( $e->getMessage(), 'fail' );
+            } finally {
+                \App\Services\EpsConfig::clearRuntimeCredentials();
+                EpsPaymentService::clearTokenCache();
+            }
         }
     }
 

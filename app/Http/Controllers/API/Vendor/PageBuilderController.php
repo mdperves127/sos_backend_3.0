@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\MerchantFrontendController;
+use App\Models\CmsSetting;
 use App\Models\PageBuilder;
+use App\Support\HeaderFooterConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -334,12 +336,23 @@ class PageBuilderController extends Controller
     }
 
     /**
-     * Public storefront: published page by path.
-     * GET /tenant-frontend/{slug}  (slug = page_builders.path)
+     * Public storefront: published page by query.
+     * GET /tenant-frontend/page-builder?path=/shop
      */
-    public function publicShow( string $slug )
+    public function publicShow( Request $request )
     {
-        $path = $this->normalizePath( $slug );
+        $raw = trim( (string) $request->query( 'path', '' ) );
+
+        if ( $raw === '' ) {
+            return response()->json( [
+                'status'  => 422,
+                'success' => false,
+                'message' => 'The path query parameter is required.',
+                'data'    => null,
+            ], 422 );
+        }
+
+        $path = $this->normalizePath( $raw );
 
         $page = PageBuilder::where( 'status', 'PUBLISHED' )
             ->where( function ( $q ) use ( $path ) {
@@ -364,6 +377,27 @@ class PageBuilderController extends Controller
             'status'  => 200,
             'success' => true,
             'data'    => $data,
+        ] );
+    }
+
+    /**
+     * Public storefront layouts: active header & footer from tenant CMS.
+     * GET /tenant-frontend/layouts
+     */
+    public function publicLayouts()
+    {
+        $cms          = CmsSetting::first();
+        $headerFooter = HeaderFooterConfig::forFrontend( $cms?->header_footer );
+
+        return response()->json( [
+            'status'  => 200,
+            'success' => true,
+            'data'    => [
+                'active_header' => $headerFooter['active_header'],
+                'active_footer' => $headerFooter['active_footer'],
+                'header'        => $headerFooter['header'],
+                'footer'        => $headerFooter['footer'],
+            ],
         ] );
     }
 

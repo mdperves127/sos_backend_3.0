@@ -53,6 +53,10 @@ class SubscriptionService
         $subscription->card_facilities_title = $validateData['card_facilities_title'];
         $subscription->subscription_amount   = $validateData['subscription_amount'];
         $subscription->suggest               = request( 'suggest' );
+        if ( array_key_exists( 'dropship_fee_type', $validateData ) ) {
+            $subscription->dropship_fee_type  = $validateData['dropship_fee_type'] ?: null;
+            $subscription->dropship_fee_value = $subscription->dropship_fee_type ? ( $validateData['dropship_fee_value'] ?? 0 ) : null;
+        }
         $subscription->save();
 
         return true;

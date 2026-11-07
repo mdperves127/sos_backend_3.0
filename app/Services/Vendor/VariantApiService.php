@@ -10,6 +10,7 @@ use App\Models\SaleOrderResource;
 use App\Models\Size;
 use App\Models\Supplier;
 use App\Models\Unit;
+use App\Models\VariantAttribute;
 use App\Models\Warehouse;
 
 /**
@@ -22,6 +23,12 @@ class VariantApiService {
             'unit'           => Unit::where( ['status' => 'active'] )->select( 'id', 'unit_name' )->get(),
             'utility'        => Color::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
             'variation'      => Size::where( ['status' => 'active'] )->select( 'id', 'name' )->get(),
+            'variant_attributes' => VariantAttribute::query()
+                ->with( 'values:id,variant_attribute_id,value,sort_order' )
+                ->where( 'status', 'active' )
+                ->select( 'id', 'name', 'slug', 'status' )
+                ->orderBy( 'name' )
+                ->get(),
             'payment_method' => PaymentMethod::where( ['status' => 'active'] )->select( 'id', 'payment_method_name', 'acc_no' )->get(),
             'category'       => Category::whereStatus( 'active' )->with( 'subcategory', function ( $q ) {
                 $q->select( 'id', 'name', 'category_id' );

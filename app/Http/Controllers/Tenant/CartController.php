@@ -14,6 +14,7 @@ use App\Models\DeliveryCharge;
 use App\Models\ProductDetails;
 use App\Models\ProductBundle;
 use App\Models\ProductPreOrder;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\ProductPreOrderService;
 use Illuminate\Validation\ValidationException;
 
@@ -77,18 +78,25 @@ class CartController extends Controller
 
         $user_id       = auth()->id();
         $product_id    = $getproduct->id;
-        $productAmount = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
+        $productAmount = ProductVariantService::productFallbackPrice( $getproduct );
         $vendor_id     = $getproduct->user_id;
 
         if ( request( 'purchase_type' ) == 'single' ) {
-            $product_price = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
+            $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                $getproduct,
+                request( 'cartItems', [] ),
+                $merchantConnection
+            );
+            $product_price     = $variantTotals['product_price'];
+            $totalproductprice = $variantTotals['total_product_price'] > 0
+                ? $variantTotals['total_product_price']
+                : ( $product_price * $totalqty );
 
             if ( $getproduct->discount_type == 'percent' ) {
                 $affi_commission = ( $productAmount / 100 ) * $getproduct->discount_rate;
             } else {
                 $affi_commission = $getproduct->discount_rate;
             }
-            $totalproductprice          = $product_price * $totalqty;
             $total_affiliate_commission = $affi_commission * $totalqty;
 
             if ( $getproduct->single_advance_payment_type == 'percent' ) {
@@ -97,7 +105,7 @@ class CartController extends Controller
                 $advancepayment = $getproduct->advance_payment;
             }
 
-            $totaladvancepayment = $getproduct->advance_payment * $totalqty;
+            $totaladvancepayment = $advancepayment * $totalqty;
         } else {
             $bulkdetails       = collect( $getproduct->selling_details )->where( 'min_bulk_qty', '<=', $totalqty )->max();
             $product_price     = $bulkdetails['min_bulk_price'];
@@ -463,8 +471,22 @@ class CartController extends Controller
             }
         }
 
+        $merchantConnection = null;
+        if ( $cart->tenant_id ) {
+            $merchantTenant = \App\Models\Tenant::on( 'mysql' )->find( $cart->tenant_id );
+            if ( $merchantTenant ) {
+                $merchantConnection = CrossTenantQueryService::connectionForTenant( $merchantTenant );
+            }
+        }
+
         try {
-            $pricing = $this->calculateCartPricing( $product, $cart->purchase_type, $totalqty );
+            $pricing = $this->calculateCartPricing(
+                $product,
+                $cart->purchase_type,
+                $totalqty,
+                $cart->cartDetails,
+                $merchantConnection
+            );
         } catch ( \RuntimeException $e ) {
             return response()->json( [
                 'status'  => 422,
@@ -506,15 +528,38 @@ class CartController extends Controller
      *     total_advance_payment: float
      * }
      */
-    private function calculateCartPricing( object $product, string $purchaseType, int $totalqty ): array
+    private function calculateCartPricing(
+        object $product,
+        string $purchaseType,
+        int $totalqty,
+        $cartDetails = null,
+        ?string $merchantConnection = null
+    ): array
     {
-        $productAmount = $product->discount_price == null ? $product->selling_price : $product->discount_price;
+        $productAmount = ProductVariantService::productFallbackPrice( $product );
 
         if ( $purchaseType === 'single' ) {
-            $productPrice = $productAmount;
+            $productPrice      = $productAmount;
+            $totalProductPrice = $productPrice * $totalqty;
+
+            if ( $cartDetails !== null ) {
+                $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                    $product,
+                    collect( $cartDetails )->map( fn ( $detail ) => [
+                        'variant_id' => $detail->variant_id ?? null,
+                        'qty'        => $detail->qty ?? 0,
+                    ] )->all(),
+                    $merchantConnection
+                );
+
+                if ( $variantTotals['total_qty'] > 0 ) {
+                    $productPrice      = $variantTotals['product_price'];
+                    $totalProductPrice = $variantTotals['total_product_price'];
+                }
+            }
 
             if ( $product->discount_type == 'percent' ) {
-                $affiliateCommission = ( $productPrice / 100 ) * $product->discount_rate;
+                $affiliateCommission = ( $productAmount / 100 ) * $product->discount_rate;
             } else {
                 $affiliateCommission = $product->discount_rate;
             }
@@ -528,7 +573,7 @@ class CartController extends Controller
             return [
                 'product_price'              => $productPrice,
                 'affiliate_commission'       => $affiliateCommission,
-                'total_product_price'        => $productPrice * $totalqty,
+                'total_product_price'        => $totalProductPrice,
                 'total_affiliate_commission' => $affiliateCommission * $totalqty,
                 'advance_payment'            => $advancePayment,
                 'total_advance_payment'      => $advancePayment * $totalqty,
@@ -593,7 +638,7 @@ class CartController extends Controller
             $productDetail = $productDetailQuery->first();
 
             $cartItem->profit_amount                 = $productDetail?->profit_amount ?? 0;
-            $cartItem->total_profit_amount           = (int) ( $productDetail?->profit_amount ?? 0 ) * (int) $cartItem->product_qty;
+            $cartItem->total_profit_amount           = round( (float) ( $productDetail?->profit_amount ?? 0 ) * (int) $cartItem->product_qty, 2 );
             $cartItem->dropshipper_product_detail_id = $productDetail?->id;
             $cartItem->dropshipper_uniqid            = $productDetail?->uniqid;
 
