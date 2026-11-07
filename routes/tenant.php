@@ -32,6 +32,7 @@ use App\Http\Controllers\API\Vendor\OrderController as VendorOrderController;
 use App\Http\Controllers\API\Vendor\PaymentMethodController;
 use App\Http\Controllers\API\Vendor\PosSaleReturnController;
 use App\Http\Controllers\API\Vendor\ProductManageController;
+use App\Http\Controllers\API\Vendor\ProductTabController;
 use App\Http\Controllers\API\Vendor\MediaController;
 use App\Http\Controllers\API\Vendor\PageBuilderController;
 use App\Http\Controllers\API\Vendor\ProductPreOrderController;
@@ -270,6 +271,15 @@ Route::middleware( [
             Route::get( 'edit-count', [ProductManageController::class, 'vendorProductEditCount'] );
             Route::get( 'edit/{id}', [ProductManageController::class, 'VendorProductEdit'] );
             Route::post( 'update/{id}', [ProductManageController::class, 'VendorUpdateProduct'] );
+
+            // Tab-wise create/update APIs (new UI). Keep monolithic store/update above for compatibility.
+            Route::post( 'info', [ProductTabController::class, 'storeInfo'] );
+            Route::post( 'info/{id}', [ProductTabController::class, 'updateInfo'] );
+            Route::post( 'price/{id}', [ProductTabController::class, 'updatePrice'] );
+            Route::post( 'shipping/{id}', [ProductTabController::class, 'updateShipping'] );
+            Route::post( 'affiliate/{id}', [ProductTabController::class, 'updateAffiliate'] );
+            Route::post( 'options/{id}', [ProductTabController::class, 'updateOptions'] );
+
             Route::delete( 'delete-image/{id}', [ProductManageController::class, 'VendorDeleteImage'] );
             Route::match( ['POST', 'DELETE'], 'delete-bulk', [ProductManageController::class, 'VendorDeleteBulk'] );
             Route::delete( 'delete/{id}', [ProductManageController::class, 'VendorDelete'] );

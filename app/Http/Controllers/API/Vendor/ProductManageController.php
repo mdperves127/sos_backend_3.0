@@ -17,6 +17,7 @@ use App\Service\Vendor\ProductService;
 use App\Service\Vendor\ProductVariantService;
 use App\Services\DropshipperAccessService;
 use App\Services\ProductPreOrderService;
+use App\Http\Controllers\API\Vendor\ProductTabController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -319,6 +320,8 @@ class ProductManageController extends Controller {
                     $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate' )->with( 'product', 'color', 'size', 'unit' );
                 },
             ] );
+
+            ProductTabController::appendTabMetaToProduct( $product );
 
             return response()->json( [
                 'status'  => 200,
