@@ -15,6 +15,7 @@ use App\Services\DropshipperAccessService;
 use App\Enums\Status;
 use App\Http\Requests\ProductRequest;
 use App\Services\ProductCheckoutService;
+use App\Services\StorefrontCheckoutService;
 use App\Services\TenantCouponService;
 use App\Services\AamarPayService;
 use App\Services\EpsConfig;
@@ -29,6 +30,10 @@ use App\Models\PaymentStore;
 class OrderController extends Controller
 {
     function guestStore( Request $request ) {
+        if ( StorefrontCheckoutService::isModernPayload( $request ) ) {
+            return StorefrontCheckoutService::place( $request, true );
+        }
+
         $requestDatas = $this->normalizeGuestDatas( $request );
 
         if ( $requestDatas->isEmpty() ) {
@@ -267,7 +272,24 @@ class OrderController extends Controller
         ] );
     }
 
-    function store( ProductRequest $request ) {
+    function store( Request $request ) {
+        if ( StorefrontCheckoutService::isModernPayload( $request ) ) {
+            return StorefrontCheckoutService::place( $request, false );
+        }
+
+        // Legacy checkout body (datas[] + cart_id).
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $request->all(),
+            ( new ProductRequest() )->rules()
+        );
+        if ( $validator->fails() ) {
+            return response()->json( [
+                'success' => false,
+                'message' => 'Validation errors',
+                'data'    => $validator->errors(),
+            ], 422 );
+        }
+
         $user = auth()->user();
         $requestDatas = $request->input( 'datas', [] );
         $shippingTemplate = $requestDatas[0] ?? [];
