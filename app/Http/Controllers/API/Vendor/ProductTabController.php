@@ -240,29 +240,44 @@ class ProductTabController extends Controller
 
         $meta = $this->getTabMeta( $product );
         $meta['has_variants'] = $hasVariants ? 1 : 0;
-        $meta['variant_attributes'] = $hasVariants
-            ? array_values( (array) $request->input( 'variant_attributes', [] ) )
-            : [];
 
         if ( $hasVariants ) {
-            $variants = $this->normalizeVariantsPayload( (array) $request->input( 'variants', [] ) );
+            $variantsInput = $this->decodeArrayInput( $request->input( 'variants', [] ) );
+            $variants      = $this->normalizeVariantsPayload( $variantsInput );
+
+            if ( $variants === [] ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => 'Please check the required fields.',
+                    'errors'  => ['variants' => ['At least one variant combination is required.']],
+                ], 400 );
+            }
+
             $product->variants = $variants;
             $product->qty = (string) collect( $variants )->sum( fn ( $v ) => max( 0, (int) ( $v['qty'] ?? 0 ) ) );
         } else {
             $product->variants = [];
         }
 
+        $meta['variant_attributes'] = $hasVariants
+            ? array_values( $this->decodeArrayInput( $request->input( 'variant_attributes', [] ) ) )
+            : [];
+
         $this->putTabMeta( $product, $meta );
         $product->save();
 
         if ( $hasVariants ) {
+            // Re-read variants after save so sync uses persisted JSON cast.
+            $product->refresh();
             ProductVariantService::syncFromProductVariantsJson( $product, null, false );
+            $product->refresh();
         }
 
         return response()->json( [
             'status'     => 200,
             'message'    => 'Price updated',
             'product_id' => $product->id,
+            'variants'   => $product->variants,
         ] );
     }
 
@@ -536,6 +551,22 @@ class ProductTabController extends Controller
     }
 
     /**
+     * Decode JSON-string or array request payloads (multipart often sends JSON strings).
+     *
+     * @param  mixed  $value
+     * @return array<int, mixed>
+     */
+    private function decodeArrayInput( $value ): array
+    {
+        if ( is_string( $value ) ) {
+            $decoded = json_decode( $value, true );
+            $value   = is_array( $decoded ) ? $decoded : [];
+        }
+
+        return is_array( $value ) ? array_values( $value ) : [];
+    }
+
+    /**
      * @param  array<int, mixed>  $variants
      * @return array<int, array<string, mixed>>
      */
@@ -550,10 +581,12 @@ class ProductTabController extends Controller
             }
 
             $price = $variant['price'] ?? $variant['rate'] ?? 0;
+            $id    = $variant['variant_id'] ?? $variant['id'] ?? null;
+            $id    = is_numeric( $id ) ? (int) $id : null;
 
             return [
-                'id'         => $variant['id'] ?? $variant['variant_id'] ?? null,
-                'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+                'id'         => $id,
+                'variant_id' => $id,
                 'key'        => $variant['key'] ?? null,
                 'label'      => $variant['label'] ?? null,
                 'sku'        => $variant['sku'] ?? null,
