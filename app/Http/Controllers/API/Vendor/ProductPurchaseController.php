@@ -368,10 +368,19 @@ class ProductPurchaseController extends Controller {
     }
 
     public function show( $id ) {
+        $purchase = ProductPurchaseService::show( $id );
+
+        if ( ! $purchase ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Product purchase not found.',
+            ], 404 );
+        }
+
         return response()->json( [
             'status'        => 200,
             'logo'          => VendorInfo::first(),
-            'purchase_show' => ProductPurchaseService::show( $id ),
+            'purchase_show' => $purchase,
         ] );
     }
 

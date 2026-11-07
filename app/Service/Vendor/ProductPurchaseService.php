@@ -56,13 +56,45 @@ class ProductPurchaseService {
         $purchaseShow = ProductPurchase::whereId( $id )
             ->with( ['purchaseDetails' => function ( $query ) {
                 $query->select( 'id', 'product_purchase_id', 'product_id', 'variant_id', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total' )
-                    ->with( 'product', 'color', 'size', 'unit', 'productVariant' );
+                    ->with( [
+                        'product:id,name,sku,image,variants,original_price,selling_price,qty',
+                        'color:id,name',
+                        'size:id,name',
+                        'unit:id,unit_name',
+                        'productVariant:id,product_id,unit_id,size_id,color_id,qty,rate',
+                    ] );
             }] )
             ->with( ['supplier' => function ( $query ) {
                 $query->select( 'id', 'supplier_name', 'phone', 'email', 'address' );
             }] )
             ->with( 'warehouse' )
             ->first();
+
+        if ( ! $purchaseShow ) {
+            return null;
+        }
+
+        $purchaseShow->purchaseDetails->transform( function ( ProductPurchaseDetails $detail ) {
+            $variantPayload = $detail->resolveVariantPayload();
+
+            $detail->setAttribute( 'variant', $variantPayload );
+            $detail->setAttribute( 'variant_label', $variantPayload['label'] ?? null );
+            $detail->setAttribute( 'variant_key', $variantPayload['key'] ?? null );
+            $detail->setAttribute( 'variant_options', $variantPayload['options'] ?? [] );
+
+            // Expose product variants list for edit/reselect UIs.
+            if ( $detail->product ) {
+                $productVariants = is_array( $detail->product->variants ) ? $detail->product->variants : [];
+                $detail->product->setAttribute( 'variants', $productVariants );
+                $detail->product->setAttribute(
+                    'has_variants',
+                    $productVariants !== [] || ProductVariant::where( 'product_id', $detail->product_id )->exists() ? 1 : 0
+                );
+            }
+
+            return $detail;
+        } );
+
         return $purchaseShow;
     }
 
