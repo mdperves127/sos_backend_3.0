@@ -10,6 +10,7 @@ use App\Models\SaleOrderResource;
 use App\Models\Size;
 use App\Models\Supplier;
 use App\Models\Unit;
+use App\Models\ShippingBoxSize;
 use App\Models\VariantAttribute;
 use App\Models\Warehouse;
 
@@ -28,6 +29,11 @@ class VariantApiService {
                 ->where( 'status', 'active' )
                 ->select( 'id', 'name', 'slug', 'status' )
                 ->orderBy( 'name' )
+                ->get(),
+            'packages'       => ShippingBoxSize::query()
+                ->where( 'status', 'active' )
+                ->select( 'id', 'name', 'length', 'width', 'height', 'measurement_type', 'weight', 'weight_type' )
+                ->latest()
                 ->get(),
             'payment_method' => PaymentMethod::where( ['status' => 'active'] )->select( 'id', 'payment_method_name', 'acc_no' )->get(),
             'category'       => Category::whereStatus( 'active' )->with( 'subcategory', function ( $q ) {

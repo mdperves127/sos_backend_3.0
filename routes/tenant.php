@@ -15,6 +15,7 @@ use App\Http\Controllers\Tenant\HistoryController;
 use App\Http\Controllers\API\ServiceOrderController;
 use App\Http\Controllers\API\SizeController;
 use App\Http\Controllers\API\VariantAttributeController;
+use App\Http\Controllers\API\ShippingBoxSizeController;
 use App\Http\Controllers\API\Vendor\BarcodeController;
 use App\Http\Controllers\API\Vendor\BrandController as VendorBrandController;
 use App\Http\Controllers\API\Vendor\CategoryController;
@@ -421,6 +422,15 @@ Route::middleware( [
             Route::delete( 'delete/{id}', [VariantAttributeController::class, 'destroy'] );
             Route::post( '{id}/values', [VariantAttributeController::class, 'addValues'] );
             Route::delete( '{id}/values/{valueId}', [VariantAttributeController::class, 'deleteValue'] );
+        } );
+
+        // Shipping box / package sizes
+        Route::prefix( 'tenant-shipping-box-size' )->group( function () {
+            Route::get( '/', [ShippingBoxSizeController::class, 'index'] );
+            Route::post( 'store', [ShippingBoxSizeController::class, 'store'] );
+            Route::get( 'edit/{id}', [ShippingBoxSizeController::class, 'edit'] );
+            Route::post( 'update/{id}', [ShippingBoxSizeController::class, 'update'] );
+            Route::delete( 'delete/{id}', [ShippingBoxSizeController::class, 'destroy'] );
         } );
 
         //Units Route
