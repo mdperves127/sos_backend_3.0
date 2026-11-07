@@ -24,6 +24,12 @@ class ProductPurchaseDetails extends Model
         return $this->belongsTo(Product::class, 'product_id')->select('id', 'name');
     }
 
+    public function productVariant()
+    {
+        return $this->belongsTo( ProductVariant::class, 'variant_id' )
+            ->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty', 'rate' );
+    }
+
     public function size()
     {
         return $this->belongsTo(Size::class, 'size_id')->select('id', 'name');

@@ -519,19 +519,33 @@ class ProductVariantService {
             if ( $variantId ) {
                 $variant = self::findVariantById( $productId, $variantId );
 
-                if ( $variant ) {
-                    $variant->qty = (int) $variant->qty + $qty;
-                    $variant->save();
-
-                    $product = Product::find( $productId );
-
-                    if ( $product ) {
-                        self::syncJsonFromDb( $product );
-                        self::recalculateProductQty( $product );
-                    }
-
+                if ( ! $variant ) {
+                    // Do not invent a null/null/null row for a missing option-based variant id.
                     return;
                 }
+
+                $variant->qty = (int) $variant->qty + $qty;
+                $variant->save();
+
+                $product = Product::find( $productId );
+
+                if ( $product ) {
+                    self::syncJsonFromDb( $product );
+                    self::recalculateProductQty( $product );
+                }
+
+                return;
+            }
+
+            // Legacy unit/size/color path only when at least one attr is present.
+            if ( $unitId === null && $sizeId === null && $colorId === null ) {
+                $product = Product::find( $productId );
+                if ( $product ) {
+                    $product->qty = (string) ( max( 0, (int) $product->qty ) + $qty );
+                    $product->saveQuietly();
+                }
+
+                return;
             }
 
             $variant = self::findOrCreateVariant( $productId, $unitId, $sizeId, $colorId, $vendorId );
