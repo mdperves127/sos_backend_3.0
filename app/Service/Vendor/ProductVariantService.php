@@ -45,6 +45,14 @@ class ProductVariantService {
     }
 
     /**
+     * Whether the payload explicitly includes a variant unit price.
+     */
+    public static function payloadHasRate( array $variant ): bool {
+        return ( array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '' )
+            || ( array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '' );
+    }
+
+    /**
      * Unit sell price for a selected variant, falling back to product price when rate is missing/zero.
      */
     public static function resolveVariantUnitPrice( ?object $variant, object $product ): float {
@@ -376,7 +384,8 @@ class ProductVariantService {
                 $sizeId  = self::resolveSizeId( $variant );
                 $colorId = self::resolveAttributeId( $variant, 'color', 'color_id' );
                 $qty     = max( 0, (int) ( $variant['qty'] ?? 0 ) );
-                $rate    = self::resolveRateFromPayload( $variant );
+                $hasRate = self::payloadHasRate( $variant );
+                $rate    = $hasRate ? self::resolveRateFromPayload( $variant ) : null;
 
                 $existing = null;
 
@@ -404,7 +413,10 @@ class ProductVariantService {
                     $existing->unit_id  = $unitId;
                     $existing->size_id  = $sizeId;
                     $existing->color_id = $colorId;
-                    $existing->rate     = $rate;
+
+                    if ( $hasRate ) {
+                        $existing->rate = $rate;
+                    }
 
                     if ( ! $preserveExistingStock ) {
                         $existing->qty = $qty;
@@ -419,7 +431,7 @@ class ProductVariantService {
                         'size_id'    => $sizeId,
                         'color_id'   => $colorId,
                         'qty'        => $qty,
-                        'rate'       => $rate,
+                        'rate'       => $rate ?? 0,
                     ] );
                 }
 
@@ -427,8 +439,8 @@ class ProductVariantService {
                 $variant['id']         = $existing->id;
                 $variant['variant_id'] = $existing->id;
                 $variant['qty']        = max( 0, (int) $existing->qty );
-                $variant['rate']       = (float) $existing->rate;
-                $variant['price']      = (float) $existing->rate;
+                $variant['rate']       = (float) ( $existing->rate ?? 0 );
+                $variant['price']      = (float) ( $existing->rate ?? 0 );
                 $variant['unit_id']    = $existing->unit_id;
                 $variant['size_id']    = $existing->size_id;
                 $variant['color_id']   = $existing->color_id;
@@ -442,6 +454,10 @@ class ProductVariantService {
 
             self::mergeDuplicateVariants( $product->id, $processedIds );
             $product->variants = $syncedJson;
+
+            // Always persist variants JSON + rates mapping. Do not rely on qty recalc save,
+            // which can early-return when all variant qtys are 0.
+            $product->saveQuietly();
             self::recalculateProductQty( $product );
         } );
     }
@@ -470,7 +486,13 @@ class ProductVariantService {
         $totalQty          = (int) ProductVariant::where( 'product_id', $product->id )->sum( 'qty' );
         $currentProductQty = (int) $product->qty;
 
+        // Keep product qty when variants report 0 but product still has stock
+        // (legacy purchase/stock flows). Still allow explicit zeroing when product qty is already 0.
         if ( $totalQty === 0 && $currentProductQty > 0 ) {
+            return;
+        }
+
+        if ( (string) $product->qty === (string) max( 0, $totalQty ) ) {
             return;
         }
 

@@ -199,27 +199,32 @@ class ProductTabController extends Controller
             return $this->notFound();
         }
 
+        // Multipart forms often send these as JSON strings — normalize before validation.
+        $request->merge( [
+            'variants'           => $this->decodeArrayInput( $request->input( 'variants', [] ) ),
+            'variant_attributes' => $this->decodeArrayInput( $request->input( 'variant_attributes', [] ) ),
+        ] );
+
         $hasVariants = in_array( (string) $request->input( 'has_variants', '0' ), ['1', 'true'], true );
 
         $validator = Validator::make( $request->all(), [
             'original_price'                          => ['required', 'numeric', 'min:0'],
-            'selling_price'                           => ['required', 'numeric', 'min:0', 'gte:original_price'],
+            'selling_price'                           => ['required', 'numeric', 'min:0'],
             'discount_price'                          => ['nullable', 'numeric', 'min:0'],
             'alert_qty'                               => ['required', 'numeric', 'min:0'],
-            'has_variants'                            => ['required', Rule::in( ['0', '1', 0, 1, true, false] )],
-            'variant_attributes'                      => [$hasVariants ? 'required' : 'nullable', 'array'],
-            'variant_attributes.*.attribute_id'       => ['required_with:variant_attributes', 'integer', 'min:1'],
+            'has_variants'                            => ['required', Rule::in( ['0', '1', 0, 1, true, false, 'true', 'false'] )],
+            'variant_attributes'                      => ['nullable', 'array'],
+            'variant_attributes.*.attribute_id'       => ['required_with:variant_attributes'],
             'variant_attributes.*.value_ids'          => ['required_with:variant_attributes', 'array', 'min:1'],
-            'variant_attributes.*.value_ids.*'        => ['required', 'integer', 'min:1'],
             'variant_attributes.*.sort_order'         => ['nullable', 'integer', 'min:0'],
-            'variants'                                => [$hasVariants ? 'required' : 'nullable', 'array'],
-            'variants.*.id'                           => ['nullable', 'integer'],
-            'variants.*.variant_id'                   => ['nullable', 'integer'],
+            'variants'                                => [$hasVariants ? 'required' : 'nullable', 'array', $hasVariants ? 'min:1' : 'nullable'],
+            'variants.*.id'                           => ['nullable'],
+            'variants.*.variant_id'                   => ['nullable'],
             'variants.*.key'                          => ['nullable', 'string', 'max:255'],
             'variants.*.label'                        => ['nullable', 'string', 'max:255'],
             'variants.*.sku'                          => ['nullable', 'string', 'max:255'],
             'variants.*.image'                        => ['nullable', 'string', 'max:1000'],
-            'variants.*.qty'                          => ['nullable', 'integer', 'min:0'],
+            'variants.*.qty'                          => ['nullable', 'numeric', 'min:0'],
             'variants.*.price'                        => ['nullable', 'numeric', 'min:0'],
             'variants.*.rate'                         => ['nullable', 'numeric', 'min:0'],
             'variants.*.sort_order'                   => ['nullable', 'integer', 'min:0'],
@@ -230,20 +235,25 @@ class ProductTabController extends Controller
             return $this->validationError( $validator );
         }
 
-        $product->original_price = $request->original_price;
-        $product->selling_price  = $request->selling_price;
-        $product->discount_price = $request->discount_price;
-        $product->alert_qty      = $request->alert_qty;
-        $product->discount_percentage = $request->discount_price
-            ? percentage( $request->selling_price, $request->discount_price )
+        $product->original_price = (float) $request->input( 'original_price' );
+        $product->selling_price  = (float) $request->input( 'selling_price' );
+        $product->discount_price = $request->filled( 'discount_price' )
+            ? (float) $request->input( 'discount_price' )
+            : null;
+        $product->alert_qty = (float) $request->input( 'alert_qty' );
+        $product->discount_percentage = $product->discount_price
+            ? percentage( $product->selling_price, $product->discount_price )
             : null;
 
         $meta = $this->getTabMeta( $product );
         $meta['has_variants'] = $hasVariants ? 1 : 0;
+        $meta['variant_attributes'] = $hasVariants
+            ? array_values( (array) $request->input( 'variant_attributes', [] ) )
+            : [];
 
+        $variants = [];
         if ( $hasVariants ) {
-            $variantsInput = $this->decodeArrayInput( $request->input( 'variants', [] ) );
-            $variants      = $this->normalizeVariantsPayload( $variantsInput );
+            $variants = $this->normalizeVariantsPayload( (array) $request->input( 'variants', [] ) );
 
             if ( $variants === [] ) {
                 return response()->json( [
@@ -259,25 +269,24 @@ class ProductTabController extends Controller
             $product->variants = [];
         }
 
-        $meta['variant_attributes'] = $hasVariants
-            ? array_values( $this->decodeArrayInput( $request->input( 'variant_attributes', [] ) ) )
-            : [];
-
         $this->putTabMeta( $product, $meta );
         $product->save();
 
         if ( $hasVariants ) {
-            // Re-read variants after save so sync uses persisted JSON cast.
-            $product->refresh();
+            // Sync using the in-memory normalized payload (avoid refresh wiping unsynced cast quirks).
+            $product->variants = $variants;
             ProductVariantService::syncFromProductVariantsJson( $product, null, false );
             $product->refresh();
         }
 
         return response()->json( [
-            'status'     => 200,
-            'message'    => 'Price updated',
-            'product_id' => $product->id,
-            'variants'   => $product->variants,
+            'status'          => 200,
+            'message'         => 'Price updated',
+            'product_id'      => $product->id,
+            'selling_price'   => (float) $product->selling_price,
+            'original_price'  => (float) $product->original_price,
+            'discount_price'  => $product->discount_price !== null ? (float) $product->discount_price : null,
+            'variants'        => $product->variants,
         ] );
     }
 
@@ -580,11 +589,10 @@ class ProductTabController extends Controller
                 $options = is_array( $decoded ) ? $decoded : [];
             }
 
-            $price = $variant['price'] ?? $variant['rate'] ?? 0;
-            $id    = $variant['variant_id'] ?? $variant['id'] ?? null;
-            $id    = is_numeric( $id ) ? (int) $id : null;
+            $id = $variant['variant_id'] ?? $variant['id'] ?? null;
+            $id = is_numeric( $id ) ? (int) $id : null;
 
-            return [
+            $row = [
                 'id'         => $id,
                 'variant_id' => $id,
                 'key'        => $variant['key'] ?? null,
@@ -592,14 +600,24 @@ class ProductTabController extends Controller
                 'sku'        => $variant['sku'] ?? null,
                 'image'      => $variant['image'] ?? null,
                 'qty'        => max( 0, (int) ( $variant['qty'] ?? 0 ) ),
-                'price'      => max( 0, (float) $price ),
-                'rate'       => max( 0, (float) $price ),
                 'sort_order' => (int) ( $variant['sort_order'] ?? $index ),
                 'options'    => array_values( (array) $options ),
                 'unit_id'    => $variant['unit_id'] ?? null,
                 'size_id'    => $variant['size_id'] ?? null,
                 'color_id'   => $variant['color_id'] ?? null,
             ];
+
+            // Only set price/rate when the client explicitly sent them — otherwise
+            // sync must keep the existing product_variants.rate (do not force 0).
+            $hasPrice = array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '';
+            $hasRate  = array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '';
+            if ( $hasPrice || $hasRate ) {
+                $price         = $hasPrice ? $variant['price'] : $variant['rate'];
+                $row['price']  = max( 0, (float) $price );
+                $row['rate']   = $row['price'];
+            }
+
+            return $row;
         } )->values()->toArray();
     }
 
