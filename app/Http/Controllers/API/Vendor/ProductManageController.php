@@ -476,7 +476,19 @@ class ProductManageController extends Controller {
                 $product->tags                        = $request->input( 'tags' );
                 $product->discount_type               = $request->discount_type;
                 $product->discount_rate               = $request->discount_rate;
-                $product->variants                    = $request->variants;
+                $previousVariants = is_array( $product->variants ) ? $product->variants : [];
+                $incomingVariants = $request->input( 'variants', [] );
+                if ( is_string( $incomingVariants ) ) {
+                    $decodedVariants  = json_decode( $incomingVariants, true );
+                    $incomingVariants = is_array( $decodedVariants ) ? $decodedVariants : [];
+                }
+                if ( is_array( $incomingVariants ) ) {
+                    $incomingVariants = ProductVariantService::rehydrateVariantIds(
+                        array_values( $incomingVariants ),
+                        $previousVariants
+                    );
+                }
+                $product->variants                    = $incomingVariants;
                 $product->selling_type                = request( 'selling_type' );
                 $product->selling_details             = request( 'selling_details' );
                 $product->advance_payment             = request( 'advance_payment' );

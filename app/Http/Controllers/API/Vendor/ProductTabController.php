@@ -245,6 +245,9 @@ class ProductTabController extends Controller
             ? percentage( $product->selling_price, $product->discount_price )
             : null;
 
+        // Capture before overwrite — form payloads often omit id/variant_id.
+        $previousVariants = is_array( $product->variants ) ? $product->variants : [];
+
         $meta = $this->getTabMeta( $product );
         $meta['has_variants'] = $hasVariants ? 1 : 0;
         $meta['variant_attributes'] = $hasVariants
@@ -254,6 +257,7 @@ class ProductTabController extends Controller
         $variants = [];
         if ( $hasVariants ) {
             $variants = $this->normalizeVariantsPayload( (array) $request->input( 'variants', [] ) );
+            $variants = ProductVariantService::rehydrateVariantIds( $variants, $previousVariants );
 
             if ( $variants === [] ) {
                 return response()->json( [
