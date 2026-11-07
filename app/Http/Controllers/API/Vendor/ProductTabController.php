@@ -507,7 +507,7 @@ class ProductTabController extends Controller
         $controller = new self();
         $meta       = $controller->getTabMeta( $product );
 
-        $shipping = $meta['shipping'] ?? [
+        $shipping = array_merge( [
             'is_physical_product' => 0,
             'package_type_id'     => null,
             'length'              => null,
@@ -516,14 +516,19 @@ class ProductTabController extends Controller
             'dimension_unit'      => 'in',
             'weight'              => null,
             'weight_unit'         => 'lb',
-        ];
+        ], is_array( $meta['shipping'] ?? null ) ? $meta['shipping'] : [] );
 
+        // Nested object for the shipping tab + flat keys for older clients.
+        $product->setAttribute( 'shipping', $shipping );
         foreach ( $shipping as $key => $value ) {
             $product->setAttribute( $key, $value );
         }
 
         $product->setAttribute( 'has_variants', (int) ( $meta['has_variants'] ?? ( is_array( $product->variants ) && $product->variants !== [] ? 1 : 0 ) ) );
-        $product->setAttribute( 'variant_attributes', $meta['variant_attributes'] ?? [] );
+        $product->setAttribute( 'variant_attributes', array_values( (array) ( $meta['variant_attributes'] ?? [] ) ) );
+
+        // Do not leak raw meta JSON blob in edit payload.
+        $product->makeHidden( ['request'] );
     }
 
     private function findOwnedProduct( $id ): ?Product
@@ -638,13 +643,36 @@ class ProductTabController extends Controller
             return [];
         }
 
-        $decoded = json_decode( (string) $raw, true );
+        if ( is_array( $raw ) ) {
+            return $raw;
+        }
 
-        return is_array( $decoded ) ? $decoded : [];
+        $decoded = json_decode( (string) $raw, true );
+        if ( is_array( $decoded ) ) {
+            return $decoded;
+        }
+
+        // Recover partially truncated JSON when possible (legacy varchar(255) column).
+        $trimmed = trim( (string) $raw );
+        if ( $trimmed !== '' && $trimmed[0] === '{' ) {
+            $repaired = $trimmed;
+            if ( ! str_ends_with( $repaired, '}' ) ) {
+                $repaired .= '}';
+            }
+            $decoded = json_decode( $repaired, true );
+            if ( is_array( $decoded ) ) {
+                return $decoded;
+            }
+        }
+
+        return [];
     }
 
     private function putTabMeta( Product $product, array $meta ): void
     {
-        $product->setAttribute( 'request', json_encode( $meta ) );
+        // Top-level merge: price/options tabs keep shipping; shipping tab keeps variant meta.
+        // (Do not use array_replace_recursive — it cannot clear arrays like variant_attributes.)
+        $merged = array_merge( $this->getTabMeta( $product ), $meta );
+        $product->setAttribute( 'request', json_encode( $merged, JSON_UNESCAPED_UNICODE ) );
     }
 }
