@@ -43,7 +43,12 @@ class ProductManageController extends Controller {
         ] );
     }
 
-    public function VendorProduct() {
+    public function VendorProduct( $status = null ) {
+        // Route param /tenant-product/{status} should behave like ?status=
+        if ( $status !== null && $status !== '' && ! request()->filled( 'status' ) ) {
+            request()->merge( ['status' => $status] );
+        }
+
         return response()->json( [
             'status'  => 200,
             'product' => ProductService::index(),

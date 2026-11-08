@@ -40,6 +40,21 @@ class ProductService {
                 return $q->where( 'category_id', request( 'category' ) );
             } )
 
+            ->when( request()->filled( 'is_affiliate' ), function ( $q ) {
+                $isAffiliate = request( 'is_affiliate' );
+                // Accept 1/0, "1"/"0", true/false, "true"/"false"
+                if ( in_array( $isAffiliate, [1, '1', true, 'true'], true ) ) {
+                    return $q->where( 'is_affiliate', 1 );
+                }
+                if ( in_array( $isAffiliate, [0, '0', false, 'false'], true ) ) {
+                    return $q->where( function ( $query ) {
+                        $query->where( 'is_affiliate', 0 )->orWhereNull( 'is_affiliate' );
+                    } );
+                }
+
+                return $q->where( 'is_affiliate', (int) $isAffiliate );
+            } )
+
             ->when( $startDate && $endDate, function ( $q ) use ( $startDate, $endDate ) {
                 $q->whereDate( 'created_at', '>=', $startDate )
                     ->whereDate( 'created_at', '<=', $endDate );
