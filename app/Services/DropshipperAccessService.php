@@ -222,6 +222,28 @@ class DropshipperAccessService {
     }
 
     /**
+     * After an assignment is revoked, reject this dropshipper's listings for products
+     * that are no longer covered by any remaining active assignment (private or public).
+     * Assign creates listings via ensureListingsForProducts; revoke must undo that.
+     */
+    public static function revokeListingsAfterAssignmentRevoke(
+        string|int $merchantTenantId,
+        string $merchantConnection,
+        string $dropshipperTenantId,
+        array $productIds
+    ): int {
+        $productIds = array_values( array_unique( array_filter( array_map( 'intval', $productIds ) ) ) );
+        if ( $productIds === [] ) {
+            return 0;
+        }
+
+        $stillAssigned = self::assignedProductIds( $merchantConnection, $dropshipperTenantId );
+        $lostAccess    = array_values( array_diff( $productIds, $stillAssigned ) );
+
+        return self::revokeListings( $merchantTenantId, $dropshipperTenantId, $lostAccess );
+    }
+
+    /**
      * Move a dropshipper's active/pending listings for these merchant products to rejected.
      * Existing orders are untouched; carts are blocked at checkout by the access re-check.
      */

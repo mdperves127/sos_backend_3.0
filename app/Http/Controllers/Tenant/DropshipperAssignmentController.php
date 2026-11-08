@@ -260,21 +260,23 @@ class DropshipperAssignmentController extends Controller {
             'revoked_at' => now(),
         ] );
 
-        $products = DB::connection( $connection )->table( 'products' )
+        $productIds = DB::connection( $connection )->table( 'products' )
             ->when(
                 $assignment->assignable_type === DropshipperProductAssignment::TYPE_PRODUCT,
                 fn ( $q ) => $q->where( 'id', $assignment->product_id ),
                 fn ( $q ) => $q->where( 'category_id', $assignment->category_id )
             )
-            ->get( ['id', 'category_id', 'is_private'] )
+            ->pluck( 'id' )
+            ->map( fn ( $id ) => (int) $id )
             ->all();
 
-        // Only private products lose existing listings; public ones stay available to everyone.
-        $revokedListings = DropshipperAccessService::revokeInaccessibleListings(
+        // Assignment ensureListingsForProducts for any product; revoke must clear those listings
+        // unless another active assignment still covers the product for this dropshipper.
+        $revokedListings = DropshipperAccessService::revokeListingsAfterAssignmentRevoke(
             tenant()->id,
             $connection,
-            $products,
-            [$assignment->dropshipper_tenant_id]
+            $assignment->dropshipper_tenant_id,
+            $productIds
         );
 
         return response()->json( [
