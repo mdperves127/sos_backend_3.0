@@ -287,6 +287,10 @@ class ProductTabController extends Controller
             $product->variants = $variants;
             ProductVariantService::syncFromProductVariantsJson( $product, null, false );
             $product->refresh();
+        } else {
+            // Turned off variants: clear JSON already saved; also delete product_variants rows.
+            ProductVariantService::clearProductVariants( $product );
+            $product->refresh();
         }
 
         return response()->json( [
@@ -297,6 +301,7 @@ class ProductTabController extends Controller
             'original_price'  => (float) $product->original_price,
             'discount_price'  => $product->discount_price !== null ? (float) $product->discount_price : null,
             'variants'        => $product->variants,
+            'has_variants'    => $hasVariants,
         ] );
     }
 

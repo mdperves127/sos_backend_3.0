@@ -30,6 +30,125 @@ class ProductVariantService {
     }
 
     /**
+     * Normalize product variants for catalog/POS/dropshipper UIs.
+     * Prefer products.variants JSON labels; fall back to product_variants + attrs.
+     * Always reads from the product's connection (safe for cross-tenant dropshipper views).
+     *
+     * @return array{has_variants: bool, variants: array<int, array<string, mixed>>}
+     */
+    public static function presentForCatalog( Product $product ): array
+    {
+        $connection = $product->getConnectionName() ?: config( 'database.default' );
+
+        $fallbackPrice = self::productFallbackPrice( $product );
+        $jsonVariants  = is_array( $product->variants ) ? $product->variants : [];
+        $dbVariants    = ProductVariant::on( $connection )
+            ->where( 'product_id', $product->id )
+            ->with( [
+                'color:id,name',
+                'size:id,name',
+                'unit:id,unit_name',
+            ] )
+            ->get()
+            ->keyBy( 'id' );
+
+        $variants = [];
+
+        if ( $jsonVariants !== [] ) {
+            foreach ( $jsonVariants as $json ) {
+                $json      = (array) $json;
+                $variantId = (int) ( $json['variant_id'] ?? $json['id'] ?? 0 );
+                $db        = $variantId > 0 ? $dbVariants->get( $variantId ) : null;
+
+                $options = array_values( (array) ( $json['options'] ?? [] ) );
+                $label   = trim( (string) ( $json['label'] ?? '' ) );
+                if ( $label === '' && $options !== [] ) {
+                    $label = collect( $options )
+                        ->map( fn ( $opt ) => is_array( $opt ) ? ( $opt['value'] ?? '' ) : '' )
+                        ->filter()
+                        ->implode( ' / ' );
+                }
+                if ( $label === '' && $db ) {
+                    $label = collect( [
+                        $db->unit?->unit_name,
+                        $db->color?->name,
+                        $db->size?->name,
+                    ] )->filter()->implode( ' / ' );
+                }
+
+                $price = (float) ( $json['price'] ?? $json['rate'] ?? 0 );
+                if ( $price <= 0 && $db ) {
+                    $price = self::resolveVariantUnitPrice( $db, $product );
+                }
+                if ( $price <= 0 ) {
+                    $price = $fallbackPrice;
+                }
+
+                $qty = array_key_exists( 'qty', $json )
+                    ? (int) $json['qty']
+                    : (int) ( $db->qty ?? 0 );
+
+                $id = $variantId > 0 ? $variantId : ( $db->id ?? null );
+                if ( ! $id ) {
+                    continue;
+                }
+
+                $variants[] = [
+                    'id'         => (int) $id,
+                    'variant_id' => (int) $id,
+                    'product_id' => (int) $product->id,
+                    'label'      => $label !== '' ? $label : 'Default',
+                    'sku'        => $json['sku'] ?? $product->sku,
+                    'image'      => $json['image'] ?? null,
+                    'qty'        => max( 0, $qty ),
+                    'price'      => $price,
+                    'rate'       => $price,
+                    'options'    => $options,
+                    'unit_id'    => $json['unit_id'] ?? $db?->unit_id,
+                    'size_id'    => $json['size_id'] ?? $db?->size_id,
+                    'color_id'   => $json['color_id'] ?? $db?->color_id,
+                    'unit'       => $db?->unit ? ['id' => $db->unit->id, 'unit_name' => $db->unit->unit_name] : null,
+                    'color'      => $db?->color ? ['id' => $db->color->id, 'name' => $db->color->name] : null,
+                    'size'       => $db?->size ? ['id' => $db->size->id, 'name' => $db->size->name] : null,
+                ];
+            }
+        } elseif ( $dbVariants->isNotEmpty() ) {
+            foreach ( $dbVariants as $db ) {
+                $label = collect( [
+                    $db->unit?->unit_name,
+                    $db->color?->name,
+                    $db->size?->name,
+                ] )->filter()->implode( ' / ' );
+                $price = self::resolveVariantUnitPrice( $db, $product );
+
+                $variants[] = [
+                    'id'         => (int) $db->id,
+                    'variant_id' => (int) $db->id,
+                    'product_id' => (int) $product->id,
+                    'label'      => $label !== '' ? $label : 'Default',
+                    'sku'        => $product->sku,
+                    'image'      => null,
+                    'qty'        => max( 0, (int) $db->qty ),
+                    'price'      => $price,
+                    'rate'       => $price,
+                    'options'    => [],
+                    'unit_id'    => $db->unit_id,
+                    'size_id'    => $db->size_id,
+                    'color_id'   => $db->color_id,
+                    'unit'       => $db->unit ? ['id' => $db->unit->id, 'unit_name' => $db->unit->unit_name] : null,
+                    'color'      => $db->color ? ['id' => $db->color->id, 'name' => $db->color->name] : null,
+                    'size'       => $db->size ? ['id' => $db->size->id, 'name' => $db->size->name] : null,
+                ];
+            }
+        }
+
+        return [
+            'has_variants' => count( $variants ) > 0,
+            'variants'     => $variants,
+        ];
+    }
+
+    /**
      * Coerce multipart/form string prices into a non-negative decimal (2 places).
      * Returns null when the value is missing/blank/non-numeric.
      */
@@ -663,6 +782,21 @@ class ProductVariantService {
             // which can early-return when all variant qtys are 0.
             $product->saveQuietly();
             self::recalculateProductQty( $product );
+        } );
+    }
+
+    /**
+     * Remove every variant row + clear products.variants JSON for a simple (non-variant) product.
+     */
+    public static function clearProductVariants( Product $product ): void
+    {
+        $connection = $product->getConnectionName() ?: config( 'database.default' );
+
+        DB::connection( $connection )->transaction( function () use ( $product ) {
+            ProductVariant::where( 'product_id', $product->id )->delete();
+
+            $product->variants = [];
+            $product->saveQuietly();
         } );
     }
 

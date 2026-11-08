@@ -14,7 +14,9 @@ use App\Models\ProductVariant;
 use App\Models\Size;
 use App\Models\Unit;
 use App\Models\User;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\CrossTenantQueryService;
+use App\Services\DropshipperAccessService;
 use App\Services\PathaoService;
 use App\Services\RedxService;
 use Illuminate\Http\Request;
@@ -63,20 +65,28 @@ class CartController extends Controller {
             }
         }
 
-        $user_id       = 1;
-        $product_id    = $getproduct->id;
-        $productAmount = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
-        $vendor_id     = $getproduct->user_id;
+        $user_id            = auth()->id() ?: 1;
+        $product_id         = $getproduct->id;
+        $productAmount      = ProductVariantService::productFallbackPrice( $getproduct );
+        $vendor_id          = $getproduct->user_id;
+        $merchantConnection = DropshipperAccessService::merchantConnection( request( 'tenant_id' ) );
 
         if ( request( 'purchase_type' ) == 'single' ) {
-            $product_price = $getproduct->discount_price == null ? $getproduct->selling_price : $getproduct->discount_price;
+            $variantTotals = ProductVariantService::lineTotalsFromCartItems(
+                $getproduct,
+                request( 'cartItems', [] ),
+                $merchantConnection
+            );
+            $product_price     = $variantTotals['product_price'];
+            $totalproductprice = $variantTotals['total_product_price'] > 0
+                ? $variantTotals['total_product_price']
+                : ( $product_price * $totalqty );
 
             if ( $getproduct->discount_type == 'percent' ) {
                 $affi_commission = ( $productAmount / 100 ) * $getproduct->discount_rate;
             } else {
                 $affi_commission = $getproduct->discount_rate;
             }
-            $totalproductprice          = $product_price * $totalqty;
             $total_affiliate_commission = $affi_commission * $totalqty;
 
             if ( $getproduct->single_advance_payment_type == 'percent' ) {
@@ -85,7 +95,7 @@ class CartController extends Controller {
                 $advancepayment = $getproduct->advance_payment;
             }
 
-            $totaladvancepayment = $getproduct->advance_payment * $totalqty;
+            $totaladvancepayment = $advancepayment * $totalqty;
         } else {
             $bulkdetails       = collect( $getproduct->selling_details )->where( 'min_bulk_qty', '<=', $totalqty )->max();
             $product_price     = $bulkdetails['min_bulk_price'];

@@ -159,18 +159,21 @@ class DropshipperAccessService {
     }
 
     /**
-     * Auto-approval: assignment > explicit product setting > category setting > off.
+     * Auto-approval for a product request.
+     *
+     * Priority: explicit product setting (on/off) > category setting > off.
+     * Assignments control ACCESS only (who may request), not approval.
      */
     public static function shouldAutoApprove( string $connection, string $dropshipperTenantId, object $product ): bool {
         if ( ! self::supportsAccessControl( $connection ) ) {
             return false;
         }
 
-        if ( self::hasActiveAssignment( $connection, $dropshipperTenantId, $product ) ) {
-            return true;
-        }
-
-        if ( isset( $product->auto_approve_dropshipper ) && $product->auto_approve_dropshipper !== null ) {
+        // Explicit product override (null / missing = inherit category).
+        if ( property_exists( $product, 'auto_approve_dropshipper' )
+            && $product->auto_approve_dropshipper !== null
+            && $product->auto_approve_dropshipper !== ''
+        ) {
             return (int) $product->auto_approve_dropshipper === 1;
         }
 

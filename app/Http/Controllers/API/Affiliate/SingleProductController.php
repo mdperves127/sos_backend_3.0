@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDetails;
+use App\Service\Vendor\ProductVariantService;
 use App\Services\CrossTenantQueryService;
 use App\Services\DropshipperAccessService;
 use App\Services\DropshipperPricingService;
@@ -64,6 +65,12 @@ class SingleProductController extends Controller {
         // Private products answer exactly like unknown IDs for dropshippers without access.
         if ( $product && $connection && DropshipperAccessService::canAccessProduct( $connection, tenant() ? (string) tenant()->id : null, $product ) ) {
             $product->setAttribute( 'dropshipper_pricing', DropshipperPricingService::publicRules( $product ) );
+
+            // Prefer products.variants JSON labels for cart/UI; keep product_variant for older clients.
+            $presented = ProductVariantService::presentForCatalog( $product );
+            $product->setAttribute( 'has_variants', $presented['has_variants'] );
+            $product->setAttribute( 'variants', $presented['variants'] );
+            $product->setAttribute( 'product_variant', $presented['variants'] );
 
             return response()->json( [
                 'status'  => 200,

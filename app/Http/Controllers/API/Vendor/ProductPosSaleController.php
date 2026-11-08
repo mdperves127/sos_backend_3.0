@@ -126,31 +126,135 @@ class ProductPosSaleController extends Controller {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'Product not found.',
-            ] );
+            ], 404 );
         }
 
         ProductVariantService::reconcileProduct( $product );
         $product->refresh();
 
-        $product = Product::where( 'id', $product->id )
-            ->select( 'id', 'category_id', 'brand_id', 'name', 'slug', 'sku', 'qty',
-                DB::raw( 'CASE
-                WHEN discount_price IS NULL THEN selling_price
-                ELSE discount_price
-                END AS discount_price' ), 'discount_percentage', 'selling_price' )
+        $fallbackPrice = (float) (
+            $product->discount_price
+                ?: $product->selling_price
+                ?: 0
+        );
+
+        $jsonVariants = is_array( $product->variants ) ? $product->variants : [];
+        $dbVariants   = ProductVariant::where( 'product_id', $product->id )
             ->with( [
-                'productVariant' => function ( $q ) {
-                    $q->select( 'id', 'product_id', 'unit_id', 'size_id', 'color_id', 'qty' )
-                        ->with( 'product', 'color', 'size', 'unit' );
-                },
+                'color:id,name',
+                'size:id,name',
+                'unit:id,unit_name',
             ] )
-            ->first();
+            ->get()
+            ->keyBy( 'id' );
+
+        $variants = [];
+
+        if ( $jsonVariants !== [] ) {
+            foreach ( $jsonVariants as $json ) {
+                $json      = (array) $json;
+                $variantId = (int) ( $json['variant_id'] ?? $json['id'] ?? 0 );
+                $db        = $variantId > 0 ? $dbVariants->get( $variantId ) : null;
+
+                $options = array_values( (array) ( $json['options'] ?? [] ) );
+                $label   = trim( (string) ( $json['label'] ?? '' ) );
+                if ( $label === '' && $options !== [] ) {
+                    $label = collect( $options )
+                        ->map( fn ( $opt ) => is_array( $opt ) ? ( $opt['value'] ?? '' ) : '' )
+                        ->filter()
+                        ->implode( ' / ' );
+                }
+                if ( $label === '' && $db ) {
+                    $label = collect( [
+                        $db->unit?->unit_name,
+                        $db->color?->name,
+                        $db->size?->name,
+                    ] )->filter()->implode( ' / ' );
+                }
+
+                $price = (float) ( $json['price'] ?? $json['rate'] ?? 0 );
+                if ( $price <= 0 && $db ) {
+                    $price = ProductVariantService::resolveVariantUnitPrice( $db, $product );
+                }
+                if ( $price <= 0 ) {
+                    $price = $fallbackPrice;
+                }
+
+                $qty = array_key_exists( 'qty', $json )
+                    ? (int) $json['qty']
+                    : (int) ( $db->qty ?? 0 );
+
+                $variants[] = [
+                    'id'         => $variantId > 0 ? $variantId : ( $db->id ?? null ),
+                    'variant_id' => $variantId > 0 ? $variantId : ( $db->id ?? null ),
+                    'product_id' => (int) $product->id,
+                    'label'      => $label !== '' ? $label : 'Default',
+                    'sku'        => $json['sku'] ?? $product->sku,
+                    'image'      => $json['image'] ?? null,
+                    'qty'        => max( 0, $qty ),
+                    'price'      => $price,
+                    'rate'       => $price,
+                    'options'    => $options,
+                    'unit_id'    => $json['unit_id'] ?? $db?->unit_id,
+                    'size_id'    => $json['size_id'] ?? $db?->size_id,
+                    'color_id'   => $json['color_id'] ?? $db?->color_id,
+                    'unit'       => $db?->unit?->unit_name,
+                    'color'      => $db?->color?->name,
+                    'size'       => $db?->size?->name,
+                ];
+            }
+        } elseif ( $dbVariants->isNotEmpty() ) {
+            foreach ( $dbVariants as $db ) {
+                $label = collect( [
+                    $db->unit?->unit_name,
+                    $db->color?->name,
+                    $db->size?->name,
+                ] )->filter()->implode( ' / ' );
+                $price = ProductVariantService::resolveVariantUnitPrice( $db, $product );
+
+                $variants[] = [
+                    'id'         => (int) $db->id,
+                    'variant_id' => (int) $db->id,
+                    'product_id' => (int) $product->id,
+                    'label'      => $label !== '' ? $label : 'Default',
+                    'sku'        => $product->sku,
+                    'image'      => null,
+                    'qty'        => max( 0, (int) $db->qty ),
+                    'price'      => $price,
+                    'rate'       => $price,
+                    'options'    => [],
+                    'unit_id'    => $db->unit_id,
+                    'size_id'    => $db->size_id,
+                    'color_id'   => $db->color_id,
+                    'unit'       => $db->unit?->unit_name,
+                    'color'      => $db->color?->name,
+                    'size'       => $db->size?->name,
+                ];
+            }
+        }
+
+        $hasVariants = count( $variants ) > 0;
 
         return response()->json( [
             'status'  => 200,
-            'product' => $product,
+            'product' => [
+                'id'                  => (int) $product->id,
+                'category_id'         => $product->category_id,
+                'brand_id'            => $product->brand_id,
+                'name'                => $product->name,
+                'slug'                => $product->slug,
+                'sku'                 => $product->sku,
+                'image'               => $product->image,
+                'qty'                 => max( 0, (int) $product->qty ),
+                'selling_price'       => (string) $product->selling_price,
+                'discount_price'      => (string) ( $product->discount_price ?: $product->selling_price ),
+                'discount_percentage' => $product->discount_percentage,
+                'has_variants'        => $hasVariants,
+                'variants'            => $variants,
+                // Backward-compatible key used by older POS UI.
+                'product_variant'     => $variants,
+            ],
         ] );
-
     }
 
     //----Barcode scan result----

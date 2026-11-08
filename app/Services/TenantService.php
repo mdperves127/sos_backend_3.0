@@ -34,21 +34,9 @@ class TenantService
             // Generate tenant ID from domain name (clean version)
             $tenantId = preg_replace('/[^a-zA-Z0-9]/', '', $data['domain']);
 
-            // Transform domain based on environment
-            $domain = $data['domain'];
-
-            // if (env('APP_ENV') === 'local') {
-            //     // For local environment, add .localhost if no domain extension
-            //     if (!str_contains($domain, '.localhost') && !str_contains($domain, '.local') && !str_contains($domain, '.')) {
-            //         $domain = $domain . '.localhost';
-            //     }
-            // } else
-
-            // Always build full tenant domain from MAIN_DOMAIN when a bare subdomain is given.
-            $mainDomain = config( 'cpanel.main_domain' );
-            if ( ! str_contains( $domain, '.' ) && $mainDomain ) {
-                $domain = $domain . '.' . $mainDomain;
-            }
+            // Transform bare subdomain into the host Stancl will identify
+            // (e.g. test2 → test2.localhost locally, or test2.MAIN_DOMAIN in production).
+            $domain = $this->resolveFullDomain( $data['domain'] );
 
             // Store password in session for later use
             session(['tenant_password_' . $tenantId => $data['password']]);
@@ -289,6 +277,28 @@ class TenantService
     public function createDatabase(string $dbname): array
     {
         return $this->cpanelService->createDatabase($dbname);
+    }
+
+    /**
+     * Resolve a bare subdomain into the full host used for tenancy identification.
+     * Matches TenantRegistrationRequest so validation and domain rows stay aligned.
+     */
+    protected function resolveFullDomain( string $domain ): string
+    {
+        if ( str_contains( $domain, '.' ) ) {
+            return $domain;
+        }
+
+        $mainDomain = trim( (string) config( 'cpanel.main_domain' ) );
+        if ( $mainDomain !== '' ) {
+            return $domain . '.' . $mainDomain;
+        }
+
+        if ( config( 'app.env' ) === 'local' ) {
+            return $domain . '.localhost';
+        }
+
+        return $domain;
     }
 
     /**

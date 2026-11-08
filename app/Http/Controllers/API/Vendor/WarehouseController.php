@@ -16,9 +16,21 @@ class WarehouseController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index() {
+        $search = request( 'search' );
+
+        $warehouses = Warehouse::where( 'vendor_id', vendorId() )
+            ->when( $search, function ( $query, $search ) {
+                $query->where( function ( $q ) use ( $search ) {
+                    $q->where( 'name', 'like', '%' . $search . '%' )
+                        ->orWhere( 'description', 'like', '%' . $search . '%' );
+                } );
+            } )
+            ->latest()
+            ->get();
+
         return response()->json( [
             'status'     => 200,
-            'warehouses' => Warehouse::where( 'vendor_id', vendorId() )->latest()->get(),
+            'warehouses' => $warehouses,
         ] );
     }
 

@@ -5,6 +5,7 @@ namespace App\Service\Vendor;
 use App\Models\CustomerPayment;
 use App\Models\PosSales;
 use App\Models\PosSalesDetails;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 
 class ProductPosSaleService {
@@ -68,10 +69,20 @@ class ProductPosSaleService {
     }
 
     public static function show( $id ) {
+        $detailColumns = [
+            'id', 'pos_sales_id', 'product_id', 'bundle_id', 'bundle_name',
+            'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total', 'status',
+        ];
+        if ( \App\Models\PosSalesDetails::supportsVariantColumns() ) {
+            $detailColumns[] = 'variant_id';
+            $detailColumns[] = 'variant_label';
+        }
+
         $saleShow = PosSales::whereId( $id )
             ->where( 'vendor_id', vendorId() )
-            ->with( ['saleDetails' => function ( $query ) {
-                $query->select( 'id', 'pos_sales_id', 'product_id', 'bundle_id', 'bundle_name', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total', 'status' )->with( 'product', 'color', 'size', 'unit' );
+            ->with( ['saleDetails' => function ( $query ) use ( $detailColumns ) {
+                $query->select( $detailColumns )
+                    ->with( ['product', 'color', 'size', 'unit'] );
             }] )
             ->with( ['customer' => function ( $query ) {
                 $query->select( 'id', 'customer_name', 'phone', 'email', 'address' );
@@ -112,6 +123,19 @@ class ProductPosSaleService {
             $saleShow->installment_plan = PosInstallmentService::planSummary( $saleShow );
         } else {
             $saleShow && ( $saleShow->is_installment = false );
+        }
+
+        if ( $saleShow ) {
+            $saleShow->saleDetails->each( function ( $detail ) {
+                $payload = $detail->resolveVariantPayload();
+                $detail->setAttribute( 'variant', $payload );
+                $detail->setAttribute( 'variant_id', $payload['variant_id'] ?? $detail->variant_id ?? null );
+                $detail->setAttribute(
+                    'variant_label',
+                    $payload['label'] ?? $detail->variant_label ?? null
+                );
+                $detail->setAttribute( 'variant_options', $payload['options'] ?? [] );
+            } );
         }
 
         return $saleShow;
@@ -191,21 +215,95 @@ class ProductPosSaleService {
     }
 
     public static function productSaleDetails( $product_ids, $saleId, $status ) {
+        $supportsVariant = PosSalesDetails::supportsVariantColumns();
+
         foreach ( $product_ids as $key => $product_id ) {
             $saleDetails               = new PosSalesDetails();
             $saleDetails->pos_sales_id = $saleId;
             $saleDetails->product_id   = $product_id;
-            $saleDetails->unit_id      = request()->unit_id[$key];
-            $saleDetails->size_id      = request()->size_id[$key];
-            $saleDetails->color_id     = request()->color_id[$key];
-            $saleDetails->qty          = request()->qty[$key];
-            $saleDetails->rate         = request()->rate[$key];
-            $saleDetails->sub_total    = request()->sub_total[$key];
+            $saleDetails->unit_id      = request()->unit_id[$key] ?? null;
+            $saleDetails->size_id      = request()->size_id[$key] ?? null;
+            $saleDetails->color_id     = request()->color_id[$key] ?? null;
+            $saleDetails->qty          = request()->qty[$key] ?? 0;
+            $saleDetails->rate         = request()->rate[$key] ?? 0;
+            $saleDetails->sub_total    = request()->sub_total[$key] ?? 0;
             $saleDetails->status       = $status;
+
+            if ( $supportsVariant ) {
+                $variantId = ProductVariantService::normalizeNullableId(
+                    request()->variant_id[$key] ?? request()->product_variant_id[$key] ?? null
+                );
+                $saleDetails->variant_id    = $variantId;
+                $saleDetails->variant_label = self::resolveVariantLabelForSale(
+                    (int) $product_id,
+                    $variantId,
+                    $saleDetails->unit_id,
+                    $saleDetails->size_id,
+                    $saleDetails->color_id
+                );
+            }
+
             $saleDetails->save();
         }
 
         return $saleDetails;
+    }
+
+    /**
+     * Build a snapshot variant label for the invoice from product JSON / attrs.
+     */
+    protected static function resolveVariantLabelForSale(
+        int $productId,
+        ?int $variantId,
+        $unitId,
+        $sizeId,
+        $colorId
+    ): ?string {
+        $product = Product::select( 'id', 'variants' )->find( $productId );
+        if ( ! $product ) {
+            return null;
+        }
+
+        $jsonVariants = is_array( $product->variants ) ? $product->variants : [];
+
+        if ( $variantId ) {
+            foreach ( $jsonVariants as $jsonVariant ) {
+                $jsonVariant = (array) $jsonVariant;
+                $jsonId      = (int) ( $jsonVariant['variant_id'] ?? $jsonVariant['id'] ?? 0 );
+                if ( $jsonId !== (int) $variantId ) {
+                    continue;
+                }
+
+                $label = trim( (string) ( $jsonVariant['label'] ?? '' ) );
+                if ( $label !== '' ) {
+                    return $label;
+                }
+
+                $options = array_values( (array) ( $jsonVariant['options'] ?? [] ) );
+                $fromOptions = collect( $options )
+                    ->map( fn ( $opt ) => is_array( $opt ) ? ( $opt['value'] ?? '' ) : '' )
+                    ->filter()
+                    ->implode( ' / ' );
+
+                return $fromOptions !== '' ? $fromOptions : null;
+            }
+        }
+
+        foreach ( $jsonVariants as $jsonVariant ) {
+            $jsonVariant = (array) $jsonVariant;
+            if (
+                (int) ( $jsonVariant['unit_id'] ?? 0 ) === (int) ( $unitId ?? 0 )
+                && (int) ( $jsonVariant['size_id'] ?? 0 ) === (int) ( $sizeId ?? 0 )
+                && (int) ( $jsonVariant['color_id'] ?? 0 ) === (int) ( $colorId ?? 0 )
+            ) {
+                $label = trim( (string) ( $jsonVariant['label'] ?? '' ) );
+                if ( $label !== '' ) {
+                    return $label;
+                }
+            }
+        }
+
+        return null;
     }
 
     public static function productVariants( $product_ids, $variant ) {

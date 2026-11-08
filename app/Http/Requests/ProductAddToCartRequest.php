@@ -10,6 +10,7 @@ use App\Services\DropshipperAccessService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ProductAddToCartRequest extends FormRequest {
@@ -78,6 +79,35 @@ class ProductAddToCartRequest extends FormRequest {
 
                     if ( (string) ( $getproduct->pre_order ?? '0' ) === '1' ) {
                         return;
+                    }
+
+                    $variantId = null;
+                    if ( preg_match( '/^cartItems\.(\d+)\.qty$/', $attribute, $matches ) ) {
+                        $item      = $this->input( 'cartItems.' . $matches[1] );
+                        $variantId = is_array( $item ) ? ( $item['variant_id'] ?? null ) : null;
+                    }
+
+                    if ( $variantId ) {
+                        $connection = DropshipperAccessService::merchantConnection( $this->input( 'tenant_id' ) );
+                        if ( $connection ) {
+                            $variantQty = DB::connection( $connection )
+                                ->table( 'product_variants' )
+                                ->where( 'id', $variantId )
+                                ->where( 'product_id', $getproduct->id )
+                                ->value( 'qty' );
+
+                            if ( $variantQty === null ) {
+                                $fail( 'Selected variant is not available!' );
+
+                                return;
+                            }
+
+                            if ( (int) $variantQty < (int) $value ) {
+                                $fail( 'Product quantity not available!' );
+                            }
+
+                            return;
+                        }
                     }
 
                     if ( request( 'purchase_type' ) == 'bulk' ) {
@@ -162,12 +192,10 @@ class ProductAddToCartRequest extends FormRequest {
             $this->input( 'tenant_id' ),
             Product::class,
             function ( $query ) {
+                // Dropshipper dashboard cart uses ProductDetails + access checks below.
+                // Do not require is_show_website — that flag is for public storefront only.
                 $query->where( 'id', $this->input( 'product_id' ) )
                     ->where( 'status', 'active' );
-
-                if ( $this->isDropshipperStorefront() ) {
-                    $query->where( 'is_show_website', 1 );
-                }
             }
         );
 

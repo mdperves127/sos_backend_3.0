@@ -16,9 +16,23 @@ class SupplierController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index() {
+        $search = request( 'search' );
+
+        $supplies = Supplier::where( 'vendor_id', vendorId() )
+            ->when( $search, function ( $query, $search ) {
+                $query->where( function ( $q ) use ( $search ) {
+                    $q->where( 'supplier_name', 'like', '%' . $search . '%' )
+                        ->orWhere( 'business_name', 'like', '%' . $search . '%' )
+                        ->orWhere( 'phone', 'like', '%' . $search . '%' )
+                        ->orWhere( 'email', 'like', '%' . $search . '%' );
+                } );
+            } )
+            ->latest()
+            ->get();
+
         return response()->json( [
             'status'   => 200,
-            'supplies' => Supplier::where( 'vendor_id', vendorId() )->latest()->get(),
+            'supplies' => $supplies,
         ] );
     }
 

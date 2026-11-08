@@ -322,8 +322,8 @@ class DropshipperAssignmentController extends Controller {
         $validator = Validator::make( $request->all(), [
             'is_private'                 => ['sometimes', 'boolean'],
             'auto_approve_dropshipper'   => ['sometimes', 'nullable', function ( $attribute, $value, $fail ) {
-                if ( ! in_array( $value, [true, false, 0, 1, '0', '1', 'true', 'false', 'inherit'], true ) ) {
-                    $fail( 'auto_approve_dropshipper must be true, false or "inherit".' );
+                if ( ! in_array( $value, [true, false, 0, 1, '0', '1', 'true', 'false', 'on', 'off', 'inherit'], true ) ) {
+                    $fail( 'auto_approve_dropshipper must be true, false, 1, 0, or "inherit".' );
                 }
             }],
             'allow_custom_selling_price' => ['sometimes', 'boolean'],
@@ -346,7 +346,8 @@ class DropshipperAssignmentController extends Controller {
 
             $changes[$field] = match ( $field ) {
                 'is_private', 'allow_custom_selling_price' => filter_var( $value, FILTER_VALIDATE_BOOLEAN ) ? 1 : 0,
-                'auto_approve_dropshipper'                 => ( $value === null || $value === '' || $value === 'inherit' ) ? null : ( filter_var( $value, FILTER_VALIDATE_BOOLEAN ) ? 1 : 0 ),
+                // Accept inherit|1|0|true|false. Keep null for category inherit.
+                'auto_approve_dropshipper'                 => $this->normalizeAutoApprove( $value ),
                 'dropshipper_price_mode'                   => $value,
                 default                                    => ( $value === null || $value === '' ) ? null : round( (float) $value, 2 ),
             };
@@ -419,19 +420,51 @@ class DropshipperAssignmentController extends Controller {
     private function productSettingsPayload( string $connection, object $product ): array {
         $categoryAutoApprove = null;
         if ( ! empty( $product->category_id ) && DB::connection( $connection )->getSchemaBuilder()->hasColumn( 'categories', 'auto_approve_dropshipper' ) ) {
-            $categoryAutoApprove = (bool) DB::connection( $connection )->table( 'categories' )->where( 'id', $product->category_id )->value( 'auto_approve_dropshipper' );
+            $rawCategory = DB::connection( $connection )
+                ->table( 'categories' )
+                ->where( 'id', $product->category_id )
+                ->value( 'auto_approve_dropshipper' );
+            // Do not use (bool) — PHP treats string "0" as true.
+            $categoryAutoApprove = $rawCategory === null ? null : ( (int) $rawCategory === 1 );
         }
 
-        $explicit = isset( $product->auto_approve_dropshipper ) ? (bool) $product->auto_approve_dropshipper : null;
+        // null = inherit category; true/false = explicit product override.
+        // Avoid (bool)/(isset) on DB values — "0" must stay false, null must stay inherit.
+        $rawExplicit = property_exists( $product, 'auto_approve_dropshipper' )
+            ? $product->auto_approve_dropshipper
+            : null;
+        $explicit = ( $rawExplicit === null || $rawExplicit === '' )
+            ? null
+            : ( (int) $rawExplicit === 1 );
 
         return [
             'product_id'                         => (int) $product->id,
-            'is_private'                         => (bool) ( $product->is_private ?? false ),
+            'is_private'                         => (int) ( $product->is_private ?? 0 ) === 1,
             'auto_approve_dropshipper'           => $explicit,
             'category_auto_approve_dropshipper'  => $categoryAutoApprove,
             'effective_auto_approve_dropshipper' => $explicit ?? (bool) $categoryAutoApprove,
             'pricing'                            => DropshipperPricingService::publicRules( $product ),
         ];
+    }
+
+    /**
+     * Normalize auto-approve payload to DB value: null (inherit), 1 (on), 0 (off).
+     */
+    private function normalizeAutoApprove( mixed $value ): ?int
+    {
+        if ( $value === null || $value === '' || $value === 'inherit' ) {
+            return null;
+        }
+
+        if ( $value === true || $value === 1 || $value === '1' || $value === 'true' || $value === 'on' ) {
+            return 1;
+        }
+
+        if ( $value === false || $value === 0 || $value === '0' || $value === 'false' || $value === 'off' ) {
+            return 0;
+        }
+
+        return filter_var( $value, FILTER_VALIDATE_BOOLEAN ) ? 1 : 0;
     }
 
     private function priceRuleError( object $product ): ?string {
