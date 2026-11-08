@@ -199,27 +199,40 @@ class ProductTabController extends Controller
             return $this->notFound();
         }
 
+        // Multipart forms send numbers as strings — coerce before validation/save.
+        $variants = ProductVariantService::normalizeVariantPriceFields(
+            $this->decodeArrayInput( $request->input( 'variants', [] ) )
+        );
+
+        $request->merge( [
+            'original_price'     => ProductVariantService::toDecimal( $request->input( 'original_price' ) ),
+            'selling_price'      => ProductVariantService::toDecimal( $request->input( 'selling_price' ) ),
+            'discount_price'     => ProductVariantService::toDecimal( $request->input( 'discount_price' ) ),
+            'alert_qty'          => ProductVariantService::toDecimal( $request->input( 'alert_qty' ) ),
+            'variants'           => $variants,
+            'variant_attributes' => $this->decodeArrayInput( $request->input( 'variant_attributes', [] ) ),
+        ] );
+
         $hasVariants = in_array( (string) $request->input( 'has_variants', '0' ), ['1', 'true'], true );
 
         $validator = Validator::make( $request->all(), [
             'original_price'                          => ['required', 'numeric', 'min:0'],
-            'selling_price'                           => ['required', 'numeric', 'min:0', 'gte:original_price'],
+            'selling_price'                           => ['required', 'numeric', 'min:0'],
             'discount_price'                          => ['nullable', 'numeric', 'min:0'],
             'alert_qty'                               => ['required', 'numeric', 'min:0'],
-            'has_variants'                            => ['required', Rule::in( ['0', '1', 0, 1, true, false] )],
-            'variant_attributes'                      => [$hasVariants ? 'required' : 'nullable', 'array'],
-            'variant_attributes.*.attribute_id'       => ['required_with:variant_attributes', 'integer', 'min:1'],
+            'has_variants'                            => ['required', Rule::in( ['0', '1', 0, 1, true, false, 'true', 'false'] )],
+            'variant_attributes'                      => ['nullable', 'array'],
+            'variant_attributes.*.attribute_id'       => ['required_with:variant_attributes'],
             'variant_attributes.*.value_ids'          => ['required_with:variant_attributes', 'array', 'min:1'],
-            'variant_attributes.*.value_ids.*'        => ['required', 'integer', 'min:1'],
             'variant_attributes.*.sort_order'         => ['nullable', 'integer', 'min:0'],
-            'variants'                                => [$hasVariants ? 'required' : 'nullable', 'array'],
-            'variants.*.id'                           => ['nullable', 'integer'],
-            'variants.*.variant_id'                   => ['nullable', 'integer'],
+            'variants'                                => [$hasVariants ? 'required' : 'nullable', 'array', $hasVariants ? 'min:1' : 'nullable'],
+            'variants.*.id'                           => ['nullable'],
+            'variants.*.variant_id'                   => ['nullable'],
             'variants.*.key'                          => ['nullable', 'string', 'max:255'],
             'variants.*.label'                        => ['nullable', 'string', 'max:255'],
             'variants.*.sku'                          => ['nullable', 'string', 'max:255'],
             'variants.*.image'                        => ['nullable', 'string', 'max:1000'],
-            'variants.*.qty'                          => ['nullable', 'integer', 'min:0'],
+            'variants.*.qty'                          => ['nullable', 'numeric', 'min:0'],
             'variants.*.price'                        => ['nullable', 'numeric', 'min:0'],
             'variants.*.rate'                         => ['nullable', 'numeric', 'min:0'],
             'variants.*.sort_order'                   => ['nullable', 'integer', 'min:0'],
@@ -230,13 +243,16 @@ class ProductTabController extends Controller
             return $this->validationError( $validator );
         }
 
-        $product->original_price = $request->original_price;
-        $product->selling_price  = $request->selling_price;
-        $product->discount_price = $request->discount_price;
-        $product->alert_qty      = $request->alert_qty;
-        $product->discount_percentage = $request->discount_price
-            ? percentage( $request->selling_price, $request->discount_price )
+        $product->original_price = ProductVariantService::toDecimal( $request->input( 'original_price' ) ) ?? 0;
+        $product->selling_price  = ProductVariantService::toDecimal( $request->input( 'selling_price' ) ) ?? 0;
+        $product->discount_price = ProductVariantService::toDecimal( $request->input( 'discount_price' ) );
+        $product->alert_qty      = ProductVariantService::toDecimal( $request->input( 'alert_qty' ) ) ?? 0;
+        $product->discount_percentage = $product->discount_price !== null
+            ? percentage( $product->selling_price, $product->discount_price )
             : null;
+
+        // Capture before overwrite — form payloads often omit id/variant_id.
+        $previousVariants = is_array( $product->variants ) ? $product->variants : [];
 
         $meta = $this->getTabMeta( $product );
         $meta['has_variants'] = $hasVariants ? 1 : 0;
@@ -244,8 +260,19 @@ class ProductTabController extends Controller
             ? array_values( (array) $request->input( 'variant_attributes', [] ) )
             : [];
 
+        $variants = [];
         if ( $hasVariants ) {
             $variants = $this->normalizeVariantsPayload( (array) $request->input( 'variants', [] ) );
+            $variants = ProductVariantService::rehydrateVariantIds( $variants, $previousVariants );
+
+            if ( $variants === [] ) {
+                return response()->json( [
+                    'status'  => 400,
+                    'message' => 'Please check the required fields.',
+                    'errors'  => ['variants' => ['At least one variant combination is required.']],
+                ], 400 );
+            }
+
             $product->variants = $variants;
             $product->qty = (string) collect( $variants )->sum( fn ( $v ) => max( 0, (int) ( $v['qty'] ?? 0 ) ) );
         } else {
@@ -256,13 +283,20 @@ class ProductTabController extends Controller
         $product->save();
 
         if ( $hasVariants ) {
+            // Sync using the in-memory normalized payload (avoid refresh wiping unsynced cast quirks).
+            $product->variants = $variants;
             ProductVariantService::syncFromProductVariantsJson( $product, null, false );
+            $product->refresh();
         }
 
         return response()->json( [
-            'status'     => 200,
-            'message'    => 'Price updated',
-            'product_id' => $product->id,
+            'status'          => 200,
+            'message'         => 'Price updated',
+            'product_id'      => $product->id,
+            'selling_price'   => (float) $product->selling_price,
+            'original_price'  => (float) $product->original_price,
+            'discount_price'  => $product->discount_price !== null ? (float) $product->discount_price : null,
+            'variants'        => $product->variants,
         ] );
     }
 
@@ -473,7 +507,7 @@ class ProductTabController extends Controller
         $controller = new self();
         $meta       = $controller->getTabMeta( $product );
 
-        $shipping = $meta['shipping'] ?? [
+        $shipping = array_merge( [
             'is_physical_product' => 0,
             'package_type_id'     => null,
             'length'              => null,
@@ -482,14 +516,19 @@ class ProductTabController extends Controller
             'dimension_unit'      => 'in',
             'weight'              => null,
             'weight_unit'         => 'lb',
-        ];
+        ], is_array( $meta['shipping'] ?? null ) ? $meta['shipping'] : [] );
 
+        // Nested object for the shipping tab + flat keys for older clients.
+        $product->setAttribute( 'shipping', $shipping );
         foreach ( $shipping as $key => $value ) {
             $product->setAttribute( $key, $value );
         }
 
         $product->setAttribute( 'has_variants', (int) ( $meta['has_variants'] ?? ( is_array( $product->variants ) && $product->variants !== [] ? 1 : 0 ) ) );
-        $product->setAttribute( 'variant_attributes', $meta['variant_attributes'] ?? [] );
+        $product->setAttribute( 'variant_attributes', array_values( (array) ( $meta['variant_attributes'] ?? [] ) ) );
+
+        // Do not leak raw meta JSON blob in edit payload.
+        $product->makeHidden( ['request'] );
     }
 
     private function findOwnedProduct( $id ): ?Product
@@ -536,6 +575,22 @@ class ProductTabController extends Controller
     }
 
     /**
+     * Decode JSON-string or array request payloads (multipart often sends JSON strings).
+     *
+     * @param  mixed  $value
+     * @return array<int, mixed>
+     */
+    private function decodeArrayInput( $value ): array
+    {
+        if ( is_string( $value ) ) {
+            $decoded = json_decode( $value, true );
+            $value   = is_array( $decoded ) ? $decoded : [];
+        }
+
+        return is_array( $value ) ? array_values( $value ) : [];
+    }
+
+    /**
      * @param  array<int, mixed>  $variants
      * @return array<int, array<string, mixed>>
      */
@@ -549,24 +604,35 @@ class ProductTabController extends Controller
                 $options = is_array( $decoded ) ? $decoded : [];
             }
 
-            $price = $variant['price'] ?? $variant['rate'] ?? 0;
+            $id = $variant['variant_id'] ?? $variant['id'] ?? null;
+            $id = is_numeric( $id ) ? (int) $id : null;
 
-            return [
-                'id'         => $variant['id'] ?? $variant['variant_id'] ?? null,
-                'variant_id' => $variant['variant_id'] ?? $variant['id'] ?? null,
+            $row = [
+                'id'         => $id,
+                'variant_id' => $id,
                 'key'        => $variant['key'] ?? null,
                 'label'      => $variant['label'] ?? null,
                 'sku'        => $variant['sku'] ?? null,
                 'image'      => $variant['image'] ?? null,
                 'qty'        => max( 0, (int) ( $variant['qty'] ?? 0 ) ),
-                'price'      => max( 0, (float) $price ),
-                'rate'       => max( 0, (float) $price ),
                 'sort_order' => (int) ( $variant['sort_order'] ?? $index ),
                 'options'    => array_values( (array) $options ),
                 'unit_id'    => $variant['unit_id'] ?? null,
                 'size_id'    => $variant['size_id'] ?? null,
                 'color_id'   => $variant['color_id'] ?? null,
             ];
+
+            // Only set price/rate when the client explicitly sent a numeric value
+            // (multipart sends strings like "120" — coerce via toDecimal).
+            $price = ProductVariantService::toDecimal( $variant['price'] ?? null );
+            $rate  = ProductVariantService::toDecimal( $variant['rate'] ?? null );
+            if ( $price !== null || $rate !== null ) {
+                $amount        = $price ?? $rate;
+                $row['price']  = $amount;
+                $row['rate']   = $amount;
+            }
+
+            return $row;
         } )->values()->toArray();
     }
 
@@ -577,13 +643,36 @@ class ProductTabController extends Controller
             return [];
         }
 
-        $decoded = json_decode( (string) $raw, true );
+        if ( is_array( $raw ) ) {
+            return $raw;
+        }
 
-        return is_array( $decoded ) ? $decoded : [];
+        $decoded = json_decode( (string) $raw, true );
+        if ( is_array( $decoded ) ) {
+            return $decoded;
+        }
+
+        // Recover partially truncated JSON when possible (legacy varchar(255) column).
+        $trimmed = trim( (string) $raw );
+        if ( $trimmed !== '' && $trimmed[0] === '{' ) {
+            $repaired = $trimmed;
+            if ( ! str_ends_with( $repaired, '}' ) ) {
+                $repaired .= '}';
+            }
+            $decoded = json_decode( $repaired, true );
+            if ( is_array( $decoded ) ) {
+                return $decoded;
+            }
+        }
+
+        return [];
     }
 
     private function putTabMeta( Product $product, array $meta ): void
     {
-        $product->setAttribute( 'request', json_encode( $meta ) );
+        // Top-level merge: price/options tabs keep shipping; shipping tab keeps variant meta.
+        // (Do not use array_replace_recursive — it cannot clear arrays like variant_attributes.)
+        $merged = array_merge( $this->getTabMeta( $product ), $meta );
+        $product->setAttribute( 'request', json_encode( $merged, JSON_UNESCAPED_UNICODE ) );
     }
 }

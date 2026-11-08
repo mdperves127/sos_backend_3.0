@@ -9,9 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class ProductVariant extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    protected $connection = 'tenant';
 
     protected $guarded = [];
+
+    protected $casts = [
+        'rate' => 'decimal:2',
+        'qty'  => 'integer',
+    ];
 
     public function color()
     {

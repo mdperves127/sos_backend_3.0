@@ -40,6 +40,21 @@ class ProductService {
                 return $q->where( 'category_id', request( 'category' ) );
             } )
 
+            ->when( request()->filled( 'is_affiliate' ), function ( $q ) {
+                $isAffiliate = request( 'is_affiliate' );
+                // Accept 1/0, "1"/"0", true/false, "true"/"false"
+                if ( in_array( $isAffiliate, [1, '1', true, 'true'], true ) ) {
+                    return $q->where( 'is_affiliate', 1 );
+                }
+                if ( in_array( $isAffiliate, [0, '0', false, 'false'], true ) ) {
+                    return $q->where( function ( $query ) {
+                        $query->where( 'is_affiliate', 0 )->orWhereNull( 'is_affiliate' );
+                    } );
+                }
+
+                return $q->where( 'is_affiliate', (int) $isAffiliate );
+            } )
+
             ->when( $startDate && $endDate, function ( $q ) use ( $startDate, $endDate ) {
                 $q->whereDate( 'created_at', '>=', $startDate )
                     ->whereDate( 'created_at', '<=', $endDate );
@@ -80,34 +95,56 @@ class ProductService {
     }
 
     public static function productVariants( $product_ids, $variant, $purchaseStatus ) {
-        $variantsData = [];
-        foreach ( $product_ids as $key => $product_id ) {
-            $variantsData[] = [
-                'user_id'    => vendorId(),
-                'product_id' => $product_id,
-                'unit_id'    => $variant['unit_id'][$key] ?? null,
-                'size_id'    => $variant['size_id'][$key] ?? null,
-                'color_id'   => $variant['color_id'][$key] ?? null,
-                'qty'        => $purchaseStatus == "received" ? $variant['qty'][$key] : 0,
-                'rate'       => $variant['rate'][$key],
-            ];
+        if ( $purchaseStatus !== 'received' ) {
+            return;
         }
 
-        foreach ( $variantsData as $variantData ) {
-            if ( $purchaseStatus !== 'received' ) {
+        foreach ( $product_ids as $key => $product_id ) {
+            $qty = max( 0, (int) ( $variant['qty'][$key] ?? 0 ) );
+            if ( $qty <= 0 ) {
                 continue;
             }
 
-            ProductVariantService::incrementStock(
-                (int) $variantData['product_id'],
-                ProductVariantService::normalizeNullableId( $variantData['unit_id'] ),
-                ProductVariantService::normalizeNullableId( $variantData['size_id'] ),
-                ProductVariantService::normalizeNullableId( $variantData['color_id'] ),
-                (int) $variantData['qty'],
-                vendorId()
-            );
-        }
+            $variantId = ProductVariantService::normalizeNullableId( $variant['variant_id'][$key] ?? null );
 
+            if ( $variantId ) {
+                ProductVariantService::incrementStock(
+                    (int) $product_id,
+                    ProductVariantService::normalizeNullableId( $variant['unit_id'][$key] ?? null ),
+                    ProductVariantService::normalizeNullableId( $variant['size_id'][$key] ?? null ),
+                    ProductVariantService::normalizeNullableId( $variant['color_id'][$key] ?? null ),
+                    $qty,
+                    vendorId(),
+                    $variantId
+                );
+
+                continue;
+            }
+
+            // Legacy unit/size/color lines (no variant_id).
+            $unitId  = ProductVariantService::normalizeNullableId( $variant['unit_id'][$key] ?? null );
+            $sizeId  = ProductVariantService::normalizeNullableId( $variant['size_id'][$key] ?? null );
+            $colorId = ProductVariantService::normalizeNullableId( $variant['color_id'][$key] ?? null );
+
+            if ( $unitId || $sizeId || $colorId ) {
+                ProductVariantService::incrementStock(
+                    (int) $product_id,
+                    $unitId,
+                    $sizeId,
+                    $colorId,
+                    $qty,
+                    vendorId()
+                );
+
+                continue;
+            }
+
+            $product = \App\Models\Product::find( $product_id );
+            if ( $product ) {
+                $product->qty = (string) ( max( 0, (int) $product->qty ) + $qty );
+                $product->saveQuietly();
+            }
+        }
     }
 
 }

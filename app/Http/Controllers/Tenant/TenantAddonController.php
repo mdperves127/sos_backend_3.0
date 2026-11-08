@@ -67,17 +67,50 @@ class TenantAddonController extends Controller
 
     /**
      * List installed / active addons for the current tenant.
+     * Includes each addon's public feature key/value pairs.
      */
     public function installed(): JsonResponse
     {
         $this->tenantTypeOrFail();
 
         $items = TenantInstalledAddon::on( 'mysql' )
-            ->with( 'addon' )
+            ->with( [ 'addon.features' ] )
             ->where( 'tenant_id', tenant()->id )
             ->where( 'status', 'active' )
             ->latest( 'activated_at' )
-            ->get();
+            ->get()
+            ->map( function ( TenantInstalledAddon $installation ) {
+                $row   = $installation->toArray();
+                $addon = $installation->addon;
+
+                $publicFeatures = collect( $addon?->features ?? [] )
+                    ->where( 'visibility', 'public' )
+                    ->values()
+                    ->map( fn ( $feature ) => [
+                        'key'        => $feature->key,
+                        'value'      => $feature->value,
+                        'visibility' => $feature->visibility,
+                    ] )
+                    ->all();
+
+                if ( isset( $row['addon'] ) && is_array( $row['addon'] ) ) {
+                    $row['addon']['features']        = $publicFeatures;
+                    $row['addon']['public_features'] = $publicFeatures;
+                    $row['addon']['feature_values']  = collect( $publicFeatures )
+                        ->mapWithKeys( fn ( $feature ) => [ (string) $feature['key'] => $feature['value'] ] )
+                        ->all();
+                }
+
+                // Flat convenience fields on the installation row.
+                $row['features']        = $publicFeatures;
+                $row['public_features'] = $publicFeatures;
+                $row['feature_values']  = collect( $publicFeatures )
+                    ->mapWithKeys( fn ( $feature ) => [ (string) $feature['key'] => $feature['value'] ] )
+                    ->all();
+
+                return $row;
+            } )
+            ->values();
 
         return response()->json( [
             'status'  => 200,

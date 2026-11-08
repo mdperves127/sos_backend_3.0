@@ -11,7 +11,8 @@ class Order extends Model {
     protected $guarded = [];
 
     protected $casts = [
-        'variants' => 'array',
+        'variants'  => 'array',
+        'form_data' => 'array',
     ];
 
     /**

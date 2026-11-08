@@ -14,9 +14,10 @@ use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\Unit;
 use App\Models\VendorInfo;
+use App\Models\Warehouse;
 use App\Service\Vendor\ProductPurchaseService;
 use App\Service\Vendor\ProductVariantService;
-use App\Service\Vendor\ProductService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -79,8 +80,15 @@ class ProductPurchaseController extends Controller {
                         ->orWhere( 'sku', 'like', '%' . $search . '%' );
                 } );
             } )
-            ->select( 'id', 'name', 'sku', 'original_price', 'selling_price', 'qty', 'image', 'supplier_id' )
-            ->get();
+            ->select( 'id', 'name', 'sku', 'original_price', 'selling_price', 'qty', 'image', 'supplier_id', 'warehouse_id', 'variants' )
+            ->get()
+            ->map( function ( Product $product ) {
+                $variants = is_array( $product->variants ) ? $product->variants : [];
+                $product->setAttribute( 'has_variants', $variants !== [] || ProductVariant::where( 'product_id', $product->id )->exists() ? 1 : 0 );
+                $product->setAttribute( 'variants', $variants );
+
+                return $product;
+            } );
 
         return response()->json( [
             'status'   => 200,
@@ -90,9 +98,35 @@ class ProductPurchaseController extends Controller {
     }
 
     public function store( Request $request ) {
+        // Normalize multipart/JSON line arrays and string decimals.
+        $productIds = array_values( (array) $request->input( 'product_id', [] ) );
+        $variantIds = array_values( (array) $request->input( 'variant_id', [] ) );
+        $qtys       = array_values( (array) $request->input( 'qty', [] ) );
+        $rates      = array_values( (array) $request->input( 'rate', [] ) );
+        $subTotals  = array_values( (array) $request->input( 'sub_total', [] ) );
+
+        // Pad variant_id to product_id length when omitted for non-variant rows.
+        while ( count( $variantIds ) < count( $productIds ) ) {
+            $variantIds[] = null;
+        }
+
+        $request->merge( [
+            'product_id'       => $productIds,
+            'variant_id'       => $variantIds,
+            'qty'              => $qtys,
+            'rate'             => array_map( fn ( $v ) => ProductVariantService::toDecimal( $v ) ?? $v, $rates ),
+            'sub_total'        => array_map( fn ( $v ) => ProductVariantService::toDecimal( $v ) ?? $v, $subTotals ),
+            'paid_amount'      => ProductVariantService::toDecimal( $request->input( 'paid_amount' ) ) ?? $request->input( 'paid_amount' ),
+            'due_amount'       => ProductVariantService::toDecimal( $request->input( 'due_amount' ) ) ?? $request->input( 'due_amount' ),
+            'purchase_discount'=> ProductVariantService::toDecimal( $request->input( 'purchase_discount' ) ) ?? $request->input( 'purchase_discount', 0 ),
+            'total_price'      => ProductVariantService::toDecimal( $request->input( 'total_price' ) ) ?? $request->input( 'total_price' ),
+            'grand_total'      => ProductVariantService::toDecimal( $request->input( 'grand_total' ) ) ?? $request->input( 'grand_total' ),
+            'total_qty'        => ProductVariantService::toDecimal( $request->input( 'total_qty' ) ) ?? $request->input( 'total_qty' ),
+        ] );
+
         $validator = Validator::make( $request->all(), [
-            'chalan_no'     => 'required|unique:product_purchases',
-            'supplier_id'   => [
+            'chalan_no'          => 'required|unique:product_purchases,chalan_no',
+            'supplier_id'        => [
                 'required',
                 'integer',
                 function ( $attribute, $value, $fail ) {
@@ -105,13 +139,29 @@ class ProductPurchaseController extends Controller {
                     }
                 },
             ],
-            'purchase_date' => 'required|date',
-            'status'        => 'required|in:ordered,received',
-            'payment_id'    => 'required',
-            'paid_amount'   => 'numeric|min:0',
-            'total_price'   => 'numeric|min:0',
-            'product_id'    => 'required|array|min:1',
-            'product_id.*'  => [
+            'warehouse_id'       => [
+                'required',
+                'integer',
+                function ( $attribute, $value, $fail ) {
+                    $exists = Warehouse::where( 'id', $value )
+                        ->where( 'vendor_id', vendorId() )
+                        ->where( 'status', 'active' )
+                        ->exists();
+                    if ( ! $exists ) {
+                        $fail( 'Selected warehouse is invalid or inactive.' );
+                    }
+                },
+            ],
+            'purchase_date'      => 'required',
+            'status'             => 'required|in:ordered,received',
+            'payment_id'         => 'required',
+            'paid_amount'        => 'required|numeric|min:0',
+            'due_amount'         => 'required|numeric|min:0',
+            'purchase_discount'  => 'required|numeric|min:0',
+            'total_price'        => 'required|numeric|min:0',
+            'total_qty'          => 'nullable|numeric|min:0',
+            'product_id'         => 'required|array|min:1',
+            'product_id.*'       => [
                 'required',
                 'integer',
                 function ( $attribute, $value, $fail ) {
@@ -123,93 +173,178 @@ class ProductPurchaseController extends Controller {
                     }
                 },
             ],
-            'unit_id'       => 'required|array',
-            'unit_id.*'     => 'required',
-            'rate'          => 'required|array',
-            'rate.*'        => 'required|numeric|min:0',
-            'sub_total'     => 'required|array',
-            'sub_total.*'   => 'required|numeric|min:0',
-            'qty'           => 'required|array',
-            'qty.*'         => 'required|integer|min:1',
+            'variant_id'         => 'nullable|array',
+            'variant_id.*'       => 'nullable',
+            'unit_id'            => 'nullable|array',
+            'unit_id.*'          => 'nullable',
+            'size_id'            => 'nullable|array',
+            'color_id'           => 'nullable|array',
+            'rate'               => 'required|array',
+            'rate.*'             => 'required|numeric|min:0',
+            'sub_total'          => 'required|array',
+            'sub_total.*'        => 'required|numeric|min:0',
+            'qty'                => 'required|array',
+            'qty.*'              => 'required|integer|min:1',
+            'note'               => 'nullable|string',
         ], [
-            'chalan_no.required'           => 'Chalan number is required.',
-            'chalan_no.unique'             => 'Chalan number must be unique.',
-            'supplier_id.required'         => 'Select the supplier you purchased from.',
-            'supplier_id.exists'           => 'Selected supplier is invalid or inactive.',
-            'purchase_date.required'       => 'Purchase date is required.',
-            'purchase_date.date'           => 'Purchase date must be a valid date.',
-            'status.required'              => 'Status is required.',
-            'payment_id.required'          => 'Payment ID is required.',
-            'paid_amount.numeric'          => 'Paid amount must be numeric.',
-            'total_price.numeric'          => 'Total price must be numeric.',
-            'product_id.required'          => 'Select at least one product.',
-            'product_id.*.required'        => 'Product ID is required for all details.',
-            'product_id.*.exists'          => 'One or more selected products are invalid.',
-            'unit_id.*.required'           => 'Unit ID is required for all details.',
-            'rate.*.required'              => 'Rate is required for all details.',
-            'rate.*.numeric'               => 'Rate must be numeric for all details.',
-            'rate.*.min'                   => 'Rate must be at least 0 for all details.',
-            'sub_total.*.required'         => 'Subtotal is required for all details.',
-            'sub_total.*.numeric'          => 'Subtotal must be numeric for all details.',
-            'sub_total.*.min'              => 'Subtotal must be at least 0 for all details.',
-            'qty.*.required'               => 'Quantity is required for all details.',
-            'qty.*.integer'                => 'Quantity must be an integer for all details.',
-            'qty.*.min'                    => 'Quantity must be at least 1 for all details.',
+            'chalan_no.required'     => 'Chalan number is required.',
+            'chalan_no.unique'       => 'Chalan number must be unique.',
+            'supplier_id.required'   => 'Select the supplier you purchased from.',
+            'warehouse_id.required'  => 'Select the warehouse for this purchase.',
+            'purchase_date.required' => 'Purchase date is required.',
+            'status.required'        => 'Status is required.',
+            'payment_id.required'    => 'Payment ID is required.',
+            'product_id.required'    => 'Select at least one product.',
+            'qty.*.min'              => 'Quantity must be at least 1 for all details.',
         ] );
+
+        $validator->after( function ( $validator ) use ( $request ) {
+            $productIds = (array) $request->input( 'product_id', [] );
+            $variantIds = (array) $request->input( 'variant_id', [] );
+            $qtys       = (array) $request->input( 'qty', [] );
+            $rates      = (array) $request->input( 'rate', [] );
+            $subTotals  = (array) $request->input( 'sub_total', [] );
+            $count      = count( $productIds );
+
+            if ( count( $qtys ) !== $count || count( $rates ) !== $count || count( $subTotals ) !== $count ) {
+                $validator->errors()->add( 'product_id', 'product_id, qty, rate and sub_total arrays must be the same length.' );
+            }
+
+            if ( count( $variantIds ) !== $count ) {
+                $validator->errors()->add( 'variant_id', 'variant_id array must match product_id length.' );
+            }
+
+            $purchaseDate = $this->normalizePurchaseDate( $request->input( 'purchase_date' ) );
+            if ( $purchaseDate === null ) {
+                $validator->errors()->add( 'purchase_date', 'Purchase date must be a valid date (dd-MM-yyyy).' );
+            }
+
+            foreach ( $productIds as $index => $productId ) {
+                $product = Product::where( 'id', $productId )
+                    ->where( 'vendor_id', vendorId() )
+                    ->first();
+
+                if ( ! $product ) {
+                    continue;
+                }
+
+                $rawVariantId = $variantIds[$index] ?? null;
+                $variantId    = ProductVariantService::normalizeNullableId( $rawVariantId );
+
+                if ( ProductPurchaseService::productHasVariants( $product ) ) {
+                    if ( ! $variantId ) {
+                        $validator->errors()->add(
+                            "variant_id.$index",
+                            'A variant is required for product #' . $productId . '.'
+                        );
+                        continue;
+                    }
+
+                    $belongs = ProductVariant::where( 'product_id', $productId )
+                        ->where( 'id', $variantId )
+                        ->exists();
+
+                    if ( ! $belongs ) {
+                        $validator->errors()->add(
+                            "variant_id.$index",
+                            'Variant #' . $variantId . ' does not belong to product #' . $productId . '.'
+                        );
+                    }
+                } elseif ( $variantId ) {
+                    $belongs = ProductVariant::where( 'product_id', $productId )
+                        ->where( 'id', $variantId )
+                        ->exists();
+
+                    if ( ! $belongs ) {
+                        $validator->errors()->add(
+                            "variant_id.$index",
+                            'Variant #' . $variantId . ' does not belong to product #' . $productId . '.'
+                        );
+                    }
+                }
+            }
+        } );
 
         if ( $validator->fails() ) {
             return response()->json( [
                 'status' => 400,
                 'errors' => $validator->messages(),
-            ] );
+            ], 400 );
         }
 
         try {
             $purchase = DB::transaction( function () use ( $request ) {
-                $productIds = $request->product_id;
-                $totalQty   = $request->total_qty ?: array_sum( array_map( 'intval', (array) $request->qty ) );
-                $dueAmount  = $request->due_amount;
+                $productIds   = array_values( (array) $request->product_id );
+                $variantIds   = array_values( (array) $request->input( 'variant_id', [] ) );
+                $totalQty     = (int) ( $request->total_qty ?: array_sum( array_map( 'intval', (array) $request->qty ) ) );
+                $totalPrice   = (float) ( $request->input( 'grand_total', $request->total_price ) );
+                $dueAmount    = $request->due_amount;
                 if ( $dueAmount === null ) {
-                    $dueAmount = max( 0, (float) $request->total_price - (float) $request->paid_amount );
+                    $dueAmount = max( 0, $totalPrice - (float) $request->paid_amount );
                 }
+                $purchaseDate = $this->normalizePurchaseDate( $request->purchase_date ) ?? $request->purchase_date;
 
                 $purchase                    = new ProductPurchase();
                 $purchase->supplier_id       = $request->supplier_id;
+                $purchase->warehouse_id      = $request->warehouse_id;
                 $purchase->chalan_no         = $request->chalan_no;
                 $purchase->user_id           = Auth::id();
-                $purchase->purchase_date     = $request->purchase_date;
+                $purchase->purchase_date     = $purchaseDate;
                 $purchase->payment_id        = $request->payment_id;
                 $purchase->paid_amount       = $request->paid_amount;
                 $purchase->total_qty         = $totalQty;
-                $purchase->total_price       = $request->total_price;
+                $purchase->total_price       = $totalPrice;
                 $purchase->due_amount        = $dueAmount;
-                $purchase->purchase_discount = $request->purchase_discount;
+                $purchase->purchase_discount = $request->purchase_discount ?? 0;
                 $purchase->status            = $request->status;
-                $purchase->payment_status    = (float) $request->total_price == (float) $request->paid_amount ? 'paid' : 'due';
+                $purchase->payment_status    = (float) $totalPrice == (float) $request->paid_amount ? 'paid' : 'due';
                 $purchase->vendor_id         = vendorId();
                 $purchase->note              = $request->note;
                 $purchase->save();
 
                 foreach ( $productIds as $key => $product_id ) {
+                    $variantId = ProductVariantService::normalizeNullableId( $variantIds[$key] ?? null );
+                    $unitId    = ProductVariantService::normalizeNullableId( $request->unit_id[$key] ?? null );
+                    $sizeId    = ProductVariantService::normalizeNullableId( $request->size_id[$key] ?? null );
+                    $colorId   = ProductVariantService::normalizeNullableId( $request->color_id[$key] ?? null );
+
+                    // Prefer attrs from the selected product_variants row when variant_id is sent.
+                    if ( $variantId ) {
+                        $dbVariant = ProductVariant::where( 'product_id', $product_id )
+                            ->where( 'id', $variantId )
+                            ->first();
+                        if ( $dbVariant ) {
+                            $unitId  = $unitId ?? ProductVariantService::normalizeNullableId( $dbVariant->unit_id );
+                            $sizeId  = $sizeId ?? ProductVariantService::normalizeNullableId( $dbVariant->size_id );
+                            $colorId = $colorId ?? ProductVariantService::normalizeNullableId( $dbVariant->color_id );
+                        }
+                    }
+
                     $purchaseDetails                      = new ProductPurchaseDetails();
                     $purchaseDetails->product_purchase_id = $purchase->id;
                     $purchaseDetails->product_id          = $product_id;
-                    $purchaseDetails->unit_id             = $request->unit_id[$key];
-                    $purchaseDetails->size_id             = $request->size_id[$key] ?? null;
-                    $purchaseDetails->color_id            = $request->color_id[$key] ?? null;
-                    $purchaseDetails->qty                 = $request->qty[$key];
-                    $purchaseDetails->rate                = $request->rate[$key];
-                    $purchaseDetails->sub_total           = $request->sub_total[$key];
+                    $purchaseDetails->variant_id          = $variantId;
+                    $purchaseDetails->unit_id             = $unitId;
+                    $purchaseDetails->size_id             = $sizeId;
+                    $purchaseDetails->color_id            = $colorId;
+                    $purchaseDetails->qty                 = (int) $request->qty[$key];
+                    $purchaseDetails->rate                = ProductVariantService::toDecimal( $request->rate[$key] ) ?? 0;
+                    $purchaseDetails->sub_total           = ProductVariantService::toDecimal( $request->sub_total[$key] ) ?? 0;
                     $purchaseDetails->save();
+
+                    if ( $request->status === 'received' ) {
+                        ProductPurchaseService::applyReceivedStock( $purchaseDetails );
+                    }
                 }
 
                 Product::whereIn( 'id', $productIds )
                     ->where( 'vendor_id', vendorId() )
-                    ->update( ['supplier_id' => $request->supplier_id] );
+                    ->update( [
+                        'supplier_id'  => $request->supplier_id,
+                        'warehouse_id' => $request->warehouse_id,
+                    ] );
 
-                ProductService::productVariants( $productIds, $request->all(), $request->status );
-
-                if ( $request->paid_amount > 0 ) {
+                if ( (float) $request->paid_amount > 0 ) {
                     $purchase['partial_payment'] = 0;
                     ProductPurchaseService::supplierPayment( $purchase );
                 }
@@ -224,68 +359,98 @@ class ProductPurchaseController extends Controller {
         }
 
         return response()->json( [
-            'status'      => 200,
-            'message'     => 'Product successfully purchased from supplier.',
-            'purchase_id' => $purchase->id,
-            'supplier_id' => (int) $purchase->supplier_id,
+            'status'       => 200,
+            'message'      => 'Product successfully purchased from supplier.',
+            'purchase_id'  => $purchase->id,
+            'supplier_id'  => (int) $purchase->supplier_id,
+            'warehouse_id' => (int) $purchase->warehouse_id,
         ] );
     }
 
     public function show( $id ) {
+        $purchase = ProductPurchaseService::show( $id );
+
+        if ( ! $purchase ) {
+            return response()->json( [
+                'status'  => 404,
+                'message' => 'Product purchase not found.',
+            ], 404 );
+        }
+
         return response()->json( [
             'status'        => 200,
             'logo'          => VendorInfo::first(),
-            'purchase_show' => ProductPurchaseService::show( $id ),
+            'purchase_show' => $purchase,
         ] );
     }
 
     public function status( $id ) {
-        $purchase = ProductPurchase::find( $id );
+        $purchase = ProductPurchase::where( 'vendor_id', vendorId() )->find( $id );
 
-        if ( !$purchase ) {
+        if ( ! $purchase ) {
             return response()->json( [
                 'status'  => 404,
                 'message' => 'Product purchase not found.',
-            ] );
+            ], 404 );
         }
 
         if ( $purchase->status == 'received' ) {
             return response()->json( [
                 'status'  => 400,
                 'message' => 'Product already received.',
-            ] );
+            ], 400 );
         }
 
-        $productDetails = ProductPurchaseDetails::where( 'product_purchase_id', $purchase->id )->get();
+        try {
+            DB::transaction( function () use ( $purchase ) {
+                $productDetails = ProductPurchaseDetails::where( 'product_purchase_id', $purchase->id )->get();
 
-        foreach ( $productDetails as $productDetail ) {
-            $receivedQty = (int) $productDetail->qty;
+                foreach ( $productDetails as $productDetail ) {
+                    ProductPurchaseService::applyReceivedStock( $productDetail );
+                }
 
-            $productVariant = ProductVariantService::findOrCreateVariant(
-                (int) $productDetail->product_id,
-                ProductVariantService::normalizeNullableId( $productDetail->unit_id ),
-                ProductVariantService::normalizeNullableId( $productDetail->size_id ),
-                ProductVariantService::normalizeNullableId( $productDetail->color_id ),
-                vendorId()
-            );
-            $productVariant->qty = (int) ( $productVariant->qty ?? 0 ) + $receivedQty;
-            $productVariant->save();
-
-            // Update qty for the product
-            $product = Product::find( $productDetail->product_id );
-            if ( $product ) {
-                ProductVariantService::syncJsonFromDb( $product );
-                ProductVariantService::recalculateProductQty( $product );
-            }
+                $purchase->status = 'received';
+                $purchase->save();
+            } );
+        } catch ( \Throwable $e ) {
+            return response()->json( [
+                'status'  => 500,
+                'message' => 'Failed to receive purchase: ' . $e->getMessage(),
+            ], 500 );
         }
-
-        $purchase->status = 'received';
-        $purchase->save();
 
         return response()->json( [
             'status'  => 200,
             'message' => 'Product successfully received.',
         ] );
+    }
+
+    /**
+     * Accept dd-MM-yyyy (frontend) or standard Y-m-d / parseable dates.
+     */
+    private function normalizePurchaseDate( $value ): ?string {
+        if ( $value === null || $value === '' ) {
+            return null;
+        }
+
+        $value = trim( (string) $value );
+
+        foreach ( ['d-m-Y', 'Y-m-d', 'd/m/Y', 'm/d/Y'] as $format ) {
+            try {
+                $date = Carbon::createFromFormat( $format, $value );
+                if ( $date !== false && $date->format( $format ) === $value ) {
+                    return $date->format( 'Y-m-d' );
+                }
+            } catch ( \Throwable $e ) {
+                // try next format
+            }
+        }
+
+        try {
+            return Carbon::parse( $value )->format( 'Y-m-d' );
+        } catch ( \Throwable $e ) {
+            return null;
+        }
     }
 
     public function addPayment( $id ) {

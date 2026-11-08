@@ -2,7 +2,10 @@
 
 namespace App\Service\Vendor;
 
+use App\Models\Product;
 use App\Models\ProductPurchase;
+use App\Models\ProductPurchaseDetails;
+use App\Models\ProductVariant;
 use App\Models\SupplierPayment;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,11 +38,12 @@ class ProductPurchaseService {
                 $endDate   = request( 'end_date' );
                 return $q->whereBetween( 'purchase_date', [$startDate, $endDate] );
             } )
-            ->select( 'id', 'chalan_no', 'status', 'total_price', 'purchase_date', 'payment_status', 'due_amount', 'supplier_id', 'total_qty', 'return_qty' )
+            ->select( 'id', 'chalan_no', 'status', 'total_price', 'purchase_date', 'payment_status', 'due_amount', 'supplier_id', 'warehouse_id', 'total_qty', 'return_qty' )
 
             ->with( ['supplier' => function ( $query ) {
                 $query->select( 'id', 'supplier_name', 'business_name' );
             }] )
+            ->with( 'warehouse' )
             ->with( 'purchaseDetails' )
             ->paginate( 10 )
             ->withQueryString();
@@ -51,13 +55,93 @@ class ProductPurchaseService {
     public static function show( $id ) {
         $purchaseShow = ProductPurchase::whereId( $id )
             ->with( ['purchaseDetails' => function ( $query ) {
-                $query->select( 'id', 'product_purchase_id', 'product_id', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total' )->with( 'product', 'color', 'size', 'unit' );
+                $query->select( 'id', 'product_purchase_id', 'product_id', 'variant_id', 'color_id', 'unit_id', 'size_id', 'qty', 'rate', 'sub_total' )
+                    ->with( [
+                        'product:id,name,sku,image,variants,original_price,selling_price,qty',
+                        'color:id,name',
+                        'size:id,name',
+                        'unit:id,unit_name',
+                        'productVariant:id,product_id,unit_id,size_id,color_id,qty,rate',
+                    ] );
             }] )
             ->with( ['supplier' => function ( $query ) {
                 $query->select( 'id', 'supplier_name', 'phone', 'email', 'address' );
             }] )
+            ->with( 'warehouse' )
             ->first();
+
+        if ( ! $purchaseShow ) {
+            return null;
+        }
+
+        $purchaseShow->purchaseDetails->transform( function ( ProductPurchaseDetails $detail ) {
+            $variantPayload = $detail->resolveVariantPayload();
+
+            $detail->setAttribute( 'variant', $variantPayload );
+            $detail->setAttribute( 'variant_label', $variantPayload['label'] ?? null );
+            $detail->setAttribute( 'variant_key', $variantPayload['key'] ?? null );
+            $detail->setAttribute( 'variant_options', $variantPayload['options'] ?? [] );
+
+            // Expose product variants list for edit/reselect UIs.
+            if ( $detail->product ) {
+                $productVariants = is_array( $detail->product->variants ) ? $detail->product->variants : [];
+                $detail->product->setAttribute( 'variants', $productVariants );
+                $detail->product->setAttribute(
+                    'has_variants',
+                    $productVariants !== [] || ProductVariant::where( 'product_id', $detail->product_id )->exists() ? 1 : 0
+                );
+            }
+
+            return $detail;
+        } );
+
         return $purchaseShow;
+    }
+
+    /**
+     * Apply received purchase stock for one line (variant-aware).
+     */
+    public static function applyReceivedStock( ProductPurchaseDetails $detail ): void {
+        $qty = max( 0, (int) $detail->qty );
+        if ( $qty <= 0 ) {
+            return;
+        }
+
+        $variantId = ProductVariantService::normalizeNullableId( $detail->variant_id );
+
+        if ( $variantId ) {
+            ProductVariantService::incrementStock(
+                (int) $detail->product_id,
+                ProductVariantService::normalizeNullableId( $detail->unit_id ),
+                ProductVariantService::normalizeNullableId( $detail->size_id ),
+                ProductVariantService::normalizeNullableId( $detail->color_id ),
+                $qty,
+                vendorId(),
+                $variantId
+            );
+
+            return;
+        }
+
+        // No variant: bump product-level qty only (do not invent a null/null/null variant row).
+        $product = Product::find( $detail->product_id );
+        if ( ! $product ) {
+            return;
+        }
+
+        $product->qty = (string) ( max( 0, (int) $product->qty ) + $qty );
+        $product->saveQuietly();
+    }
+
+    /**
+     * Whether the product currently has variant combinations configured.
+     */
+    public static function productHasVariants( Product $product ): bool {
+        if ( is_array( $product->variants ) && $product->variants !== [] ) {
+            return true;
+        }
+
+        return ProductVariant::where( 'product_id', $product->id )->exists();
     }
 
     // public static function productVariants($product_ids , $variant ,$purchaseStatus)

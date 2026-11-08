@@ -41,7 +41,7 @@ class ProductRequest extends FormRequest {
             'datas'                  => ['required', 'array'],
             'datas.*.name'           => ['required'],
             'datas.*.phone'          => ['required', 'string', 'min:10'],
-            'datas.*.email'          => ['required', 'email'],
+            'datas.*.email'          => ['nullable', 'email'],
             'datas.*.city'           => ['nullable'],
             'datas.*.address'        => ['required', 'string', 'min:10'],
             'datas.*.variants'       => ['required', 'array'],

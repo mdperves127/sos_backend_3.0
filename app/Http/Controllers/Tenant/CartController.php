@@ -163,7 +163,33 @@ class CartController extends Controller
             $preOrderPaymentType = $resolved['payment_type'];
         }
 
-        if ( Cart::where( 'product_id', $product_id )->where( 'user_id', $user_id )->exists() ) {
+        $incomingVariantIds = collect( request( 'cartItems', [] ) )
+            ->map( function ( $item ) {
+                $variantId = is_array( $item ) ? ( $item['variant_id'] ?? null ) : null;
+
+                return $variantId === null || $variantId === '' ? null : (int) $variantId;
+            } )
+            ->filter( fn ( $id ) => $id && $id > 0 )
+            ->unique()
+            ->values();
+
+        $existingCartQuery = Cart::query()
+            ->where( 'product_id', $product_id )
+            ->where( 'user_id', $user_id );
+
+        if ( $incomingVariantIds->isNotEmpty() ) {
+            // Allow same product with a different variant; block only matching variant lines.
+            $alreadyInCart = ( clone $existingCartQuery )
+                ->whereHas( 'cartDetails', function ( $query ) use ( $incomingVariantIds ) {
+                    $query->whereIn( 'variant_id', $incomingVariantIds->all() );
+                } )
+                ->exists();
+        } else {
+            // Non-variant product: keep unique product-in-cart behavior.
+            $alreadyInCart = $existingCartQuery->exists();
+        }
+
+        if ( $alreadyInCart ) {
             return response()->json( [
                 'status'  => 409,
                 'message' => $getproduct->name . ' already added to cart.',
@@ -322,7 +348,13 @@ class CartController extends Controller
     public function cart(Request $request)
     {
         $cart = Cart::where( 'user_id', auth()->id() )
-            ->with( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit', 'bundle.items.product:id,name,image,sku'] )
+            ->with( [
+                'cartDetails.color',
+                'cartDetails.size',
+                'cartDetails.unit',
+                'cartDetails.variant',
+                'bundle.items.product:id,name,image,sku',
+            ] )
             ->get();
 
         if ( $this->isDropshipperStorefront() ) {
@@ -330,6 +362,8 @@ class CartController extends Controller
         } else {
             $cart->load( 'product' );
         }
+
+        $cart = $this->enrichCartVariantData( $cart );
 
         $deliveryCharge = DeliveryCharge::where('status', 'active')->select('id', 'area', 'charge')->get();
         return response()->json(
@@ -504,11 +538,13 @@ class CartController extends Controller
             'totaladvancepayment'        => $pricing['total_advance_payment'],
         ] );
 
-        $cart->load( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit'] );
+        $cart->load( ['cartDetails.color', 'cartDetails.size', 'cartDetails.unit', 'cartDetails.variant', 'product'] );
 
         if ( $this->isDropshipperStorefront() ) {
             $cart = $this->enrichDropshipperCartItems( collect( [$cart] ) )->first();
         }
+
+        $cart = $this->enrichCartVariantData( collect( [$cart] ) )->first();
 
         return response()->json( [
             'status'  => 200,
@@ -654,6 +690,83 @@ class CartController extends Controller
                     $cartItem->setAttribute( 'product', $merchantProduct );
                 }
             }
+
+            return $cartItem;
+        } );
+    }
+
+    /**
+     * Attach storefront-friendly variant payloads on each cart line.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Cart>  $cartItems
+     * @return \Illuminate\Support\Collection<int, \App\Models\Cart>
+     */
+    private function enrichCartVariantData( $cartItems ) {
+        return $cartItems->map( function ( Cart $cartItem ) {
+            $product      = $cartItem->product;
+            $variantsJson = is_array( $product?->variants ) ? $product->variants : [];
+            $byId         = [];
+
+            foreach ( $variantsJson as $jsonVariant ) {
+                $jsonVariant = (array) $jsonVariant;
+                $id          = (int) ( $jsonVariant['variant_id'] ?? $jsonVariant['id'] ?? 0 );
+                if ( $id > 0 ) {
+                    $byId[$id] = $jsonVariant;
+                }
+            }
+
+            if ( $product ) {
+                $product->setAttribute( 'has_variants', $variantsJson !== [] ? 1 : 0 );
+            }
+
+            $fallback = $product ? ProductVariantService::productFallbackPrice( $product ) : 0.0;
+
+            $cartItem->cartDetails->each( function ( CartDetails $detail ) use ( $byId, $fallback ) {
+                $variantId = (int) ( $detail->variant_id ?? 0 );
+
+                if ( $variantId <= 0 ) {
+                    $detail->setAttribute( 'variant', null );
+                    $detail->setAttribute( 'variant_label', null );
+                    $detail->setAttribute( 'variant_options', [] );
+
+                    return;
+                }
+
+                $json = $byId[$variantId] ?? null;
+                $rate = $json ? ProductVariantService::resolveRateFromPayload( $json ) : 0.0;
+
+                if ( $rate <= 0 && $detail->relationLoaded( 'variant' ) && $detail->variant ) {
+                    $rate = (float) ( $detail->variant->rate ?? 0 );
+                }
+
+                $payload = [
+                    'id'              => $variantId,
+                    'variant_id'      => $variantId,
+                    'key'             => $json['key'] ?? null,
+                    'label'           => $json['label'] ?? null,
+                    'sku'             => $json['sku'] ?? null,
+                    'image'           => $json['image'] ?? null,
+                    'qty'             => isset( $json['qty'] )
+                        ? max( 0, (int) $json['qty'] )
+                        : ( $detail->relationLoaded( 'variant' ) && $detail->variant
+                            ? max( 0, (int) $detail->variant->qty )
+                            : null ),
+                    'options'         => array_values( (array) ( $json['options'] ?? [] ) ),
+                    'unit_id'         => $json['unit_id'] ?? $detail->unit_id,
+                    'size_id'         => $json['size_id'] ?? $detail->size,
+                    'color_id'        => $json['color_id'] ?? $detail->color,
+                    'rate'            => $rate,
+                    'price'           => $rate,
+                    'effective_price' => $rate > 0 ? $rate : $fallback,
+                ];
+
+                $detail->setAttribute( 'variant', $payload );
+                $detail->setAttribute( 'variant_label', $payload['label'] );
+                $detail->setAttribute( 'variant_key', $payload['key'] );
+                $detail->setAttribute( 'variant_options', $payload['options'] );
+                $detail->setAttribute( 'variant_image', $payload['image'] );
+                $detail->setAttribute( 'effective_price', $payload['effective_price'] );
+            } );
 
             return $cartItem;
         } );

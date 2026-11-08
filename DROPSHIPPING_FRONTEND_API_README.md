@@ -310,7 +310,7 @@ The `data` object is a standard Laravel paginator, so it also contains `from`, `
 
 - If it was already revoked: `{"status":200,"message":"Assignment already revoked."}`.
 - If not found: `404 {"status":404,"message":"Assignment not found."}`.
-- For **private** products only, the dropshipper's existing listings (`product_details` with status `1` or `2`) are moved to status `3` with reason `"Access revoked by merchant"`.
+- The dropshipper's existing listings for products no longer covered by any active assignment (`product_details` with status `1` or `2`) are moved to status `3` with reason `"Access revoked by merchant"`. Public marketplace browse is unchanged; only the dropshipper's own active/pending listing rows are revoked.
 - Public products keep their listings.
 - Existing orders are not changed.
 - Re-assigning the same target later **reactivates** the same row (`summary.reactivated`).
@@ -936,7 +936,7 @@ Work that needs a missing backend endpoint is listed in §12.
 - [ ] `type=category_products` creates one row per eligible product; a product added later is **not** covered.
 - [ ] `category_products` on an empty category returns 422 `No eligible products in this category.`
 - [ ] Unknown or unapproved dropshipper returns 422; an unknown product or category returns 404.
-- [ ] Revoking a private product's assignment returns `revoked_listings ≥ 1`; the dropshipper's listing moves to rejected with reason "Access revoked by merchant".
+- [ ] Revoking an assignment returns `revoked_listings ≥ 1` when the dropshipper had an active/pending listing; that listing moves to rejected with reason "Access revoked by merchant".
 - [ ] Re-assigning after revoke returns `reactivated: 1`.
 - [ ] Assigning a product with a pending request returns `approved_pending_requests ≥ 1`.
 

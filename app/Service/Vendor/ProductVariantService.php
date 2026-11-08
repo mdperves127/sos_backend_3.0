@@ -30,18 +30,207 @@ class ProductVariantService {
     }
 
     /**
+     * Coerce multipart/form string prices into a non-negative decimal (2 places).
+     * Returns null when the value is missing/blank/non-numeric.
+     */
+    public static function toDecimal( mixed $value ): ?float {
+        if ( $value === null || $value === '' || is_bool( $value ) || is_array( $value ) || is_object( $value ) ) {
+            return null;
+        }
+
+        if ( is_string( $value ) ) {
+            $value = trim( $value );
+            // Strip currency noise / thousand separators: "$1,234.50" → "1234.50"
+            $value = preg_replace( '/[^0-9.\-]/', '', $value ) ?? '';
+            if ( $value === '' || $value === '-' || $value === '.' || $value === '-.' ) {
+                return null;
+            }
+        }
+
+        if ( ! is_numeric( $value ) ) {
+            return null;
+        }
+
+        return round( max( 0, (float) $value ), 2 );
+    }
+
+    /**
      * Accept `price` or `rate` from tenant panel payloads. Non-negative; 0 means "use product price".
      */
     public static function resolveRateFromPayload( array $variant ): float {
-        if ( array_key_exists( 'price', $variant ) && $variant['price'] !== null && $variant['price'] !== '' ) {
-            return max( 0, (float) $variant['price'] );
+        if ( array_key_exists( 'price', $variant ) ) {
+            $price = self::toDecimal( $variant['price'] );
+            if ( $price !== null ) {
+                return $price;
+            }
         }
 
-        if ( array_key_exists( 'rate', $variant ) && $variant['rate'] !== null && $variant['rate'] !== '' ) {
-            return max( 0, (float) $variant['rate'] );
+        if ( array_key_exists( 'rate', $variant ) ) {
+            $rate = self::toDecimal( $variant['rate'] );
+            if ( $rate !== null ) {
+                return $rate;
+            }
         }
 
         return 0.0;
+    }
+
+    /**
+     * Whether the payload explicitly includes a variant unit price.
+     */
+    public static function payloadHasRate( array $variant ): bool {
+        if ( array_key_exists( 'price', $variant ) && self::toDecimal( $variant['price'] ) !== null ) {
+            return true;
+        }
+
+        return array_key_exists( 'rate', $variant ) && self::toDecimal( $variant['rate'] ) !== null;
+    }
+
+    /**
+     * Normalize price/rate/qty fields on a variants array (multipart strings → decimals).
+     *
+     * @param  array<int, mixed>  $variants
+     * @return array<int, array<string, mixed>>
+     */
+    public static function normalizeVariantPriceFields( array $variants ): array {
+        foreach ( $variants as $index => $variant ) {
+            $variant = (array) $variant;
+
+            if ( array_key_exists( 'price', $variant ) ) {
+                $price = self::toDecimal( $variant['price'] );
+                if ( $price !== null ) {
+                    $variant['price'] = $price;
+                    $variant['rate']  = $price;
+                } else {
+                    unset( $variant['price'] );
+                }
+            }
+
+            if ( array_key_exists( 'rate', $variant ) ) {
+                $rate = self::toDecimal( $variant['rate'] );
+                if ( $rate !== null ) {
+                    $variant['rate']  = $rate;
+                    $variant['price'] = $variant['price'] ?? $rate;
+                } else {
+                    unset( $variant['rate'] );
+                }
+            }
+
+            if ( array_key_exists( 'qty', $variant ) ) {
+                $qty = self::toDecimal( $variant['qty'] );
+                $variant['qty'] = $qty !== null ? (int) $qty : 0;
+            }
+
+            $variants[$index] = $variant;
+        }
+
+        return array_values( $variants );
+    }
+
+    /**
+     * Stable fingerprint from option attribute/value ids (order-independent).
+     */
+    public static function optionsFingerprint( array $variant ): string {
+        $options = $variant['options'] ?? [];
+        if ( is_string( $options ) ) {
+            $decoded = json_decode( $options, true );
+            $options = is_array( $decoded ) ? $decoded : [];
+        }
+
+        if ( ! is_array( $options ) || $options === [] ) {
+            return '';
+        }
+
+        $pairs = [];
+        foreach ( $options as $option ) {
+            $option = (array) $option;
+            $attributeId = (string) ( $option['attribute_id'] ?? '' );
+            $valueId     = (string) ( $option['value_id'] ?? '' );
+            if ( $attributeId === '' && $valueId === '' ) {
+                continue;
+            }
+            $pairs[] = $attributeId . ':' . $valueId;
+        }
+
+        sort( $pairs );
+
+        return implode( '|', $pairs );
+    }
+
+    /**
+     * Fill missing variant ids from a previous products.variants JSON snapshot
+     * using key, sku, or options fingerprint. Needed because the price tab often
+     * sends empty id/variant_id for option-based combinations.
+     *
+     * @param  array<int, array<string, mixed>>  $incoming
+     * @param  array<int, mixed>                 $existingJson
+     * @return array<int, array<string, mixed>>
+     */
+    public static function rehydrateVariantIds( array $incoming, array $existingJson ): array {
+        $byKey     = [];
+        $bySku     = [];
+        $byOptions = [];
+
+        foreach ( $existingJson as $existing ) {
+            $existing = (array) $existing;
+            $id       = (int) ( $existing['variant_id'] ?? $existing['id'] ?? 0 );
+            if ( $id <= 0 ) {
+                continue;
+            }
+
+            $key = isset( $existing['key'] ) ? trim( (string) $existing['key'] ) : '';
+            if ( $key !== '' ) {
+                $byKey[$key] = $id;
+            }
+
+            $sku = isset( $existing['sku'] ) ? trim( (string) $existing['sku'] ) : '';
+            if ( $sku !== '' ) {
+                $bySku[$sku] = $id;
+            }
+
+            $fingerprint = self::optionsFingerprint( $existing );
+            if ( $fingerprint !== '' ) {
+                $byOptions[$fingerprint] = $id;
+            }
+        }
+
+        foreach ( $incoming as $index => $variant ) {
+            $variant = (array) $variant;
+            $id      = (int) ( $variant['variant_id'] ?? $variant['id'] ?? 0 );
+            if ( $id > 0 ) {
+                $incoming[$index] = $variant;
+                continue;
+            }
+
+            $resolved = null;
+            $key      = isset( $variant['key'] ) ? trim( (string) $variant['key'] ) : '';
+            if ( $key !== '' && isset( $byKey[$key] ) ) {
+                $resolved = $byKey[$key];
+            }
+
+            if ( $resolved === null ) {
+                $sku = isset( $variant['sku'] ) ? trim( (string) $variant['sku'] ) : '';
+                if ( $sku !== '' && isset( $bySku[$sku] ) ) {
+                    $resolved = $bySku[$sku];
+                }
+            }
+
+            if ( $resolved === null ) {
+                $fingerprint = self::optionsFingerprint( $variant );
+                if ( $fingerprint !== '' && isset( $byOptions[$fingerprint] ) ) {
+                    $resolved = $byOptions[$fingerprint];
+                }
+            }
+
+            if ( $resolved !== null ) {
+                $variant['id']         = $resolved;
+                $variant['variant_id'] = $resolved;
+            }
+
+            $incoming[$index] = $variant;
+        }
+
+        return $incoming;
     }
 
     /**
@@ -330,19 +519,33 @@ class ProductVariantService {
             if ( $variantId ) {
                 $variant = self::findVariantById( $productId, $variantId );
 
-                if ( $variant ) {
-                    $variant->qty = (int) $variant->qty + $qty;
-                    $variant->save();
-
-                    $product = Product::find( $productId );
-
-                    if ( $product ) {
-                        self::syncJsonFromDb( $product );
-                        self::recalculateProductQty( $product );
-                    }
-
+                if ( ! $variant ) {
+                    // Do not invent a null/null/null row for a missing option-based variant id.
                     return;
                 }
+
+                $variant->qty = (int) $variant->qty + $qty;
+                $variant->save();
+
+                $product = Product::find( $productId );
+
+                if ( $product ) {
+                    self::syncJsonFromDb( $product );
+                    self::recalculateProductQty( $product );
+                }
+
+                return;
+            }
+
+            // Legacy unit/size/color path only when at least one attr is present.
+            if ( $unitId === null && $sizeId === null && $colorId === null ) {
+                $product = Product::find( $productId );
+                if ( $product ) {
+                    $product->qty = (string) ( max( 0, (int) $product->qty ) + $qty );
+                    $product->saveQuietly();
+                }
+
+                return;
             }
 
             $variant = self::findOrCreateVariant( $productId, $unitId, $sizeId, $colorId, $vendorId );
@@ -368,27 +571,37 @@ class ProductVariantService {
         $vendorId     = $vendorId ?? $product->vendor_id ?? vendorId();
         $syncedJson   = [];
         $processedIds = [];
+        $connection   = $product->getConnectionName() ?: config( 'database.default' );
 
-        DB::transaction( function () use ( $product, $variants, $vendorId, $preserveExistingStock, &$syncedJson, &$processedIds ) {
+        DB::connection( $connection )->transaction( function () use ( $product, $variants, $vendorId, $preserveExistingStock, &$syncedJson, &$processedIds ) {
             foreach ( $variants as $variant ) {
                 $variant = (array) $variant;
                 $unitId  = self::resolveAttributeId( $variant, 'unit', 'unit_id' );
                 $sizeId  = self::resolveSizeId( $variant );
                 $colorId = self::resolveAttributeId( $variant, 'color', 'color_id' );
                 $qty     = max( 0, (int) ( $variant['qty'] ?? 0 ) );
-                $rate    = self::resolveRateFromPayload( $variant );
+                $hasRate = self::payloadHasRate( $variant );
+                $rate    = $hasRate ? self::resolveRateFromPayload( $variant ) : null;
 
                 $existing = null;
 
                 if ( ! empty( $variant['variant_id'] ) || ! empty( $variant['id'] ) ) {
                     $existingId = (int) ( $variant['variant_id'] ?? $variant['id'] );
-                    $existing   = ProductVariant::where( 'product_id', $product->id )
-                        ->where( 'id', $existingId )
-                        ->first();
+                    // Ignore non-persisted / frontend temp ids.
+                    if ( $existingId > 0 && ! in_array( $existingId, $processedIds, true ) ) {
+                        $existing = ProductVariant::where( 'product_id', $product->id )
+                            ->where( 'id', $existingId )
+                            ->first();
+                    }
                 }
 
-                if ( ! $existing ) {
-                    $existing = self::findVariant( $product->id, $unitId, $sizeId, $colorId );
+                // Only collapse by unit/size/color when at least one attr is set.
+                // Option-based variants often have all-null attrs and must stay separate.
+                if ( ! $existing && ( $unitId !== null || $sizeId !== null || $colorId !== null ) ) {
+                    $candidate = self::findVariant( $product->id, $unitId, $sizeId, $colorId );
+                    if ( $candidate && ! in_array( $candidate->id, $processedIds, true ) ) {
+                        $existing = $candidate;
+                    }
                 }
 
                 if ( $existing ) {
@@ -396,7 +609,10 @@ class ProductVariantService {
                     $existing->unit_id  = $unitId;
                     $existing->size_id  = $sizeId;
                     $existing->color_id = $colorId;
-                    $existing->rate     = $rate;
+
+                    if ( $hasRate ) {
+                        $existing->rate = $rate;
+                    }
 
                     if ( ! $preserveExistingStock ) {
                         $existing->qty = $qty;
@@ -411,24 +627,41 @@ class ProductVariantService {
                         'size_id'    => $sizeId,
                         'color_id'   => $colorId,
                         'qty'        => $qty,
-                        'rate'       => $rate,
+                        'rate'       => $rate ?? 0,
                     ] );
+                }
+
+                // Hard-guarantee rate persistence for priced payloads.
+                if ( $hasRate ) {
+                    ProductVariant::where( 'id', $existing->id )->update( [
+                        'rate' => $rate,
+                    ] );
+                    $existing->rate = $rate;
                 }
 
                 $processedIds[]        = $existing->id;
                 $variant['id']         = $existing->id;
                 $variant['variant_id'] = $existing->id;
                 $variant['qty']        = max( 0, (int) $existing->qty );
-                $variant['rate']       = (float) $existing->rate;
-                $variant['price']      = (float) $existing->rate;
+                $variant['rate']       = (float) ( $existing->rate ?? 0 );
+                $variant['price']      = (float) ( $existing->rate ?? 0 );
                 $variant['unit_id']    = $existing->unit_id;
                 $variant['size_id']    = $existing->size_id;
                 $variant['color_id']   = $existing->color_id;
                 $syncedJson[]          = $variant;
             }
 
+            // Remove DB rows no longer present in the payload.
+            ProductVariant::where( 'product_id', $product->id )
+                ->whereNotIn( 'id', $processedIds )
+                ->delete();
+
             self::mergeDuplicateVariants( $product->id, $processedIds );
             $product->variants = $syncedJson;
+
+            // Always persist variants JSON + rates mapping. Do not rely on qty recalc save,
+            // which can early-return when all variant qtys are 0.
+            $product->saveQuietly();
             self::recalculateProductQty( $product );
         } );
     }
@@ -457,7 +690,13 @@ class ProductVariantService {
         $totalQty          = (int) ProductVariant::where( 'product_id', $product->id )->sum( 'qty' );
         $currentProductQty = (int) $product->qty;
 
+        // Keep product qty when variants report 0 but product still has stock
+        // (legacy purchase/stock flows). Still allow explicit zeroing when product qty is already 0.
         if ( $totalQty === 0 && $currentProductQty > 0 ) {
+            return;
+        }
+
+        if ( (string) $product->qty === (string) max( 0, $totalQty ) ) {
             return;
         }
 
@@ -734,31 +973,69 @@ class ProductVariantService {
 
         $jsonVariants = is_array( $product->variants ) ? $product->variants : [];
         $updatedJson  = [];
-        $usedDbIds    = [];
+        $usedJsonIdx  = [];
 
         foreach ( $dbVariants as $dbVariant ) {
-            $matched = false;
+            $matchedIdx = null;
 
-            foreach ( $jsonVariants as $jsonVariant ) {
+            // 1) Prefer exact id / variant_id match (required for multi option-based variants).
+            foreach ( $jsonVariants as $idx => $jsonVariant ) {
+                if ( isset( $usedJsonIdx[$idx] ) ) {
+                    continue;
+                }
+
                 $jsonVariant = (array) $jsonVariant;
+                $jsonId      = (int) ( $jsonVariant['variant_id'] ?? $jsonVariant['id'] ?? 0 );
 
-                if ( self::variantAttributesMatch( $jsonVariant, $dbVariant ) ) {
-                    $jsonVariant['id']         = $dbVariant->id;
-                    $jsonVariant['variant_id'] = $dbVariant->id;
-                    $jsonVariant['qty']        = max( 0, (int) $dbVariant->qty );
-                    $jsonVariant['rate']       = (float) ( $dbVariant->rate ?? 0 );
-                    $jsonVariant['price']      = (float) ( $dbVariant->rate ?? 0 );
-                    $jsonVariant['unit_id']    = $dbVariant->unit_id;
-                    $jsonVariant['size_id']    = $dbVariant->size_id;
-                    $jsonVariant['color_id']   = $dbVariant->color_id;
-                    $updatedJson[]             = $jsonVariant;
-                    $usedDbIds[]               = $dbVariant->id;
-                    $matched                   = true;
+                if ( $jsonId > 0 && $jsonId === (int) $dbVariant->id ) {
+                    $matchedIdx = $idx;
                     break;
                 }
             }
 
-            if ( ! $matched ) {
+            // 2) Fall back to unit/size/color only when at least one attr is present.
+            if ( $matchedIdx === null && ( $dbVariant->unit_id || $dbVariant->size_id || $dbVariant->color_id ) ) {
+                foreach ( $jsonVariants as $idx => $jsonVariant ) {
+                    if ( isset( $usedJsonIdx[$idx] ) ) {
+                        continue;
+                    }
+
+                    $jsonVariant = (array) $jsonVariant;
+
+                    if ( self::variantAttributesMatch( $jsonVariant, $dbVariant ) ) {
+                        $matchedIdx = $idx;
+                        break;
+                    }
+                }
+            }
+
+            // 3) Option-based (null attrs): keep first unused JSON row in order so
+            // key/label/sku/options survive reconcile when ids were omitted.
+            if ( $matchedIdx === null && ! $dbVariant->unit_id && ! $dbVariant->size_id && ! $dbVariant->color_id ) {
+                foreach ( $jsonVariants as $idx => $jsonVariant ) {
+                    if ( isset( $usedJsonIdx[$idx] ) ) {
+                        continue;
+                    }
+
+                    $matchedIdx = $idx;
+                    break;
+                }
+            }
+
+            if ( $matchedIdx !== null ) {
+                $jsonVariant                   = (array) $jsonVariants[$matchedIdx];
+                $jsonVariant['id']             = $dbVariant->id;
+                $jsonVariant['variant_id']     = $dbVariant->id;
+                $jsonVariant['qty']            = max( 0, (int) $dbVariant->qty );
+                // DB rate is source of truth after sync; keep JSON metadata (key/label/options).
+                $jsonVariant['rate']           = (float) ( $dbVariant->rate ?? 0 );
+                $jsonVariant['price']          = (float) ( $dbVariant->rate ?? 0 );
+                $jsonVariant['unit_id']        = $dbVariant->unit_id;
+                $jsonVariant['size_id']        = $dbVariant->size_id;
+                $jsonVariant['color_id']       = $dbVariant->color_id;
+                $updatedJson[]                 = $jsonVariant;
+                $usedJsonIdx[$matchedIdx]      = true;
+            } else {
                 $updatedJson[] = [
                     'id'         => $dbVariant->id,
                     'variant_id' => $dbVariant->id,
@@ -769,7 +1046,6 @@ class ProductVariantService {
                     'rate'       => (float) ( $dbVariant->rate ?? 0 ),
                     'price'      => (float) ( $dbVariant->rate ?? 0 ),
                 ];
-                $usedDbIds[] = $dbVariant->id;
             }
         }
 
@@ -798,7 +1074,17 @@ class ProductVariantService {
             self::normalizeNullableId( $variant->color_id ) ?? 'null',
         ] ) );
 
-        foreach ( $groups as $group ) {
+        foreach ( $groups as $groupKey => $group ) {
+            // Option-based variants share null/null/null attrs — never merge those.
+            if ( $groupKey === 'null-null-null' ) {
+                foreach ( $group as $variant ) {
+                    $variant->qty = max( 0, (int) $variant->qty );
+                    $variant->save();
+                }
+
+                continue;
+            }
+
             if ( $group->count() <= 1 ) {
                 $variant      = $group->first();
                 $variant->qty = max( 0, (int) $variant->qty );

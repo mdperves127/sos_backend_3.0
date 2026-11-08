@@ -11,6 +11,12 @@ class OrderDetails extends Model {
 
     protected $guarded = [];
 
+    protected $casts = [
+        'variant_options' => 'array',
+        'rate'            => 'decimal:2',
+        'sub_total'       => 'decimal:2',
+    ];
+
     public function product() {
         return $this->belongsTo( Product::class, 'product_id' )->select( 'id', 'name' );
     }

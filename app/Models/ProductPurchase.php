@@ -21,6 +21,11 @@ class ProductPurchase extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    public function warehouse()
+    {
+        return $this->belongsTo( Warehouse::class )->select( 'id', 'name', 'status' );
+    }
+
     function returnDetails(){
         return $this->hasMany(SupplierReturnProduct::class);
     }

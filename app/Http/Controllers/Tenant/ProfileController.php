@@ -15,10 +15,12 @@ use App\Models\CmsSetting;
 use App\Models\TenantCustomDomain;
 use App\Models\TenantInstalledAddon;
 use App\Models\Product;
-use App\Models\ProductDetails;
 use App\Models\PosSales;
 use App\Models\VendorService;
 use App\Services\CustomDomainService;
+use App\Services\DropshipperAccessService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class ProfileController extends Controller
@@ -79,36 +81,65 @@ class ProfileController extends Controller
      */
     private function tenantSegmentUsage( ?UserSubscription $subscription ): array
     {
-        $ownerId = vendorId();
-        $userId  = Auth::id();
+        $ownerId    = vendorId();
+        $tenantType = $this->currentTenantType();
 
-        $productQtyUsed = 0;
-        $productRequestUsed = 0;
-        $productApproveUsed = 0;
+        $productQtyUsed       = 0;
+        $productRequestUsed   = 0;
+        $productApproveUsed   = 0;
         $affiliateRequestUsed = 0;
-        $posSaleQtyUsed = 0;
+        $posSaleQtyUsed       = 0;
 
         try {
             $productQtyUsed = Product::on( 'tenant' )->count();
-            $productRequestUsed = ProductDetails::on( 'tenant' )
-                ->when( $userId, fn ( $q ) => $q->where( 'user_id', $userId ) )
-                ->count();
-            $productApproveUsed = ProductDetails::on( 'tenant' )
-                ->when( $userId, fn ( $q ) => $q->where( 'user_id', $userId ) )
-                ->where( 'status', 1 )
-                ->count();
-            $affiliateRequestUsed = ProductDetails::on( 'tenant' )
-                ->when( $ownerId, fn ( $q ) => $q->where( 'vendor_id', $ownerId ) )
-                ->where( 'status', 1 )
-                ->count();
+        } catch ( \Throwable $e ) {
+            Log::warning( 'tenant_usage.product_qty_failed', [
+                'tenant_id' => tenant()?->id,
+                'message'   => $e->getMessage(),
+            ] );
+        }
 
+        // Dropshipper: listings live in this tenant DB (user_id/vendor_id often 0).
+        if ( $tenantType === 'dropshipper' ) {
+            try {
+                // Keep assigned products synced before reading usage.
+                DropshipperAccessService::ensureAssignedListings( (string) tenant()->id );
+
+                $productRequestUsed = (int) DB::connection( 'tenant' )->table( 'product_details' )->count();
+                $productApproveUsed = (int) DB::connection( 'tenant' )->table( 'product_details' )
+                    ->where( 'status', DropshipperAccessService::DETAIL_ACTIVE )
+                    ->count();
+            } catch ( \Throwable $e ) {
+                Log::warning( 'tenant_usage.dropshipper_listings_failed', [
+                    'tenant_id' => tenant()?->id,
+                    'message'   => $e->getMessage(),
+                ] );
+            }
+        }
+
+        // Merchant: affiliate slots = dropshipper listings and/or active assignment coverage.
+        if ( $tenantType === 'merchant' ) {
+            try {
+                $affiliateRequestUsed = DropshipperAccessService::countMerchantAffiliateUsage( tenant()->id );
+            } catch ( \Throwable $e ) {
+                Log::warning( 'tenant_usage.merchant_affiliate_failed', [
+                    'tenant_id' => tenant()?->id,
+                    'message'   => $e->getMessage(),
+                ] );
+            }
+        }
+
+        try {
             if ( Schema::connection( 'tenant' )->hasTable( 'pos_sales' ) ) {
                 $posSaleQtyUsed = PosSales::on( 'tenant' )
                     ->when( $ownerId, fn ( $q ) => $q->where( 'vendor_id', $ownerId ) )
                     ->count();
             }
         } catch ( \Throwable $e ) {
-            // Tenant tables may be unavailable during partial setup.
+            Log::warning( 'tenant_usage.pos_sales_failed', [
+                'tenant_id' => tenant()?->id,
+                'message'   => $e->getMessage(),
+            ] );
         }
 
         $serviceCreateUsed = VendorService::on( 'mysql' )
@@ -163,6 +194,17 @@ class ProfileController extends Controller
                 'limit' => $limit( 'affiliate_request' ),
             ],
         ];
+    }
+
+    private function currentTenantType(): ?string {
+        if ( ! function_exists( 'tenant' ) || ! tenant() ) {
+            return null;
+        }
+
+        // Prefer Stancl helper / raw column — VirtualColumn can shadow `type` via data JSON.
+        return tenant( 'type' )
+            ?? ( tenant()->getAttributes()['type'] ?? null )
+            ?? tenant()->type;
     }
 
     /**

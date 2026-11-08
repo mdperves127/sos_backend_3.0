@@ -222,6 +222,28 @@ class DropshipperAccessService {
     }
 
     /**
+     * After an assignment is revoked, reject this dropshipper's listings for products
+     * that are no longer covered by any remaining active assignment (private or public).
+     * Assign creates listings via ensureListingsForProducts; revoke must undo that.
+     */
+    public static function revokeListingsAfterAssignmentRevoke(
+        string|int $merchantTenantId,
+        string $merchantConnection,
+        string $dropshipperTenantId,
+        array $productIds
+    ): int {
+        $productIds = array_values( array_unique( array_filter( array_map( 'intval', $productIds ) ) ) );
+        if ( $productIds === [] ) {
+            return 0;
+        }
+
+        $stillAssigned = self::assignedProductIds( $merchantConnection, $dropshipperTenantId );
+        $lostAccess    = array_values( array_diff( $productIds, $stillAssigned ) );
+
+        return self::revokeListings( $merchantTenantId, $dropshipperTenantId, $lostAccess );
+    }
+
+    /**
      * Move a dropshipper's active/pending listings for these merchant products to rejected.
      * Existing orders are untouched; carts are blocked at checkout by the access re-check.
      */
@@ -532,5 +554,97 @@ class DropshipperAccessService {
         }
 
         return $revoked;
+    }
+
+    /**
+     * Count product_details rows for a merchant across all dropshipper tenant DBs.
+     * Listings (requests + assignments) are stored on the dropshipper side with tenant_id = merchant id.
+     */
+    public static function countMerchantListings( string|int $merchantTenantId, ?int $status = self::DETAIL_ACTIVE ): int {
+        $merchantTenantId = (string) $merchantTenantId;
+        $total            = 0;
+
+        $dropshippers = Tenant::on( 'mysql' )->where( 'type', 'dropshipper' )->get( ['id'] );
+
+        foreach ( $dropshippers as $dropshipper ) {
+            try {
+                $connection = CrossTenantQueryService::connectionForTenant( $dropshipper );
+                $query      = DB::connection( $connection )
+                    ->table( 'product_details' )
+                    ->where( 'tenant_id', $merchantTenantId );
+
+                if ( $status !== null ) {
+                    $query->where( 'status', $status );
+                }
+
+                $total += (int) $query->count();
+            } catch ( \Throwable $e ) {
+                Log::warning( 'dropship.count_merchant_listings_failed', [
+                    'merchant_tenant_id'    => $merchantTenantId,
+                    'dropshipper_tenant_id' => (string) $dropshipper->id,
+                    'message'               => $e->getMessage(),
+                ] );
+            } finally {
+                self::restoreDefaultConnection();
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * Count product slots granted by active merchant assignments (per dropshipper).
+     * Lives entirely in the merchant DB — updates immediately on assign/revoke.
+     */
+    public static function countMerchantAssignedUsages( string|int $merchantTenantId ): int {
+        $connection = self::merchantConnection( $merchantTenantId );
+        if ( ! $connection || ! self::supportsAccessControl( $connection ) ) {
+            return 0;
+        }
+
+        try {
+            $dropshipperIds = DB::connection( $connection )
+                ->table( 'dropshipper_product_assignments' )
+                ->where( 'status', DropshipperProductAssignment::STATUS_ACTIVE )
+                ->distinct()
+                ->pluck( 'dropshipper_tenant_id' );
+
+            $total = 0;
+            foreach ( $dropshipperIds as $dropshipperId ) {
+                $total += count( self::assignedProductIds( $connection, (string) $dropshipperId ) );
+            }
+
+            return $total;
+        } catch ( \Throwable $e ) {
+            Log::warning( 'dropship.count_merchant_assigned_usages_failed', [
+                'merchant_tenant_id' => (string) $merchantTenantId,
+                'message'            => $e->getMessage(),
+            ] );
+
+            return 0;
+        } finally {
+            self::restoreDefaultConnection();
+        }
+    }
+
+    /**
+     * Merchant affiliate_request used = active dropshipper listings for this merchant,
+     * falling back to assignment product slots when listings have not synced yet.
+     */
+    public static function countMerchantAffiliateUsage( string|int $merchantTenantId ): int {
+        $fromListings    = self::countMerchantListings( $merchantTenantId );
+        $fromAssignments = self::countMerchantAssignedUsages( $merchantTenantId );
+
+        return max( $fromListings, $fromAssignments );
+    }
+
+    private static function restoreDefaultConnection(): void {
+        if ( function_exists( 'tenant' ) && tenant() ) {
+            DB::setDefaultConnection( 'tenant' );
+
+            return;
+        }
+
+        DB::setDefaultConnection( 'mysql' );
     }
 }
