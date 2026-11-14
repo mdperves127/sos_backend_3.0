@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Models\Settings;
 use App\Models\Product;
+use App\Services\AddonActivationService;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ProductImage;
 
@@ -124,7 +125,16 @@ class ProductController extends Controller
 
             $getmembershipdetails = getmembershipdetails();
 
-            $productecreateqty = $getmembershipdetails?->product_qty;
+            $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant()->id : '';
+            $productecreateqty = $tenantId !== ''
+                ? AddonActivationService::tenantQuotaLimit(
+                    $tenantId,
+                    'product_qty',
+                    $getmembershipdetails?->product_qty,
+                )
+                : ( is_numeric( $getmembershipdetails?->product_qty )
+                    ? (int) $getmembershipdetails->product_qty
+                    : null );
 
             $totalcreatedproduct = Product::where('user_id', userid())->count();
 
@@ -136,8 +146,11 @@ class ProductController extends Controller
                 return responsejson('Membership expired!', 'fail');
             }
 
-            if ($productecreateqty <=  $totalcreatedproduct) {
-                return responsejson('You can not create product more than ' . $productecreateqty . '.', 'fail');
+            if ($productecreateqty === null || $productecreateqty <= $totalcreatedproduct) {
+                return responsejson(
+                    'You can not create product more than ' . ( $productecreateqty ?? 0 ) . '.',
+                    'fail'
+                );
             }
 
 

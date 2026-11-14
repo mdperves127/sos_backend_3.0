@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserSubscription;
 use App\Models\VendorRole;
+use App\Services\AddonActivationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -56,23 +57,32 @@ class TenantEmployeeController extends Controller {
     }
 
     private function assertEmployeeFeatureAllowed() {
+        if ( $this->tenantHasEmployeeCreateAccess() ) {
+            return null;
+        }
+
+        return response()->json( [
+            'status'  => 401,
+            'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
+        ] );
+    }
+
+    /**
+     * Allow when subscription.employee_create is enabled OR an active addon
+     * grants employee_create (value "yes" or a positive numeric quota like "1").
+     */
+    private function tenantHasEmployeeCreateAccess(): bool {
+        if ( ! function_exists( 'tenant' ) || ! tenant() ) {
+            return false;
+        }
+
         $subscription = $this->tenantSubscription();
 
-        if ( !$subscription ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! It seems you are not eligible to access this feature. Please contact the administrator for assistance.',
-            ] );
-        }
-
-        if ( $subscription->employee_create == null ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
-            ] );
-        }
-
-        return null;
+        return AddonActivationService::tenantHasFlagAccess(
+            (string) tenant()->id,
+            'employee_create',
+            $subscription?->employee_create,
+        );
     }
 
     private function assertAdmin(): ?\Illuminate\Http\JsonResponse {

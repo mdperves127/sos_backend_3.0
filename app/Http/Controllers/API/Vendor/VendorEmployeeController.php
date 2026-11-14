@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\VendorEmployee;
 use App\Models\VendorRole;
+use App\Services\AddonActivationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -46,22 +47,38 @@ class VendorEmployeeController extends Controller {
         ] );
     }
 
-    public function store( Request $request ) {
+    private function assertEmployeeFeatureAllowed( ?User $user ) {
+        $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant()->id : null;
+        if (
+            $tenantId
+            && AddonActivationService::tenantHasFlagAccess(
+                $tenantId,
+                'employee_create',
+                $user?->usersubscription?->employee_create,
+            )
+        ) {
+            return null;
+        }
 
-        $user = User::find( vendorId() );
-
-        if ( !$user->usersubscription ) {
+        if ( ! $user?->usersubscription ) {
             return response()->json( [
                 'status'  => 401,
                 'message' => 'Oops! It seems you are not eligible to access this feature. Please contact the administrator for assistance.',
             ] );
         }
 
-        if ( $user?->usersubscription?->employee_create == null ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
-            ] );
+        return response()->json( [
+            'status'  => 401,
+            'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
+        ] );
+    }
+
+    public function store( Request $request ) {
+
+        $user = User::find( vendorId() );
+
+        if ( $response = $this->assertEmployeeFeatureAllowed( $user ) ) {
+            return $response;
         }
         $validator = Validator::make( $request->all(), [
             'name'           => 'required|string|max:255',
@@ -224,18 +241,8 @@ class VendorEmployeeController extends Controller {
 
         $user = User::find( vendorId() );
 
-        if ( !$user->usersubscription ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! It seems you are not eligible to access this feature. Please contact the administrator for assistance.',
-            ] );
-        }
-
-        if ( $user?->usersubscription?->employee_create == null ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
-            ] );
+        if ( $response = $this->assertEmployeeFeatureAllowed( $user ) ) {
+            return $response;
         }
         // dd(Auth::user()->vendor_id);
         $validator = Validator::make( $request->all(), [
@@ -360,18 +367,8 @@ class VendorEmployeeController extends Controller {
 
         $user = User::find( vendorId() );
 
-        if ( !$user->usersubscription ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! It seems you are not eligible to access this feature. Please contact the administrator for assistance.',
-            ] );
-        }
-
-        if ( $user?->usersubscription?->employee_create == null ) {
-            return response()->json( [
-                'status'  => 401,
-                'message' => 'Oops! This service is not available with your current subscription. Please contact the administrator for assistance.',
-            ] );
+        if ( $response = $this->assertEmployeeFeatureAllowed( $user ) ) {
+            return $response;
         }
         // dd(Auth::user()->vendor_id);
         $validator = Validator::make( $request->all(), [

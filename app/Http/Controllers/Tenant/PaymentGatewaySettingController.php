@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\PaymentGatewaySetting;
+use App\Services\AddonActivationService;
 use App\Services\EpsConfig;
 use App\Services\TenantPaymentGatewayService;
 use Illuminate\Http\Request;
@@ -55,6 +56,16 @@ class PaymentGatewaySettingController extends Controller
                 'message' => 'Unknown payment gateway.',
                 'data'    => null,
             ], 404 );
+        }
+
+        $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant()->id : '';
+        if ( $tenantId === '' || ! AddonActivationService::tenantHasPaymentProvider( $tenantId, $gateway ) ) {
+            return response()->json( [
+                'status'  => 403,
+                'success' => false,
+                'message' => 'This payment gateway addon is not active for your store.',
+                'data'    => null,
+            ], 403 );
         }
 
         $rules = [

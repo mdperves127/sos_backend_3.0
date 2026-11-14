@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Concerns;
 
 use App\Models\ProductDetails;
 use App\Models\UserSubscription;
+use App\Services\AddonActivationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
@@ -19,15 +20,29 @@ trait ResolvesTenantChatAccess {
     }
 
     private function tenantHasChatAccess( ?UserSubscription $sub ): bool {
-        if ( !$sub ) {
-            return false;
-        }
-        if ( $sub->chat_access === 'yes' ) {
-            return true;
-        }
-        $plan = $sub->subscription;
+        $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant()->id : '';
 
-        return $plan && $plan->chat_access === 'yes';
+        $subscriptionFlag = null;
+        if ( $sub ) {
+            if ( $sub->chat_access === 'yes' ) {
+                $subscriptionFlag = 'yes';
+            } else {
+                $plan = $sub->subscription;
+                if ( $plan && $plan->chat_access === 'yes' ) {
+                    $subscriptionFlag = 'yes';
+                }
+            }
+        }
+
+        if ( $tenantId === '' ) {
+            return AddonActivationService::isFeatureValueEnabled( $subscriptionFlag );
+        }
+
+        return AddonActivationService::tenantHasFlagAccess(
+            $tenantId,
+            'chat_access',
+            $subscriptionFlag,
+        );
     }
 
     private function chatAccessDeniedResponse(): JsonResponse {

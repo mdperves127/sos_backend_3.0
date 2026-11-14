@@ -30,6 +30,166 @@ class AddonActivationService
             ->exists();
     }
 
+    /**
+     * True when a feature value grants access (yes / positive numeric quota).
+     */
+    public static function isFeatureValueEnabled( mixed $value ): bool
+    {
+        $normalized = strtolower( trim( (string) $value ) );
+        if ( $normalized === '' || $normalized === 'no' || $normalized === '0'
+            || $normalized === 'null' || $normalized === 'false' ) {
+            return false;
+        }
+        if ( $normalized === 'yes' || $normalized === 'true' ) {
+            return true;
+        }
+        if ( is_numeric( $normalized ) ) {
+            return (float) $normalized > 0;
+        }
+
+        // Opaque provider values (e.g. payment: eps / uddokta)
+        return true;
+    }
+
+    /**
+     * True when an active tenant addon grants a feature key
+     * (value "yes" or a positive numeric quota such as "1").
+     */
+    public static function tenantHasFeature( string $tenantId, string $featureKey ): bool
+    {
+        $featureKey = strtolower( trim( $featureKey ) );
+        if ( $featureKey === '' || $tenantId === '' ) {
+            return false;
+        }
+
+        $installations = TenantInstalledAddon::on( 'mysql' )
+            ->with( [ 'addon.features' ] )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->get();
+
+        foreach ( $installations as $installation ) {
+            foreach ( $installation->addon?->features ?? [] as $feature ) {
+                $key = strtolower( trim( (string) $feature->key ) );
+                if ( $key !== $featureKey ) {
+                    continue;
+                }
+
+                if ( self::isFeatureValueEnabled( $feature->value ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Flag-style access: subscription column OR active addon feature.
+     */
+    public static function tenantHasFlagAccess(
+        string $tenantId,
+        string $featureKey,
+        mixed $subscriptionValue = null,
+    ): bool {
+        if ( self::isFeatureValueEnabled( $subscriptionValue ) ) {
+            return true;
+        }
+
+        return self::tenantHasFeature( $tenantId, $featureKey );
+    }
+
+    /**
+     * True when an active payment addon grants a specific provider
+     * (addon value "eps"/"aamarpay" or "uddokta"/"uddoktapay").
+     */
+    public static function tenantHasPaymentProvider( string $tenantId, string $gateway ): bool
+    {
+        $gateway = strtolower( trim( $gateway ) );
+        $aliases = match ( $gateway ) {
+            'eps', 'aamarpay' => ['eps', 'aamarpay'],
+            'uddoktapay', 'uddokta' => ['uddoktapay', 'uddokta'],
+            default => [$gateway],
+        };
+
+        if ( $tenantId === '' || $aliases === [''] ) {
+            return false;
+        }
+
+        $installations = TenantInstalledAddon::on( 'mysql' )
+            ->with( [ 'addon.features' ] )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->get();
+
+        foreach ( $installations as $installation ) {
+            foreach ( $installation->addon?->features ?? [] as $feature ) {
+                $key = strtolower( trim( (string) $feature->key ) );
+                if ( $key !== 'payment' ) {
+                    continue;
+                }
+
+                $value = strtolower( trim( (string) $feature->value ) );
+                if ( in_array( $value, $aliases, true ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Sum numeric feature values from active addons for a quota key.
+     */
+    public static function tenantNumericFeatureBonus( string $tenantId, string $featureKey ): int
+    {
+        $featureKey = strtolower( trim( $featureKey ) );
+        if ( $featureKey === '' || $tenantId === '' ) {
+            return 0;
+        }
+
+        $bonus = 0;
+        $installations = TenantInstalledAddon::on( 'mysql' )
+            ->with( [ 'addon.features' ] )
+            ->where( 'tenant_id', $tenantId )
+            ->where( 'status', 'active' )
+            ->get();
+
+        foreach ( $installations as $installation ) {
+            foreach ( $installation->addon?->features ?? [] as $feature ) {
+                $key = strtolower( trim( (string) $feature->key ) );
+                if ( $key !== $featureKey ) {
+                    continue;
+                }
+                $value = trim( (string) $feature->value );
+                if ( is_numeric( $value ) ) {
+                    $bonus += max( 0, (int) $value );
+                }
+            }
+        }
+
+        return $bonus;
+    }
+
+    /**
+     * Combined quota limit = subscription base + active addon numeric bonuses.
+     */
+    public static function tenantQuotaLimit(
+        string $tenantId,
+        string $featureKey,
+        mixed $subscriptionBase = null,
+    ): ?int {
+        $base = is_numeric( $subscriptionBase ) ? (int) $subscriptionBase : null;
+        $bonus = self::tenantNumericFeatureBonus( $tenantId, $featureKey );
+
+        if ( $base === null && $bonus === 0 ) {
+            return null;
+        }
+
+        return ( $base ?? 0 ) + $bonus;
+    }
+
     public static function hasPendingForTenant( string $tenantId, int $addonId ): bool
     {
         return TenantInstalledAddon::on( 'mysql' )

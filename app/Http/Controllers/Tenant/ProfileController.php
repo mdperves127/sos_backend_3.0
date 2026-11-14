@@ -17,6 +17,7 @@ use App\Models\TenantInstalledAddon;
 use App\Models\Product;
 use App\Models\PosSales;
 use App\Models\VendorService;
+use App\Services\AddonActivationService;
 use App\Services\CustomDomainService;
 use App\Services\DropshipperAccessService;
 use Illuminate\Support\Facades\DB;
@@ -46,12 +47,57 @@ class ProfileController extends Controller
             ->flatMap( function ( TenantInstalledAddon $installation ) {
                 return $installation->addon?->features ?? collect();
             } )
-            ->map( function ( $feature ) use ( $usage ) {
+            ->reduce( function ( $carry, $feature ) use ( $usage ) {
                 $key = strtolower( trim( (string) $feature->key ) );
+                if ( $key === '' ) {
+                    return $carry;
+                }
+
+                $value = (string) $feature->value;
+
+                // Payment gateways share key "payment" with different provider values
+                // (eps, uddokta) — keep every enabled provider row.
+                if ( $key === 'payment' ) {
+                    if ( ! AddonActivationService::isFeatureValueEnabled( $value ) ) {
+                        return $carry;
+                    }
+
+                    $slot = $key . ':' . strtolower( trim( $value ) );
+                    $row  = [
+                        'key'        => $feature->key,
+                        'value'      => $value,
+                        'visibility' => $feature->visibility,
+                    ];
+                    $carry->put( $slot, $row );
+
+                    return $carry;
+                }
+
+                $existing = $carry->get( $key );
+
+                // Prefer enabling values; for numeric quotas keep the larger amount.
+                if ( $existing ) {
+                    $existingValue = (string) $existing['value'];
+                    $preferNew     = false;
+
+                    if ( AddonActivationService::isFeatureValueEnabled( $value )
+                        && ! AddonActivationService::isFeatureValueEnabled( $existingValue ) ) {
+                        $preferNew = true;
+                    } elseif ( is_numeric( $value ) && is_numeric( $existingValue )
+                        && (float) $value > (float) $existingValue ) {
+                        $preferNew = true;
+                    } elseif ( strtolower( $value ) === 'yes' && strtolower( $existingValue ) !== 'yes' ) {
+                        $preferNew = true;
+                    }
+
+                    if ( ! $preferNew ) {
+                        return $carry;
+                    }
+                }
 
                 $row = [
                     'key'        => $feature->key,
-                    'value'      => $feature->value,
+                    'value'      => $value,
                     'visibility' => $feature->visibility,
                 ];
 
@@ -60,8 +106,10 @@ class ProfileController extends Controller
                     $row['limit'] = $usage[ $key ]['limit'];
                 }
 
-                return $row;
-            } )
+                $carry->put( $key, $row );
+
+                return $carry;
+            }, collect() )
             ->values();
 
         return response()->json([
@@ -323,7 +371,11 @@ class ProfileController extends Controller
         return response()->json([
             'status' => 200,
             'shop_info' => $tenant,
-            'has_custom_domain' => $package?->has_custom_domain ?? 'no',
+            'has_custom_domain' => AddonActivationService::tenantHasFlagAccess(
+                (string) tenant()->id,
+                'has_custom_domain',
+                $package?->has_custom_domain ?? 'no',
+            ) ? 'yes' : 'no',
             'custom_domain_connection' => $domainRecord ? [
                 'domain' => $domainRecord->domain,
                 'status' => $domainRecord->status,
@@ -384,7 +436,11 @@ class ProfileController extends Controller
                 ->latest('id')
                 ->first();
 
-            if ( ( $package?->has_custom_domain ?? 'no' ) !== 'yes' ) {
+            if ( ! AddonActivationService::tenantHasFlagAccess(
+                (string) tenant()->id,
+                'has_custom_domain',
+                $package?->has_custom_domain ?? 'no',
+            ) ) {
                 return response()->json( [
                     'status'  => 403,
                     'message' => 'Your package does not include custom domain.',

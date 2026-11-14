@@ -19,11 +19,22 @@ class TenantAddonController extends Controller
     {
         $tenantType = $this->tenantTypeOrFail();
 
-        $activeIds = TenantInstalledAddon::on( 'mysql' )
+        $installStatuses = TenantInstalledAddon::on( 'mysql' )
             ->where( 'tenant_id', tenant()->id )
-            ->where( 'status', 'active' )
-            ->pluck( 'addon_id' )
-            ->all();
+            ->whereIn( 'status', [ 'active', 'pending', 'inactive' ] )
+            ->get( [ 'addon_id', 'status' ] )
+            ->groupBy( 'addon_id' )
+            ->map( function ( $rows ) {
+                $statuses = $rows->pluck( 'status' )->all();
+                if ( in_array( 'active', $statuses, true ) ) {
+                    return 'active';
+                }
+                if ( in_array( 'pending', $statuses, true ) ) {
+                    return 'pending';
+                }
+
+                return 'inactive';
+            } );
 
         $query = Addon::on( 'mysql' )
             ->with( 'features' )
@@ -35,10 +46,14 @@ class TenantAddonController extends Controller
             $query->where( 'addon_type', $request->input( 'addon_type' ) );
         }
 
-        $addons = $query->get()->map( function ( Addon $addon ) use ( $activeIds ) {
+        $addons = $query->get()->map( function ( Addon $addon ) use ( $installStatuses ) {
             $row = $addon->toArray();
-            $isActive = in_array( $addon->id, $activeIds, true );
-            $row['is_active'] = $isActive;
+            $installStatus = $installStatuses->get( $addon->id );
+            $isActive = $installStatus === 'active';
+            $isPending = $installStatus === 'pending';
+            $row['is_active']  = $isActive;
+            $row['is_pending'] = $isPending;
+            $row['install_status'] = $installStatus ?? null;
             $row['is_free']   = (float) $addon->price <= 0;
             $row['features']  = $addon->features
                 ->when( ! $isActive, fn ( $features ) => $features->where( 'visibility', 'public' ) )

@@ -1424,8 +1424,16 @@ class MerchantFrontendController extends Controller
                 'best_sub_category_id' => $this->resolveCmsSubcategory( $cms, 'best_sub_category_id' ),
                 'website_visits' => $package_info?->website_visits,
                 'already_visits' => $package_info?->already_visits,
-                'has_website' => $package_info?->has_website,
-                'has_custom_domain' => $package_info?->has_custom_domain,
+                'has_website' => \App\Services\AddonActivationService::tenantHasFlagAccess(
+                    (string) tenant()->id,
+                    'has_website',
+                    $package_info?->has_website,
+                ) ? 'yes' : 'no',
+                'has_custom_domain' => \App\Services\AddonActivationService::tenantHasFlagAccess(
+                    (string) tenant()->id,
+                    'has_custom_domain',
+                    $package_info?->has_custom_domain,
+                ) ? 'yes' : 'no',
                 'tenant_type' => tenant()->type,
             ];
         } );
