@@ -227,6 +227,7 @@ Route::middleware( [
         Route::prefix( 'page-builder' )->group( function () {
             Route::get( '/', [PageBuilderController::class, 'index'] );
             Route::get( 'lookup', [PageBuilderController::class, 'lookup'] );
+            Route::post( 'starter', [PageBuilderController::class, 'storeStarter'] );
             Route::post( '/', [PageBuilderController::class, 'store'] );
             Route::get( '{id}', [PageBuilderController::class, 'show'] );
             Route::match( ['PUT', 'PATCH'], '{id}', [PageBuilderController::class, 'update'] );

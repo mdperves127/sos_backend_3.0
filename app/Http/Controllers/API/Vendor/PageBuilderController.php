@@ -10,6 +10,7 @@ use App\Support\HeaderFooterConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -138,19 +139,79 @@ class PageBuilderController extends Controller
         }
 
         $data = $this->normalizePayload( $validator->validated() );
-
-        if ( ( $data['status'] ?? 'DRAFT' ) === 'PUBLISHED' && empty( $data['published_at'] ) ) {
-            $data['published_at'] = now();
-        }
-
-        $page = PageBuilder::create( $data );
+        $page = $this->upsertPage( $data );
 
         return response()->json( [
             'status'  => 200,
             'success' => true,
-            'message' => 'Page created successfully.',
+            'message' => $page->wasRecentlyCreated
+                ? 'Page created successfully.'
+                : 'Page saved successfully.',
             'data'    => $page->fresh()->toApiArray(),
-        ], 201 );
+        ], $page->wasRecentlyCreated ? 201 : 200 );
+    }
+
+    /**
+     * POST /api/page-builder/starter
+     * Create/update Home + Shop + Shop details + Checkout in one request.
+     */
+    public function storeStarter( Request $request )
+    {
+        $validator = Validator::make( $request->all(), [
+            'theme'  => ['nullable', 'string', Rule::in( ['one', 'two', 'three', 'four'] )],
+            'pages'  => ['required', 'array', 'min:1', 'max:20'],
+            'pages.*.path'     => ['required', 'string', 'max:255'],
+            'pages.*.slug'     => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'pages.*.pageName' => ['required', 'string', 'max:255'],
+            'pages.*.pageType' => ['required', Rule::in( PageBuilder::PAGE_TYPES )],
+            'pages.*.template' => ['nullable', 'string', 'max:255'],
+            'pages.*.blocks'   => ['nullable', 'array'],
+            'pages.*.sortOrder'=> ['nullable', 'integer', 'min:0'],
+            'pages.*.status'   => ['nullable', Rule::in( PageBuilder::STATUSES )],
+            'pages.*.seo'      => ['nullable', 'array'],
+            'pages.*.settings' => ['nullable', 'array'],
+        ] );
+
+        if ( $validator->fails() ) {
+            return $this->validationError( $validator->errors()->toArray() );
+        }
+
+        $pagesInput = $validator->validated()['pages'];
+        $paths = [];
+        $slugs = [];
+
+        foreach ( $pagesInput as $index => $pageInput ) {
+            $path = $this->normalizePath( (string) ( $pageInput['path'] ?? '' ) );
+            $slug = Str::slug( (string) ( $pageInput['slug'] ?? '' ) );
+
+            if ( in_array( $path, $paths, true ) || in_array( $slug, $slugs, true ) ) {
+                return $this->validationError( [
+                    "pages.{$index}" => ['Duplicate path or slug inside starter payload.'],
+                ] );
+            }
+
+            $paths[] = $path;
+            $slugs[] = $slug;
+        }
+
+        $saved = DB::transaction( function () use ( $pagesInput ) {
+            $out = [];
+
+            foreach ( $pagesInput as $pageInput ) {
+                $data = $this->normalizePayload( $pageInput );
+                $out[] = $this->upsertPage( $data )->fresh()->toApiArray();
+            }
+
+            return $out;
+        } );
+
+        return response()->json( [
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Starter pages created successfully.',
+            'theme'   => $request->input( 'theme' ),
+            'data'    => $saved,
+        ] );
     }
 
     /**
@@ -236,10 +297,11 @@ class PageBuilderController extends Controller
 
     /**
      * DELETE /api/page-builder/{id}
+     * Hard-delete so slug/path unique indexes are freed for recreate.
      */
     public function destroy( $id )
     {
-        $page = PageBuilder::find( $id );
+        $page = PageBuilder::withTrashed()->find( $id );
 
         if ( ! $page ) {
             return response()->json( [
@@ -250,7 +312,7 @@ class PageBuilderController extends Controller
             ], 404 );
         }
 
-        $page->delete();
+        $page->forceDelete();
 
         return response()->json( [
             'status'  => 200,
@@ -812,8 +874,9 @@ class PageBuilderController extends Controller
      */
     private function rules( ?int $ignoreId = null, bool $includeStatus = true ): array
     {
-        $pathRule = Rule::unique( 'page_builders', 'path' );
-        $slugRule = Rule::unique( 'page_builders', 'slug' );
+        // Ignore soft-deleted rows in validation; store() restores them when needed.
+        $pathRule = Rule::unique( 'page_builders', 'path' )->whereNull( 'deleted_at' );
+        $slugRule = Rule::unique( 'page_builders', 'slug' )->whereNull( 'deleted_at' );
 
         if ( $ignoreId ) {
             $pathRule = $pathRule->ignore( $ignoreId );
@@ -896,13 +959,55 @@ class PageBuilderController extends Controller
         return rtrim( $path, '/' ) ?: '/';
     }
 
+    /**
+     * Create, restore, or update a page by path/slug (handles soft-deleted conflicts).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function upsertPage( array $data ): PageBuilder
+    {
+        if ( ( $data['status'] ?? 'DRAFT' ) === 'PUBLISHED' && empty( $data['published_at'] ) ) {
+            $data['published_at'] = now();
+        }
+
+        $existing = PageBuilder::withTrashed()
+            ->where( function ( $query ) use ( $data ) {
+                $query->where( 'path', $data['path'] )
+                    ->orWhere( 'slug', $data['slug'] );
+            } )
+            ->orderByRaw( 'deleted_at is null desc' )
+            ->first();
+
+        if ( $existing ) {
+            // Free other soft-deleted rows that collide on path/slug.
+            PageBuilder::onlyTrashed()
+                ->where( 'id', '!=', $existing->id )
+                ->where( function ( $query ) use ( $data ) {
+                    $query->where( 'path', $data['path'] )
+                        ->orWhere( 'slug', $data['slug'] );
+                } )
+                ->forceDelete();
+
+            if ( $existing->trashed() ) {
+                $existing->restore();
+            }
+
+            $existing->update( $data );
+            $existing->wasRecentlyCreated = false;
+
+            return $existing->fresh();
+        }
+
+        return PageBuilder::create( $data );
+    }
+
     private function uniqueSlug( string $base ): string
     {
         $slug = Str::slug( $base ) ?: 'page';
         $candidate = $slug;
         $i = 1;
 
-        while ( PageBuilder::where( 'slug', $candidate )->exists() ) {
+        while ( PageBuilder::withTrashed()->where( 'slug', $candidate )->exists() ) {
             $candidate = $slug . '-' . $i++;
         }
 
@@ -915,7 +1020,7 @@ class PageBuilderController extends Controller
         $candidate = $path;
         $i = 1;
 
-        while ( PageBuilder::where( 'path', $candidate )->exists() ) {
+        while ( PageBuilder::withTrashed()->where( 'path', $candidate )->exists() ) {
             $candidate = $path . '-' . $i++;
         }
 

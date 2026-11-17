@@ -30,6 +30,8 @@ class PageBuilder extends Model
         'BLOG',
         'BLOG_DETAILS',
         'CHECKOUT',
+        'LOGIN',
+        'REGISTER',
     ];
 
     public const STATUSES = [
