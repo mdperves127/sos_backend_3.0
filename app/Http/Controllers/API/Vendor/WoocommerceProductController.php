@@ -41,60 +41,66 @@ class WoocommerceProductController extends Controller {
     }
 
     public function index(): JsonResponse {
-
         try {
+            $credential = WoocommerceCredential::where( 'vendor_id', vendorId() )
+                ->where( 'is_active', true )
+                ->latest( 'id' )
+                ->first();
 
-            $credentials = $this->wcCredential();
-            if ( !$credentials ) {
+            if ( ! $credential ) {
                 return response()->json( ['error' => 'No credentials found for this vendor.'], 404 );
             }
 
-            // Initialize pagination parameters
-            $perPage = 2;
-            $page    = request()->get( 'page', 1 ); // Default to page 1 if not provided
+            $stats = app( \App\Services\WooCommerce\WooCommerceProductSyncService::class )
+                ->syncAllFromWoo( $credential );
 
-            // Make the API request with pagination
-            $response = $this->client->request( 'GET', $credentials['wc_url'] . '/wp-json/wc/v3/products', [
-                'auth'  => [$credentials['wc_key'], $credentials['wc_secret']],
-                'query' => [
-                    'per_page' => $perPage,
-                    'page'     => $page,
-                ],
-            ] );
-
-            if ( !in_array( $response->getStatusCode(), [200, 201] ) ) {
-                return response()->json( ['error' => 'Failed to retrieve orders. Status code: ' . $response->getStatusCode()], $response->getStatusCode() );
-            }
-
-            // Parse response data
-            $products = json_decode( $response->getBody()->getContents(), true );
-
-            // Total pages and total count (use WooCommerce headers)
-            $totalCount = $response->getHeaderLine( 'X-WP-Total' );
-            $totalPages = $response->getHeaderLine( 'X-WP-TotalPages' );
-
-            $responseProductFetch = [];
-            if ( $totalPages > 1 ) {
-                for ( $i = 1; $i <= $totalPages; $i++ ) {
-                    $responseProductFetch[] = $this->wcProductFetch( $credentials, $i, 10 );
-                }
-            }
-
-            $totalProducts = Product::where( 'user_id', vendorId() )->get();
+            $totalProducts = Product::where( 'user_id', vendorId() )
+                ->where( 'product_type', 'woocommerce' )
+                ->latest( 'id' )
+                ->get();
 
             return response()->json( [
                 'status'     => 200,
                 'data'       => $totalProducts,
-                'data_count' => count( $totalProducts ),
-                'message'    => "Successfully synced",
+                'data_count' => $totalProducts->count(),
+                'sync'       => $stats,
+                'message'    => 'Successfully synced',
             ] );
-
         } catch ( Exception $e ) {
-            error_log( $e->getMessage() );
             return response()->json( ['error' => 'An error occurred: ' . $e->getMessage()], 500 );
         }
+    }
 
-        // ============================ old code ============================
+    /**
+     * Push a local AffSell product to WooCommerce (AffSell → WP).
+     */
+    public function wcProductStore( Request $request ): JsonResponse {
+        $productId = (int) $request->input( 'product_id' );
+        $product   = Product::where( 'user_id', vendorId() )->find( $productId );
+        if ( ! $product ) {
+            return response()->json( ['status' => 404, 'message' => 'Product not found'], 404 );
+        }
+
+        $credential = WoocommerceCredential::where( 'vendor_id', vendorId() )
+            ->where( 'is_active', true )
+            ->latest( 'id' )
+            ->first();
+        if ( ! $credential ) {
+            return response()->json( ['status' => 404, 'message' => 'No WooCommerce store connected'], 404 );
+        }
+
+        try {
+            $remote = app( \App\Services\WooCommerce\WooCommerceProductSyncService::class )
+                ->pushToWoo( $credential, $product );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => 'Product pushed to WooCommerce',
+                'data'    => $remote,
+            ] );
+        } catch ( Exception $e ) {
+            return response()->json( ['status' => 500, 'message' => $e->getMessage()], 500 );
+        }
     }
 
     public function wcProductFetch( $credential, $pageNumber = 1, $perPage = 10 ) {

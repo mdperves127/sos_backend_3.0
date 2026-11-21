@@ -28,7 +28,14 @@ class ProductStatusController extends Controller {
 
         $dropshipperTenantId = tenant() ? (string) tenant()->id : null;
 
-        // Query products across ALL vendor tenants
+        // Filter marketplace to one merchant store (aliases: store_id, merchant_id, tenant_id).
+        $storeId = request( 'store_id' ) ?: request( 'merchant_id' ) ?: request( 'tenant_id' );
+        $storeId = is_string( $storeId ) || is_numeric( $storeId )
+            ? trim( (string) $storeId )
+            : '';
+        $tenantIds = $storeId !== '' ? [$storeId] : null;
+
+        // Query products across merchant tenants (or a single store when store_id is set)
         $products = CrossTenantQueryService::queryAllTenants(
             Product::class,
             function ($query) use ($dropshipperTenantId) {
@@ -56,7 +63,9 @@ class ProductStatusController extends Controller {
                     ->when(request('start_commission') && request('end_commission'), function ($query) {
                         $query->whereBetween('discount_rate', [request('start_commission'), request('end_commission')]);
                     });
-            }
+            },
+            ['*'],
+            $tenantIds
         );
 
         // Filter out products that exist in ProductDetails

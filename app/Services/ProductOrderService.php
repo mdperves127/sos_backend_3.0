@@ -1588,57 +1588,30 @@ class ProductOrderService {
 
     protected static function wocommerceOrderStatusUpdate( $orderId, $systemStatus, $wcStatus ) {
         $order = Order::where( 'id', $orderId )->first();
-        if ( !$order ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'Order not found!',
-            ] );
+        if ( ! $order || empty( $order->wc_order_no ) ) {
+            return false;
         }
 
-        $wcOrderNo = explode( "-", $order->wc_order_no )[1];
-        if ( !$wcOrderNo ) {
-            return response()->json( [
-                'status'  => 404,
-                'message' => 'WooCommerce order number not found.',
-            ] );
+        // Skip if this status change originated from a WooCommerce webhook (loop guard).
+        if ( \App\Services\WooCommerce\WooCommerceLoopGuard::isMarked( 'order_local', $order->id ) ) {
+            return false;
         }
 
-        $client = new Client();
+        $credentials = WoocommerceCredential::where( 'vendor_id', $order->vendor_id )
+            ->where( 'is_active', true )
+            ->latest( 'id' )
+            ->first()
+            ?: WoocommerceCredential::where( 'vendor_id', $order->vendor_id )->latest( 'id' )->first();
+
+        if ( ! $credentials ) {
+            return false;
+        }
 
         try {
-
-            $credentials = WoocommerceCredential::where( 'vendor_id', $order->vendor_id )->first();
-            if ( !$credentials ) {
-                return response()->json( ['error' => 'No credentials found for this vendor.'], 404 );
-            }
-
-            // Make the API request with pagination
-            $response = $client->request( 'PUT', $credentials->wc_url . '/wp-json/wc/v3/orders/' . $wcOrderNo, [
-                'auth' => [$credentials->wc_key, $credentials->wc_secret],
-                'json' => [
-                    'status' => $wcStatus,
-                ],
-            ] );
-
-            if ( !in_array( $response->getStatusCode(), [200, 201] ) ) {
-                return response()->json( ['error' => 'Failed to retrieve orders. Status code: ' . $response->getStatusCode()], $response->getStatusCode() );
-            }
-
-            return true;
-
-            // Parse response data
-            $order = json_decode( $response->getBody(), true );
-
-            return response()->json( [
-                'status'  => 200,
-                'data'    => $order,
-                'message' => "Successfully synced",
-            ] );
-
+            return app( \App\Services\WooCommerce\WooCommerceOrderSyncService::class )
+                ->pushStatusToWoo( $credentials, $order, (string) $systemStatus );
         } catch ( Exception $e ) {
             return false;
-            // error_log( $e->getMessage() );
-            // return response()->json( ['error' => 'An error occurred: ' . $e->getMessage()], 500 );
         }
     }
 

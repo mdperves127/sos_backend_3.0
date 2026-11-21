@@ -39,171 +39,30 @@ class WoocommerceOrderController extends Controller {
 
     public function index(): JsonResponse {
         try {
+            $credential = WoocommerceCredential::where( 'vendor_id', vendorId() )
+                ->where( 'is_active', true )
+                ->latest( 'id' )
+                ->first();
 
-            $credentials = $this->wcCredential();
-            if (!$credentials) {
-                return response()->json(['error' => 'No credentials found for this vendor.'], 404);
+            if ( ! $credential ) {
+                return response()->json( ['error' => 'No credentials found for this vendor.'], 404 );
             }
 
-            // Initialize pagination parameters
-            $perPage = 10;
-            $page = request()->get('page', 1);
+            $stats = app( \App\Services\WooCommerce\WooCommerceOrderSyncService::class )
+                ->syncAllFromWoo( $credential );
 
-
-            // Make the API request with pagination
-            $response = $this->client->request('GET', $credentials['wc_url'] . '/wp-json/wc/v3/orders', [
-                'auth' => [$credentials['wc_key'], $credentials['wc_secret']],
-                'query' => [
-                    'per_page' => $perPage,
-                    'page' => $page,
-                ],
-            ]);
-
-            if (!in_array($response->getStatusCode(), [200, 201])) {
-                return response()->json(['error' => 'Failed to retrieve orders. Status code: ' . $response->getStatusCode()], $response->getStatusCode());
-            }
-
-            // Parse response data
-            $orders = json_decode($response->getBody()->getContents(), true);
-
-
-
-
-            // Total pages and total count (use WooCommerce headers)
-            $totalCount = $response->getHeaderLine('X-WP-Total');
-            $totalPages = $response->getHeaderLine('X-WP-TotalPages');
-
-
-            if($totalPages > 1)
-            {
-                for($i = 1; $i <= $totalPages; $i++)
-                {
-                    $responseOrderFetch = $this->wcOrderFetch($credentials, $i, 10);
-                }
-            }
-
-            $totalOrders = Order::where('vendor_id', vendorId())->get();
+            $totalOrders = Order::where( 'vendor_id', vendorId() )
+                ->whereNotNull( 'wc_order_no' )
+                ->latest( 'id' )
+                ->get();
 
             return response()->json( [
-                'status'  => 200,
-                'data'   => $totalOrders,
-                'data_count' => count( $totalOrders ),
-                'message' => "Successfully synced",
+                'status'     => 200,
+                'data'       => $totalOrders,
+                'data_count' => $totalOrders->count(),
+                'sync'       => $stats,
+                'message'    => 'Successfully synced',
             ] );
-
-            /**
-             * The following code is the old code that was replaced by the above code.
-             * The above code is more efficient and fetches all orders from all pages.
-             */
-
-            // Generate next and previous links
-            // $baseUrl = request()->url();
-            // $nextPage = ($page < $totalPages) ? $baseUrl . '?page=' . ($page + 1) . '&per_page=' . $perPage : null;
-            // $prevPage = ($page > 1) ? $baseUrl . '?page=' . ($page - 1) . '&per_page=' . $perPage : null;
-
-            // // Return paginated response
-            // return response()->json([
-            //     'data' => $orders,
-            //     'pagination' => [
-            //         'current_page' => (int)$page,
-            //         'per_page' => $perPage,
-            //         'total_count' => (int)$totalCount,
-            //         'total_pages' => (int)$totalPages,
-            //         'next_page' => $nextPage,
-            //         'prev_page' => $prevPage,
-            //     ],
-            // ]);
-
-            // ============================ Total Order Fetch and Pagination ============================
-
-
-            // ============================ old code ============================
-
-            //     $credentials = $this->wcCredential();
-            //     if ( !$credentials ) {
-            //         return response()->json( ['error' => 'No credentials found for this vendor.'], 404 );
-            //     }
-
-            //     $response = $this->client->request( 'GET', $credentials['wc_url'] . '/wp-json/wc/v3/orders?per_page=100', [
-            //         'auth' => [$credentials['wc_key'], $credentials['wc_secret']],
-            //     ] );
-
-            //     if ( !in_array( $response->getStatusCode(), [200, 201] ) ) {
-            //         return response()->json( ['error' => 'Failed to retrieve orders. Status code: ' . $response->getStatusCode()], $response->getStatusCode() );
-            //     }
-
-            //     $orders = json_decode( $response->getBody()->getContents(), true );
-
-
-            //     foreach ( $orders as $orderData ) {
-            //         try {
-            //             $orderNumber = 'WC-' . ( $orderData['number'] ?? '0' );
-
-            //             $existingOrder = Order::where( 'wc_order_no', $orderNumber )->first();
-
-            //             if ( $existingOrder ) {
-            //                 error_log( "Order with order_id $orderNumber already exists, skipping." );
-            //                 continue;
-            //             }
-
-            //             $order            = new Order();
-            //             $order->vendor_id = vendorId();
-
-            //             if ( isset( $orderData['billing'] ) ) {
-            //                 $billing        = $orderData['billing'];
-            //                 $order->name    = ( $billing['first_name'] ?? '' ) . ' ' . ( $billing['last_name'] ?? '' );
-            //                 $order->email   = $billing['email'] ?? '';
-            //                 $order->phone   = substr( $billing['phone'], 3 ) ?? '00000000';
-            //                 $order->address = ( $billing['address_1'] ?? '' ) . ', ' . ( $billing['address_2'] ?? '' );
-            //                 $order->city    = $billing['city'] ?? '';
-            //             } else {
-            //                 $order->name    = 'unknown';
-            //                 $order->email   = 'unknown';
-            //                 $order->phone   = '00000000';
-            //                 $order->address = 'unknown';
-            //                 $order->city    = 'unknown';
-            //             }
-
-            //             $order->wc_order_no    = $orderNumber;
-            //             $order->product_amount = $orderData['total'] ?? 0;
-            //             $order->due_amount     = $orderData['payment_method'] == "cod" ? $orderData['total'] : 0;
-            //             $order->order_media    = 'Woocommerce';
-            //             $order->status         = 'pending';
-            //             $order->last_status    = 'pending';
-            //             $order->category_id    = 0;
-            //             $order->custom_order   = 1;
-            //             $order->qty            = getWcItemTotalQty( $orderData );
-            //             $order->save();
-
-            //             if ( isset( $orderData['line_items'] ) ) {
-            //                 foreach ( $orderData['line_items'] as $orderItemData ) {
-            //                     $orderItem           = new OrderDetails();
-            //                     $orderItem->order_id = $order->id;
-
-            //                     $orderItem->product_id = $orderItemData['product_id'] ?? null;
-
-            //                     if ( is_null( $orderItem->product_id ) ) {
-            //                         error_log( "Missing product_id for order " . $order->order_id );
-            //                         continue; // Skip if product_id is missing
-            //                     }
-
-            //                     $orderItem->sub_qty   = $orderItemData['quantity'] ?? 0;
-            //                     $orderItem->rate      = $orderItemData['price'] ?? 0;
-            //                     $orderItem->sub_total = $orderItemData['subtotal'] ?? 0;
-            //                     $orderItem->save();
-            //                 }
-            //             }
-            //         } catch ( \Exception $e ) {
-            //             return response()->json( ['error' => 'An error occurred: ' . $e->getMessage()], 500 );
-            //         }
-            //     }
-
-            //     return response()->json( [
-            //         'status'  => 200,
-            //         'data'   => $orders,
-            //         'data_count' => count( $orders ),
-            //         'message' => "Successfully synced",
-            //     ] );
 
         } catch ( Exception $e ) {
             error_log( $e->getMessage() );
@@ -211,6 +70,14 @@ class WoocommerceOrderController extends Controller {
         }
 
         // ============================ old code ============================
+    }
+
+
+    /**
+     * Manual order sync endpoint (legacy route POST woo-commerce-order/store).
+     */
+    public function store( Request $request ): JsonResponse {
+        return $this->index();
     }
 
     public function wcOrderFetch($credential, $pageNumber = 1, $perPage = 10) {

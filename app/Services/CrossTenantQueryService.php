@@ -17,18 +17,26 @@ class CrossTenantQueryService
      * @param array $selectFields Fields to select from the model
      * @return Collection
      */
-    public static function queryAllTenants( string $modelClass, callable $queryCallback, array $selectFields = ['*'] ): Collection {
-        return self::queryTenantsByType( 'merchant', $modelClass, $queryCallback, $selectFields );
+    public static function queryAllTenants( string $modelClass, callable $queryCallback, array $selectFields = ['*'], ?array $tenantIds = null ): Collection {
+        return self::queryTenantsByType( 'merchant', $modelClass, $queryCallback, $selectFields, $tenantIds );
     }
 
     /**
      * Query a model across all tenant databases for a given tenant type.
+     *
+     * @param  array<int, string|int>|null  $tenantIds  when set, only these tenant IDs are queried
      */
-    public static function queryTenantsByType( string $tenantType, string $modelClass, callable $queryCallback, array $selectFields = ['*'] ): Collection {
+    public static function queryTenantsByType( string $tenantType, string $modelClass, callable $queryCallback, array $selectFields = ['*'], ?array $tenantIds = null ): Collection {
         $results = collect();
         $model   = new $modelClass;
 
-        $tenants = Tenant::on( 'mysql' )->where( 'type', $tenantType )->get();
+        $tenants = Tenant::on( 'mysql' )
+            ->where( 'type', $tenantType )
+            ->when( $tenantIds !== null, function ( $q ) use ( $tenantIds ) {
+                $ids = array_values( array_filter( array_map( 'strval', $tenantIds ) ) );
+                $q->whereIn( 'id', $ids === [] ? ['__none__'] : $ids );
+            } )
+            ->get();
 
         \Log::info('CrossTenantQuery: Found tenants', ['count' => $tenants->count()]);
 

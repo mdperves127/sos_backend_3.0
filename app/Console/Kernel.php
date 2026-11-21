@@ -25,6 +25,8 @@ class Kernel extends ConsoleKernel
         $schedule->command( 'pos:installment-reminder' )->dailyAt( '09:05' )->withoutOverlapping();
         // Pre-order expected delivery reminders for authenticated customers.
         $schedule->command( 'preorder:delivery-reminder' )->dailyAt( '09:10' )->withoutOverlapping();
+        // WooCommerce fallback sync when webhooks miss events (every 30 minutes).
+        $schedule->command( 'woocommerce:fallback-sync' )->everyThirtyMinutes()->withoutOverlapping();
     }
 
     /**

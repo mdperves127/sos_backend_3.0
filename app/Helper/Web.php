@@ -395,7 +395,11 @@ function percentage( $amount, $discountAmount ) {
 }
 
 function wcCredential() {
-    return WoocommerceCredential::where( 'vendor_id', Auth::id() )->first();
+    return WoocommerceCredential::where( 'vendor_id', vendorId() )
+        ->where( 'is_active', true )
+        ->latest( 'id' )
+        ->first()
+        ?: WoocommerceCredential::where( 'vendor_id', vendorId() )->latest( 'id' )->first();
 }
 
 if ( !function_exists( 'getWcItemTotalQty' ) ) {

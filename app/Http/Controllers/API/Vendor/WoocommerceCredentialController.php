@@ -4,17 +4,20 @@ namespace App\Http\Controllers\API\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\WoocommerceCredential;
+use App\Services\WooCommerceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class WoocommerceCredentialController extends Controller {
+    public function __construct( protected WooCommerceService $woo ) {
+    }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index() {
-
-        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->get();
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )
+            ->latest( 'id' )
+            ->get()
+            ->map( fn ( WoocommerceCredential $row ) => $row->toPublicArray() );
 
         return response()->json( [
             'status' => 200,
@@ -22,76 +25,175 @@ class WoocommerceCredentialController extends Controller {
         ] );
     }
 
-    /**
-     * Store the newly created resource in storage.
-     */
     public function store( Request $request ) {
         $validator = Validator::make( $request->all(), [
-            'wc_key'    => 'required|unique:woocommerce_credentials',
-            'wc_secret' => 'required|unique:woocommerce_credentials',
-            'wc_url'    => 'required|unique:woocommerce_credentials',
-        ], [
-            'wc_key.unique'    => 'This appkey register with another vendor',
-            'wc_secret.unique' => 'This secretkey Already register with another vendor',
-            'wc_url.unique'    => 'This website Already register with another vendor',
+            'wc_key'    => 'required',
+            'wc_secret' => 'required',
+            'wc_url'    => 'required|url',
         ] );
 
         if ( $validator->fails() ) {
             return response()->json( [
                 'status' => 400,
                 'errors' => $validator->messages(),
-            ] );
+            ], 400 );
         }
 
-        $data            = new WoocommerceCredential();
-        $data->vendor_id = auth()->user()->id;
-        $data->wc_key    = $request->wc_key;
-        $data->wc_secret = $request->wc_secret;
-        $data->wc_url    = $request->wc_url;
+        $url = rtrim( (string) $request->wc_url, '/' );
+
+        $taken = WoocommerceCredential::where( 'wc_url', $url )
+            ->where( 'vendor_id', '!=', vendorId() )
+            ->exists();
+        if ( $taken ) {
+            return response()->json( [
+                'status' => 400,
+                'errors' => ['wc_url' => ['This website is already registered with another vendor']],
+            ], 400 );
+        }
+
+        try {
+            $this->woo->validateConnection( $url, (string) $request->wc_key, (string) $request->wc_secret );
+        } catch ( \Throwable $e ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => $e->getMessage(),
+            ], 422 );
+        }
+
+        // Single active store per vendor (existing architecture).
+        WoocommerceCredential::where( 'vendor_id', vendorId() )->update( ['is_active' => false] );
+
+        $data                     = new WoocommerceCredential();
+        $data->vendor_id          = vendorId();
+        $data->wc_key             = $request->wc_key;
+        $data->wc_secret          = $request->wc_secret;
+        $data->wc_url             = $url;
+        $data->status             = WoocommerceCredential::STATUS_CONNECTED;
+        $data->connection_message = 'Connected';
+        $data->is_active          = true;
+        $data->sync_direction     = WoocommerceCredential::DIRECTION_TWO_WAY;
+        $data->product_sync       = true;
+        $data->order_sync         = true;
+        $data->stock_sync         = true;
+        $data->auto_sync          = true;
+        $data->webhook_secret     = Str::random( 32 );
         $data->save();
-        return $this->response( "Created successfull" );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Created successfull',
+            'data'    => $data->toPublicArray(),
+        ] );
     }
 
-    /**
-     * Edit the resource.
-     */
     public function edit( $id ) {
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->find( $id );
+        if ( ! $data ) {
+            return response()->json( ['status' => 404, 'message' => 'Not found'], 404 );
+        }
 
-        return $this->response( WoocommerceCredential::find( $id ) );
+        return response()->json( [
+            'status' => 200,
+            'data'   => $data->toPublicArray(),
+        ] );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update( Request $request, $id ) {
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->find( $id );
+        if ( ! $data ) {
+            return response()->json( ['status' => 404, 'message' => 'Not found'], 404 );
+        }
 
         $validator = Validator::make( $request->all(), [
-            'wc_key'    => 'required|unique:woocommerce_credentials,wc_key,' . $id . ',id,vendor_id,' . vendorId(),
-            'wc_secret' => 'required|unique:woocommerce_credentials,wc_secret,' . $id . ',id,vendor_id,' . vendorId(),
-            'wc_url'    => 'required|unique:woocommerce_credentials,wc_url,' . $id . ',id,vendor_id,' . vendorId(),
+            'wc_key'    => 'required',
+            'wc_secret' => 'required',
+            'wc_url'    => 'required|url',
         ] );
 
         if ( $validator->fails() ) {
             return response()->json( [
                 'status' => 400,
                 'errors' => $validator->messages(),
+            ], 400 );
+        }
+
+        $url = rtrim( (string) $request->wc_url, '/' );
+
+        try {
+            $this->woo->validateConnection( $url, (string) $request->wc_key, (string) $request->wc_secret );
+        } catch ( \Throwable $e ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => $e->getMessage(),
+            ], 422 );
+        }
+
+        $data->wc_key             = $request->wc_key;
+        $data->wc_secret          = $request->wc_secret;
+        $data->wc_url             = $url;
+        $data->status             = WoocommerceCredential::STATUS_CONNECTED;
+        $data->connection_message = 'Updated and validated';
+        $data->is_active          = true;
+        $data->last_error         = null;
+        $data->save();
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Update successfull',
+            'data'    => $data->toPublicArray(),
+        ] );
+    }
+
+    public function destroy( $id ) {
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->find( $id );
+        if ( ! $data ) {
+            return response()->json( ['status' => 404, 'message' => 'Not found'], 404 );
+        }
+        $data->delete();
+
+        return $this->response( 'Deleted successfull' );
+    }
+
+    public function status( $id ) {
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->find( $id );
+        if ( ! $data ) {
+            return response()->json( ['status' => 404, 'message' => 'Not found'], 404 );
+        }
+
+        try {
+            $this->woo->validateConnection( $data->wc_url, $data->wc_key, $data->wc_secret );
+            $data->update( [
+                'status'             => WoocommerceCredential::STATUS_CONNECTED,
+                'connection_message' => 'Connection OK',
+                'last_error'         => null,
+            ] );
+        } catch ( \Throwable $e ) {
+            $data->update( [
+                'status'             => WoocommerceCredential::STATUS_ERROR,
+                'connection_message' => $e->getMessage(),
+                'last_error'         => $e->getMessage(),
             ] );
         }
 
-        $data            = WoocommerceCredential::find( $id );
-        $data->vendor_id = auth()->user()->id;
-        $data->wc_key    = $request->wc_key;
-        $data->wc_secret = $request->wc_secret;
-        $data->wc_url    = $request->wc_url;
-        $data->save();
-        return $this->response( "Update successfull" );
+        return response()->json( [
+            'status' => 200,
+            'data'   => $data->fresh()->toPublicArray(),
+        ] );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy( $id ) {
-        WoocommerceCredential::find( $id )->delete();
-        return $this->response( 'Deleted successfull' );
+    public function default( $id ) {
+        $data = WoocommerceCredential::where( 'vendor_id', vendorId() )->find( $id );
+        if ( ! $data ) {
+            return response()->json( ['status' => 404, 'message' => 'Not found'], 404 );
+        }
+
+        WoocommerceCredential::where( 'vendor_id', vendorId() )->update( ['is_active' => false] );
+        $data->update( ['is_active' => true] );
+
+        return response()->json( [
+            'status'  => 200,
+            'message' => 'Default store updated.',
+            'data'    => $data->fresh()->toPublicArray(),
+        ] );
     }
 }

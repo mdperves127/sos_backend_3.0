@@ -484,7 +484,9 @@ Count: `GET /api/dropshipper/request-count-pending` returns `{"status":200,"coun
 
 `GET /api/tenant-dropshipper/products?page=1`
 
-Optional filters: `search`, `warranty`, `category_id`, `start_stock` + `end_stock`, `start_price` + `end_price`, `start_commission` + `end_commission`, and `high_to_low` or `low_to_high`.
+Optional filters: `store_id` (aliases: `merchant_id`, `tenant_id`) to limit results to one merchant store, `search`, `warranty`, `category_id`, `start_stock` + `end_stock`, `start_price` + `end_price`, `start_commission` + `end_commission`, and `high_to_low` or `low_to_high`.
+
+Example by store: `GET /api/tenant-dropshipper/products?store_id=mymerchant&page=1`
 
 ```json
 {

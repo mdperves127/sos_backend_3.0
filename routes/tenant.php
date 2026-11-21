@@ -54,6 +54,8 @@ use App\Http\Controllers\API\Vendor\WarehouseController;
 use App\Http\Controllers\API\Vendor\WoocommerceCredentialController as WooCommerceCredentialController;
 use App\Http\Controllers\API\Vendor\WoocommerceOrderController as WooCommerceOrderController;
 use App\Http\Controllers\API\Vendor\WoocommerceProductController as WooCommerceProductController;
+use App\Http\Controllers\Tenant\WooCommerceIntegrationController;
+use App\Http\Controllers\Tenant\WooCommerceWebhookController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Tenant\AamarpayController;
 use App\Http\Controllers\API\Admin\TenantMaterialController;
@@ -117,6 +119,9 @@ Route::middleware( [
     Route::post( 'forgot/password', [TenantForgotPasswordController::class, 'sendResetLinkEmail'] );
     Route::post( 'password/reset', [TenantResetPasswordController::class, 'reset'] );
     Route::post( 'frontend-order-create/guest', [TenantOrderController::class, 'guestStore'] );
+
+    // WooCommerce webhooks (public on tenant domain; signature verified in controller)
+    Route::post( 'woocommerce/webhook', [WooCommerceWebhookController::class, 'handle'] );
 
     Route::get('tenant-frontend/delivery-charge', [TenantDeliveryChargeController::class, 'index']);
 
@@ -575,7 +580,7 @@ Route::middleware( [
         Route::post( 'new-order/{tenant_id?}', [VendorDashboardController::class, 'newShipmentOrder'] );
         Route::get( 'get-redx-area', [VendorDashboardController::class, 'getRedxArea'] );
 
-        //Woo-commerce-credential Route
+        // Legacy WooCommerce credential CRUD (secrets masked in responses)
         Route::prefix( 'tenant-woo-commerce-credential' )->group( function () {
             Route::get( '/', [WooCommerceCredentialController::class, 'index'] );
             Route::post( 'store', [WooCommerceCredentialController::class, 'store'] );
@@ -586,7 +591,18 @@ Route::middleware( [
             Route::get( 'default/{id}', [WooCommerceCredentialController::class, 'default'] );
         } );
 
-        //Woo-commerce-credential Route
+        // Merchant WooCommerce integration dashboard API
+        Route::prefix( 'woocommerce' )->group( function () {
+            Route::get( '/', [WooCommerceIntegrationController::class, 'show'] );
+            Route::post( 'connect', [WooCommerceIntegrationController::class, 'connect'] );
+            Route::post( 'disconnect', [WooCommerceIntegrationController::class, 'disconnect'] );
+            Route::post( 'reconnect', [WooCommerceIntegrationController::class, 'reconnect'] );
+            Route::post( 'settings', [WooCommerceIntegrationController::class, 'updateSettings'] );
+            Route::post( 'sync-now', [WooCommerceIntegrationController::class, 'syncNow'] );
+            Route::get( 'history', [WooCommerceIntegrationController::class, 'history'] );
+            Route::post( 'history/{id}/retry', [WooCommerceIntegrationController::class, 'retry'] );
+        } );
+
         Route::prefix( 'woo-commerce-order' )->group( function () {
             Route::get( '/', [WooCommerceOrderController::class, 'index'] );
             Route::post( 'store', [WooCommerceOrderController::class, 'store'] );
