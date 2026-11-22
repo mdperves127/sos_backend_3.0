@@ -41,7 +41,8 @@ class WoocommerceCredentialController extends Controller {
 
         $url = rtrim( (string) $request->wc_url, '/' );
 
-        $taken = WoocommerceCredential::where( 'wc_url', $url )
+        $taken = WoocommerceCredential::withTrashed()
+            ->where( 'wc_url', $url )
             ->where( 'vendor_id', '!=', vendorId() )
             ->exists();
         if ( $taken ) {
@@ -60,10 +61,28 @@ class WoocommerceCredentialController extends Controller {
             ], 422 );
         }
 
-        // Single active store per vendor (existing architecture).
-        WoocommerceCredential::where( 'vendor_id', vendorId() )->update( ['is_active' => false] );
+        // Reuse / restore this vendor's row after delete or disconnect.
+        $data = WoocommerceCredential::withTrashed()
+            ->where( 'vendor_id', vendorId() )
+            ->where( 'wc_url', $url )
+            ->latest( 'id' )
+            ->first()
+            ?: WoocommerceCredential::withTrashed()
+                ->where( 'vendor_id', vendorId() )
+                ->latest( 'id' )
+                ->first();
 
-        $data                     = new WoocommerceCredential();
+        if ( ! $data ) {
+            $data = new WoocommerceCredential();
+        } elseif ( method_exists( $data, 'trashed' ) && $data->trashed() ) {
+            $data->restore();
+        }
+
+        WoocommerceCredential::withTrashed()
+            ->where( 'vendor_id', vendorId() )
+            ->when( $data->id, fn ( $q ) => $q->where( 'id', '!=', $data->id ) )
+            ->update( ['is_active' => false] );
+
         $data->vendor_id          = vendorId();
         $data->wc_key             = $request->wc_key;
         $data->wc_secret          = $request->wc_secret;
@@ -71,12 +90,13 @@ class WoocommerceCredentialController extends Controller {
         $data->status             = WoocommerceCredential::STATUS_CONNECTED;
         $data->connection_message = 'Connected';
         $data->is_active          = true;
-        $data->sync_direction     = WoocommerceCredential::DIRECTION_TWO_WAY;
-        $data->product_sync       = true;
-        $data->order_sync         = true;
-        $data->stock_sync         = true;
-        $data->auto_sync          = true;
-        $data->webhook_secret     = Str::random( 32 );
+        $data->sync_direction     = $data->sync_direction ?: WoocommerceCredential::DIRECTION_TWO_WAY;
+        $data->product_sync       = $data->product_sync ?? true;
+        $data->order_sync         = $data->order_sync ?? true;
+        $data->stock_sync         = $data->stock_sync ?? true;
+        $data->auto_sync          = $data->auto_sync ?? true;
+        $data->webhook_secret     = $data->webhook_secret ?: Str::random( 32 );
+        $data->last_error         = null;
         $data->save();
 
         return response()->json( [
