@@ -55,6 +55,10 @@ function productImageUpload( $file, $path = 'uploads/product' ) {
 
 function fileUploadFromUrl( $url, $path, $width = null, $height = null, $quality = 100 ) {
     $extension = strtolower( pathinfo( parse_url( $url, PHP_URL_PATH ) ?? '', PATHINFO_EXTENSION ) ?: 'jpg' );
+    if ( ! in_array( $extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true ) ) {
+        $extension = 'jpg';
+    }
+
     $imageName = Str::random( 10 ) . '-' . time() . '.' . $extension;
     $imagePath = $path . '/' . $imageName;
     $fullPath  = public_path( $imagePath );
@@ -64,7 +68,51 @@ function fileUploadFromUrl( $url, $path, $width = null, $height = null, $quality
         mkdir( $directory, 0755, true );
     }
 
-    $imageContents = file_get_contents( $url );
+    // Prefer cURL/Guzzle — many hosts set allow_url_fopen=0 so file_get_contents(https://) fails.
+    $imageContents = null;
+
+    try {
+        $client   = new \GuzzleHttp\Client( [
+            'timeout'         => 30,
+            'connect_timeout' => 10,
+            'http_errors'     => false,
+            'verify'          => false,
+        ] );
+        $response = $client->get( $url );
+        if ( $response->getStatusCode() >= 200 && $response->getStatusCode() < 300 ) {
+            $imageContents = (string) $response->getBody();
+        }
+    } catch ( \Throwable $e ) {
+        $imageContents = null;
+    }
+
+    if ( $imageContents === null || $imageContents === '' ) {
+        if ( function_exists( 'curl_init' ) ) {
+            $ch = curl_init( $url );
+            curl_setopt_array( $ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ] );
+            $imageContents = curl_exec( $ch );
+            $code          = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+            curl_close( $ch );
+            if ( $code < 200 || $code >= 300 || $imageContents === false ) {
+                $imageContents = null;
+            }
+        }
+    }
+
+    if ( ( $imageContents === null || $imageContents === '' ) && ini_get( 'allow_url_fopen' ) ) {
+        $imageContents = @file_get_contents( $url );
+    }
+
+    if ( $imageContents === null || $imageContents === '' ) {
+        throw new \RuntimeException( 'Unable to download image from URL (allow_url_fopen may be off; cURL/Guzzle also failed).' );
+    }
+
     file_put_contents( $fullPath, $imageContents );
 
     return $imagePath;

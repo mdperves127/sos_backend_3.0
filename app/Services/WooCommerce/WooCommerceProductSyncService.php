@@ -324,25 +324,45 @@ class WooCommerceProductSyncService {
             return;
         }
 
+        $savedAny = false;
+
         foreach ( $images as $loop => $image ) {
             $src = $image['src'] ?? null;
             if ( ! $src ) {
                 continue;
             }
-            $path = fileUploadFromUrl( $src, 'uploads/product' );
+
+            try {
+                $path = fileUploadFromUrl( $src, 'uploads/product' );
+            } catch ( \Throwable $e ) {
+                Log::warning( 'woo.image_download_failed', [
+                    'url'     => $src,
+                    'message' => $e->getMessage(),
+                ] );
+                continue;
+            }
+
             if ( ! $path ) {
                 continue;
             }
-            if ( $loop === 0 ) {
+
+            $savedAny = true;
+
+            if ( $loop === 0 || ! $product->image ) {
                 $product->image = $path;
                 continue;
             }
+
             if ( $product->exists ) {
                 ProductImage::firstOrCreate( [
                     'product_id' => $product->id,
                     'image'      => $path,
                 ] );
             }
+        }
+
+        if ( ! $savedAny && ! $product->image ) {
+            $product->image = 'uploads/product/no-image.png';
         }
     }
 
