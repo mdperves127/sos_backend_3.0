@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Jobs\WooCommerceSyncJob;
 use App\Models\WoocommerceCredential;
 use App\Models\WoocommerceSyncLog;
+use App\Services\WooCommerce\WooCommerceOrderSyncService;
+use App\Services\WooCommerce\WooCommerceProductSyncService;
 use App\Services\WooCommerce\WooCommerceSyncLogger;
 use App\Services\WooCommerceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -205,27 +208,100 @@ class WooCommerceIntegrationController extends Controller {
             return response()->json( ['status' => 422, 'message' => 'type must be full, products or orders.'], 422 );
         }
 
-        // Log before dispatch: with QUEUE_CONNECTION=sync the job runs inline and
-        // must not tear down the HTTP tenant connection before this request finishes.
-        WooCommerceSyncLogger::log(
+        $log = WooCommerceSyncLogger::log(
             $credential,
             'manual',
             $credential->sync_direction ?: WoocommerceCredential::DIRECTION_TWO_WAY,
             'pending',
-            'Manual sync queued: ' . $type
+            'Manual sync started: ' . $type
         );
 
-        WooCommerceSyncJob::dispatch(
-            (string) tenant( 'id' ),
-            $type,
-            ['manual' => true],
-            $credential->id
-        );
+        // Manual Sync Now runs inline so history leaves "pending" and products appear
+        // without requiring a queue worker. Webhooks/fallback still use the job.
+        try {
+            $results = $this->runManualSync( $credential, $type );
+            $message = $this->formatSyncMessage( $type, $results );
 
-        return response()->json( [
-            'status'  => 200,
-            'message' => 'Sync queued.',
-        ] );
+            $log->update( [
+                'status'        => 'success',
+                'message'       => $message,
+                'payload_after' => $results,
+            ] );
+            WooCommerceSyncLogger::markCredentialSynced( $credential, true );
+
+            return response()->json( [
+                'status'  => 200,
+                'message' => $message,
+                'data'    => $results,
+            ] );
+        } catch ( \Throwable $e ) {
+            Log::error( 'woo.manual_sync_failed', [
+                'tenant' => tenant( 'id' ),
+                'type'   => $type,
+                'error'  => $e->getMessage(),
+            ] );
+
+            $log->update( [
+                'status'  => 'failed',
+                'message' => $e->getMessage(),
+            ] );
+            WooCommerceSyncLogger::markCredentialSynced( $credential, false, $e->getMessage() );
+
+            return response()->json( [
+                'status'  => 500,
+                'message' => 'Sync failed: ' . $e->getMessage(),
+            ], 500 );
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function runManualSync( WoocommerceCredential $credential, string $type ): array {
+        $products = app( WooCommerceProductSyncService::class );
+        $orders   = app( WooCommerceOrderSyncService::class );
+
+        return match ( $type ) {
+            'products' => ['products' => $products->syncAllFromWoo( $credential )],
+            'orders'   => ['orders' => $orders->syncAllFromWoo( $credential )],
+            default    => [
+                'products' => $products->syncAllFromWoo( $credential ),
+                'orders'   => $orders->syncAllFromWoo( $credential ),
+            ],
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $results
+     */
+    private function formatSyncMessage( string $type, array $results ): string {
+        $parts = [];
+        if ( isset( $results['products'] ) && is_array( $results['products'] ) ) {
+            $p = $results['products'];
+            $parts[] = sprintf(
+                'products: imported %d, updated/skipped %d, failed %d',
+                (int) ( $p['imported'] ?? 0 ),
+                (int) ( $p['skipped'] ?? 0 ),
+                (int) ( $p['failed'] ?? 0 )
+            );
+            if ( ! empty( $p['message'] ) ) {
+                $parts[] = (string) $p['message'];
+            }
+        }
+        if ( isset( $results['orders'] ) && is_array( $results['orders'] ) ) {
+            $o = $results['orders'];
+            $parts[] = sprintf(
+                'orders: imported %d, updated %d, failed %d',
+                (int) ( $o['imported'] ?? 0 ),
+                (int) ( $o['updated'] ?? 0 ),
+                (int) ( $o['failed'] ?? 0 )
+            );
+            if ( ! empty( $o['message'] ) ) {
+                $parts[] = (string) $o['message'];
+            }
+        }
+
+        return $parts === [] ? ( 'Manual sync finished: ' . $type ) : implode( '; ', $parts );
     }
 
     public function history( Request $request ): JsonResponse {

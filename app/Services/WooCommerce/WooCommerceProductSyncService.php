@@ -99,8 +99,18 @@ class WooCommerceProductSyncService {
                 $before ? $stats['skipped']++ : $stats['imported']++;
             } catch ( \Throwable $e ) {
                 $stats['failed']++;
+                $stats['errors'][] = [
+                    'wc_id'   => $wcProduct['id'] ?? null,
+                    'message' => $e->getMessage(),
+                ];
+                Log::warning( 'woo.product_sync_item_failed', [
+                    'wc_id'   => $wcProduct['id'] ?? null,
+                    'message' => $e->getMessage(),
+                ] );
             }
         }
+
+        $stats['fetched'] = count( $products );
 
         return $stats;
     }

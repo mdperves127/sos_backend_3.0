@@ -19,11 +19,7 @@ class WoocommerceCredential extends Model {
     ];
 
     protected $casts = [
-        'product_sync'    => 'boolean',
-        'order_sync'      => 'boolean',
-        'stock_sync'      => 'boolean',
-        'auto_sync'       => 'boolean',
-        'is_active'       => 'boolean',
+        // Keep sync toggles uncast: missing columns are null and must default to ON.
         'last_synced_at'  => 'datetime',
         'last_success_at' => 'datetime',
     ];
@@ -47,20 +43,21 @@ class WoocommerceCredential extends Model {
     }
 
     public function canSyncProducts( string $direction ): bool {
-        return (bool) $this->is_active
-            && (bool) $this->product_sync
+        // Null = column not migrated yet → treat as enabled (legacy rows).
+        return ( $this->is_active ?? true )
+            && ( $this->product_sync ?? true )
             && $this->allowsDirection( $direction );
     }
 
     public function canSyncOrders( string $direction ): bool {
-        return (bool) $this->is_active
-            && (bool) $this->order_sync
+        return ( $this->is_active ?? true )
+            && ( $this->order_sync ?? true )
             && $this->allowsDirection( $direction );
     }
 
     public function canSyncStock( string $direction ): bool {
-        return (bool) $this->is_active
-            && (bool) $this->stock_sync
+        return ( $this->is_active ?? true )
+            && ( $this->stock_sync ?? true )
             && $this->allowsDirection( $direction );
     }
 
@@ -77,11 +74,11 @@ class WoocommerceCredential extends Model {
             'status'              => $this->status ?: self::STATUS_DISCONNECTED,
             'connection_message'  => $this->connection_message,
             'sync_direction'      => $this->sync_direction ?: self::DIRECTION_TWO_WAY,
-            'product_sync'        => (bool) $this->product_sync,
-            'order_sync'          => (bool) $this->order_sync,
-            'stock_sync'          => (bool) $this->stock_sync,
-            'auto_sync'           => (bool) $this->auto_sync,
-            'is_active'           => (bool) $this->is_active,
+            'product_sync'        => (bool) ( $this->product_sync ?? true ),
+            'order_sync'          => (bool) ( $this->order_sync ?? true ),
+            'stock_sync'          => (bool) ( $this->stock_sync ?? true ),
+            'auto_sync'           => (bool) ( $this->auto_sync ?? true ),
+            'is_active'           => (bool) ( $this->is_active ?? true ),
             'last_synced_at'      => optional( $this->last_synced_at )->toIso8601String(),
             'last_success_at'     => optional( $this->last_success_at )->toIso8601String(),
             'last_error'          => $this->last_error,
