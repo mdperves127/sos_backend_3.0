@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Services\PlatformFeeService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class CreateCustomPackageRequest extends FormRequest
 {
@@ -39,6 +41,12 @@ class CreateCustomPackageRequest extends FormRequest
             'employee_create'           => 'nullable|in:yes,no',
             'has_website'               => 'nullable|in:yes,no',
             'has_custom_domain'         => 'nullable|in:yes,no',
+            'dropship_fee_type'         => ['sometimes', 'nullable', Rule::in( array_merge( PlatformFeeService::PLAN_TYPES, [''] ) )],
+            'dropship_fee_value'        => ['sometimes', 'nullable', 'numeric', 'min:0', 'regex:/^\d{1,10}(\.\d{1,2})?$/', function ( $attribute, $value, $fail ) {
+                if ( $this->input( 'dropship_fee_type' ) === PlatformFeeService::TYPE_PERCENTAGE && (float) $value > 100 ) {
+                    $fail( 'Percentage platform fee cannot exceed 100.' );
+                }
+            }],
         ];
     }
 

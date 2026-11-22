@@ -41,6 +41,10 @@ class SubscriptionService
             'employee_create'           => ( $data['employee_create'] ?? 'no' ) === 'yes' ? 'yes' : null,
             'has_website'               => $data['has_website'] ?? 'no',
             'has_custom_domain'         => $data['has_custom_domain'] ?? 'no',
+            'dropship_fee_type'         => ! empty( $data['dropship_fee_type'] ) ? $data['dropship_fee_type'] : null,
+            'dropship_fee_value'        => ! empty( $data['dropship_fee_type'] )
+                ? round( max( 0, (float) ( $data['dropship_fee_value'] ?? 0 ) ), 2 )
+                : null,
         ] );
     }
 
