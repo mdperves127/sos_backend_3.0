@@ -48,15 +48,24 @@ class WooCommerceIntegrationController extends Controller {
         $key    = (string) $request->input( 'wc_key' );
         $secret = (string) $request->input( 'wc_secret' );
 
-        // Prevent another tenant/vendor claiming the same store URL inside this tenant DB is fine;
-        // globally, URL uniqueness was already in the legacy controller — keep per-tenant uniqueness.
-        $current = $this->ownedCredential( includeInactive: true );
-        $exists  = WoocommerceCredential::query()
+        // Reuse this merchant's existing row (active, disconnected, or soft-deleted)
+        // so remove + add-again does not create duplicates or trip uniqueness checks.
+        $credential = WoocommerceCredential::withTrashed()
+            ->where( 'vendor_id', vendorId() )
             ->where( 'wc_url', $url )
-            ->when( $current, fn ( $q ) => $q->where( 'id', '!=', $current->id ) )
+            ->latest( 'id' )
+            ->first()
+            ?: WoocommerceCredential::withTrashed()
+                ->where( 'vendor_id', vendorId() )
+                ->latest( 'id' )
+                ->first();
+
+        $takenByOther = WoocommerceCredential::withTrashed()
+            ->where( 'wc_url', $url )
+            ->where( 'vendor_id', '!=', vendorId() )
             ->exists();
 
-        if ( $exists ) {
+        if ( $takenByOther ) {
             return response()->json( [
                 'status'  => 422,
                 'message' => 'This store URL is already registered.',
@@ -72,22 +81,33 @@ class WooCommerceIntegrationController extends Controller {
             ], 422 );
         }
 
-        $credential = $this->ownedCredential() ?: new WoocommerceCredential();
+        if ( ! $credential ) {
+            $credential = new WoocommerceCredential();
+        } elseif ( method_exists( $credential, 'trashed' ) && $credential->trashed() ) {
+            $credential->restore();
+        }
+
+        // One active store per merchant.
+        WoocommerceCredential::withTrashed()
+            ->where( 'vendor_id', vendorId() )
+            ->when( $credential->id, fn ( $q ) => $q->where( 'id', '!=', $credential->id ) )
+            ->update( ['is_active' => false] );
+
         $credential->fill( [
-            'vendor_id'           => vendorId(),
-            'wc_url'              => $url,
-            'wc_key'              => $key,
-            'wc_secret'           => $secret,
-            'status'              => WoocommerceCredential::STATUS_CONNECTED,
-            'connection_message'  => $result['message'] ?? 'Connected',
-            'is_active'           => true,
-            'sync_direction'      => $credential->sync_direction ?: WoocommerceCredential::DIRECTION_TWO_WAY,
-            'product_sync'        => $credential->product_sync ?? true,
-            'order_sync'          => $credential->order_sync ?? true,
-            'stock_sync'          => $credential->stock_sync ?? true,
-            'auto_sync'           => $credential->auto_sync ?? true,
-            'webhook_secret'      => $credential->webhook_secret ?: Str::random( 32 ),
-            'last_error'          => null,
+            'vendor_id'          => vendorId(),
+            'wc_url'             => $url,
+            'wc_key'             => $key,
+            'wc_secret'          => $secret,
+            'status'             => WoocommerceCredential::STATUS_CONNECTED,
+            'connection_message' => $result['message'] ?? 'Connected',
+            'is_active'          => true,
+            'sync_direction'     => $credential->sync_direction ?: WoocommerceCredential::DIRECTION_TWO_WAY,
+            'product_sync'       => $credential->product_sync ?? true,
+            'order_sync'         => $credential->order_sync ?? true,
+            'stock_sync'         => $credential->stock_sync ?? true,
+            'auto_sync'          => $credential->auto_sync ?? true,
+            'webhook_secret'     => $credential->webhook_secret ?: Str::random( 32 ),
+            'last_error'         => null,
         ] );
         $credential->save();
 

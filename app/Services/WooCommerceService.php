@@ -77,8 +77,36 @@ class WooCommerceService {
                 'status'  => $code,
             ];
         } catch ( GuzzleException $e ) {
-            throw new RuntimeException( 'Unable to reach WooCommerce store: ' . $e->getMessage(), 0, $e );
+            throw new RuntimeException( self::friendlyReachabilityError( $e->getMessage(), $url ), 0, $e );
         }
+    }
+
+    /**
+     * Turn low-level cURL/Guzzle failures into actionable merchant-facing messages.
+     */
+    public static function friendlyReachabilityError( string $raw, ?string $url = null ): string {
+        $host = $url ? ( parse_url( $url, PHP_URL_HOST ) ?: $url ) : 'the store host';
+
+        if ( str_contains( $raw, 'Could not resolve host' ) || str_contains( $raw, 'cURL error 6' ) ) {
+            return "AffSell server DNS cannot resolve \"{$host}\". "
+                . 'This is not a WooCommerce API key issue. '
+                . 'Check the store URL spelling, that the domain has public DNS, '
+                . 'and that the AffSell server can resolve external hostnames. '
+                . "Detail: {$raw}";
+        }
+
+        if ( str_contains( $raw, 'cURL error 7' ) || str_contains( $raw, 'Failed to connect' ) ) {
+            return "AffSell server cannot connect to \"{$host}\". "
+                . 'The store may be down, blocking the server IP, or a firewall is blocking outbound HTTPS. '
+                . "Detail: {$raw}";
+        }
+
+        if ( str_contains( $raw, 'cURL error 28' ) || str_contains( $raw, 'timed out' ) ) {
+            return "Connection to \"{$host}\" timed out from the AffSell server. "
+                . "Detail: {$raw}";
+        }
+
+        return 'Unable to reach WooCommerce store: ' . $raw;
     }
 
     public function request( string $method, string $path, array $options = [] ): array {
