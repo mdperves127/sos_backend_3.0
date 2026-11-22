@@ -153,7 +153,7 @@ class WooCommerceOrderSyncService {
             ] );
 
             WooCommerceLoopGuard::mark( 'order_local', $order->id );
-            if ( Schema::connection( 'tenant' )->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
+            if ( Schema->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
                 $order->wc_last_synced_at = now();
                 $order->save();
             }
@@ -208,10 +208,10 @@ class WooCommerceOrderSyncService {
         $order->category_id      = 0;
         $order->custom_order     = 1;
         $order->qty = function_exists( 'getWcItemTotalQty' ) ? getWcItemTotalQty( $wcOrder ) : $this->lineQty( $wcOrder );
-        if ( Schema::connection( 'tenant' )->hasColumn( 'orders', 'payment_method' ) ) {
+        if ( Schema->hasColumn( 'orders', 'payment_method' ) ) {
             $order->payment_method = $wcOrder['payment_method_title'] ?? $wcOrder['payment_method'] ?? null;
         }
-        if ( Schema::connection( 'tenant' )->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
+        if ( Schema->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
             $order->wc_last_synced_at = now();
         }
         $order->save();
@@ -237,7 +237,7 @@ class WooCommerceOrderSyncService {
             }
         }
 
-        if ( Schema::connection( 'tenant' )->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
+        if ( Schema->hasColumn( 'orders', 'wc_last_synced_at' ) ) {
             $order->wc_last_synced_at = now();
         }
         $order->save();
@@ -271,7 +271,7 @@ class WooCommerceOrderSyncService {
             }
 
             $variantId = null;
-            if ( ! empty( $item['variation_id'] ) && Schema::connection( 'tenant' )->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
+            if ( ! empty( $item['variation_id'] ) && Schema->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
                 $variantId = ProductVariant::where( 'wc_variation_id', (string) $item['variation_id'] )->value( 'id' );
             }
 
@@ -281,7 +281,7 @@ class WooCommerceOrderSyncService {
             $detail->sub_qty    = (int) ( $item['quantity'] ?? 0 );
             $detail->rate       = (float) ( $item['price'] ?? 0 );
             $detail->sub_total  = (float) ( $item['subtotal'] ?? 0 );
-            if ( Schema::connection( 'tenant' )->hasColumn( 'order_details', 'variant_id' ) ) {
+            if ( Schema->hasColumn( 'order_details', 'variant_id' ) ) {
                 $detail->variant_id = $variantId;
             }
             $detail->save();

@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class WoocommerceCredential extends Model {
     use HasFactory, SoftDeletes;
 
-    protected $connection = 'tenant';
-
+    // Use the active default connection (HTTP middleware sets `tenant`;
+    // queued jobs bind `tenant` or switch default). Do not hard-pin here.
     protected $guarded = [];
 
     protected $hidden = [

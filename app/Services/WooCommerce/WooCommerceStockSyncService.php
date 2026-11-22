@@ -40,7 +40,7 @@ class WooCommerceStockSyncService {
             if ( ! WooCommerceLoopGuard::isMarked( 'stock_local', $product->id ) && (int) $product->qty !== $incomingQty ) {
                 $before = ['qty' => $product->qty];
                 $product->qty = $incomingQty;
-                if ( Schema::connection( 'tenant' )->hasColumn( 'products', 'wc_last_synced_at' ) ) {
+                if ( Schema->hasColumn( 'products', 'wc_last_synced_at' ) ) {
                     $product->wc_last_synced_at = now();
                 }
                 $product->save();
@@ -87,7 +87,7 @@ class WooCommerceStockSyncService {
 
             WooCommerceLoopGuard::mark( 'stock', $wcId );
 
-            if ( Schema::connection( 'tenant' )->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
+            if ( Schema->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
                 $variants = ProductVariant::where( 'product_id', $product->id )
                     ->whereNotNull( 'wc_variation_id' )
                     ->get();

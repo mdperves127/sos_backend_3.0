@@ -16,6 +16,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WooCommerceSyncJob implements ShouldQueue {
@@ -50,27 +51,39 @@ class WooCommerceSyncJob implements ShouldQueue {
             return;
         }
 
-        $connection = CrossTenantQueryService::connectionForTenant( $tenant );
-        config( ['database.default' => $connection] );
+        // When QUEUE_CONNECTION=sync, this job runs inside the HTTP request.
+        // Do NOT call tenancy()->end() in that case — it tears down the `tenant`
+        // connection and breaks the rest of the request (and models that use it).
+        $alreadyInTenant = function_exists( 'tenancy' )
+            && tenancy()->initialized
+            && (string) tenant( 'id' ) === (string) $this->tenantId;
 
-        // Initialize tenancy context for helpers that call tenant().
-        if ( function_exists( 'tenancy' ) ) {
-            tenancy()->initialize( $tenant );
-        }
+        $previousDefault = config( 'database.default' );
 
-        $credential = $this->credentialId
-            ? WoocommerceCredential::on( $connection )->find( $this->credentialId )
-            : WoocommerceCredential::on( $connection )->where( 'is_active', true )->latest( 'id' )->first();
+        if ( ! $alreadyInTenant ) {
+            $this->bindTenantConnection( $tenant );
 
-        if ( ! $credential || ! $credential->is_active ) {
-            return;
-        }
+            if ( function_exists( 'tenancy' ) ) {
+                tenancy()->initialize( $tenant );
+            }
 
-        if ( ! $credential->auto_sync && ( $this->payload['manual'] ?? false ) !== true ) {
-            return;
+            config( ['database.default' => 'tenant'] );
+            DB::setDefaultConnection( 'tenant' );
         }
 
         try {
+            $credential = $this->credentialId
+                ? WoocommerceCredential::query()->find( $this->credentialId )
+                : WoocommerceCredential::query()->where( 'is_active', true )->latest( 'id' )->first();
+
+            if ( ! $credential || ! $credential->is_active ) {
+                return;
+            }
+
+            if ( ! $credential->auto_sync && ( $this->payload['manual'] ?? false ) !== true ) {
+                return;
+            }
+
             match ( $this->action ) {
                 'products' => $products->syncAllFromWoo( $credential ),
                 'orders'   => $orders->syncAllFromWoo( $credential ),
@@ -95,7 +108,7 @@ class WooCommerceSyncJob implements ShouldQueue {
             };
 
             if ( $this->logId ) {
-                WoocommerceSyncLog::on( $connection )->whereKey( $this->logId )->update( [
+                WoocommerceSyncLog::query()->whereKey( $this->logId )->update( [
                     'status'      => 'success',
                     'retry_count' => $this->attempts(),
                     'message'     => 'Retry succeeded',
@@ -107,12 +120,34 @@ class WooCommerceSyncJob implements ShouldQueue {
                 'action' => $this->action,
                 'error'  => $e->getMessage(),
             ] );
-            WooCommerceSyncLogger::markCredentialSynced( $credential, false, $e->getMessage() );
+
+            if ( isset( $credential ) && $credential ) {
+                WooCommerceSyncLogger::markCredentialSynced( $credential, false, $e->getMessage() );
+            }
+
             throw $e;
         } finally {
-            if ( function_exists( 'tenancy' ) && tenancy()->initialized ) {
-                tenancy()->end();
+            if ( ! $alreadyInTenant ) {
+                if ( function_exists( 'tenancy' ) && tenancy()->initialized ) {
+                    tenancy()->end();
+                }
+                config( ['database.default' => $previousDefault ?: 'mysql'] );
+                DB::setDefaultConnection( $previousDefault ?: 'mysql' );
             }
+        }
+    }
+
+    /**
+     * Ensure the named `tenant` connection points at this tenant DB.
+     * Many models (Product, etc.) hardcode connection = tenant.
+     */
+    protected function bindTenantConnection( Tenant $tenant ): void {
+        $connectionName = CrossTenantQueryService::connectionForTenant( $tenant );
+        $config         = config( "database.connections.{$connectionName}" );
+
+        if ( is_array( $config ) ) {
+            config( ['database.connections.tenant' => $config] );
+            DB::purge( 'tenant' );
         }
     }
 }

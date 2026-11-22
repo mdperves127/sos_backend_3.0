@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class WoocommerceSyncLog extends Model {
-    protected $connection = 'tenant';
-
+    // Follows the active default / tenant connection (same as Order).
     protected $table = 'woocommerce_sync_logs';
 
     protected $guarded = [];

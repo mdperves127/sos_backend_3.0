@@ -205,19 +205,21 @@ class WooCommerceIntegrationController extends Controller {
             return response()->json( ['status' => 422, 'message' => 'type must be full, products or orders.'], 422 );
         }
 
-        WooCommerceSyncJob::dispatch(
-            (string) tenant( 'id' ),
-            $type,
-            ['manual' => true],
-            $credential->id
-        );
-
+        // Log before dispatch: with QUEUE_CONNECTION=sync the job runs inline and
+        // must not tear down the HTTP tenant connection before this request finishes.
         WooCommerceSyncLogger::log(
             $credential,
             'manual',
             $credential->sync_direction ?: WoocommerceCredential::DIRECTION_TWO_WAY,
             'pending',
             'Manual sync queued: ' . $type
+        );
+
+        WooCommerceSyncJob::dispatch(
+            (string) tenant( 'id' ),
+            $type,
+            ['manual' => true],
+            $credential->id
         );
 
         return response()->json( [

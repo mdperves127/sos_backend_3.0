@@ -46,7 +46,7 @@ class WooCommerceProductSyncService {
         }
 
         try {
-            $product = DB::connection( 'tenant' )->transaction( function () use ( $wcProduct, $credential ) {
+            $product = DB::transaction( function () use ( $wcProduct, $credential ) {
                 return $this->upsertLocalProduct( $wcProduct, $credential );
             } );
 
@@ -130,7 +130,7 @@ class WooCommerceProductSyncService {
                 }
             }
 
-            if ( Schema::connection( 'tenant' )->hasColumn( 'products', 'wc_last_synced_at' ) ) {
+            if ( Schema->hasColumn( 'products', 'wc_last_synced_at' ) ) {
                 $product->wc_last_synced_at = now();
             }
             $product->save();
@@ -237,7 +237,7 @@ class WooCommerceProductSyncService {
             'uniqid'             => $product->uniqid ?: uniqid(),
         ] );
 
-        if ( Schema::connection( 'tenant' )->hasColumn( 'products', 'wc_last_synced_at' ) ) {
+        if ( Schema->hasColumn( 'products', 'wc_last_synced_at' ) ) {
             $product->wc_last_synced_at = now();
         }
 
@@ -254,7 +254,7 @@ class WooCommerceProductSyncService {
     }
 
     protected function syncVariations( WoocommerceCredential $credential, Product $product, int $wcProductId ): void {
-        if ( ! Schema::connection( 'tenant' )->hasTable( 'product_variants' ) ) {
+        if ( ! Schema->hasTable( 'product_variants' ) ) {
             return;
         }
 
@@ -281,7 +281,7 @@ class WooCommerceProductSyncService {
             }
 
             $variantQuery = ProductVariant::where( 'product_id', $product->id );
-            if ( Schema::connection( 'tenant' )->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
+            if ( Schema->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
                 $variant = ( clone $variantQuery )->where( 'wc_variation_id', (string) $variation['id'] )->first();
             } else {
                 $variant = null;
@@ -298,7 +298,7 @@ class WooCommerceProductSyncService {
             $variant->size_id  = $sizeId;
             $variant->qty      = (int) ( $variation['stock_quantity'] ?? 0 );
             $variant->rate     = (float) ( $variation['sale_price'] ?: $variation['regular_price'] ?: 0 );
-            if ( Schema::connection( 'tenant' )->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
+            if ( Schema->hasColumn( 'product_variants', 'wc_variation_id' ) ) {
                 $variant->wc_variation_id = (string) $variation['id'];
             }
             $variant->save();
