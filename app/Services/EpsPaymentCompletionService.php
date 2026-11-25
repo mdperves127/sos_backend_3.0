@@ -473,6 +473,29 @@ class EpsPaymentCompletionService
     {
         $info = is_array( $payment->info ) ? $payment->info : [];
 
+        // Page-builder / dynamic form_data checkout snapshot.
+        if ( ! empty( $info['modern_checkout'] ) && is_array( $info['checkout'] ?? null ) ) {
+            StorefrontCheckoutService::completeFromPaymentStore( $payment );
+
+            $payment->update( [
+                'status'      => 'completed',
+                'last_status' => 'completed',
+            ] );
+
+            $storefrontTenantId = $info['storefront_tenant_id']
+                ?? $info['placing_tenant_id']
+                ?? ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null )
+                ?? $info['tenant_id']
+                ?? null;
+
+            $base = rtrim( RedirectHelper::getPaymentRedirectUrl(
+                $storefrontTenantId,
+                $info['return_url'] ?? null
+            ), '/' ) . '/';
+
+            return $base . '?message=' . urlencode( 'Product purchase successfully' );
+        }
+
         $checkouts = [];
         if ( ! empty( $info['checkouts'] ) && is_array( $info['checkouts'] ) ) {
             $checkouts = $info['checkouts'];

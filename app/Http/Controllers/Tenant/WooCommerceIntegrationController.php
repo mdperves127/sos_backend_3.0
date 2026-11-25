@@ -44,9 +44,9 @@ class WooCommerceIntegrationController extends Controller {
             return response()->json( ['status' => 422, 'errors' => $validator->errors()], 422 );
         }
 
-        $url    = rtrim( (string) $request->input( 'wc_url' ), '/' );
-        $key    = (string) $request->input( 'wc_key' );
-        $secret = (string) $request->input( 'wc_secret' );
+        $url    = rtrim( trim( (string) $request->input( 'wc_url' ) ), '/' );
+        $key    = trim( (string) $request->input( 'wc_key' ) );
+        $secret = trim( (string) $request->input( 'wc_secret' ) );
 
         // Reuse this merchant's existing row (active, disconnected, or soft-deleted)
         // so remove + add-again does not create duplicates or trip uniqueness checks.
@@ -159,8 +159,23 @@ class WooCommerceIntegrationController extends Controller {
             return response()->json( ['status' => 404, 'message' => 'No store credentials found. Connect first.'], 404 );
         }
 
+        $key    = trim( (string) $request->input( 'wc_key', $credential->wc_key ) );
+        $secret = trim( (string) $request->input( 'wc_secret', $credential->wc_secret ) );
+        $url    = rtrim( trim( (string) $request->input( 'wc_url', $credential->wc_url ) ), '/' );
+
+        // Reject masked UI values so reconnect does not keep a dead secret.
+        if ( $request->filled( 'wc_key' ) && str_contains( $key, '*' ) ) {
+            $key = (string) $credential->wc_key;
+        }
+        if ( $request->filled( 'wc_secret' ) && ( str_contains( $secret, '*' ) || $secret === '' ) ) {
+            return response()->json( [
+                'status'  => 422,
+                'message' => 'Paste a full Consumer secret (cs_…). Masked or empty secrets are not accepted.',
+            ], 422 );
+        }
+
         try {
-            $this->woo->validateConnection( $credential->wc_url, $credential->wc_key, $credential->wc_secret );
+            $this->woo->validateConnection( $url, $key, $secret );
         } catch ( \Throwable $e ) {
             $credential->update( [
                 'status'             => WoocommerceCredential::STATUS_ERROR,
@@ -172,6 +187,9 @@ class WooCommerceIntegrationController extends Controller {
         }
 
         $credential->update( [
+            'wc_url'             => $url,
+            'wc_key'             => $key,
+            'wc_secret'          => $secret,
             'status'             => WoocommerceCredential::STATUS_CONNECTED,
             'is_active'          => true,
             'connection_message' => 'Reconnected',
