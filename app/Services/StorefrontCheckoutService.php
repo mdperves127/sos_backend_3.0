@@ -400,8 +400,11 @@ class StorefrontCheckoutService
                     $order->delivery_charge = $groupShipping;
                     $order->delivery_area   = $delivery['area'] ?? null;
                     $order->delivery_id     = $delivery['id'] ?? null;
-                    $order->sale_discount   = $groupDiscount > 0 ? $groupDiscount : null;
-                    $order->coupon_code     = $groupDiscount > 0 ? ( $couponCtx['coupon']->code ?? null ) : null;
+                    // sale_discount is NOT NULL in tenant DB — always persist a number.
+                    $order->sale_discount = $groupDiscount > 0 ? $groupDiscount : 0;
+                    if ( $groupDiscount > 0 ) {
+                        $order->coupon_code = $couponCtx['coupon']->code ?? null;
+                    }
                     $order->order_media     = $isGuest ? 'website-guest' : 'website';
                     $order->tenant_id       = function_exists( 'tenant' ) && tenant() ? tenant()->id : $merchantTenantId;
 
