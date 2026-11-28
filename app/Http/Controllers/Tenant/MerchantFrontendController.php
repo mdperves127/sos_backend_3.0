@@ -34,6 +34,7 @@ use App\Models\VariantAttribute;
 use App\Models\VariantAttributeValue;
 use App\Service\Vendor\ProductVariantService;
 use App\Services\ProductPreOrderService;
+use App\Services\TenantFrontendDemoDataService;
 
 
 class MerchantFrontendController extends Controller
@@ -457,6 +458,24 @@ class MerchantFrontendController extends Controller
 
     public function products(Request $request)
     {
+        $demo = app( TenantFrontendDemoDataService::class );
+        if ( $demo->isActive() ) {
+            $products = $demo->filterProducts( $demo->products(), $request );
+            $products = $this->sortProductCollection( $products, $request );
+            $payload  = $this->paginateProductCollection( $request, $products );
+
+            if ( ! $request->attributes->get( 'page_builder_skip', false ) ) {
+                $pageBuilder = app( \App\Http\Controllers\API\Vendor\PageBuilderController::class )
+                    ->resolvePublishedShopPageData();
+
+                $payload['page_builder'] = $pageBuilder;
+                $needFields              = $this->extractPageBuilderNeedFields( $pageBuilder );
+                $payload['data']         = $this->projectProductNeedFields( $payload['data'], $needFields );
+            }
+
+            return response()->json( $payload );
+        }
+
         $isDropshipper = tenant() && tenant()->type === 'dropshipper';
 
         if ( $isDropshipper ) {
@@ -1117,6 +1136,11 @@ class MerchantFrontendController extends Controller
 
     public function categories()
     {
+        $demo = app( TenantFrontendDemoDataService::class );
+        if ( $demo->isActive() ) {
+            return response()->json( $demo->categories()->values() );
+        }
+
         $tenantId = (string) tenant()->id;
 
         if (tenant()->type == 'dropshipper') {
@@ -1188,6 +1212,11 @@ class MerchantFrontendController extends Controller
     }
     public function subcategories()
     {
+        $demo = app( TenantFrontendDemoDataService::class );
+        if ( $demo->isActive() ) {
+            return response()->json( $demo->subcategories()->values() );
+        }
+
         if (tenant()->type == 'dropshipper') {
             // Step 1: Get all ProductDetails from current tenant's database
             $allProductDetails = ProductDetails::where('status', 1)->get();
@@ -1270,6 +1299,11 @@ class MerchantFrontendController extends Controller
     }
     public function brands()
     {
+        $demo = app( TenantFrontendDemoDataService::class );
+        if ( $demo->isActive() ) {
+            return response()->json( $demo->brands()->values() );
+        }
+
         if (tenant()->type == 'dropshipper') {
             // Step 1: Get all ProductDetails from current tenant's database
             $allProductDetails = ProductDetails::where('status', 1)->get();

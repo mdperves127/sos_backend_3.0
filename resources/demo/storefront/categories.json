@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Demo Apparel",
+    "slug": "demo-apparel",
+    "description": "Sample apparel category for demo storefront.",
+    "status": "active",
+    "image": null,
+    "auto_approve_dropshipper": 0,
+    "created_at": "2026-01-01T10:00:00.000000Z",
+    "updated_at": "2026-01-01T10:00:00.000000Z",
+    "deleted_at": null
+  },
+  {
+    "id": 2,
+    "name": "Demo Accessories",
+    "slug": "demo-accessories",
+    "description": "Sample accessories category for demo storefront.",
+    "status": "active",
+    "image": null,
+    "auto_approve_dropshipper": 0,
+    "created_at": "2026-01-01T10:00:00.000000Z",
+    "updated_at": "2026-01-01T10:00:00.000000Z",
+    "deleted_at": null
+  },
+  {
+    "id": 3,
+    "name": "Demo Home",
+    "slug": "demo-home",
+    "description": "Sample home category for demo storefront.",
+    "status": "active",
+    "image": null,
+    "auto_approve_dropshipper": 0,
+    "created_at": "2026-01-01T10:00:00.000000Z",
+    "updated_at": "2026-01-01T10:00:00.000000Z",
+    "deleted_at": null
+  }
+]
