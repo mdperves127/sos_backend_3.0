@@ -1444,16 +1444,28 @@ class MerchantFrontendController extends Controller
     /**
      * Public storefront: which product-checkout gateways are usable (no secrets).
      * GET /api/tenant-frontend/payment-gateways
+     *
+     * usable = enabled + credentials configured + payment addon grants that provider.
      */
     public function paymentGateways()
     {
+        $tenantId = function_exists( 'tenant' ) && tenant() ? (string) tenant()->id : '';
+
         $gateways = collect( \App\Services\TenantPaymentGatewayService::publicStatusAll() )
-            ->map( function ( array $row ) {
+            ->map( function ( array $row ) use ( $tenantId ) {
+                $gateway = (string) ( $row['gateway'] ?? '' );
+                $enabled = (bool) ( $row['enabled'] ?? false );
+                $configured = (bool) ( $row['configured'] ?? false );
+                $addonOk = $tenantId !== ''
+                    && \App\Services\AddonActivationService::tenantHasPaymentProvider( $tenantId, $gateway );
+                $usable = $enabled && $configured && $addonOk;
+
                 return [
-                    'gateway'    => $row['gateway'],
-                    'enabled'    => (bool) ( $row['enabled'] ?? false ),
-                    'configured' => (bool) ( $row['configured'] ?? false ),
-                    'usable'     => (bool) ( $row['usable'] ?? false ),
+                    'gateway'    => $gateway,
+                    'enabled'    => $enabled,
+                    'configured' => $configured,
+                    'addon'      => $addonOk,
+                    'usable'     => $usable,
                 ];
             } )
             ->values()
