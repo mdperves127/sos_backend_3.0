@@ -1413,49 +1413,16 @@ class MerchantFrontendController extends Controller
     {
         $tenantId = (string) tenant()->id;
         $payload = PublicApiCache::remember( 'tenant:' . $tenantId . ':cms', function () {
-            $contentServices = ServiceContent::orderBy('order', 'asc')->get();
-            $banners = Banner::orderBy('order', 'asc')->get();
-            $offers = Offer::latest()->get();
             $cms = CmsSetting::first();
             $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
             $headerFooter = \App\Support\HeaderFooterConfig::forFrontend( $cms?->header_footer );
 
             return [
-                'content_services' => $contentServices,
-                'banners' => $banners,
                 'cms' => $cms,
-                'offers' => $offers,
                 'active_header' => $headerFooter['active_header'],
                 'active_footer' => $headerFooter['active_footer'],
                 'header' => $headerFooter['header'],
                 'footer' => $headerFooter['footer'],
-
-                'populer_section_category_id_1' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_1' ),
-                'populer_section_category_id_2' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_2' ),
-                'populer_section_category_id_3' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_3' ),
-                'populer_section_category_id_4' => $this->resolveCmsCategory( $cms, 'populer_section_category_id_4' ),
-                'populer_section_subcategory_id_1' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_1' ),
-                'populer_section_subcategory_id_2' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_2' ),
-                'populer_section_subcategory_id_3' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_3' ),
-                'populer_section_subcategory_id_4' => $this->resolveCmsSubcategory( $cms, 'populer_section_subcategory_id_4' ),
-                'recomended_category_id_1' => $this->resolveCmsCategory( $cms, 'recomended_category_id_1' ),
-                'recomended_category_id_2' => $this->resolveCmsCategory( $cms, 'recomended_category_id_2' ),
-                'recomended_category_id_3' => $this->resolveCmsCategory( $cms, 'recomended_category_id_3' ),
-                'recomended_category_id_4' => $this->resolveCmsCategory( $cms, 'recomended_category_id_4' ),
-                'recomended_sub_category_id_1' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_1' ),
-                'recomended_sub_category_id_2' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_2' ),
-                'recomended_sub_category_id_3' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_3' ),
-                'recomended_sub_category_id_4' => $this->resolveCmsSubcategory( $cms, 'recomended_sub_category_id_4' ),
-                'best_setting_category_id_1' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_1' ),
-                'best_setting_category_id_2' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_2' ),
-                'best_setting_category_id_3' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_3' ),
-                'best_setting_category_id_4' => $this->resolveCmsCategory( $cms, 'best_setting_category_id_4' ),
-                'best_setting_sub_category_id_1' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_1' ),
-                'best_setting_sub_category_id_2' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_2' ),
-                'best_setting_sub_category_id_3' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_3' ),
-                'best_setting_sub_category_id_4' => $this->resolveCmsSubcategory( $cms, 'best_setting_sub_category_id_4' ),
-                'best_category_id' => $this->resolveCmsCategory( $cms, 'best_category_id' ),
-                'best_sub_category_id' => $this->resolveCmsSubcategory( $cms, 'best_sub_category_id' ),
                 'website_visits' => $package_info?->website_visits,
                 'already_visits' => $package_info?->already_visits,
                 'has_website' => \App\Services\AddonActivationService::tenantHasFlagAccess(
