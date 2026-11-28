@@ -505,7 +505,11 @@ class EpsPaymentService
             $base = 'https://' . ltrim( $base, '/' );
         }
 
-        return strtolower( (string) ( parse_url( $base, PHP_URL_HOST ) ?: 'affsell.com' ) );
+        return strtolower( (string) (
+            parse_url( $base, PHP_URL_HOST )
+            ?: config( 'cpanel.main_domain' )
+            ?: 'localhost'
+        ) );
     }
 
     private static function hostAllowedByEps( string $host, string $epsBaseHost ): bool

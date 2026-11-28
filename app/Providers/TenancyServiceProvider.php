@@ -13,6 +13,7 @@ use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
 use Stancl\Tenancy\Middleware;
 use App\Jobs\CreateTenantUser;
+use App\Jobs\MigrateTenantRoleMigrations;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -27,7 +28,8 @@ class TenancyServiceProvider extends ServiceProvider
             Events\TenantCreated::class => [
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
-                    Jobs\MigrateDatabase::class,
+                    Jobs\MigrateDatabase::class, // shared: database/migrations/tenant
+                    MigrateTenantRoleMigrations::class, // merchant/ or dropshipper/ only
                     Jobs\SeedDatabase::class,
 
                     // Your own jobs to prepare the tenant.

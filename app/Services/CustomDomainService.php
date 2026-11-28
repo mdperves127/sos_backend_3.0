@@ -409,7 +409,7 @@ class CustomDomainService
      * @return array{subdomain: string, subdomain_name: string}|null
      */
     private function getTenantSubdomain( string $tenantId, ?string $customDomain = null ): ?array {
-        $mainDomain = env( 'MAIN_DOMAIN' );
+        $mainDomain = config( 'cpanel.main_domain' );
         $domains    = Domain::on( 'mysql' )
             ->where( 'tenant_id', $tenantId )
             ->pluck( 'domain' );

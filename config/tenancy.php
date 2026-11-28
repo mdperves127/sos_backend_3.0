@@ -16,16 +16,15 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => [
+    'central_domains' => array_values( array_filter( array_unique( [
         '127.0.0.1',
         'localhost',
         'localhost:8000',
         '127.0.0.1:8000',
-        env('MAIN_DOMAIN'), // Add your main domain here, e.g. 'app.com'
-        env('APP_URL'), // Add your app URL
-        // Note: For localhost testing, we're temporarily disabling PreventAccessFromCentralDomains
-        // in routes/tenant.php to allow subdomain access
-    ],
+        env( 'MAIN_DOMAIN' ),
+        // APP_URL may be a full URL — only the host belongs in central_domains.
+        parse_url( (string) env( 'APP_URL', '' ), PHP_URL_HOST ) ?: null,
+    ] ) ) ),
 
     /**
      * Expected A-record IP for tenant custom domains.
@@ -61,10 +60,25 @@ return [
         /**
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
+         *
+         * Set TENANCY_DB_PREFIX in .env (required in production).
+         * Fallback: first 8 chars of CPANEL_USER + '_' (cPanel MySQL convention).
+         * Never hardcode a brand-specific prefix here.
          */
-        // Must match the cPanel MySQL account prefix (usually first 8 chars of CPANEL_USER + '_').
-        'prefix' => env('TENANCY_DB_PREFIX', 'affsellc_'),
-        'suffix' => '',
+        'prefix' => ( static function (): string {
+            $explicit = env( 'TENANCY_DB_PREFIX' );
+            if ( is_string( $explicit ) && $explicit !== '' ) {
+                return $explicit;
+            }
+
+            $cpanelUser = trim( (string) env( 'CPANEL_USER', '' ) );
+            if ( $cpanelUser !== '' && ! str_starts_with( strtolower( $cpanelUser ), 'your_cpanel' ) ) {
+                return substr( $cpanelUser, 0, 8 ) . '_';
+            }
+
+            return '';
+        } )(),
+        'suffix' => env( 'TENANCY_DB_SUFFIX', '' ),
 
         /**
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
@@ -194,6 +208,13 @@ return [
 
     /**
      * Parameters used by the tenants:migrate command.
+     *
+     * Shared tenant schema only. Role-scoped folders live under
+     * database/migrations/tenant/{merchant|dropshipper} and are applied by
+     * App\Jobs\MigrateTenantRoleMigrations / php artisan tenants:migrate-structured.
+     *
+     * Do NOT point this at merchant/dropshipper subfolders for all tenants.
+     * Do NOT move already-executed files out of migrations/tenant.
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.

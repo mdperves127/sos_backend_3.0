@@ -31,7 +31,11 @@ return [
     'host' => env( 'CPANEL_HOST', '127.0.0.1' ),
     'port' => (int) env( 'CPANEL_PORT', 2083 ),
 
+    // Root domain for tenant subdomains (e.g. shop.MAIN_DOMAIN). Required for domain create.
     'main_domain' => env( 'MAIN_DOMAIN' ),
+
+    // Optional explicit DB prefix override used by cPanel helpers (falls back to tenancy.database.prefix).
+    'db_prefix' => env( 'TENANCY_DB_PREFIX' ),
 
     'tenant_root' => env( 'CPANEL_TENANT_ROOT', 'public_html/' ),
 

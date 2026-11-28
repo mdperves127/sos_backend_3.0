@@ -53,7 +53,7 @@ use Spatie\Permission\Models\Role;
 */
 
 Route::get('/', function () {
-    return redirect('https://affsell.com');
+    return redirect( rtrim( (string) config( 'app.redirecturl' ), '/' ) . '/' );
 });
 
 // EPS browser return (also used when frontend proxies /eps-return.html here)

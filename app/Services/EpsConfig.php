@@ -89,7 +89,9 @@ class EpsConfig
             return rtrim( $modeSpecific, '/' );
         }
 
-        return rtrim( (string) config( 'services.eps.base_url', 'https://affsell.com' ), '/' );
+        $fallback = 'https://' . rtrim( (string) ( config( 'cpanel.main_domain' ) ?: 'localhost' ), '/' );
+
+        return rtrim( (string) config( 'services.eps.base_url', $fallback ), '/' );
     }
 
     public static function get( string $key ): mixed

@@ -211,7 +211,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -337,7 +337,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -462,7 +462,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -588,7 +588,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -713,7 +713,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -839,7 +839,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -965,7 +965,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1091,7 +1091,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1214,7 +1214,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([
@@ -1330,7 +1330,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection
                     config([
@@ -1423,7 +1423,7 @@ class OrderController extends Controller {
                 $tenant = Tenant::find( $order->tenant_id );
                 if ( $tenant ) {
                     $connectionName = 'tenant_' . $tenant->id;
-                    $databaseName = config( 'tenancy.database.prefix', 'affsellc_' ) . $tenant->id;
+                    $databaseName = config( 'tenancy.database.prefix', '' ) . $tenant->id;
 
                     // Configure connection using the same method as CrossTenantQueryService
                     config([

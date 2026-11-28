@@ -44,14 +44,14 @@ return [
         'mode'           => env( 'EPS_MODE' ),
         'legacy_sandbox' => env( 'EPS_SANDBOX' ),
         // Fallback when mode-specific base URL is not set.
-        'base_url'       => env( 'EPS_BASE_URL', 'https://affsell.com' ),
+        'base_url'       => env( 'EPS_BASE_URL' ) ?: ( 'https://' . rtrim( (string) env( 'MAIN_DOMAIN', 'localhost' ), '/' ) ),
         'base_urls'      => [
-            'sandbox' => env( 'EPS_SANDBOX_BASE_URL', env( 'EPS_BASE_URL', 'https://affsell.com' ) ),
-            'live'    => env( 'EPS_LIVE_BASE_URL', env( 'EPS_BASE_URL', 'https://affsell.com' ) ),
+            'sandbox' => env( 'EPS_SANDBOX_BASE_URL' ) ?: env( 'EPS_BASE_URL' ) ?: ( 'https://' . rtrim( (string) env( 'MAIN_DOMAIN', 'localhost' ), '/' ) ),
+            'live'    => env( 'EPS_LIVE_BASE_URL' ) ?: env( 'EPS_BASE_URL' ) ?: ( 'https://' . rtrim( (string) env( 'MAIN_DOMAIN', 'localhost' ), '/' ) ),
         ],
         // Real Laravel API (auto-complete / recovery).
-        'api_url'       => env( 'EPS_API_URL', env( 'APP_URL', 'https://mdperves.info' ) ),
-        // Optional: host under affsell.com that points to Laravel, e.g. pay.affsell.com
+        'api_url'       => env( 'EPS_API_URL', env( 'APP_URL' ) ),
+        // Optional callback host under MAIN_DOMAIN that points to Laravel.
         'callback_host' => env( 'EPS_CALLBACK_HOST', '' ),
         'credentials'   => [
             'sandbox' => [
