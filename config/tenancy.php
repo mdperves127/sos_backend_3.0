@@ -208,6 +208,13 @@ return [
 
     /**
      * Parameters used by the tenants:migrate command.
+     *
+     * Shared tenant schema only. Role-scoped folders live under
+     * database/migrations/tenant/{merchant|dropshipper} and are applied by
+     * App\Jobs\MigrateTenantRoleMigrations / php artisan tenants:migrate-structured.
+     *
+     * Do NOT point this at merchant/dropshipper subfolders for all tenants.
+     * Do NOT move already-executed files out of migrations/tenant.
      */
     'migration_parameters' => [
         '--force' => true, // This needs to be true to run migrations in production.
