@@ -1413,7 +1413,28 @@ class MerchantFrontendController extends Controller
     {
         $tenantId = (string) tenant()->id;
         $payload = PublicApiCache::remember( 'tenant:' . $tenantId . ':cms', function () {
-            $cms = CmsSetting::first();
+            $cms = CmsSetting::query()->first( [
+                'id',
+                'is_demo_active',
+                'app_name',
+                'color_primary',
+                'logo',
+                'theme',
+                'fav_icon',
+                'contact_email',
+                'auth_page_image',
+                'is_stock_show',
+                'show_whats_app_website',
+                'scripts_google_analytics',
+                'scripts_google_adsense',
+                'scripts_google_recaptcha',
+                'scripts_facebook_pixel',
+                'scripts_facebook_messenger',
+                'scripts_whatsapp_chat',
+                'scripts_google_tag_manager',
+                'scripts_google_tag_manager_body',
+                'header_footer', // used below; hidden from JSON via CmsSetting::$hidden
+            ] );
             $package_info = UserSubscription::on('mysql')->where('tenant_id', tenant()->id)->first();
             $headerFooter = \App\Support\HeaderFooterConfig::forFrontend( $cms?->header_footer );
 
