@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Settings;
+use App\Models\CmsSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -23,13 +23,13 @@ class TenantFrontendDemoDataService
         }
 
         try {
-            if ( ! \Illuminate\Support\Facades\Schema::hasColumn( 'settings', 'is_demo_active' ) ) {
+            if ( ! \Illuminate\Support\Facades\Schema::hasColumn( 'cms_settings', 'is_demo_active' ) ) {
                 return false;
             }
 
-            $settings = Settings::query()->first( ['id', 'is_demo_active'] );
+            $cms = CmsSetting::query()->first( ['id', 'is_demo_active'] );
 
-            return (bool) ( $settings?->is_demo_active );
+            return (bool) ( $cms?->is_demo_active );
         } catch ( Throwable $e ) {
             Log::warning( 'tenant_frontend.demo_setting_read_failed', [
                 'tenant'  => tenant( 'id' ),

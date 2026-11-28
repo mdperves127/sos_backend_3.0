@@ -17,6 +17,7 @@ class CmsSetting extends Model
     ];
 
     protected $casts = [
-        'header_footer' => 'array',
+        'header_footer'  => 'array',
+        'is_demo_active' => 'boolean',
     ];
 }

@@ -99,6 +99,7 @@ class CmsController extends Controller
         $request->validate( [
             'is_stock_show'           => ['nullable', 'in:yes,no'],
             'show_whats_app_website'  => ['nullable', 'in:yes,no'],
+            'is_demo_active'          => ['nullable', 'boolean'],
         ] );
 
         $data = CmsSetting::first();

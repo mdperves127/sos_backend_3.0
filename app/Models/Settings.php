@@ -11,12 +11,7 @@ class Settings extends Model {
 
     // protected $guarded = [];
 
-    protected $casts = [
-        'is_demo_active' => 'boolean',
-    ];
-
     protected $fillable = [
-        'is_demo_active',
         'logo',
         'home_banner_heading',
         'home_banner_description',
