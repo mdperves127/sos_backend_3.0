@@ -17,9 +17,21 @@ class TenantWelcomeMail extends Mailable
         public string $domainUrl,
         public string $type = 'dropshipper'
     ) {
-        // Welcome email must show public storefront domain (affsell.com), not API host (affsell.org).
-        // Rewrite once here so visible text and href always match in templates.
-        $this->domainUrl = str_ireplace( 'affsell.org', 'affsell.com', $domainUrl );
+        // Prefer public storefront host from .env over API host in welcome links.
+        $apiHost = (string) (
+            config( 'app.api_public_host' )
+            ?: parse_url( (string) config( 'app.url' ), PHP_URL_HOST )
+        );
+        $frontendHost = (string) (
+            config( 'app.frontend_public_host' )
+            ?: parse_url( (string) config( 'app.maindomain' ), PHP_URL_HOST )
+            ?: parse_url( (string) config( 'app.redirecturl' ), PHP_URL_HOST )
+            ?: config( 'cpanel.main_domain' )
+        );
+
+        if ( $apiHost !== '' && $frontendHost !== '' && strcasecmp( $apiHost, $frontendHost ) !== 0 ) {
+            $this->domainUrl = str_ireplace( $apiHost, $frontendHost, $domainUrl );
+        }
     }
 
     public function build()

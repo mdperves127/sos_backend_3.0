@@ -17,8 +17,15 @@ return [
 
     'name'            => env( 'APP_NAME', 'Laravel' ),
     'aamarpay'        => env( 'APP_ENV' ) == 'production' ? 'https://sandbox.aamarpay.com/index.php' : 'https://sandbox.aamarpay.com/index.php',
-    'redirecturl'     => env( 'REDIRECT_FRONTEND_URL', 'https://affsell.com/' ),
-    'maindomain'      => env( 'MAIN_FRONTEND_DOMAIN_URL', 'https://affsell.com/' ),
+    // Prefer explicit frontend URLs; otherwise derive from MAIN_DOMAIN in .env.
+    'redirecturl'     => env( 'REDIRECT_FRONTEND_URL' )
+        ?: ( 'https://' . rtrim( (string) env( 'MAIN_DOMAIN', 'localhost' ), '/' ) . '/' ),
+    'maindomain'      => env( 'MAIN_FRONTEND_DOMAIN_URL' )
+        ?: ( env( 'REDIRECT_FRONTEND_URL' )
+            ?: ( 'https://' . rtrim( (string) env( 'MAIN_DOMAIN', 'localhost' ), '/' ) . '/' ) ),
+    // Optional rewrite: API host → public storefront host (welcome emails, links).
+    'api_public_host' => env( 'API_PUBLIC_HOST' ),
+    'frontend_public_host' => env( 'FRONTEND_PUBLIC_HOST', env( 'MAIN_DOMAIN' ) ),
 
     /*
     |--------------------------------------------------------------------------

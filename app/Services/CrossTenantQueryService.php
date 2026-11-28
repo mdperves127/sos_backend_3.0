@@ -332,8 +332,8 @@ class CrossTenantQueryService
             return $data['tenancy_db_name'];
         }
 
-        $prefix = config( 'tenancy.database.prefix', 'affsellc_' );
-        $suffix = config( 'tenancy.database.suffix', '' );
+        $prefix = (string) config( 'tenancy.database.prefix', '' );
+        $suffix = (string) config( 'tenancy.database.suffix', '' );
 
         return $prefix . $tenant->getTenantKey() . $suffix;
     }
