@@ -1,18 +1,13 @@
 # Merchant-only tenant migrations
 
-Put **new** migrations here only when the change must apply to `tenants.type = merchant` and must **not** run on dropshipper tenant databases.
+These migrations run **only** for `tenants.type = merchant` (after the shared `database/migrations/tenant` path).
 
-## Rules
+Dropshipper registrations do **not** get products, POS, warehouses, WooCommerce, assignments, etc.
 
-- Do **not** move existing files from `database/migrations/tenant/`.
-- Prefer shared migrations when both roles need the same schema.
-- Merchant and dropshipper share one schema today; most product/order tables stay shared.
-- Filenames must be unique across shared + merchant + dropshipper paths.
-
-## Run
-
-Automatically after shared migrations on merchant tenant create, or:
+## Commands
 
 ```bash
+php artisan tenants:migrate
+# or
 php artisan tenants:migrate-structured --type=merchant
 ```

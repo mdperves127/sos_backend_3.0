@@ -65,7 +65,12 @@ class TenancyServiceProvider extends ServiceProvider
 
             // Database events
             Events\DatabaseCreated::class => [],
-            Events\DatabaseMigrated::class => [],
+            // After shared tenants:migrate, apply merchant/ or dropshipper/ folder.
+            Events\DatabaseMigrated::class => [
+                function ( Events\DatabaseMigrated $event ) {
+                    ( new MigrateTenantRoleMigrations( $event->tenant ) )->handle();
+                },
+            ],
             Events\DatabaseSeeded::class => [],
             Events\DatabaseRolledBack::class => [],
             Events\DatabaseDeleted::class => [],

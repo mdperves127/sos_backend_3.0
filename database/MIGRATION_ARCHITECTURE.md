@@ -2,15 +2,19 @@
 
 ## Executive finding
 
-Merchant and Dropshipper are **tenant types** (`tenants.type`), not separate database schemas.
+Merchant and Dropshipper are **tenant types** (`tenants.type`).
 
-Every tenant (merchant or dropshipper) receives the **same shared tenant migration path**:
+**New registrations get lean, role-specific schemas:**
 
-`database/migrations/tenant/*.php`
+| Path | Who |
+|------|-----|
+| `database/migrations/tenant/*.php` | Shared core (auth, CMS, carts, delivery, …) |
+| `database/migrations/tenant/merchant/*.php` | Merchant only (products, orders, POS, Woo, assignments, …) |
+| `database/migrations/tenant/dropshipper/*.php` | Dropshipper only (`product_details`, ratings, pending products) |
 
-Application code gates features by `tenant()->type`. Schema stays compatible across roles so cross-tenant dropshipping (merchant product DB ↔ dropshipper `product_details`) keeps working.
+Verified fresh migrate: merchant ~113 tables (has `products`/`orders`, no `product_details`); dropshipper ~58 tables (has `product_details`, no `products`/`orders`/`pos_sales`).
 
-**Do not move already-executed migration files.** Laravel stores migration basenames in each DB’s `migrations` table; renaming/moving them re-runs or breaks rollback.
+Already-provisioned tenant DBs are **not** auto-pruned (no data loss). Re-register or recreate DB to get the lean schema.
 
 ---
 

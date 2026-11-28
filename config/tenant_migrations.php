@@ -4,10 +4,13 @@
  * Tenant migration path registry and table ownership catalog.
  *
  * IMPORTANT:
- * - Merchant and Dropshipper are TENANT TYPES (tenants.type), not separate databases.
- * - Both roles share one tenant schema today (database/migrations/tenant/*.php).
- * - Do NOT move already-executed migration files — Laravel records basenames in `migrations`.
- * - Put ONLY new role-scoped migrations under merchant/ or dropshipper/.
+ * - Merchant and Dropshipper are TENANT TYPES (tenants.type).
+ * - Shared core: database/migrations/tenant/*.php
+ * - Merchant-only: database/migrations/tenant/merchant/*.php
+ * - Dropshipper-only: database/migrations/tenant/dropshipper/*.php
+ * - New registrations get shared + role path only (lean schemas).
+ * - Existing DBs that already ran old shared files keep those rows in `migrations`
+ *   (moved files still match by basename; they will not re-run).
  */
 return [
 
@@ -201,10 +204,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'notes' => [
-        'same_schema' => 'Merchant and dropshipper tenant DBs share database/migrations/tenant.',
-        'wallet'      => 'No wallets table. Balance is tenants.balance; ledger is central payment_histories / withdraws.',
-        'orders'      => 'Product checkout writes orders into the merchant (product) tenant DB.',
-        'listings'    => 'Dropshipper catalog is product_details on the dropshipper DB.',
-        'lag'         => 'Table-count differences between tenants are usually pending tenants:migrate, not role design.',
+        'split_schema' => 'New tenants: shared path + role folder. Merchant gets catalog/POS/orders; dropshipper gets product_details.',
+        'wallet'       => 'No wallets table. Balance is tenants.balance; ledger is central payment_histories / withdraws.',
+        'orders'       => 'Product checkout writes orders into the merchant (product) tenant DB.',
+        'listings'     => 'Dropshipper catalog is product_details on the dropshipper DB.',
+        'existing'     => 'Already-provisioned DBs keep extra tables; we do not auto-drop them.',
     ],
 ];
