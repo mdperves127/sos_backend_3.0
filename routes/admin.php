@@ -74,6 +74,10 @@ Route::middleware( ['adminDatabase', 'adminAuth', 'isAPIAdmin'] )->group( functi
     Route::get( 'admin/profile', [ProfileController::class, 'AdminProfile'] );
 
     Route::post( 'admin/update/profile', [ProfileController::class, 'AdminUpdateProfile'] );
+    Route::post( 'admin/profile/email/send-otp', [ProfileController::class, 'sendEmailChangeOtp'] );
+    Route::post( 'admin/profile/email/verify', [ProfileController::class, 'verifyEmailChangeOtp'] );
+    Route::post( 'admin/profile/password/send-otp', [ProfileController::class, 'sendPasswordChangeOtp'] );
+    Route::post( 'admin/profile/password/verify', [ProfileController::class, 'verifyPasswordChangeOtp'] );
 
 
     Route::get( 'admin/request/product/pending', [ProductStatusController::class, 'AdminRequestPending'] );

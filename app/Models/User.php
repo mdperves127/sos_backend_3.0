@@ -49,9 +49,11 @@ class User extends Authenticatable {
         'role_type',
         'vendor_role_id',
         'number',
+        'number2',
         'image',
         'status',
         'balance',
+
         'uniqid',
         'last_seen',
         'verify_code',

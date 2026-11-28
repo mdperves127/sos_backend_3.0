@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Enums\Status;
+use App\Helper\RedirectHelper;
 use App\Models\Cart;
 use App\Models\DeliveryCharge;
 use App\Models\Order;
 use App\Models\OrderDetails;
+use App\Models\PaymentGatewaySetting;
+use App\Models\PaymentStore;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Tenant;
@@ -43,31 +46,116 @@ class StorefrontCheckoutService
             ], 422 );
         }
 
-        $paymentType = strtoupper( trim( (string) $request->input( 'payment_type', 'COD' ) ) );
-        if ( $paymentType === '' ) {
-            $paymentType = 'COD';
-        }
-
-        if ( ! in_array( $paymentType, ['COD', 'AAMARPAY', 'EPS', 'UDDOKTAPAY', 'MY-WALLET'], true ) ) {
+        $paymentType = self::normalizePaymentType( $request->input( 'payment_type', 'COD' ) );
+        if ( ! in_array( $paymentType, ['COD', 'EPS', 'UDDOKTAPAY', 'MY-WALLET'], true ) ) {
             return response()->json( [
                 'success' => false,
                 'status'  => 422,
                 'message' => 'Validation failed',
-                'errors'  => ['payment_type' => ['Unsupported payment type.']],
+                'errors'  => ['payment_type' => ['Unsupported payment type. Use COD, EPS, or uddoktapay.']],
             ], 422 );
         }
 
-        // Gateway payments still go through the legacy adapter for now.
-        if ( in_array( $paymentType, ['AAMARPAY', 'EPS', 'UDDOKTAPAY'], true ) ) {
-            return response()->json( [
-                'success' => false,
-                'status'  => 422,
-                'message' => 'Use COD for this checkout payload, or complete gateway checkout via the legacy flow.',
-                'errors'  => ['payment_type' => ['Gateway checkout for the new payload is not enabled yet. Use COD.']],
-            ], 422 );
+        $prepared = self::prepareCheckoutContext( $request, $isGuest );
+        if ( $prepared instanceof JsonResponse ) {
+            return $prepared;
         }
 
-        $customer = (array) $request->input( 'customer', [] );
+        // Online gateways: validate + reserve PaymentStore, redirect — order is created after success.
+        if ( in_array( $paymentType, ['EPS', 'UDDOKTAPAY'], true ) ) {
+            return self::initiateGatewayCheckout( $prepared, $paymentType, $isGuest );
+        }
+
+        return self::commitCheckoutOrders( $prepared, $paymentType, $isGuest, paidOnline: false );
+    }
+
+    /**
+     * Complete a modern page-builder checkout after EPS / UddoktaPay success.
+     *
+     * @return array{orders: array<int, array<string, mixed>>, total: float}
+     */
+    public static function completeFromPaymentStore( PaymentStore $payment ): array
+    {
+        $info = is_array( $payment->info ) ? $payment->info : [];
+        if ( empty( $info['modern_checkout'] ) || ! is_array( $info['checkout'] ?? null ) ) {
+            throw new \RuntimeException( 'Modern checkout payload missing on payment.' );
+        }
+
+        $checkout    = $info['checkout'];
+        $paymentType = self::normalizePaymentType(
+            $info['payment_gateway']
+                ?? $payment->payment_gateway
+                ?? ( $checkout['payment_type'] ?? 'COD' )
+        );
+        if ( ! in_array( $paymentType, ['EPS', 'UDDOKTAPAY'], true ) ) {
+            $paymentType = $payment->payment_gateway === 'uddoktapay' ? 'UDDOKTAPAY' : 'EPS';
+        }
+
+        $isGuest = (bool) ( $checkout['is_guest'] ?? true );
+        $userId  = (int) ( $checkout['user_id'] ?? $info['userid'] ?? 0 );
+
+        $fakeRequest = Request::create( '/', 'POST', [
+            'payment_type' => strtolower( $paymentType ),
+            'tenant_id'    => $checkout['merchant_tenant_id'] ?? $info['tenant_id'] ?? null,
+            'delivery'     => $checkout['delivery'] ?? [],
+            'totals'       => $checkout['totals'] ?? [],
+            'coupon'       => $checkout['coupon'] ?? [],
+            'items'        => $checkout['items'] ?? [],
+            'customer'     => $checkout['customer'] ?? [],
+            'form_data'    => $checkout['form_data'] ?? ['schema' => [], 'values' => []],
+        ] );
+
+        // Re-resolve lines/stock at payment time (prices from trusted stored lines when carts gone).
+        $prepared = self::prepareCheckoutContext(
+            $fakeRequest,
+            $isGuest,
+            $userId > 0 ? $userId : null,
+            is_array( $checkout['trusted_lines'] ?? null ) ? $checkout['trusted_lines'] : null
+        );
+        if ( $prepared instanceof JsonResponse ) {
+            $payload = $prepared->getData( true );
+            throw new \RuntimeException( (string) ( $payload['message'] ?? 'Checkout validation failed after payment.' ) );
+        }
+
+        $response = self::commitCheckoutOrders( $prepared, $paymentType, $isGuest, paidOnline: true, userId: $userId );
+        $payload  = $response->getData( true );
+        if ( ( $payload['status'] ?? null ) !== 200 ) {
+            throw new \RuntimeException( (string) ( $payload['message'] ?? 'Order placement failed after payment.' ) );
+        }
+
+        return [
+            'orders' => $payload['data']['orders'] ?? [],
+            'total'  => (float) ( $payload['data']['totals']['total'] ?? 0 ),
+        ];
+    }
+
+    public static function normalizePaymentType( mixed $paymentType ): string
+    {
+        $type = strtolower( trim( (string) $paymentType ) );
+
+        return match ( $type ) {
+            'eps', 'aamarpay' => 'EPS',
+            'uddoktapay', 'uddokta' => 'UDDOKTAPAY',
+            'my-wallet', 'my_wallet', 'wallet' => 'MY-WALLET',
+            'cod', '' => 'COD',
+            default => strtoupper( $type ),
+        };
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|null  $trustedLines
+     * @return array<string, mixed>|JsonResponse
+     */
+    private static function prepareCheckoutContext(
+        Request $request,
+        bool $isGuest,
+        ?int $userId = null,
+        ?array $trustedLines = null
+    ): array|JsonResponse {
+        $customer = self::mergeCustomerFromForm(
+            (array) $request->input( 'customer', [] ),
+            (array) $request->input( 'form_data', [] )
+        );
         $formData = (array) $request->input( 'form_data', [] );
         $delivery = self::resolveDelivery( (array) $request->input( 'delivery', [] ) );
         if ( isset( $delivery['error'] ) ) {
@@ -79,22 +167,73 @@ class StorefrontCheckoutService
             ], 422 );
         }
 
-        $resolvedLines = $isGuest
-            ? self::resolveGuestLines( (array) $request->input( 'items', [] ) )
-            : self::resolveAuthLines( (array) $request->input( 'items', [] ), (int) auth()->id() );
+        if ( is_array( $trustedLines ) && $trustedLines !== [] ) {
+            $lines   = [];
+            $cartIds = [];
+            $errors  = [];
 
-        if ( isset( $resolvedLines['error'] ) ) {
-            return response()->json( [
-                'success' => false,
-                'status'  => 422,
-                'message' => 'Validation failed',
-                'errors'  => $resolvedLines['errors'] ?? ['items' => [$resolvedLines['error']]],
-            ], 422 );
+            foreach ( array_values( $trustedLines ) as $index => $line ) {
+                $line      = (array) $line;
+                $productId = (int) ( $line['product_id'] ?? 0 );
+                $qty       = max( 1, (int) ( $line['qty'] ?? 1 ) );
+                $variantId = ProductVariantService::normalizeNullableId( $line['variant_id'] ?? null );
+                $merchantTenantId = $request->input( 'tenant_id' )
+                    ?: ( function_exists( 'tenant' ) && tenant() ? tenant()->id : null );
+
+                $product = $merchantTenantId
+                    ? CrossTenantQueryService::getSingleRecordFromTenant(
+                        $merchantTenantId,
+                        Product::class,
+                        fn ( $query ) => $query->where( 'id', $productId )->where( 'status', 'active' )
+                    )
+                    : Product::where( 'id', $productId )->where( 'status', 'active' )->first();
+
+                if ( ! $product ) {
+                    $errors["items.$index.product_id"] = ['Product is not available.'];
+                    continue;
+                }
+
+                $stockError = self::assertStock( $product, $variantId, $qty, $merchantTenantId );
+                if ( $stockError ) {
+                    $errors["items.$index.qty"] = [$stockError];
+                    continue;
+                }
+
+                if ( ! empty( $line['cart_id'] ) ) {
+                    $cartIds[] = (int) $line['cart_id'];
+                }
+                $lines[] = $line;
+            }
+
+            if ( $errors !== [] ) {
+                return response()->json( [
+                    'success' => false,
+                    'status'  => 422,
+                    'message' => 'Validation failed',
+                    'errors'  => $errors,
+                ], 422 );
+            }
+
+            $cartIds = array_values( array_unique( $cartIds ) );
+        } else {
+            $authUserId = $userId ?? ( $isGuest ? 0 : (int) auth()->id() );
+            $resolvedLines = $isGuest
+                ? self::resolveGuestLines( (array) $request->input( 'items', [] ) )
+                : self::resolveAuthLines( (array) $request->input( 'items', [] ), $authUserId );
+
+            if ( isset( $resolvedLines['error'] ) ) {
+                return response()->json( [
+                    'success' => false,
+                    'status'  => 422,
+                    'message' => 'Validation failed',
+                    'errors'  => $resolvedLines['errors'] ?? ['items' => [$resolvedLines['error']]],
+                ], 422 );
+            }
+
+            $lines   = $resolvedLines['lines'];
+            $cartIds = $resolvedLines['cart_ids'] ?? [];
         }
 
-        /** @var array<int, array<string, mixed>> $lines */
-        $lines    = $resolvedLines['lines'];
-        $cartIds  = $resolvedLines['cart_ids'] ?? [];
         $subtotal = round( collect( $lines )->sum( 'line_total' ), 2 );
         $shipping = (float) $delivery['charge'];
 
@@ -103,7 +242,7 @@ class StorefrontCheckoutService
         $couponCtx   = self::resolveCoupon(
             is_string( $couponCode ) ? $couponCode : null,
             $subtotal,
-            $isGuest ? 0 : (int) auth()->id(),
+            $isGuest ? 0 : (int) ( $userId ?? auth()->id() ),
             $customer['email'] ?? ( $formData['values']['email'] ?? null )
         );
         if ( isset( $couponCtx['error'] ) ) {
@@ -128,7 +267,47 @@ class StorefrontCheckoutService
             ], 400 );
         }
 
-        $connectionName = CrossTenantQueryService::connectionForTenant( $tenant );
+        return [
+            'customer'           => $customer,
+            'form_data'          => $formData,
+            'delivery'           => $delivery,
+            'lines'              => $lines,
+            'cart_ids'           => $cartIds,
+            'subtotal'           => $subtotal,
+            'shipping'           => $shipping,
+            'discount'           => $discount,
+            'total'              => $total,
+            'coupon_ctx'         => $couponCtx,
+            'merchant_tenant_id' => $merchantTenantId,
+            'tenant'             => $tenant,
+            'connection_name'    => CrossTenantQueryService::connectionForTenant( $tenant ),
+            'user_id'            => $isGuest ? null : (int) ( $userId ?? auth()->id() ),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $prepared
+     */
+    private static function commitCheckoutOrders(
+        array $prepared,
+        string $paymentType,
+        bool $isGuest,
+        bool $paidOnline = false,
+        ?int $userId = null
+    ): JsonResponse {
+        $connectionName   = $prepared['connection_name'];
+        $lines            = $prepared['lines'];
+        $customer         = $prepared['customer'];
+        $formData         = $prepared['form_data'];
+        $delivery         = $prepared['delivery'];
+        $subtotal         = $prepared['subtotal'];
+        $shipping         = $prepared['shipping'];
+        $discount         = $prepared['discount'];
+        $total            = $prepared['total'];
+        $couponCtx        = $prepared['coupon_ctx'];
+        $merchantTenantId = $prepared['merchant_tenant_id'];
+        $cartIds          = $prepared['cart_ids'] ?? [];
+        $resolvedUserId   = $userId ?? $prepared['user_id'] ?? ( $isGuest ? null : auth()->id() );
 
         try {
             $orderResult = DB::connection( $connectionName )->transaction( function () use (
@@ -144,19 +323,19 @@ class StorefrontCheckoutService
                 $paymentType,
                 $couponCtx,
                 $isGuest,
-                $merchantTenantId
+                $merchantTenantId,
+                $paidOnline,
+                $resolvedUserId
             ) {
-                // One order per product group (schema has singular product_id).
-                $groups      = collect( $lines )->groupBy( 'product_id' );
-                $savedOrders = [];
-                $couponLeft  = $discount;
-                $shippingLeft = $shipping;
+                $groups          = collect( $lines )->groupBy( 'product_id' );
+                $savedOrders     = [];
+                $couponLeft      = $discount;
+                $shippingLeft    = $shipping;
                 $deliveryApplied = false;
                 $couponApplied   = false;
 
                 foreach ( $groups as $productId => $groupLines ) {
                     $groupLines = $groupLines->values()->all();
-                    $first      = $groupLines[0];
                     $product    = Product::on( $connectionName )->where( 'id', $productId )->where( 'status', 'active' )->first();
 
                     if ( ! $product ) {
@@ -172,13 +351,14 @@ class StorefrontCheckoutService
                         $groupDiscount = min( $couponLeft, max( 0, $groupSubtotal + $groupShipping ) );
                     }
 
-                    $groupDue = max( 0, round( $groupSubtotal + $groupShipping - $groupDiscount, 2 ) );
+                    $groupDue  = max( 0, round( $groupSubtotal + $groupShipping - $groupDiscount, 2 ) );
+                    $groupPaid = $paidOnline ? $groupDue : 0.0;
 
                     $orderId = self::generateUniqueOrderId( $connectionName );
                     $order   = new Order();
                     $order->setConnection( $connectionName );
                     $order->order_id        = $orderId;
-                    $order->user_id         = $isGuest ? null : auth()->id();
+                    $order->user_id         = $isGuest ? null : $resolvedUserId;
                     $order->vendor_id       = $product->user_id;
                     $order->affiliator_id   = 0;
                     $order->product_id      = $product->id;
@@ -193,35 +373,38 @@ class StorefrontCheckoutService
                         $customer['city'] ?? ( $formData['values']['city'] ?? null )
                     );
                     $order->variants        = array_map( fn ( $line ) => [
-                        'variant_id'      => $line['variant_id'],
-                        'id'              => $line['variant_id'],
-                        'label'           => $line['variant_label'],
-                        'qty'             => $line['qty'],
-                        'rate'            => $line['unit_price'],
-                        'price'           => $line['unit_price'],
-                        'sku'             => $line['sku'],
-                        'image'           => $line['image'],
-                        'options'         => $line['variant_options'],
-                        'color'           => $line['color'],
-                        'size'            => $line['size'],
-                        'unit_id'         => $line['unit_id'],
-                        'product_name'    => $line['product_name'],
-                        'line_key'        => $line['line_key'] ?? null,
-                        'cart_id'         => $line['cart_id'] ?? null,
-                        'cart_detail_id'  => $line['cart_detail_id'] ?? null,
+                        'variant_id'     => $line['variant_id'],
+                        'id'             => $line['variant_id'],
+                        'label'          => $line['variant_label'],
+                        'qty'            => $line['qty'],
+                        'rate'           => $line['unit_price'],
+                        'price'          => $line['unit_price'],
+                        'sku'            => $line['sku'],
+                        'image'          => $line['image'],
+                        'options'        => $line['variant_options'],
+                        'color'          => $line['color'],
+                        'size'           => $line['size'],
+                        'unit_id'        => $line['unit_id'],
+                        'product_name'   => $line['product_name'],
+                        'line_key'       => $line['line_key'] ?? null,
+                        'cart_id'        => $line['cart_id'] ?? null,
+                        'cart_detail_id' => $line['cart_detail_id'] ?? null,
                     ], $groupLines );
                     $order->afi_amount      = 0;
                     $order->product_amount  = $groupSubtotal;
-                    $order->due_amount      = $groupDue;
-                    $order->paid_amount     = 0;
+                    $order->due_amount      = $paidOnline ? 0 : $groupDue;
+                    $order->paid_amount     = $groupPaid;
                     $order->status          = Status::Pending->value;
                     $order->category_id     = $product->category_id;
                     $order->qty             = $groupQty;
                     $order->delivery_charge = $groupShipping;
                     $order->delivery_area   = $delivery['area'] ?? null;
                     $order->delivery_id     = $delivery['id'] ?? null;
-                    $order->sale_discount   = $groupDiscount > 0 ? $groupDiscount : null;
-                    $order->coupon_code     = $groupDiscount > 0 ? ( $couponCtx['coupon']->code ?? null ) : null;
+                    // sale_discount is NOT NULL in tenant DB — always persist a number.
+                    $order->sale_discount = $groupDiscount > 0 ? $groupDiscount : 0;
+                    if ( $groupDiscount > 0 ) {
+                        $order->coupon_code = $couponCtx['coupon']->code ?? null;
+                    }
                     $order->order_media     = $isGuest ? 'website-guest' : 'website';
                     $order->tenant_id       = function_exists( 'tenant' ) && tenant() ? tenant()->id : $merchantTenantId;
 
@@ -245,13 +428,13 @@ class StorefrontCheckoutService
                                 $couponCtx['coupon'],
                                 $groupDiscount,
                                 (int) $order->id,
-                                $isGuest ? null : (int) auth()->id(),
+                                $isGuest ? null : (int) $resolvedUserId,
                                 $order->email
                             );
                         } catch ( \Throwable $e ) {
                             // Order already saved; coupon usage is best-effort.
                         }
-                        $couponLeft   = max( 0, $couponLeft - $groupDiscount );
+                        $couponLeft    = max( 0, $couponLeft - $groupDiscount );
                         $couponApplied = true;
                     }
 
@@ -268,11 +451,11 @@ class StorefrontCheckoutService
                 }
 
                 return [
-                    'orders'  => $savedOrders,
-                    'total'   => $total,
-                    'subtotal'=> $subtotal,
-                    'shipping'=> $shipping,
-                    'discount'=> $discount,
+                    'orders'   => $savedOrders,
+                    'total'    => $total,
+                    'subtotal' => $subtotal,
+                    'shipping' => $shipping,
+                    'discount' => $discount,
                 ];
             } );
         } catch ( \Throwable $e ) {
@@ -283,9 +466,8 @@ class StorefrontCheckoutService
             ], 500 );
         }
 
-        // Clear auth carts used in this checkout.
-        if ( ! $isGuest && $cartIds !== [] ) {
-            Cart::where( 'user_id', auth()->id() )
+        if ( ! $isGuest && $cartIds !== [] && $resolvedUserId ) {
+            Cart::where( 'user_id', $resolvedUserId )
                 ->whereIn( 'id', $cartIds )
                 ->get()
                 ->each
@@ -295,13 +477,13 @@ class StorefrontCheckoutService
         $primary = $orderResult['orders'][0] ?? null;
 
         return response()->json( [
-            'status'       => 200,
-            'success'      => true,
-            'message'      => 'Order placed successfully',
-            'order_id'     => $primary['order_id'] ?? null,
-            'order_ids'    => array_column( $orderResult['orders'], 'order_id' ),
-            'orders_placed'=> count( $orderResult['orders'] ),
-            'data'         => [
+            'status'        => 200,
+            'success'       => true,
+            'message'       => 'Order placed successfully',
+            'order_id'      => $primary['order_id'] ?? null,
+            'order_ids'     => array_column( $orderResult['orders'], 'order_id' ),
+            'orders_placed' => count( $orderResult['orders'] ),
+            'data'          => [
                 'order_id'     => $primary['id'] ?? null,
                 'order_number' => $primary['order_number'] ?? null,
                 'orders'       => $orderResult['orders'],
@@ -313,6 +495,209 @@ class StorefrontCheckoutService
                 ],
             ],
         ] );
+    }
+
+    /**
+     * @param  array<string, mixed>  $prepared
+     */
+    private static function initiateGatewayCheckout( array $prepared, string $paymentType, bool $isGuest ): JsonResponse
+    {
+        $total = (float) $prepared['total'];
+        if ( $total <= 0 ) {
+            return response()->json( [
+                'success' => false,
+                'status'  => 422,
+                'message' => 'Payable amount must be greater than zero for online payment.',
+            ], 422 );
+        }
+
+        $storefrontTenantId = function_exists( 'tenant' ) && tenant()
+            ? (string) tenant()->id
+            : (string) $prepared['merchant_tenant_id'];
+
+        if ( $storefrontTenantId === '' ) {
+            return response()->json( [
+                'success' => false,
+                'status'  => 400,
+                'message' => 'Tenant context is required for gateway checkout.',
+            ], 400 );
+        }
+
+        $prefix = $paymentType === 'UDDOKTAPAY' ? 'udp' : 'eps';
+        $trx    = preg_replace( '/[^A-Za-z0-9]/', '', uniqid( $prefix, true ) ) ?: uniqid();
+        $first  = $prepared['lines'][0] ?? [];
+        $coupon = $prepared['coupon_ctx']['coupon'] ?? null;
+        $customer = $prepared['customer'];
+
+        $checkoutSnapshot = [
+            'is_guest'           => $isGuest,
+            'user_id'            => $prepared['user_id'],
+            'merchant_tenant_id' => $prepared['merchant_tenant_id'],
+            'payment_type'       => strtolower( $paymentType ),
+            'delivery'           => [
+                'id'     => $prepared['delivery']['id'] ?? null,
+                'area'   => $prepared['delivery']['area'] ?? null,
+                'charge' => $prepared['delivery']['charge'] ?? 0,
+            ],
+            'totals'             => [
+                'subtotal' => $prepared['subtotal'],
+                'shipping' => $prepared['shipping'],
+                'discount' => $prepared['discount'],
+                'total'    => $prepared['total'],
+            ],
+            'coupon'             => [
+                'code'     => $coupon?->code,
+                'discount' => $prepared['discount'],
+            ],
+            'items'              => $prepared['lines'],
+            'trusted_lines'      => $prepared['lines'],
+            'customer'           => $customer,
+            'form_data'          => $prepared['form_data'],
+        ];
+
+        $info = RedirectHelper::appendPaymentReturnUrl( [
+            'modern_checkout'      => true,
+            'checkout'             => $checkoutSnapshot,
+            'cartid'               => $first['cart_id'] ?? null,
+            'productid'            => $first['product_id'] ?? null,
+            'totalqty'             => $first['qty'] ?? 1,
+            'userid'               => $prepared['user_id'] ?? 0,
+            'tenant_id'            => $prepared['merchant_tenant_id'],
+            'storefront_tenant_id' => $storefrontTenantId,
+            'placing_tenant_id'    => $storefrontTenantId,
+            'order_media'          => $isGuest ? 'website-guest' : 'website',
+            'coupon_id'            => $coupon?->id,
+            'coupon_discount'      => (float) $prepared['discount'],
+            'customer'             => [
+                'name'  => $customer['name'] ?? null,
+                'email' => $customer['email'] ?? null,
+                'phone' => $customer['phone'] ?? null,
+            ],
+            // Keep empty legacy checkouts so completion routes to modern path only.
+            'checkouts'            => [],
+        ] );
+
+        try {
+            if ( $paymentType === 'UDDOKTAPAY' ) {
+                TenantPaymentGatewayService::applyForProductCheckout(
+                    PaymentGatewaySetting::GATEWAY_UDDOKTAPAY,
+                    $storefrontTenantId
+                );
+
+                $successUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-success' );
+                $cancelUrl  = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-cancel' );
+                $webhookUrl = UddoktaPayService::tenantCallbackUrl( $storefrontTenantId, 'product-checkout-webhook' );
+
+                $gateway = UddoktaPayService::gateway(
+                    $total,
+                    $trx,
+                    [
+                        'name'  => $customer['name'] ?? null,
+                        'email' => $customer['email'] ?? null,
+                        'phone' => $customer['phone'] ?? null,
+                    ],
+                    $successUrl,
+                    $cancelUrl,
+                    $webhookUrl,
+                    ['tenant_id' => $storefrontTenantId]
+                );
+
+                $info['invoice_id'] = $gateway->invoice_id ?? null;
+
+                PaymentStore::on( 'mysql' )->create( [
+                    'payment_gateway' => 'uddoktapay',
+                    'trxid'           => $trx,
+                    'status'          => 'pending',
+                    'last_status'     => 'pending',
+                    'order_media'     => $isGuest ? 'website-guest' : 'website',
+                    'payment_type'    => 'checkout',
+                    'info'            => $info,
+                ] );
+            } else {
+                PaymentStore::on( 'mysql' )->create( [
+                    'payment_gateway' => 'aamarpay',
+                    'trxid'           => $trx,
+                    'status'          => 'pending',
+                    'last_status'     => 'pending',
+                    'order_media'     => $isGuest ? 'website-guest' : 'website',
+                    'payment_type'    => 'checkout',
+                    'info'            => $info,
+                ] );
+
+                TenantPaymentGatewayService::applyForProductCheckout(
+                    PaymentGatewaySetting::GATEWAY_EPS,
+                    $storefrontTenantId
+                );
+
+                $successUrl = EpsPaymentService::paymentSuccessUrl( 'product-checkout-success' );
+                $gateway    = AamarPayService::gateway(
+                    $total,
+                    $trx,
+                    'Product Checkout',
+                    $successUrl,
+                    'tenant',
+                    [
+                        'name'  => $customer['name'] ?? null,
+                        'email' => $customer['email'] ?? null,
+                        'phone' => $customer['phone'] ?? null,
+                    ]
+                );
+            }
+        } catch ( \Throwable $e ) {
+            return response()->json( [
+                'success' => false,
+                'status'  => 400,
+                'message' => $e->getMessage(),
+            ], 400 );
+        } finally {
+            if ( $paymentType === 'UDDOKTAPAY' ) {
+                UddoktaPayService::clearRuntimeCredentials();
+            } else {
+                EpsConfig::clearRuntimeCredentials();
+                EpsPaymentService::clearTokenCache();
+            }
+        }
+
+        return response()->json( [
+            'status'       => 200,
+            'success'      => true,
+            'result'       => $gateway->result ?? 'true',
+            'payment_url'  => $gateway->payment_url ?? null,
+            'payment_type' => strtolower( $paymentType ),
+            'trxid'        => $trx,
+            'amount'       => $total,
+            'message'      => $paymentType === 'UDDOKTAPAY'
+                ? 'Redirect to UddoktaPay payment gateway.'
+                : 'Redirect to EPS payment gateway.',
+            'data'         => [
+                'totals' => [
+                    'subtotal' => $prepared['subtotal'],
+                    'shipping' => $prepared['shipping'],
+                    'discount' => $prepared['discount'],
+                    'total'    => $prepared['total'],
+                ],
+            ],
+        ] );
+    }
+
+    /**
+     * Prefer explicit customer.* then form_data.values.* for core fields.
+     *
+     * @param  array<string, mixed>  $customer
+     * @param  array<string, mixed>  $formData
+     * @return array<string, mixed>
+     */
+    private static function mergeCustomerFromForm( array $customer, array $formData ): array
+    {
+        $values = (array) ( $formData['values'] ?? [] );
+        foreach ( ['name', 'phone', 'email', 'address', 'notes', 'city'] as $key ) {
+            $current = $customer[$key] ?? null;
+            if ( ( $current === null || trim( (string) $current ) === '' ) && isset( $values[$key] ) ) {
+                $customer[$key] = $values[$key];
+            }
+        }
+
+        return $customer;
     }
 
     /**

@@ -39,7 +39,9 @@ class WoocommerceCredentialController extends Controller {
             ], 400 );
         }
 
-        $url = rtrim( (string) $request->wc_url, '/' );
+        $url    = rtrim( trim( (string) $request->wc_url ), '/' );
+        $key    = trim( (string) $request->wc_key );
+        $secret = trim( (string) $request->wc_secret );
 
         $taken = WoocommerceCredential::withTrashed()
             ->where( 'wc_url', $url )
@@ -53,7 +55,7 @@ class WoocommerceCredentialController extends Controller {
         }
 
         try {
-            $this->woo->validateConnection( $url, (string) $request->wc_key, (string) $request->wc_secret );
+            $this->woo->validateConnection( $url, $key, $secret );
         } catch ( \Throwable $e ) {
             return response()->json( [
                 'status'  => 422,
@@ -84,8 +86,8 @@ class WoocommerceCredentialController extends Controller {
             ->update( ['is_active' => false] );
 
         $data->vendor_id          = vendorId();
-        $data->wc_key             = $request->wc_key;
-        $data->wc_secret          = $request->wc_secret;
+        $data->wc_key             = $key;
+        $data->wc_secret          = $secret;
         $data->wc_url             = $url;
         $data->status             = WoocommerceCredential::STATUS_CONNECTED;
         $data->connection_message = 'Connected';
@@ -137,10 +139,12 @@ class WoocommerceCredentialController extends Controller {
             ], 400 );
         }
 
-        $url = rtrim( (string) $request->wc_url, '/' );
+        $url    = rtrim( trim( (string) $request->wc_url ), '/' );
+        $key    = trim( (string) $request->wc_key );
+        $secret = trim( (string) $request->wc_secret );
 
         try {
-            $this->woo->validateConnection( $url, (string) $request->wc_key, (string) $request->wc_secret );
+            $this->woo->validateConnection( $url, $key, $secret );
         } catch ( \Throwable $e ) {
             return response()->json( [
                 'status'  => 422,
@@ -148,8 +152,8 @@ class WoocommerceCredentialController extends Controller {
             ], 422 );
         }
 
-        $data->wc_key             = $request->wc_key;
-        $data->wc_secret          = $request->wc_secret;
+        $data->wc_key             = $key;
+        $data->wc_secret          = $secret;
         $data->wc_url             = $url;
         $data->status             = WoocommerceCredential::STATUS_CONNECTED;
         $data->connection_message = 'Updated and validated';

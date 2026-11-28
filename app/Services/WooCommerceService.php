@@ -50,25 +50,59 @@ class WooCommerceService {
     }
 
     public function validateConnection( string $url, string $key, string $secret ): array {
-        $url = self::assertSafeStoreUrl( $url );
+        $url    = self::assertSafeStoreUrl( $url );
+        $key    = trim( $key );
+        $secret = trim( $secret );
+
+        if ( $key === '' || $secret === '' ) {
+            throw new RuntimeException( 'Consumer key and consumer secret are required.' );
+        }
+
+        // Masked/placeholder values from the UI must never be submitted as real credentials.
+        if ( str_contains( $key, '*' ) || str_contains( $secret, '*' ) ) {
+            throw new RuntimeException(
+                'Paste the full Consumer key and Consumer secret from WooCommerce '
+                . '(Settings → Advanced → REST API). Masked values like ck_**** are not valid.'
+            );
+        }
+
+        // Keys/secrets look swapped (common after copy/paste).
+        if ( str_starts_with( $key, 'cs_' ) && str_starts_with( $secret, 'ck_' ) ) {
+            throw new RuntimeException(
+                'Consumer key and secret appear swapped. '
+                . 'wc_key must start with ck_ and wc_secret must start with cs_.'
+            );
+        }
 
         try {
+            // Prefer query-string auth: many hosts strip the Authorization header
+            // even over HTTPS (CGI/FastCGI/proxies), which WooCommerce reports as
+            // invalid/missing credentials when Basic Auth alone is used.
             $response = $this->client->request( 'GET', $url . '/wp-json/wc/v3/system_status', [
-                'auth' => [$key, $secret],
+                'query' => [
+                    'consumer_key'    => $key,
+                    'consumer_secret' => $secret,
+                ],
             ] );
 
             $code = $response->getStatusCode();
+            $body = self::decodeJsonBody( (string) $response->getBody() );
+
             if ( $code === 401 || $code === 403 ) {
                 // Some stores restrict system_status; fall back to products.
                 $response = $this->client->request( 'GET', $url . '/wp-json/wc/v3/products', [
-                    'auth'  => [$key, $secret],
-                    'query' => ['per_page' => 1],
+                    'query' => [
+                        'consumer_key'    => $key,
+                        'consumer_secret' => $secret,
+                        'per_page'        => 1,
+                    ],
                 ] );
                 $code = $response->getStatusCode();
+                $body = self::decodeJsonBody( (string) $response->getBody() );
             }
 
             if ( ! in_array( $code, [200, 201], true ) ) {
-                throw new RuntimeException( 'WooCommerce API returned HTTP ' . $code );
+                throw new RuntimeException( self::friendlyAuthError( $code, $body ) );
             }
 
             return [
@@ -79,6 +113,37 @@ class WooCommerceService {
         } catch ( GuzzleException $e ) {
             throw new RuntimeException( self::friendlyReachabilityError( $e->getMessage(), $url ), 0, $e );
         }
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $body
+     */
+    public static function friendlyAuthError( int $code, ?array $body ): string {
+        $wcMessage = is_array( $body ) ? (string) ( $body['message'] ?? '' ) : '';
+        $wcCode    = is_array( $body ) ? (string) ( $body['code'] ?? '' ) : '';
+
+        if ( $code === 401 || $code === 403 || str_contains( $wcCode, 'authentication' ) ) {
+            $detail = $wcMessage !== '' ? $wcMessage : ( 'HTTP ' . $code );
+
+            return 'WooCommerce rejected these API credentials (' . $detail . '). '
+                . 'In WP Admin go to WooCommerce → Settings → Advanced → REST API, '
+                . 'create a new key with Read/Write permission, then paste the new '
+                . 'Consumer key (ck_…) and Consumer secret (cs_…) here. '
+                . 'Do not reuse a revoked key, and do not paste a masked value.';
+        }
+
+        if ( $wcMessage !== '' ) {
+            return 'WooCommerce API error (HTTP ' . $code . '): ' . $wcMessage;
+        }
+
+        return 'WooCommerce API returned HTTP ' . $code;
+    }
+
+    /** @return array<string, mixed>|null */
+    private static function decodeJsonBody( string $raw ): ?array {
+        $decoded = json_decode( $raw, true );
+
+        return is_array( $decoded ) ? $decoded : null;
     }
 
     /**
@@ -106,6 +171,18 @@ class WooCommerceService {
                 . "Detail: {$raw}";
         }
 
+        // Guzzle may surface WC 401 bodies when http_errors is enabled upstream.
+        if (
+            str_contains( $raw, 'Consumer secret is invalid' )
+            || str_contains( $raw, 'woocommerce_rest_authentication_error' )
+            || str_contains( $raw, '401 Unauthorized' )
+        ) {
+            return self::friendlyAuthError( 401, [
+                'message' => 'Consumer secret is invalid.',
+                'code'    => 'woocommerce_rest_authentication_error',
+            ] );
+        }
+
         return 'Unable to reach WooCommerce store: ' . $raw;
     }
 
@@ -117,10 +194,16 @@ class WooCommerceService {
 
         $url = $credential->normalizedUrl() . '/wp-json/wc/v3/' . ltrim( $path, '/' );
 
+        $options = array_merge( [
+            'query' => [],
+        ], $options );
+        $options['query'] = array_merge( [
+            'consumer_key'    => trim( (string) $credential->wc_key ),
+            'consumer_secret' => trim( (string) $credential->wc_secret ),
+        ], is_array( $options['query'] ?? null ) ? $options['query'] : [] );
+
         try {
-            $response = $this->client->request( $method, $url, array_merge( [
-                'auth' => [$credential->wc_key, $credential->wc_secret],
-            ], $options ) );
+            $response = $this->client->request( $method, $url, $options );
         } catch ( GuzzleException $e ) {
             throw new RuntimeException( 'WooCommerce request failed: ' . $e->getMessage(), 0, $e );
         }
@@ -133,6 +216,9 @@ class WooCommerceService {
         }
 
         if ( $code < 200 || $code >= 300 ) {
+            if ( $code === 401 || $code === 403 ) {
+                throw new RuntimeException( self::friendlyAuthError( $code, is_array( $body ) ? $body : null ) );
+            }
             $message = is_array( $body ) ? ( $body['message'] ?? json_encode( $body ) ) : (string) $response->getBody();
             throw new RuntimeException( 'WooCommerce API error (' . $code . '): ' . $message );
         }
